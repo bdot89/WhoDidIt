@@ -172,7 +172,7 @@ function T:Start(guid, puller, how)
 	if F.encKnown or UnitClassification(guid) == "worldboss" then
 		W.Print("Tracking |cffffd100" .. F.enc .. "|r.")
 	end
-	W.Logs:OnFightStart()
+	if W.Logs then W.Logs:OnFightStart() end
 	if W.UI then W.UI:OnFightStart() end
 end
 

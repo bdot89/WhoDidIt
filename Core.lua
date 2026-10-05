@@ -7,6 +7,10 @@ WhoDidIt = {}
 local W = WhoDidIt
 
 W.version = GetAddOnMetadata("WhoDidIt", "Version") or "1.0.0"
+
+-- WoW only reads an addon's file list at start-up, so files added by an
+-- update stay missing after /reload until the game is restarted
+W.RESTART_MSG = "|cffff5555WhoDidIt was updated with new files - exit and restart WoW (a /reload isn't enough) to load them.|r"
 W.env = {}
 
 local floor = math.floor
@@ -272,8 +276,9 @@ function W:SaveFight(rec)
 		W.Print("Type |cffffd100/wdi|r for the full breakdown.")
 	end
 	W.Shout:Auto(rec)
-	W.Board:OnFight(rec)
-	W.Logs:OnFightEnd(rec)
+	-- (missing until the game is restarted after an update adds new files)
+	if W.Board then W.Board:OnFight(rec) end
+	if W.Logs then W.Logs:OnFightEnd(rec) end
 	if W.UI then W.UI:OnFightEnd() end
 end
 
@@ -395,6 +400,8 @@ local function slash(msg)
 	elseif cmd == "threat" then
 		db.opts.queryThreat = (rest ~= "off")
 		W.Print("Threat queries: " .. (db.opts.queryThreat and "on" or "off"))
+	elseif (cmd == "log" or cmd == "share") and not (W.Board and W.Logs) then
+		W.Print(W.RESTART_MSG)
 	elseif cmd == "rankings" or cmd == "ranks" then
 		W.UI:SetMode("rankings")
 	elseif cmd == "logs" then

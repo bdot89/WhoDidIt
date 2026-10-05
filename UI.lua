@@ -1578,6 +1578,26 @@ function UI:RefreshLogs()
 	lastModeKey = key
 end
 
+-- Board.lua / Logs.lua didn't load (the game wasn't restarted after an update)
+function UI:RefreshMissing()
+	for i = 1, getn(UI.rankButtons) do UI.rankButtons[i]:Hide() end
+	for i = 1, getn(UI.logButtons) do UI.logButtons[i]:Hide() end
+	leftHead:SetText(UI.mode == "logs" and "Logs" or "Rankings")
+	leftCount:SetText("")
+	fightList:SetData({})
+	rTitle:SetText("Restart WoW to finish updating")
+	rInfo:SetText("|cffaaaaaaNew WhoDidIt files aren't loaded yet|r")
+	rVerdict:SetText("|cffff7777Exit the game completely and start it again.|r\n|cff888888A /reload isn't enough: WoW only picks up new addon files at start-up.|r")
+	hintText:SetText("")
+	local rows = {}
+	head(rows, "Why")
+	tinsert(rows, row("This update added Rankings (Board.lua) and Chronicle log controls (Logs.lua)."))
+	tinsert(rows, row("WoW reads each addon's file list once, when the game starts - /reload only re-runs files it already knows."))
+	tinsert(rows, row("Fights still work normally until then: click |cffffd100Fights|r in the title bar."))
+	lastModeKey = nil
+	mainList:SetData(rows)
+end
+
 local lastTab
 function UI:Refresh()
 	if not f:IsVisible() then return end
@@ -1588,6 +1608,7 @@ function UI:Refresh()
 	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat"))
 
 	UI:ApplyMode()
+	if UI.mode ~= "fights" and not (W.Board and W.Logs) then return UI:RefreshMissing() end
 	if UI.mode == "rankings" then return UI:RefreshRankings() end
 	if UI.mode == "logs" then return UI:RefreshLogs() end
 	lastModeKey = nil
