@@ -25,6 +25,7 @@ local PROTO   = "WDIB1"
 local SEP     = "~"
 
 local KILL_MIN, KILL_MAX   = 5, 3600
+local CHRON_KILL_MIN = 10   -- Chronicle logs with a boss "killed" faster than this are broken
 local CLEAR_MIN, CLEAR_MAX = 120, 8 * 3600
 local RUN_MAX = 6 * 3600   -- a run older than this can't become a clear
 
@@ -125,10 +126,10 @@ function B:LoadChronicle()
 			local zone = CHRON_ZONE[p[4]] or p[4]
 			if t == "PC" then
 				local secs = tonumber(p[5])
-				if secs and secs <= CLEAR_MAX then me.clears[zone] = { t = secs, d = tonumber(p[6]), g = p[7], slug = p[8], chron = true } end
+				if secs and secs >= CLEAR_MIN and secs <= CLEAR_MAX then me.clears[zone] = { t = secs, d = tonumber(p[6]), g = p[7], slug = p[8], chron = true } end
 			else
 				local secs = tonumber(p[6])
-				if secs and secs <= KILL_MAX then me.kills[p[5]] = { t = secs, d = tonumber(p[7]), g = p[8], slug = p[9], chron = true } end
+				if secs and secs >= CHRON_KILL_MIN and secs <= KILL_MAX then me.kills[p[5]] = { t = secs, d = tonumber(p[7]), g = p[8], slug = p[9], chron = true } end
 			end
 		elseif t == "C" or t == "K" then
 			local realm = p[2]
@@ -141,9 +142,10 @@ function B:LoadChronicle()
 				data.bosses[zone] = data.bosses[zone] or {}
 				data.bosses[zone][key] = true
 			end
-			-- broken logs (a "clear" spanning days) would wreck the boards
+			-- broken logs (a "clear" spanning days, a 4-second boss) would wreck the boards
 			local maxSecs = (kind == "clears") and CLEAR_MAX or KILL_MAX
-			if realm ~= "" and guild and guild ~= "" and secs and secs <= maxSecs then
+			local minSecs = (kind == "clears") and CLEAR_MIN or CHRON_KILL_MIN
+			if realm ~= "" and guild and guild ~= "" and secs and secs >= minSecs and secs <= maxSecs then
 				local r = data.realms[realm]
 				if not r then
 					r = { kills = {}, clears = {} }
@@ -544,7 +546,8 @@ function B:Rivals(zone, kind, key)
 	local now, home = time(), B.Realm()
 	for i = 1, getn(db.list) do
 		local e = db.list[i]
-		if now - (e.d or 0) < RIVAL_DAYS * 86400 and (not zone or e.zone == zone) and (not key or (e.kind == kind and e.key == key)) then
+		local sane = e.t >= ((e.kind == "clears") and CLEAR_MIN or CHRON_KILL_MIN)   -- not a broken log
+		if sane and now - (e.d or 0) < RIVAL_DAYS * 86400 and (not zone or e.zone == zone) and (not key or (e.kind == kind and e.key == key)) then
 			local ours = B:GuildBest(home, e.kind, e.key, guild)
 			if not ours or e.t < ours.t then
 				e.cur = ours and ours.t or e.ours
@@ -564,36 +567,99 @@ function B:RivalText(e)
 	return B:RivalName(e) .. " beat our " .. boardTitle(e.kind, e.key) .. " " .. ago(e.d) .. " (" .. B.Fmt(e.t) .. " vs our " .. B.Fmt(e.cur or e.ours) .. ")"
 end
 
+------------------------------------------------------------------ colours for chat posts
+-- W:Send colours names from this map: our guild green, other guilds
+-- orange, realms purple, bosses and instances gold (plus raid members in
+-- their class colour). Multi-word names and "N'Zoth (PvE)" work too.
+
+local CHAT_US, CHAT_THEM, CHAT_REALM, CHAT_BOSS = "#33ff33", "#ff9966", "#cc99ff", "#ffd100"
+
+function B:ChatColours()
+	local m = {}
+	for enc in pairs(W.Data.encounters) do m[enc] = CHAT_BOSS end
+	for zone in pairs(W.Data.clears) do
+		m[zone] = CHAT_BOSS
+		if W.Data.instanceTitle[zone] then m[W.Data.instanceTitle[zone]] = CHAT_BOSS end
+	end
+	local realms = B:Realms()
+	for i = 1, getn(realms) do
+		local r = realms[i]
+		local label = B.RealmLabel(r)
+		m[label] = CHAT_REALM
+		-- "C'Thun" alone is also a boss: plain realm names only when they have no type
+		if label == r then m[r] = CHAT_REALM end
+		local kinds = { "kills", "clears" }
+		for k = 1, 2 do
+			local boards = {}
+			local mine = WhoDidItDB.board and WhoDidItDB.board[r]
+			if type(mine) == "table" and type(mine[kinds[k]]) == "table" then tinsert(boards, mine[kinds[k]]) end
+			local c = B.chron and B.chron.realms[r]
+			if c then tinsert(boards, c[kinds[k]]) end
+			for j = 1, getn(boards) do
+				for key, list in pairs(boards[j]) do
+					if kinds[k] == "kills" and not m[key] then m[key] = CHAT_BOSS end
+					for g in pairs(list) do
+						if string.len(g) >= 3 then m[g] = CHAT_THEM end
+					end
+				end
+			end
+		end
+	end
+	m[B.ServerName()] = CHAT_REALM
+	for name, e in pairs(W.roster and W.roster.byName or {}) do
+		if e.class then m[name] = e.class end
+	end
+	local guild = B.MyGuild()
+	if guild then m[guild] = CHAT_US end
+	return m
+end
+
+------------------------------------------------------------------ rival watch posts
+
 local TAUNT = {
-	"Rival watch, {zone}: {list}. Are we really letting that slide?",
-	"{zone} tonight. {list}. Time to take them back.",
-	"Before we pull anything in {zone}: {list}. Revenge is on the menu.",
-	"{list}. {zone} is right here - let's remind them whose times these are.",
-	"News from the boards: {list}. Pump harder, {zone} awaits.",
+	"Are we really letting that slide?",
+	"Time to take them back.",
+	"Revenge is on the menu tonight.",
+	"Let's remind them whose times these are.",
+	"Pump harder.",
+	"Somebody's been sleeping on their consumables.",
 }
 
--- one line about rivals for an instance (or the entries given)
-function B:RivalLine(zone, list)
+-- "Hell Fire of C'Thun (Hardcore) - Majordomo Executus 1:24.7 (ours 1:29.2, yesterday)"
+function B:RivalShort(e)
+	local what = (e.kind == "clears") and ((W.Data.instanceTitle[e.key] or e.key) .. " clear") or e.key
+	return B:RivalName(e) .. " - " .. what .. " " .. B.Fmt(e.t) .. " (ours " .. B.Fmt(e.cur or e.ours) .. ", " .. ago(e.d) .. ")"
+end
+
+-- a heading line, then one line per rival (our realm first, newest first), at most 3
+function B:RivalLines(zone, list)
 	list = list or B:Rivals(zone)
-	if getn(list) == 0 then return nil end
-	local parts = {}
-	for i = 1, math.min(3, getn(list)) do tinsert(parts, B:RivalText(list[i])) end
-	local more = getn(list) - 3
-	local text = table.concat(parts, "; ") .. ((more > 0) and ("; +" .. more .. " more") or "")
-	local t = TAUNT[math.random(getn(TAUNT))]
-	t = string.gsub(t, "{zone}", function() return W.Data.instanceTitle[zone] or zone or "the raid" end)
-	t = string.gsub(t, "{list}", function() return text end)
-	return "[WhoDidIt] " .. t
+	local n = getn(list)
+	if n == 0 then return nil end
+	local home = B.Realm()
+	local sorted = {}
+	for i = 1, n do sorted[i] = list[i] end
+	table.sort(sorted, function(a, b)
+		local ha, hb = (a.realm == home), (b.realm == home)
+		if ha ~= hb then return ha end
+		return (a.d or 0) > (b.d or 0)
+	end)
+	local title = W.Data.instanceTitle[zone or ""] or zone or "the raid"
+	local lines = { "[WhoDidIt] RIVAL WATCH: " .. title .. " - " .. n .. " of our time" .. (n == 1 and " was" or "s were")
+		.. " beaten. " .. TAUNT[math.random(getn(TAUNT))] }
+	for i = 1, math.min(3, n) do tinsert(lines, i .. ") " .. B:RivalShort(sorted[i])) end
+	if n > 3 then tinsert(lines, "...and " .. (n - 3) .. " more. All of them: /wdi rankings") end
+	return lines
 end
 
 function B:PostRivals(zone, list)
-	local line = B:RivalLine(zone, list)
-	if not line then
-		W.Print("Nobody has beaten our " .. (W.Data.instanceTitle[zone] or zone or "") .. " times in the last " .. RIVAL_DAYS .. " days.")
+	local lines = B:RivalLines(zone, list)
+	if not lines then
+		W.Print("Nobody has beaten our " .. (W.Data.instanceTitle[zone or ""] or zone or "") .. " times in the last " .. RIVAL_DAYS .. " days.")
 		return
 	end
 	for _, e in ipairs(list or B:Rivals(zone)) do e.posted = true end
-	W:Send({ line }, nil, {})
+	W:Send(lines, nil, B:ChatColours())
 end
 
 -- entering a raid instance: post its rivals once (rival alerts on)
@@ -794,7 +860,7 @@ end
 function B:Banter(kind, key, what, secs, old, realm, guild, rival)
 	local line = B:BanterLine(kind, key, what, secs, old, realm, guild, rival)
 	B:Claim(((kind == "clear") and "C:" or "K:") .. key, function()
-		W:Send({ line }, nil, {})   -- {} = colour times and numbers
+		W:Send({ line }, nil, B:ChatColours())   -- guilds, realms, bosses, times in colour
 	end)
 end
 
@@ -808,7 +874,10 @@ function B:BanterTest()
 	if math.random(3) == 1 then
 		rival = { g = "Care Bears", realm = B.Realm(), t = secs + math.random(-30, 30), d = time() - math.random(3) * 86400 }
 	end
-	W:Send({ B:BanterLine("kill", what, what, secs, old, B.Realm(), B.MyGuild() or "Your Guild", rival) }, "SELF", {})
+	local colours = B:ChatColours()
+	colours["Care Bears"] = colours["Care Bears"] or "#ff9966"
+	colours["Your Guild"] = "#33ff33"
+	W:Send({ B:BanterLine("kill", what, what, secs, old, B.Realm(), B.MyGuild() or "Your Guild", rival) }, "SELF", colours)
 end
 
 ------------------------------------------------------------------ posting the boards

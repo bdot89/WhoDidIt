@@ -87,6 +87,40 @@ end
 
 local function wrap(h, s) return "|cff" .. h .. s .. "|r" end
 
+-- a colour map value: a class ("MAGE") or a colour ("#ff8866")
+local function colourOf(v)
+	if string.sub(v, 1, 1) == "#" then return string.sub(v, 2) end
+	return hex(v)
+end
+
+-- phrases from the colour map that the word matcher can't find on its own
+-- (several words, or an apostrophe: "Care Bears", "N'Zoth (PvE)"), by first
+-- character, longest first so "N'Zoth (PvE)" wins over "N'Zoth"
+local function phraseIndex(map)
+	local idx = {}
+	for k in pairs(map) do
+		if string.find(k, "[^%w]") then
+			local c = string.sub(k, 1, 1)
+			idx[c] = idx[c] or {}
+			tinsert(idx[c], k)
+		end
+	end
+	for _, list in pairs(idx) do
+		table.sort(list, function(a, b) return string.len(a) > string.len(b) end)
+	end
+	return idx
+end
+
+local function phraseAt(s, i, idx)
+	local list = idx[string.sub(s, i, i)]
+	if not list then return nil end
+	for j = 1, getn(list) do
+		local p = list[j]
+		local e = i + string.len(p) - 1
+		if string.sub(s, i, e) == p and not string.find(string.sub(s, e + 1, e + 1), "^%w") then return p, e end
+	end
+end
+
 -- One left-to-right pass so colour codes never get coloured again:
 -- [WhoDidIt] tag, "Award Title:" at the start, times, numbers, WIPE/KILL,
 -- and raid members' names in their class colour. namesOnly = names only.
@@ -109,7 +143,7 @@ local function colorize(s, classes, namesOnly)
 		if e2 and e2 <= 32 then
 			local title = string.sub(s, 1, e2 - 1)
 			if classes[title] then
-				tinsert(out, wrap(hex(classes[title]), title) .. ":")
+				tinsert(out, wrap(colourOf(classes[title]), title) .. ":")
 			elseif not namesOnly then
 				tinsert(out, wrap(COL.title, title .. ":"))
 			else
@@ -118,9 +152,14 @@ local function colorize(s, classes, namesOnly)
 			i = e2 + 1
 		end
 	end
+	local idx = phraseIndex(classes)
 	while i <= n do
+		local phrase, pe = phraseAt(s, i, idx)
 		local a, b = string.find(s, "^%d+:%d%d", i)
-		if a then
+		if phrase then
+			tinsert(out, wrap(colourOf(classes[phrase]), phrase))
+			i = pe + 1
+		elseif a then
 			local tok = string.sub(s, a, b)
 			tinsert(out, namesOnly and tok or wrap(COL.time, tok))
 			i = b + 1
@@ -135,7 +174,7 @@ local function colorize(s, classes, namesOnly)
 				if a then
 					local w = string.sub(s, a, b)
 					if classes[w] then
-						tinsert(out, wrap(hex(classes[w]), w))
+						tinsert(out, wrap(colourOf(classes[w]), w))
 					elseif RESULT_COL[w] and not namesOnly then
 						tinsert(out, wrap(RESULT_COL[w], w))
 					else

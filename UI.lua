@@ -902,7 +902,7 @@ postBoardBtn:SetScript("OnClick", function()
 	if UI.rk.boss then line = B:TopLine("kills", UI.rk.boss, realm, UI.rk.faction)
 	elseif UI.rk.view == "clears" then line = B:TopLine("clears", zone, realm, UI.rk.faction)
 	else line = B:StandingsLine(zone, realm) end
-	if line then W:Send({ line }, nil, {}) else W.Print("Nothing to post for this board yet.") end
+	if line then W:Send({ line }, nil, B:ChatColours()) else W.Print("Nothing to post for this board yet.") end
 end)
 local function banterTip(what)
 	return function()
