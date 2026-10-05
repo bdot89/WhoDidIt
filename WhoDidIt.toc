@@ -4,11 +4,14 @@
 ## Author: bdot1
 ## Version: 1.0.0
 ## SavedVariables: WhoDidItDB
+## OptionalDeps: ChronicleCompanion, TWThreat
 
 Core.lua
 Data.lua
 Tracker.lua
 Analyzer.lua
 Shoutout.lua
+Board.lua
+Logs.lua
 UI.lua
 Demo.lua

@@ -225,6 +225,9 @@ local DEFAULTS = {
 	shoutChannel = "RAID",  -- designated channel for reports & shout-outs ("#name" = custom channel)
 	autoShout   = "off",    -- off / smart (shame wipes, praise kills) / shame / praise / both
 	chatColors  = true,     -- colour names, times and numbers in posted messages
+	shareBoard  = true,     -- share guild kill/clear records with WhoDidIt users on the realm
+	chronStartOnPull = true,  -- start Chronicle logging when a boss is pulled
+	chronSaveOnFight = true,  -- save the Chronicle log after every boss fight
 }
 
 W:On("ADDON_LOADED", function(name)
@@ -269,6 +272,8 @@ function W:SaveFight(rec)
 		W.Print("Type |cffffd100/wdi|r for the full breakdown.")
 	end
 	W.Shout:Auto(rec)
+	W.Board:OnFight(rec)
+	W.Logs:OnFightEnd(rec)
 	if W.UI then W.UI:OnFightEnd() end
 end
 
@@ -307,6 +312,8 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi announce self|channel|off|r - post a summary after each fight (channel = the shout channel)")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi trash on|off|r - also track elite trash pulls")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi demo|r - add two sample fights to try every feature, " .. c .. "/wdi demo live|r - watch one play out live, " .. c .. "/wdi demo clear|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi start|r / " .. c .. "/wdi stop|r - manually track your target / end tracking")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi status|r, " .. c .. "/wdi clear|r")
@@ -388,6 +395,19 @@ local function slash(msg)
 	elseif cmd == "threat" then
 		db.opts.queryThreat = (rest ~= "off")
 		W.Print("Threat queries: " .. (db.opts.queryThreat and "on" or "off"))
+	elseif cmd == "rankings" or cmd == "ranks" then
+		W.UI:SetMode("rankings")
+	elseif cmd == "logs" then
+		W.UI:SetMode("logs")
+	elseif cmd == "log" then
+		if rest == "start" then W.Logs:Start()
+		elseif rest == "stop" then W.Logs:Stop()
+		elseif rest == "save" then W.Logs:Save()
+		else W.Print("Usage: /wdi log start|stop|save") end
+	elseif cmd == "share" then
+		db.opts.shareBoard = (rest ~= "off")
+		if db.opts.shareBoard then W.Board:Join() else W.Board:Leave() end
+		W.Print("Sharing kill times with WhoDidIt users on this realm: " .. (db.opts.shareBoard and "on" or "off"))
 	elseif cmd == "demo" or cmd == "test" then
 		W.Demo:Run(rest)
 	elseif cmd == "start" then

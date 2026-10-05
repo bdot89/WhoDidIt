@@ -591,6 +591,123 @@ local HINTS = {
 
 ------------------------------------------------------------------ data helpers
 
+------------------------------------------------------------------ modes: Fights / Rankings / Logs
+
+UI.mode = "fights"
+UI.rk = { view = "kills" }   -- rankings state: view, realm, faction, inst, boss
+
+local MODES = {
+	{ id = "fights",   text = "Fights"   },
+	{ id = "rankings", text = "Rankings" },
+	{ id = "logs",     text = "Logs"     },
+}
+UI.modeButtons = {}
+for i = 1, getn(MODES) do
+	local m = MODES[i]
+	local b = button(f, m.text, 78, 18)
+	b:SetPoint("LEFT", version, "RIGHT", 18 + (i - 1) * 82, 0)
+	b.id = m.id
+	b:SetScript("OnClick", function() UI:SetMode(this.id) end)
+	UI.modeButtons[i] = b
+end
+tooltip(UI.modeButtons[1], "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
+tooltip(UI.modeButtons[2], "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
+tooltip(UI.modeButtons[3], "Logs", { "Chronicle combat logging: start, stop, save, archive and delete the log you upload to chronicleclassic.com." })
+
+-- a row of buttons in the tab strip, used by Rankings and Logs
+local function stripButtons(defs)
+	local n = getn(defs)
+	local w = floor((RW - (n - 1) * 4) / n)
+	local list = {}
+	for i = 1, n do
+		local d = defs[i]
+		local b = button(f, d[1], w, TABH)
+		b:SetPoint("TOPLEFT", f, "TOPLEFT", RX + (i - 1) * (w + 4), TABY)
+		b:SetScript("OnClick", d[2])
+		if d[3] then tooltip(b, d[1], d[3]) end
+		b:Hide()
+		list[i] = b
+	end
+	return list
+end
+
+local function cycleList(list, cur)
+	for i = 1, getn(list) do
+		if list[i] == cur then return list[i + 1] or list[1] end
+	end
+	return list[1]
+end
+
+UI.rankButtons = stripButtons({
+	{ "Kill times", function() UI.rk.view = "kills"; UI.rk.boss = nil; UI:Refresh() end,
+	  { "Best kill time on every boss: you, your guild and the realm." } },
+	{ "Full clears", function() UI.rk.view = "clears"; UI.rk.boss = nil; UI:Refresh() end,
+	  { "Fastest full clear of the instance: first combat inside to the last boss.", "Optional bosses aren't required." } },
+	{ "Realm", function()
+		UI.rk.realm = cycleList(W.Board:Realms(), UI.rk.realm or W.Board.Realm())
+		UI.rk.boss = nil
+		UI:Refresh()
+	  end, { "Cycle through realms you have data for (your current realm first)." } },
+	{ "Faction", function()
+		local mine = W.Board.Faction()
+		local other = (mine == "Horde") and "Alliance" or "Horde"
+		UI.rk.faction = cycleList({ mine, "All", other }, UI.rk.faction or mine)
+		UI:Refresh()
+	  end, { "Your faction first, then everyone, then the other faction." } },
+	{ "Sharing", function()
+		WhoDidItDB.opts.shareBoard = not WhoDidItDB.opts.shareBoard
+		if WhoDidItDB.opts.shareBoard then W.Board:Join() else W.Board:Leave() end
+		UI:Refresh()
+	  end, { "Share your guild's records with WhoDidIt users on this realm (and receive theirs).",
+	         "Uses a hidden chat channel; records are self-reported." } },
+	{ "Ask for times", function()
+		if UI.rk.asked and GetTime() - UI.rk.asked < 60 then W.Print("Already asked - give people a minute to answer.") return end
+		UI.rk.asked = GetTime()
+		W.Board:Ask()
+		W.Print("Asked WhoDidIt users on " .. W.Board.Realm() .. " for their guild's times.")
+	  end, { "Ask everyone online with WhoDidIt for their guild's best times right now." } },
+})
+
+UI.logButtons = stripButtons({
+	{ "Start logging", function()
+		if W.Logs:Enabled() then W.Logs:Stop() else W.Logs:Start() end
+		UI:Refresh()
+	  end, { "Start Chronicle combat logging, or stop it and save everything to the log file." } },
+	{ "Save now", function() W.Logs:Save(); UI:Refresh() end,
+	  { "Write everything logged so far to the log file (logging keeps going)." } },
+	{ "Archive log", function() W.Logs:Archive(); UI:Refresh() end,
+	  { "Save, then move the current log to a backup file and start a fresh one.", "Do this between raid lockouts." } },
+	{ "|cffff5555Delete log|r", function() W.Logs:Delete() end,
+	  { "Delete the current log file and anything unsaved (Chronicle asks first)." } },
+})
+
+-- show the controls that belong to the current mode
+function UI:ApplyMode()
+	local fights = (UI.mode == "fights")
+	local function vis(b, on) if on then b:Show() else b:Hide() end end
+	for i = 1, getn(UI.modeButtons) do
+		local b = UI.modeButtons[i]
+		if b.id == UI.mode then b:LockHighlight() else b:UnlockHighlight() end
+	end
+	for i = 1, getn(UI.tabButtons) do vis(UI.tabButtons[i], fights) end
+	for i = 1, getn(UI.rankButtons) do vis(UI.rankButtons[i], UI.mode == "rankings") end
+	for i = 1, getn(UI.logButtons) do vis(UI.logButtons[i], UI.mode == "logs") end
+	local fightOnly = { shameBtn, praiseBtn, chanBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
+	for i = 1, getn(fightOnly) do vis(fightOnly[i], fights) end
+	if not fights then
+		for i = 1, getn(UI.meterButtons) do UI.meterButtons[i]:Hide() end
+		for _, list in pairs(UI.actionButtons) do
+			for i = 1, getn(list) do list[i]:Hide() end
+		end
+	end
+end
+
+function UI:SetMode(mode)
+	UI.mode = mode
+	UI.rk.boss = nil
+	UI:Open()
+end
+
 function UI:Current()
 	if UI.selIdx == 0 then
 		if W.Tracker.fight then
@@ -1157,6 +1274,310 @@ end
 
 ------------------------------------------------------------------ refresh
 
+------------------------------------------------------------------ Rankings view
+
+local lastModeKey
+local FAC_COL = { Alliance = "|cff3399ff", Horde = "|cffff4444" }
+
+local function facTag(fac)
+	return (FAC_COL[fac] or "|cffaaaaaa") .. (fac == "Alliance" and "A" or (fac == "Horde" and "H" or "?")) .. "|r"
+end
+local function rkRealm() return UI.rk.realm or W.Board.Realm() end
+local function rkFaction() return UI.rk.faction or W.Board.Faction() end
+local function instTitle(zone) return W.Data.instanceTitle[zone] or zone end
+
+-- an instance's encounters: the clear list first, then optional ones
+local function instBosses(zone)
+	local list, have = {}, {}
+	local need = W.Data.clears[zone] or {}
+	for i = 1, getn(need) do
+		tinsert(list, need[i])
+		have[need[i]] = true
+	end
+	local extra = {}
+	for enc, def in pairs(W.Data.encounters) do
+		if def.zone == zone and not have[enc] then tinsert(extra, enc) end
+	end
+	table.sort(extra)
+	for i = 1, getn(extra) do tinsert(list, extra[i]) end
+	return list
+end
+
+-- the ranked leaderboard for one boss or one instance's clears
+local function boardRows(rows, realm, faction, kind, key, myGuild)
+	local B = W.Board
+	local list = B:Board(realm, kind, key, faction)
+	if getn(list) == 0 then
+		tinsert(rows, row("|cff888888No times yet. They show up as soon as you - or any WhoDidIt user on " .. realm .. " - gets one.|r"))
+		return
+	end
+	local best = list[1][2].t
+	for i = 1, getn(list) do
+		local g, rec = list[i][1], list[i][2]
+		local mine = (g == myGuild)
+		local horde = (rec.f == "Horde")
+		tinsert(rows, row(
+			string.format("%d. ", i) .. facTag(rec.f) .. "  " .. (mine and ("|cffffd100" .. g .. "|r") or g)
+				.. "  |cff888888" .. B.Date(rec.d) .. ((rec.n and rec.n > 0) and (", " .. rec.n .. " players") or "") .. "|r",
+			"|cffffffff" .. B.Fmt(rec.t) .. "|r" .. ((i > 1) and ("  |cff888888+" .. B.Fmt(rec.t - best) .. "|r") or ""),
+			{ sel = mine, bar = best / rec.t, cr = horde and 0.85 or 0.2, cg = horde and 0.2 or 0.5, cb = horde and 0.2 or 1,
+			  tip = { "Recorded " .. B.Date(rec.d) .. (rec.by and (" by " .. rec.by) or ""),
+			          rec.net and "Shared by a WhoDidIt user (self-reported)" or "Recorded by your WhoDidIt" } }))
+	end
+end
+
+function UI:RankNavRows(realm)
+	local B = W.Board
+	local rows = {}
+	local guild, pb = B.MyGuild(), B:PB()
+	local run = B:CurrentRun()
+	local clears = B:DB(realm).clears
+	for i = 1, getn(W.Data.clearOrder) do
+		local zone = W.Data.clearOrder[i]
+		local mine = pb.clears[zone]
+		local g = guild and clears[zone] and clears[zone][guild]
+		local right = ""
+		if run and run.zone == zone then
+			right = "|cff33ccffrun|r"
+		elseif g then
+			right = "#" .. (B:Rank(realm, "clears", zone, guild, "All") or "?")
+		end
+		tinsert(rows, row(
+			instTitle(zone) .. "\n|cff888888you " .. (mine and B.Fmt(mine.t) or "-") .. "   guild " .. (g and B.Fmt(g.t) or "-") .. "|r",
+			right,
+			{ sel = (UI.rk.inst == zone), click = function() UI.rk.inst = zone; UI.rk.boss = nil; UI:Refresh() end }))
+	end
+	return rows
+end
+
+function UI:RankKillRows(realm, faction, zone)
+	local B = W.Board
+	local rows = {}
+	local guild, pb = B.MyGuild(), B:PB()
+	local kills = B:DB(realm).kills
+	head(rows, "Boss kill times  |cff888888(click a boss for its full leaderboard)|r")
+	local bosses = instBosses(zone)
+	for i = 1, getn(bosses) do
+		local enc = bosses[i]
+		local top = B:Board(realm, "kills", enc, faction)[1]
+		local mine = pb.kills[enc]
+		local g = guild and kills[enc] and kills[enc][guild]
+		local rank = g and B:Rank(realm, "kills", enc, guild, faction)
+		tinsert(rows, row(enc,
+			"|cff66ccffyou|r " .. (mine and B.Fmt(mine.t) or "-")
+				.. "    |cff33ff33guild|r " .. (g and (B.Fmt(g.t) .. (rank and (" #" .. rank) or "")) or "-")
+				.. "    |cffffd100best|r " .. (top and (B.Fmt(top[2].t) .. " " .. top[1]) or "-"),
+			{ click = function() UI.rk.boss = enc; UI:Refresh() end,
+			  tip = { "you = your personal best, guild = your guild's best and rank,", "best = the fastest guild on " .. realm .. " (" .. faction .. ")", "Click for the full leaderboard." },
+			  tipTitle = enc }))
+	end
+	return rows
+end
+
+function UI:RankBossRows(realm, faction, enc)
+	local B = W.Board
+	local rows = {}
+	local guild, pb = B.MyGuild(), B:PB()
+	tinsert(rows, row("|cffffd100<< Back to all bosses|r", nil, { head = true, click = function() UI.rk.boss = nil; UI:Refresh() end }))
+	head(rows, enc .. " on " .. realm .. "  |cff888888(" .. faction .. ")|r")
+	local mine = pb.kills[enc]
+	tinsert(rows, row("|cff66ccffYour best kill|r", mine and ("|cffffffff" .. B.Fmt(mine.t) .. "|r  |cff888888" .. B.Date(mine.d) .. "|r") or "|cff888888none yet|r"))
+	if guild then
+		local g = B:DB(realm).kills[enc]
+		g = g and g[guild]
+		local rank, of = B:Rank(realm, "kills", enc, guild, faction)
+		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  #" .. (rank or "?") .. " of " .. of) or "|cff888888no kill yet|r"))
+	end
+	head(rows, "Leaderboard")
+	boardRows(rows, realm, faction, "kills", enc, guild)
+	return rows
+end
+
+function UI:RankClearRows(realm, faction, zone)
+	local B = W.Board
+	local rows = {}
+	local guild, pb = B.MyGuild(), B:PB()
+	local need = W.Data.clears[zone] or {}
+	head(rows, "Full clears of " .. instTitle(zone))
+	local mine = pb.clears[zone]
+	tinsert(rows, row("|cff66ccffYour best clear|r", mine and ("|cffffffff" .. B.Fmt(mine.t) .. "|r  |cff888888" .. B.Date(mine.d) .. "|r") or "|cff888888none yet|r"))
+	if guild then
+		local g = B:DB(realm).clears[zone]
+		g = g and g[guild]
+		local rank, of = B:Rank(realm, "clears", zone, guild, faction)
+		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  #" .. (rank or "?") .. " of " .. of) or "|cff888888no clear yet|r"))
+	end
+	local run = B:CurrentRun()
+	if run and run.zone == zone then
+		local done = 0
+		for i = 1, getn(need) do if run.kills[need[i]] then done = done + 1 end end
+		tinsert(rows, row("|cff33ccffRun in progress|r  " .. done .. " / " .. getn(need) .. " bosses", "|cffffffff" .. B.Fmt(time() - run.start) .. "|r so far"))
+	end
+	head(rows, "Leaderboard")
+	boardRows(rows, realm, faction, "clears", zone, guild)
+	head(rows, "Counts as a full clear")
+	local parts = {}
+	for i = 1, getn(need) do
+		local killed = run and run.zone == zone and run.kills[need[i]]
+		tinsert(parts, (killed and "|cff33ff33" or "|cffaaaaaa") .. need[i] .. "|r")
+	end
+	local line = {}
+	for i = 1, getn(parts) do
+		tinsert(line, parts[i])
+		if getn(line) == 4 or i == getn(parts) then
+			tinsert(rows, row(table.concat(line, ", ")))
+			line = {}
+		end
+	end
+	return rows
+end
+
+function UI:RefreshRankings()
+	local B = W.Board
+	local realm, faction = rkRealm(), rkFaction()
+	if not UI.rk.inst then
+		local z = GetRealZoneText()
+		UI.rk.inst = W.Data.clears[z] and z or W.Data.clearOrder[1]
+	end
+	local zone = UI.rk.inst
+	leftHead:SetText("Instances")
+	leftCount:SetText(realm)
+	fightList:SetData(UI:RankNavRows(realm), true)
+
+	UI.rankButtons[3]:SetText("Realm: " .. realm)
+	UI.rankButtons[4]:SetText("Faction: " .. faction)
+	UI.rankButtons[5]:SetText("Sharing: " .. (WhoDidItDB.opts.shareBoard and "|cff33ff33on|r" or "|cffff5555off|r"))
+	if UI.rk.view == "kills" then
+		UI.rankButtons[1]:LockHighlight(); UI.rankButtons[2]:UnlockHighlight()
+	else
+		UI.rankButtons[2]:LockHighlight(); UI.rankButtons[1]:UnlockHighlight()
+	end
+
+	local guilds = {}
+	local r = B:DB(realm)
+	for g in pairs(r.clears[zone] or {}) do guilds[g] = true end
+	local bosses = instBosses(zone)
+	for i = 1, getn(bosses) do
+		for g in pairs(r.kills[bosses[i]] or {}) do guilds[g] = true end
+	end
+	local ng = 0
+	for _ in pairs(guilds) do ng = ng + 1 end
+
+	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. (UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
+	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. ng .. " guild(s) with times   |   sharing "
+		.. (WhoDidItDB.opts.shareBoard and "on" or "off") .. "|r")
+	local guild = B.MyGuild()
+	local verdict
+	if guild then
+		local g = r.clears[zone] and r.clears[zone][guild]
+		if g then
+			local rank, of = B:Rank(realm, "clears", zone, guild, "All")
+			verdict = "|cff33ff33" .. guild .. "|r best clear |cffffffff" .. B.Fmt(g.t) .. "|r - #" .. rank .. " of " .. of .. " on " .. realm
+		else
+			verdict = "|cff33ff33" .. guild .. "|r has no full clear recorded here yet."
+		end
+	else
+		verdict = "You're not in a guild - your own times still count as personal bests."
+	end
+	local pbc = B:PB().clears[zone]
+	verdict = verdict .. "\n|cff66ccffYour best clear:|r " .. (pbc and B.Fmt(pbc.t) or "none yet")
+	rVerdict:SetText(verdict)
+
+	local rows
+	if UI.rk.boss then rows = UI:RankBossRows(realm, faction, UI.rk.boss)
+	elseif UI.rk.view == "kills" then rows = UI:RankKillRows(realm, faction, zone)
+	else rows = UI:RankClearRows(realm, faction, zone) end
+
+	hintText:SetText("Kills: pull to kill.  Clears: first combat inside to the last boss.  Shared times are self-reported.")
+	hintText:Show()
+	local key = "rk" .. realm .. faction .. zone .. UI.rk.view .. tostring(UI.rk.boss)
+	mainList:SetData(rows, key == lastModeKey)
+	lastModeKey = key
+end
+
+------------------------------------------------------------------ Logs view
+
+local function onOff(v) return v and "|cff33ff33on|r" or "|cff888888off|r" end
+
+function UI:LogNavRows()
+	local rows = {}
+	local hist = W.Logs.history
+	if getn(hist) == 0 then
+		tinsert(rows, row("|cff888888Nothing saved yet\nthis session.|r"))
+	end
+	for i = 1, math.min(12, getn(hist)) do
+		local h = hist[i]
+		tinsert(rows, row(h[3] .. "\n|cff888888" .. h[1] .. "|r", "|cffffffff" .. FmtNum(h[2]) .. "|r lines"))
+	end
+	return rows
+end
+
+function UI:LogRows()
+	local L = W.Logs
+	local rows = {}
+	if not L:Available() then
+		head(rows, "ChronicleCompanion isn't loaded")
+		tinsert(rows, row("WhoDidIt drives the |cffffd100ChronicleCompanion|r addon, which writes the logs you upload to chronicleclassic.com."))
+		tinsert(rows, row("Install it in Interface/AddOns (it needs Nampower for file access), then /reload."))
+		return rows
+	end
+	local opts = WhoDidItDB.opts
+	local file = L:File() or "?"
+	head(rows, "Status")
+	tinsert(rows, row("Chronicle logging", L:Enabled() and "|cff33ff33ON|r" or "|cffff5555OFF|r"))
+	tinsert(rows, row("Log file", "|cffffffffWoW folder\\CustomData\\" .. file .. "|r"))
+	tinsert(rows, row("Lines logged but not saved yet", "|cffffffff" .. FmtNum(L:Unsaved()) .. "|r"))
+	tinsert(rows, row("Saved by WhoDidIt this session",
+		"|cffffffff" .. FmtNum(L.savedLines) .. "|r lines" .. (L.lastSave and ("  |cff888888last " .. L.lastSave .. "|r") or "")))
+	tinsert(rows, row("File access (Nampower)", WriteCustomFile and "|cff33ff33ok|r" or "|cffff5555missing - logs can't be written|r"))
+
+	head(rows, "Automatic logging  |cff888888(click to switch on / off)|r")
+	local function toggle(label, value, fn, tip)
+		tinsert(rows, row(label, onOff(value), { click = function() fn(); UI:Refresh() end, tip = { tip }, tipTitle = label }))
+	end
+	toggle("Start logging when I enter a raid", L:Setting("autoEnableInRaid"),
+		function() L:ToggleSetting("autoEnableInRaid") end, "Chronicle setting.")
+	toggle("Start logging when I enter a dungeon", L:Setting("autoEnableInDungeon"),
+		function() L:ToggleSetting("autoEnableInDungeon") end, "Chronicle setting.")
+	toggle("Save after every combat", L:Setting("autoCombatSave"),
+		function() L:ToggleSetting("autoCombatSave") end, "Chronicle setting: writes the log to disk whenever you leave combat.")
+	toggle("Start logging when a boss is pulled", opts.chronStartOnPull,
+		function() opts.chronStartOnPull = not opts.chronStartOnPull end, "WhoDidIt: a safety net in case logging was off when the boss was pulled.")
+	toggle("Save after every boss fight", opts.chronSaveOnFight,
+		function() opts.chronSaveOnFight = not opts.chronSaveOnFight end, "WhoDidIt: writes the log to disk after every kill or wipe.")
+	toggle("One log file per realm", L:Setting("includeRealmInFilename"),
+		function() L:ToggleSetting("includeRealmInFilename") end, "Chronicle setting: adds the realm to the file name.")
+
+	head(rows, "Uploading to Chronicle")
+	tinsert(rows, row("1.  After the raid click |cffffd100Stop & save|r (or |cffffd100Save now|r)."))
+	tinsert(rows, row("2.  Open |cffffd100chronicleclassic.com|r and click |cffffd100Upload|r."))
+	tinsert(rows, row("3.  Choose |cffffffffWoW folder\\CustomData\\" .. file .. "|r."))
+	tinsert(rows, row("4.  Before your next lockout, |cffffd100Archive log|r or |cffffd100Delete log|r so raids don't mix."))
+	tinsert(rows, row("|cff888888Addons can't reach the internet, so the upload itself is done on the website.|r"))
+	return rows
+end
+
+function UI:RefreshLogs()
+	local L = W.Logs
+	leftHead:SetText("Saved this session")
+	leftCount:SetText("")
+	fightList:SetData(UI:LogNavRows(), true)
+	UI.logButtons[1]:SetText(L:Enabled() and "|cffff5555Stop & save|r" or "|cff33ff33Start logging|r")
+	if L:Available() then
+		rTitle:SetText("Chronicle logs  " .. (L:Enabled() and "|cff33ff33LOGGING|r" or "|cffff5555OFF|r"))
+		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. FmtNum(L:Unsaved()) .. " unsaved lines|r")
+	else
+		rTitle:SetText("Chronicle logs  |cffff5555not found|r")
+		rInfo:SetText("|cffaaaaaaChronicleCompanion addon not loaded|r")
+	end
+	rVerdict:SetText("Upload the log at |cffffd100chronicleclassic.com|r after your raid.\n|cff888888Addons can't reach the internet, so uploading happens on the website.|r")
+	hintText:SetText("Click an option to switch it on or off.  Hover the buttons for details.")
+	hintText:Show()
+	local key = "logs"
+	mainList:SetData(UI:LogRows(), key == lastModeKey)
+	lastModeKey = key
+end
+
 local lastTab
 function UI:Refresh()
 	if not f:IsVisible() then return end
@@ -1165,6 +1586,12 @@ function UI:Refresh()
 	local e = W.env
 	local function yn(v, n) return (v and "|cff33ff33" or "|cffff3333") .. n .. "|r" end
 	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat"))
+
+	UI:ApplyMode()
+	if UI.mode == "rankings" then return UI:RefreshRankings() end
+	if UI.mode == "logs" then return UI:RefreshLogs() end
+	lastModeKey = nil
+	leftHead:SetText("Encounters")
 
 	trashBtn:SetText("Trash: " .. (db.opts.trackTrash and "on" or "off"))
 	local ann = db.opts.announce
@@ -1299,7 +1726,9 @@ f:SetScript("OnShow", function() UI:Refresh() end)
 -- live view: rebuild the in-progress report every 1.5s while it's on screen
 W:Every(1.5, function()
 	if not f:IsVisible() then return end
-	if W.Tracker.fight then
+	if UI.mode == "logs" then
+		UI:Refresh()   -- unsaved line count
+	elseif UI.mode == "fights" and W.Tracker.fight then
 		if UI.selIdx == 0 then UI.liveRec = W.Analyzer:Build(W.Tracker.fight, false) end
 		UI:Refresh()
 	end

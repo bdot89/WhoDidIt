@@ -107,6 +107,49 @@ for enc, def in pairs(D.encounters) do
 	for i = 1, table.getn(list) do D.bosses[list[i]] = enc end
 end
 
+------------------------------------------------------------------ full clears (Rankings)
+-- An instance counts as cleared when every encounter in its list has died
+-- in one run (first combat in the instance -> last required kill).
+-- Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro)
+-- aren't required.
+
+D.clearOrder = {
+	"Molten Core", "Onyxia's Lair", "Blackwing Lair", "Zul'Gurub",
+	"Ruins of Ahn'Qiraj", "Ahn'Qiraj", "Naxxramas", "Emerald Sanctum",
+}
+
+D.clears = {
+	["Molten Core"] = {
+		"Lucifron", "Magmadar", "Gehennas", "Garr", "Shazzrah", "Baron Geddon",
+		"Golemagg the Incinerator", "Sulfuron Harbinger", "Majordomo Executus", "Ragnaros",
+	},
+	["Onyxia's Lair"] = { "Onyxia" },
+	["Blackwing Lair"] = {
+		"Razorgore the Untamed", "Vaelastrasz the Corrupt", "Broodlord Lashlayer", "Firemaw",
+		"Ebonroc", "Flamegor", "Chromaggus", "Nefarian",
+	},
+	["Zul'Gurub"] = {
+		"High Priestess Jeklik", "High Priest Venoxis", "High Priestess Mar'li", "Bloodlord Mandokir",
+		"High Priest Thekal", "High Priestess Arlokk", "Jin'do the Hexxer", "Hakkar",
+	},
+	["Ruins of Ahn'Qiraj"] = {
+		"Kurinnaxx", "General Rajaxx", "Moam", "Buru the Gorger", "Ayamiss the Hunter", "Ossirian the Unscarred",
+	},
+	["Ahn'Qiraj"] = {
+		"The Prophet Skeram", "Battleguard Sartura", "Fankriss the Unyielding", "Princess Huhuran",
+		"Twin Emperors", "C'Thun",
+	},
+	["Naxxramas"] = {
+		"Anub'Rekhan", "Grand Widow Faerlina", "Maexxna", "Noth the Plaguebringer", "Heigan the Unclean",
+		"Loatheb", "Instructor Razuvious", "Gothik the Harvester", "The Four Horsemen", "Patchwerk",
+		"Grobbulus", "Gluth", "Thaddius", "Sapphiron", "Kel'Thuzad",
+	},
+	["Emerald Sanctum"] = { "Erennius", "Solnius" },
+}
+
+-- Rankings list name for instances whose zone text is short
+D.instanceTitle = { ["Ahn'Qiraj"] = "Temple of Ahn'Qiraj" }
+
 ------------------------------------------------------------------ avoidable damage
 -- Damage from these (cast by an enemy) is the victim's fault.
 -- notTank = tanks are expected to take it. w = blame weight per instance.

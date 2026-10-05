@@ -105,6 +105,29 @@ Every player name in the window (blame board, Heroes, Meters, Consumes) works th
 | **Alt-click** | Big them up |
 | **Right-click** | Mark / unmark as a tank |
 
+## Rankings
+
+The **Rankings** button (title bar, or `/wdi rankings`) shows kill times and full clears for every raid:
+
+- **Kill times:** your personal best, your guild's best and rank, and the fastest guild on the realm for every boss. Click a boss for its full leaderboard.
+- **Full clears:** first combat inside the instance to the last required boss, all in one run. Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro) aren't required. A run in progress shows which bosses are down.
+- **Closest to you first:** it opens on your current instance, realm and faction, with your own and your guild's times pinned at the top. **Realm** and **Faction** switch the view.
+- **Every guild on your realm:** each guild's best times are shared with other WhoDidIt users over a hidden realm channel (`WDIBoard`). So the board fills up with every guild that has at least one WhoDidIt user. **Sharing** turns it off (`/wdi share off`). Shared times are self-reported: they're sanity-checked but can't be verified.
+
+A kill or clear counts for the raid's majority guild (at least half the raid). Personal bests are kept per character.
+
+> Chronicle's own rankings can't be shown in game: addons have no internet access, and Chronicle's API only accepts requests from its own website.
+
+## Chronicle logs
+
+The **Logs** button (or `/wdi logs`) controls the [ChronicleCompanion](https://chronicleclassic.com) addon, which writes the combat logs you upload to chronicleclassic.com:
+
+- **Start logging / Stop & save**, **Save now**, **Archive log** (between lockouts) and **Delete log**
+- Chronicle's auto-logging settings (raids, dungeons, save after combat, one file per realm)
+- WhoDidIt extras: **start logging when a boss is pulled** and **save after every boss fight**
+- Live status: logging on/off, the log file, unsaved lines, and what was saved this session
+- Step-by-step upload instructions. The upload itself is done on the website.
+
 ## Shout-outs
 
 <table>
@@ -212,6 +235,10 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 
 ```
 /wdi                       open / close the window
+/wdi rankings              kill times & full clears
+/wdi share on|off          share your guild's times with WhoDidIt users on the realm
+/wdi logs                  Chronicle log controls
+/wdi log start|stop|save   control Chronicle logging
 /wdi demo                  add two sample fights (a wipe and a kill)
 /wdi demo live             watch the wipe play out live at 4x speed
 /wdi demo clear            remove demo fights
