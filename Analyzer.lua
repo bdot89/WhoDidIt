@@ -1017,10 +1017,8 @@ end
 
 function A:ReportLines(rec, n)
 	local out = {}
-	local function add(s)
-		if string.len(s) > 250 then s = string.sub(s, 1, 247) .. "..." end
-		tinsert(out, s)
-	end
+	-- long lines are split into several messages (with colours) when sent
+	local function add(s) tinsert(out, s) end
 	add(A.ChatHeader("REPORT", rec))
 	add("Verdict: " .. (rec.verdict or ""))
 	local c = 0
@@ -1038,7 +1036,7 @@ function A:ReportLines(rec, n)
 			tinsert(parts, i .. ". " .. b.name .. " " .. b.pts .. "pt (" .. why .. ")")
 		end
 	end
-	if getn(parts) > 0 then add("Blame: " .. table.concat(parts, "  ")) end
+	if getn(parts) > 0 then add("Blame: " .. table.concat(parts, "; ")) end
 	local h = rec.heroes and rec.heroes[1]
 	if h and h.pts >= 2 then
 		add("Hero: " .. h.name .. " " .. h.pts .. "pt (" .. (string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")) .. ")")

@@ -68,7 +68,6 @@ local function clean(s)
 	s = string.gsub(s or "", "|c%x%x%x%x%x%x%x%x", "")
 	s = string.gsub(s, "|r", "")
 	s = string.gsub(s, "|", "/")
-	if string.len(s) > 250 then s = string.sub(s, 1, 247) .. "..." end
 	return s
 end
 
@@ -149,14 +148,49 @@ local function colorize(s, classes, namesOnly)
 	return table.concat(out)
 end
 
--- best coloured version that still fits in one chat message
-local function colored(plain, classes)
-	if not classes then return nil end
-	local c = colorize(plain, classes)
-	if string.len(c) <= 255 then return c end
-	c = colorize(plain, classes, true)
-	if string.len(c) <= 255 then return c end
-	return nil
+-- splits s near position max at the last "; ", ", " or " " before it
+local SEPS = { "; ", ", ", " " }
+local function splitAt(s, max)
+	for i = 1, getn(SEPS) do
+		local sep = SEPS[i]
+		local last
+		local pos = 1
+		while true do
+			local a = string.find(s, sep, pos, true)
+			if not a or a > max then break end
+			last = a
+			pos = a + 1
+		end
+		if last and last > max * 0.4 then
+			return string.sub(s, 1, last - 1), string.sub(s, last + string.len(sep))
+		end
+	end
+	return string.sub(s, 1, max), string.sub(s, max + 1)
+end
+
+-- One plain line -> one or more chat messages { coloured, plain }. A line
+-- that's too long once coloured is split in two (recursively) instead of
+-- losing its colours or being cut off. Chat messages max out at 255 bytes.
+local function render(plain, classes, out)
+	if classes then
+		local c = colorize(plain, classes)
+		if string.len(c) <= 255 then
+			tinsert(out, { c, plain })
+			return
+		end
+	elseif string.len(plain) <= 255 then
+		tinsert(out, { nil, plain })
+		return
+	end
+	if string.len(plain) > 50 then
+		local head, tail = splitAt(plain, math.floor(string.len(plain) * 0.55))
+		render(head, classes, out)
+		render("   " .. tail, classes, out)
+		return
+	end
+	-- short but still too long coloured: names only, else plain
+	local c = colorize(plain, classes, true)
+	tinsert(out, { (string.len(c) <= 255) and c or nil, plain })
 end
 
 -- name -> class for a fight report (used to colour names)
@@ -197,12 +231,15 @@ function W:Send(lines, channel, classes)
 	if (kind == "GUILD" or kind == "OFFICER") and not IsInGuild() then kind = "SELF" end
 
 	for i = 1, getn(lines) do
-		local plain = clean(lines[i])
-		local col = colored(plain, classes)
-		if kind == "SELF" then
-			W.Print(col or plain)
-		else
-			tinsert(queue, { col, plain, kind, target })
+		local pieces = {}
+		render(clean(lines[i]), classes, pieces)
+		for j = 1, getn(pieces) do
+			local col, plain = pieces[j][1], pieces[j][2]
+			if kind == "SELF" then
+				W.Print(col or plain)
+			else
+				tinsert(queue, { col, plain, kind, target })
+			end
 		end
 	end
 end
