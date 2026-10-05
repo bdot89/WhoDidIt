@@ -132,10 +132,12 @@ function Get-Faction($players) {
             if ($Alliance -contains $race) { $a++ } elseif ($Horde -contains $race) { $h++ }
         }
     }
-    $n = $a + $h
-    if ($n -eq 0) { return "Unknown" }
-    if ($a / $n -ge 0.75) { return "Alliance" }
-    if ($h / $n -ge 0.75) { return "Horde" }
+    # Mixed when 2+ players of each faction raided together; one odd player
+    # (a log glitch) doesn't flip a raid
+    if ($a + $h -eq 0) { return "Unknown" }
+    if ($a -ge 2 -and $h -ge 2) { return "Mixed" }
+    if ($a -gt $h) { return "Alliance" }
+    if ($h -gt $a) { return "Horde" }
     return "Mixed"
 }
 
@@ -180,10 +182,11 @@ function Save-Cache($cache) {
 # faction + your characters for one raid (roster only: ~4 KB), cached
 function Get-Attendance($id, $realm, $cache) {
     if (-not $id) { return $null }
-    if ($cache.att.ContainsKey($id)) { return $cache.att[$id] }
+    # fv 3 = faction worked out with the current rule (older entries are read again once)
+    if ($cache.att.ContainsKey($id) -and [int]$cache.att[$id].fv -ge 3) { return $cache.att[$id] }
     $i = Get-Api ("/raidlogs/instances/" + $id + "?attendance_only=true")
     if (-not $i) { return $null }
-    $a = @{ faction = (Get-Faction $i.players); mine = (Get-Mine $realm $i.players) }
+    $a = @{ faction = (Get-Faction $i.players); mine = (Get-Mine $realm $i.players); fv = 3 }
     $cache.att[$id] = $a
     return $a
 }
@@ -359,7 +362,7 @@ function Sync {
             instance = $a.name; realm = $a.realmName; slug = $a.slug;
             guild = $a.guild.name; guildId = $a.guild.id; players = $a.player_count;
             faction = (Get-Faction $inst.players); mine = (Get-Mine $a.realmName $inst.players);
-            ended = (To-Epoch $a.ended_at); kills = (Read-LogKills $inst); v = 2
+            ended = (To-Epoch $a.ended_at); kills = (Read-LogKills $inst); v = 3
         }
         if ($done % 25 -eq 0 -or $done -eq $todo.Count) {
             Save-Cache $cache
@@ -373,9 +376,9 @@ function Sync {
     #     existed, and best clears older than the look-back, are fetched here, -DetailsPerSync at a time.
     $best = Get-BestKills $cache
     $need = [ordered]@{}
-    foreach ($b in $best.Values) { if (-not $cache.logs[$b.id].v) { $need[$b.id] = $null } }
+    foreach ($b in $best.Values) { if ([int]$cache.logs[$b.id].v -lt 3) { $need[$b.id] = $null } }   # v 3 = detail + current faction rule
     foreach ($c in $clears.Values) {
-        if ($c.id -and (-not $cache.logs.ContainsKey([string]$c.id) -or -not $cache.logs[[string]$c.id].v)) { $need[[string]$c.id] = $c }
+        if ($c.id -and (-not $cache.logs.ContainsKey([string]$c.id) -or [int]$cache.logs[[string]$c.id].v -lt 3)) { $need[[string]$c.id] = $c }
     }
     $left = $need.Count
     if ($left -gt 0) { Log "Raid details to read for the boards: $left (up to $DetailsPerSync now, the rest on later syncs)" }
@@ -389,11 +392,11 @@ function Sync {
         $c = $need[$id]
         if ($old) {
             $cache.logs[$id] = @{ instance = $old.instance; realm = $old.realm; slug = $old.slug; guild = $old.guild; guildId = $old.guildId;
-                players = $old.players; faction = $old.faction; mine = @($old.mine); ended = $old.ended; kills = (Read-LogKills $inst); v = 2 }
+                players = $old.players; faction = (Get-Faction $inst.players); mine = @($old.mine); ended = $old.ended; kills = (Read-LogKills $inst); v = 3 }
         } elseif ($c) {
             $cache.logs[$id] = @{ instance = $c.instance; realm = $c.realm; slug = $c.slug; guild = $c.guild; guildId = $c.guildId;
-                players = $c.players; faction = $c.faction; mine = (Get-Mine $c.realm $inst.players); ended = $c.ended;
-                kills = (Read-LogKills $inst); v = 2 }
+                players = $c.players; faction = (Get-Faction $inst.players); mine = (Get-Mine $c.realm $inst.players); ended = $c.ended;
+                kills = (Read-LogKills $inst); v = 3 }
         }
         if ($n % 25 -eq 0) { Save-Cache $cache; Log "Raid details: $n / $([math]::Min($DetailsPerSync, $left))" }
     }
