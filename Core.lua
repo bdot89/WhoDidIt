@@ -322,6 +322,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi banter kills|clears [on|off]|r - fun kill / clear time announcements,  " .. c .. "/wdi banter test|r - preview one")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi loot|r - master looting with RollFor (built in): soft-res, rolls, winners and a step-by-step guide")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi marks|r - auto marking: saved packs and quick save,  " .. c .. "/wdi mark|r - mark the pack under your mouse,  " .. c .. "/wdi marks help|r - all marking commands")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi demo|r - add two sample fights to try every feature, " .. c .. "/wdi demo live|r - watch one play out live, " .. c .. "/wdi demo clear|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi start|r / " .. c .. "/wdi stop|r - manually track your target / end tracking")
@@ -417,6 +418,9 @@ local function slash(msg)
 		else
 			W.Print("Usage: /wdi banter kills|clears [on|off]  or  /wdi banter test")
 		end
+	elseif cmd == "loot" or cmd == "ml" then
+		if not W.Loot then W.Print(W.RESTART_MSG) return end
+		W.UI:SetMode("loot")
 	elseif (cmd == "marks" or cmd == "mark") and not W.Marks then
 		W.Print(W.RESTART_MSG)
 	elseif cmd == "marks" then

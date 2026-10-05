@@ -1,11 +1,11 @@
 ## Interface: 11200
 ## Title: |cffff5555Who|cffffd100DidIt|r
-## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. Includes the Chronicle logger and an auto marker. /whodidit
+## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. Includes the Chronicle logger, an auto marker and RollFor for master looting. /whodidit
 ## Author: bdot1
-## Version: 1.2.0
-## SavedVariables: WhoDidItDB, ChronicleCompanionDB
-## SavedVariablesPerCharacter: ChronicleCompanionCharDB
-## OptionalDeps: ChronicleCompanion, AutoMarker, TWThreat
+## Version: 1.3.0
+## SavedVariables: WhoDidItDB, ChronicleCompanionDB, RollForDb
+## SavedVariablesPerCharacter: ChronicleCompanionCharDB, RollForCharDb
+## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, TWThreat
 
 # Built-in Chronicle logger (ChronicleCompanion by Emyrk). tools\WhoDidIt-Sync
 # downloads it into Chronicle\ and rewrites the list below when it updates.
@@ -26,6 +26,107 @@ Chronicle\slash.lua
 Chronicle\init.lua
 # <<< Chronicle files
 
+# Built-in RollFor (master looting, by Obszczymucha - sica42's 1.12 fork).
+# tools\WhoDidIt-Sync downloads it into RollFor\ and rewrites the list below.
+RollForLoader.lua
+# >>> RollFor files (generated)
+RollFor\wdi_version.lua
+RollFor\libs\vanilla\LibStub\LibStub.lua
+RollFor\libs\vanilla\CallbackHandler-1.0\CallbackHandler-1.0.lua
+RollFor\libs\vanilla\AceCore-3.0\AceCore-3.0.lua
+RollFor\libs\vanilla\AceTimer-3.0\AceTimer-3.0.lua
+RollFor\src\vanilla\backport.lua
+RollFor\src\vanilla\compat.lua
+RollFor\src\vanilla\Json.lua
+RollFor\src\modules.lua
+RollFor\src\DebugBuffer.lua
+RollFor\src\Module.lua
+RollFor\src\Db.lua
+RollFor\src\Types.lua
+RollFor\src\Interface.lua
+RollFor\src\WowApi.lua
+RollFor\src\Config.lua
+RollFor\src\ItemUtils.lua
+RollFor\src\EventFrame.lua
+RollFor\src\LootFacade.lua
+RollFor\src\RollingLogicUtils.lua
+RollFor\src\DroppedLoot.lua
+RollFor\src\DroppedLootAnnounce.lua
+RollFor\src\TradeTracker.lua
+RollFor\src\SoftResDataTransformer.lua
+RollFor\src\SoftRes.lua
+RollFor\src\SoftResAwardedLootDecorator.lua
+RollFor\src\SoftResAbsentPlayersDecorator.lua
+RollFor\src\SoftResPresentPlayersDecorator.lua
+RollFor\src\SoftResMatchedNameDecorator.lua
+RollFor\src\AwardedLoot.lua
+RollFor\src\GroupRoster.lua
+RollFor\src\NameAutoMatcher.lua
+RollFor\src\NameManualMatcher.lua
+RollFor\src\NameMatchReport.lua
+RollFor\src\BindingsHandler.lua
+RollFor\src\EventHandler.lua
+RollFor\src\SoftResGui.lua
+RollFor\src\VersionBroadcast.lua
+RollFor\src\MasterLoot.lua
+RollFor\src\MasterLootCandidateSelectionFrame.lua
+RollFor\src\SoftResCheck.lua
+RollFor\src\SoftResRollingLogic.lua
+RollFor\src\NonSoftResRollingLogic.lua
+RollFor\src\TieRollingLogic.lua
+RollFor\src\RaidRollRollingLogic.lua
+RollFor\src\UsagePrinter.lua
+RollFor\src\MinimapButton.lua
+RollFor\src\MasterLootWarning.lua
+RollFor\src\AutoLoot.lua
+RollFor\src\WinnerTracker.lua
+RollFor\src\FrameBuilder.lua
+RollFor\src\PopupBuilder.lua
+RollFor\src\LootAwardPopup.lua
+RollFor\src\MasterLootCandidates.lua
+RollFor\src\NewGroupEvent.lua
+RollFor\src\AutoGroupLoot.lua
+RollFor\src\BossList.lua
+RollFor\src\AutoMasterLoot.lua
+RollFor\src\RollTracker.lua
+RollFor\src\RollController.lua
+RollFor\src\RollingPopup.lua
+RollFor\src\OptionsGuiElements.lua
+RollFor\src\OptionsPopup.lua
+RollFor\src\WinnersPopup.lua
+RollFor\src\WinnersPopupGui.lua
+RollFor\src\ConfirmPopup.lua
+RollFor\src\SoftResRollGuiData.lua
+RollFor\src\TieRollGuiData.lua
+RollFor\src\RollingPopupContentTransformer.lua
+RollFor\src\GuiElements.lua
+RollFor\src\WelcomePopup.lua
+RollFor\src\InstaRaidRollRollingLogic.lua
+RollFor\src\EventBus.lua
+RollFor\src\LootList.lua
+RollFor\src\SoftResLootListDecorator.lua
+RollFor\src\LootFrame.lua
+RollFor\src\RollForAd.lua
+RollFor\src\RollingStrategyFactory.lua
+RollFor\src\RollingLogic.lua
+RollFor\src\ArgsParser.lua
+RollFor\src\RollResultAnnouncer.lua
+RollFor\src\ChatApi.lua
+RollFor\src\Chat.lua
+RollFor\src\PlayerInfo.lua
+RollFor\src\LootAwardCallback.lua
+RollFor\src\LootFacadeListener.lua
+RollFor\src\LootController.lua
+RollFor\src\TooltipReader.lua
+RollFor\src\UiReloadPopup.lua
+RollFor\src\Sandbox.lua
+RollFor\src\ModernLootFrameSkin.lua
+RollFor\src\OgLootFrameSkin.lua
+RollFor\src\Client.lua
+RollFor\src\ClientBroadcast.lua
+RollFor\main.lua
+# <<< RollFor files
+
 Core.lua
 Data.lua
 Tracker.lua
@@ -36,5 +137,6 @@ Logs.lua
 # auto marker: built-in packs (downloaded by tools\WhoDidIt-Sync), then the marker
 Marks\packs.lua
 Marks.lua
+Loot.lua
 UI.lua
 Demo.lua

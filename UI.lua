@@ -645,6 +645,7 @@ local MODES = {
 	{ id = "rankings", text = "Rankings" },
 	{ id = "logs",     text = "Logs"     },
 	{ id = "marks",    text = "Marks"    },
+	{ id = "loot",     text = "Loot"     },
 }
 UI.modeButtons = {}
 for i = 1, getn(MODES) do
@@ -660,6 +661,8 @@ tooltip(UI.modeButtons[2], "Rankings", { "Boss kill times and full clears: yours
 tooltip(UI.modeButtons[3], "Logs", { "Chronicle combat logging: start, stop, save, archive and delete the log you upload to chronicleclassic.com." })
 tooltip(UI.modeButtons[4], "Marks", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
 	"and quick save - mark mobs in game, click Save marks as pack." })
+tooltip(UI.modeButtons[5], "Loot", { "Master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
+	"see who won what, and a step-by-step guide." })
 
 -- a row of buttons in the tab strip, used by Rankings and Logs
 local function stripButtons(defs)
@@ -796,6 +799,45 @@ tooltip(kindBtn, "Mark same kind", { "Mark every mob nearby of the same kind as 
 local markOnly = { mouseBtn, smartBtn, hiddenBtn, findBtn, hereBtn, kindBtn }
 for i = 1, getn(markOnly) do markOnly[i]:Hide() end
 
+UI.lt = { section = "guide" }   -- loot view state
+
+UI.lootButtons = stripButtons({
+	{ "|cff33ff33Import soft-res|r", function() W.Loot:Key("softres_toggle") end,
+	  { "Open RollFor's soft-res import window (/sr).",
+	    "Paste the data from raidres.fly.dev > RollFor export > Copy RollFor data to clipboard, then click Import!" } },
+	{ "Check soft-res", function() W.Loot:Run("SRC", ""); UI.lt.section = "softres"; UI:Refresh() end,
+	  { "List who in the raid hasn't soft-reserved yet (/src).", "The Soft-res page shows everyone's items." } },
+	{ "Winners", function() W.Loot:Key("winners_toggle") end,
+	  { "RollFor's winners window: every item given out, with filters and sorting (/rfw)." } },
+	{ "RollFor options", function() W.Loot:Key("options_toggle") end,
+	  { "RollFor's own options window, with every setting (/rfo)." } },
+	{ "Post how to roll", function() W.Loot:Run("HTR", "") end,
+	  { "Tell the raid how to roll: /roll for main spec, /roll 99 off spec, /roll 98 transmog (/htr)." } },
+})
+
+-- loot quick actions take the place of the fight buttons while in Loot
+local finishBtn = gridButton("Finish roll", 3, 1)
+local cancelBtn = gridButton("|cffff5555Cancel roll|r", 3, 2)
+local srsBtn    = gridButton("SR items", 2, 1)
+local sroBtn    = gridButton("Fix SR names", 2, 2)
+local mlBtn     = gridButton("Auto ML", 1, 1)
+local verBtn    = gridButton("Who has RollFor", 1, 2)
+finishBtn:SetScript("OnClick", function() W.Loot:Run("FR", "") end)
+cancelBtn:SetScript("OnClick", function() W.Loot:Run("CR", "") end)
+srsBtn:SetScript("OnClick", function() W.Loot:Run("SRS", "") end)
+sroBtn:SetScript("OnClick", function() W.Loot:Run("SRO", "") end)
+mlBtn:SetScript("OnClick", function() W.Loot:Toggle("auto-master-loot"); UI:Refresh() end)
+verBtn:SetScript("OnClick", function() W.Loot:Run("RF", "versioncheck") end)
+tooltip(finishBtn, "Finish roll", { "End the current roll now instead of waiting for the timer (/fr)." })
+tooltip(cancelBtn, "Cancel roll", { "Stop the current roll without a winner (/cr)." })
+tooltip(srsBtn, "Soft-reserved items", { "List every soft-reserved item and who reserved it, in chat (/srs)." })
+tooltip(sroBtn, "Fix soft-res names", { "Match players whose name on the soft-res sheet doesn't match their character (/sro).",
+	"RollFor fixes simple typos by itself." })
+tooltip(mlBtn, "Auto master loot", { "Switch the raid to master loot when you target a boss (you must be raid leader)." })
+tooltip(verBtn, "Who has RollFor", { "Ask the raid who has RollFor (or WhoDidIt) and which version - raiders with it get a roll window." })
+local lootOnly = { finishBtn, cancelBtn, srsBtn, sroBtn, mlBtn, verBtn }
+for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
+
 -- banter toggles take the place of the fight buttons while in Rankings
 local banterKillBtn  = gridButton("Kill banter", 3, 1)
 local banterClearBtn = gridButton("Clear banter", 3, 2)
@@ -835,6 +877,9 @@ function UI:ApplyMode()
 	local marks = (UI.mode == "marks" and W.Marks ~= nil)
 	for i = 1, getn(UI.markButtons) do vis(UI.markButtons[i], marks) end
 	for i = 1, getn(markOnly) do vis(markOnly[i], marks) end
+	local loot = (UI.mode == "loot" and W.Loot ~= nil)
+	for i = 1, getn(UI.lootButtons) do vis(UI.lootButtons[i], loot) end
+	for i = 1, getn(lootOnly) do vis(lootOnly[i], loot) end
 	local fightOnly = { shameBtn, praiseBtn, chanBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
 	for i = 1, getn(fightOnly) do vis(fightOnly[i], fights) end
 	for i = 1, getn(rankOnly) do vis(rankOnly[i], UI.mode == "rankings" and W.Board ~= nil) end
@@ -2249,13 +2294,286 @@ function UI:RefreshMarks()
 	lastModeKey = key
 end
 
+------------------------------------------------------------------ Loot view
+
+local SR_SPEC    = { { 120, "LEFT" }, { 110, "LEFT" }, { 254, "LEFT" }, { 60, "RIGHT" } }
+local AWARD_SPEC = { { 24, "RIGHT" }, { 226, "LEFT" }, { 120, "LEFT" }, { 110, "LEFT" }, { 60, "RIGHT" } }
+local CMD_SPEC   = { { 130, "LEFT" }, { 430, "LEFT" } }
+local QUALITY_COL = { [0] = "|cff9d9d9d", "|cffffffff", "|cff1eff00", "|cff0070dd", "|cffa335ee", "|cffff8000" }
+local ROLL_TEXT = { MainSpec = "main spec", OffSpec = "off spec", Transmog = "transmog", SoftRes = "soft-res",
+	RR = "raid roll", RaidRoll = "raid roll", InstaRaidRoll = "raid roll" }
+
+local function itemText(id)
+	local name, _, quality = GetItemInfo(id or 0)
+	if not name then return C_DIM .. "item " .. tostring(id) .. "|r" end
+	return (QUALITY_COL[quality] or "|cffffffff") .. name .. "|r"
+end
+
+-- one step of the guide: a number, its lines (rows clip, so lines stay short), and optionally something to click
+local function step(rows, n, lines, click, hint)
+	local d = click and function() click(); UI:Refresh() end
+	for i = 1, getn(lines) do
+		local first = (i == 1)
+		tinsert(rows, row((first and ("|cffffd100" .. n .. ".|r  ") or "      ") .. lines[i],
+			(first and hint) and (C_GUILD .. hint .. "  >|r") or nil, d and { click = d } or nil))
+	end
+end
+
+function UI:LootGuideRows()
+	local Lt = W.Loot
+	local rows = {}
+	head(rows, "Before the raid: soft-res")
+	step(rows, 1, { "Make a soft-res sheet at |cffffd100raidres.fly.dev|r and share the link.",
+		"Raiders pick the items they want." })
+	step(rows, 2, { "Lock the sheet, click |cffffd100RollFor export|r, then |cffffd100Copy RollFor data to clipboard|r." })
+	step(rows, 3, { "Click |cff33ff33Import soft-res|r, paste with Ctrl+V, click |cffffd100Import!|r" },
+		function() Lt:Key("softres_toggle") end, "open it")
+	step(rows, 4, { "See who hasn't soft-reserved on the |cffffd100Soft-res|r page." },
+		function() UI.lt.section = "softres" end, "show it")
+	step(rows, 5, { "A name on the sheet doesn't match a character? Fix it here." },
+		function() Lt:Run("SRO", "") end, "fix names")
+
+	head(rows, "In the raid")
+	step(rows, 6, { "Be raid leader. |cffffd100Auto master loot|r switches to master loot",
+		"when you target a boss (on by default)." })
+	step(rows, 7, { "Tell the raid how to roll: |cffffffff/roll|r main spec, |cffffffff/roll 99|r off spec,",
+		"|cffffffff/roll 98|r transmog." }, function() Lt:Run("HTR", "") end, "post it")
+
+	head(rows, "When loot drops")
+	step(rows, 8, { "Loot the boss. RollFor's loot window lists every item and who reserved it." })
+	step(rows, 9, { "Click an item, then |cffffd100Roll|r. Soft-reserved: only those players roll.",
+		"Not reserved: everyone rolls, and main spec beats off spec." })
+	step(rows, 10, { "Ties re-roll by themselves. When it's done, click |cffffd100Award|r next to",
+		"the winner and confirm - the item goes straight to them." })
+	step(rows, 11, { "Two of the same item? Both are rolled together; the top two rolls win." })
+	step(rows, 12, { "Trash and greens: |cffffd100Raid roll|r gives the item to a random raider." })
+	step(rows, 13, { "Gave it to the wrong person? Trade it on - RollFor updates its winners." })
+	step(rows, 14, { "Everything given out is on the |cffffd100Loot given|r page." },
+		function() UI.lt.section = "given" end, "show it")
+
+	head(rows, "Commands  " .. C_DIM .. "(shift-click an item into chat after the command)|r")
+	local cmds = {
+		{ "/rf <item> [secs]", "roll an item (from the loot window or your bags)" },
+		{ "/rf 2x<item>", "roll two of the same item - the top two rolls win" },
+		{ "/arf <item>", "everyone may roll, even if it's soft-reserved" },
+		{ "/rr  /irr <item>", "raid roll an item  /  instant raid roll" },
+		{ "/fr  /cr", "finish the roll early  /  cancel it" },
+		{ "/srs  /src  /sro", "reserved items  /  who hasn't reserved  /  fix names" },
+		{ "/sr  /rfw  /rfo", "import window  /  winners window  /  RollFor options" },
+		{ "/rf config", "every RollFor setting (/rf config help explains them)" },
+	}
+	for i = 1, getn(cmds) do tinsert(rows, cells(CMD_SPEC, { "|cffffd100" .. cmds[i][1] .. "|r", "|cffdddddd" .. cmds[i][2] .. "|r" })) end
+	tinsert(rows, row(C_DIM .. "Keys for RollFor's windows: Esc > Key Bindings > RollFor.|r"))
+	return rows
+end
+
+function UI:LootSoftResRows()
+	local Lt = W.Loot
+	local rows = {}
+	local sr = Lt:SoftRes()
+	if not sr then
+		head(rows, "No soft-res sheet imported")
+		tinsert(rows, row("Click |cff33ff33Import soft-res|r at the top and paste the data from raidres.fly.dev.",
+			C_GUILD .. "open it  >|r", { click = function() Lt:Key("softres_toggle") end }))
+		tinsert(rows, row(C_DIM .. "The How it works page explains each step.|r"))
+		return rows
+	end
+	local roster = Lt:Roster()
+	local inGroup = GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0
+	local reserved = {}
+	head(rows, "Soft-res sheet " .. (sr.id and ("|cffffffff" .. sr.id .. "|r ") or "") .. C_DIM .. "(" .. table.concat(sr.instances, ", ") .. ")|r   "
+		.. C_TIME .. getn(sr.players) .. "|r players, " .. C_TIME .. sr.items .. "|r items")
+	colHead(rows, SR_SPEC, { "Player", "Spec", "Reserved", "In raid" })
+	for i = 1, getn(sr.players) do
+		local p = sr.players[i]
+		local here = roster[string.lower(p.name)]
+		reserved[string.lower(p.name)] = true
+		local names, tip = {}, {}
+		for j = 1, getn(p.items) do
+			tinsert(names, itemText(p.items[j]))
+			tinsert(tip, itemText(p.items[j]))
+		end
+		tinsert(rows, cells(SR_SPEC,
+			{ here and W.CName(here.name, here.class) or ("|cffdddddd" .. p.name .. "|r"),
+			  C_DIM .. Lt.RoleText(p.role) .. "|r",
+			  table.concat(names, ", "),
+			  here and (C_GUILD .. "yes|r") or (inGroup and "|cffff7777not here|r" or C_DIM .. "-|r") },
+			{ tipTitle = p.name, tip = tip }))
+	end
+	if inGroup then
+		local missing = {}
+		for key, who in pairs(roster) do
+			if not reserved[key] then tinsert(missing, W.CName(who.name, who.class)) end
+		end
+		table.sort(missing)
+		head(rows, "In the raid without a soft-res  " .. C_DIM .. "(" .. getn(missing) .. ")|r")
+		if getn(missing) == 0 then
+			tinsert(rows, row(C_GUILD .. "Everyone has soft-reserved.|r"))
+		else
+			-- six names a row: rows clip rather than wrap
+			for i = 1, getn(missing), 6 do
+				local part = {}
+				for j = i, math.min(i + 5, getn(missing)) do tinsert(part, missing[j]) end
+				tinsert(rows, row(table.concat(part, ", ")))
+			end
+			tinsert(rows, row("|cffffd100Post the missing players and the sheet link to the raid|r", C_GUILD .. "post it  >|r",
+				{ click = function() Lt:Run("SRC", "a") end, tipTitle = "Post to raid", tip = { "/src a" } }))
+		end
+	end
+	tinsert(rows, row(C_DIM .. "Names that don't match a character: Fix SR names (/sro).|r"))
+	tinsert(rows, row(C_DIM .. "Importing a new sheet replaces this one.|r"))
+	return rows
+end
+
+function UI:LootGivenRows()
+	local Lt = W.Loot
+	local rows = {}
+	local list = Lt:Awarded()
+	head(rows, "Loot given  " .. C_DIM .. "(newest first, from RollFor - the Winners window has filters)|r")
+	if getn(list) == 0 then
+		tinsert(rows, row(C_DIM .. "Nothing awarded yet. Items you award with RollFor show up here.|r"))
+		return rows
+	end
+	colHead(rows, AWARD_SPEC, { "#", "Item", "Winner", "How", "Roll" })
+	for i = 1, getn(list) do
+		local a = list[i]
+		local name, _, quality = GetItemInfo(a.item_id or 0)
+		local item = name and ((QUALITY_COL[quality or a.quality] or "|cffffffff") .. name .. "|r") or (a.item_link or itemText(a.item_id))
+		tinsert(rows, cells(AWARD_SPEC,
+			{ C_DIM .. i .. ".|r", item, W.CName(a.player_name or "?", a.player_class),
+			  "|cffdddddd" .. (ROLL_TEXT[a.roll_type or ""] or ROLL_TEXT[a.rolling_strategy or ""] or (a.roll_type or "awarded")) .. "|r"
+			    .. ((a.plus_one and (" " .. C_GUILD .. "+1|r")) or ""),
+			  a.winning_roll and (C_TIME .. a.winning_roll .. "|r") or (C_DIM .. "-|r") }))
+	end
+	return rows
+end
+
+function UI:LootSettingsRows()
+	local Lt = W.Loot
+	local rows = {}
+	head(rows, "RollFor settings  " .. C_DIM .. "(click to switch on / off - saved per character)|r")
+	for i = 1, getn(Lt.SETTINGS) do
+		local s = Lt.SETTINGS[i]
+		local cmd = s[2]
+		local extra = { tipTitle = s[3], tip = { s[4], C_DIM .. "/rf config " .. cmd .. "|r" }, click = function() Lt:Toggle(cmd); UI:Refresh() end }
+		tinsert(rows, row("|cffffffff" .. s[3] .. "|r", onOff(Lt:Setting(s[1])), extra))
+		tinsert(rows, row("      " .. C_DIM .. s[4] .. "|r", nil, { tipTitle = s[3], tip = extra.tip, click = extra.click }))
+	end
+	head(rows, "For your raiders")
+	local popup = Lt:RollPopup()
+	local ptip = { "When you start a roll, raiders with RollFor (or WhoDidIt) get a window to roll from.",
+		"Off - nobody   Eligible - players who may roll on it   Always - everyone", C_DIM .. "Click to change.|r" }
+	tinsert(rows, row("|cffffffffRoll window for raiders|r", "|cffffd100" .. popup .. "|r",
+		{ tipTitle = "Roll window for raiders", tip = ptip, click = function() Lt:CycleRollPopup(); UI:Refresh() end }))
+	tinsert(rows, row("      " .. C_DIM .. "Raiders with RollFor or WhoDidIt get a roll window when you start a roll.|r", nil,
+		{ tipTitle = "Roll window for raiders", tip = ptip, click = function() Lt:CycleRollPopup(); UI:Refresh() end }))
+	head(rows, "More")
+	tinsert(rows, row("|cffffd100Open RollFor's options window|r  " .. C_DIM .. "roll times, thresholds, quick award keys|r", nil,
+		{ click = function() Lt:Key("options_toggle") end }))
+	tinsert(rows, row("|cffffd100Print every setting in chat|r", C_DIM .. "/rf config|r", { click = function() Lt:Run("RF", "config") end }))
+	return rows
+end
+
+local LOOT_SECTIONS = {
+	{ "guide",    "How it works",  "Step by step, and every command" },
+	{ "softres",  "Soft-res",      nil },
+	{ "given",    "Loot given",    nil },
+	{ "settings", "Settings",      "RollFor's options, explained" },
+}
+
+function UI:LootNavRows()
+	local Lt = W.Loot
+	local rows = {}
+	local sr = Lt:SoftRes()
+	local given = getn(Lt:Awarded())
+	for i = 1, getn(LOOT_SECTIONS) do
+		local s = LOOT_SECTIONS[i]
+		local sub = s[3]
+		if s[1] == "softres" then
+			sub = sr and (getn(sr.players) .. " players, " .. sr.items .. " items") or "nothing imported yet"
+		elseif s[1] == "given" then
+			sub = given .. " item" .. (given == 1 and "" or "s") .. " awarded"
+		end
+		local id = s[1]
+		tinsert(rows, row("|cffffffff" .. s[2] .. "|r\n" .. C_DIM .. sub .. "|r", nil,
+			{ sel = (UI.lt.section == id), click = function() UI.lt.section = id; UI:Refresh() end }))
+	end
+	return rows
+end
+
+local METHOD_TEXT = { freeforall = "Free for all", roundrobin = "Round robin", group = "Group loot", needbeforegreed = "Need before greed" }
+
+function UI:RefreshLoot()
+	local Lt = W.Loot
+	leftHead:SetText("Loot")
+	leftCount:SetText("")
+	fightList:SetData(UI:LootNavRows(), true)
+	mlBtn:SetText("Auto ML: " .. (Lt:Setting("auto_master_loot") ~= false and "|cff33ff33on|r" or "|cffff5555off|r"))
+
+	local src = Lt:Source()
+	if not src then
+		rTitle:SetText("Loot  |cffff5555RollFor isn't installed yet|r")
+		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once, then restart WoW|r")
+		rVerdict:SetText("RollFor is built in - the helper downloads it from its official source.\n"
+			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is downloaded: restart WoW (a /reload isn't enough).|r") or "|cff888888The guide below works without it.|r"))
+	else
+		rTitle:SetText("Loot  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
+			.. (src == "builtin" and "|cff33ff33built in|r" or "|cffffd100separate addon|r"))
+		local inGroup = GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0
+		local method, looter = Lt:LootMethod()
+		local me = UnitName("player")
+		local info
+		if not inGroup then
+			info = "|cffaaaaaaNot in a group|r"
+		elseif method == "master" then
+			info = "Master loot: " .. ((looter == me) and "|cff33ff33you|r" or ("|cffffffff" .. (looter or "?") .. "|r"))
+		else
+			info = "|cffff9933" .. (METHOD_TEXT[method or ""] or (method or "?")) .. "|r - not master loot"
+		end
+		local sr = Lt:SoftRes()
+		info = info .. "   |cff888888|   soft-res: " .. (sr and (getn(sr.players) .. " players") or "none") .. "|r"
+		rInfo:SetText(info)
+		local nextStep
+		if WDI_ROLLFOR_SKIP then
+			nextStep = "|cffff9933The separate RollFor is still running - /reload and WhoDidIt takes over.|r"
+		elseif not sr then
+			nextStep = "|cffffd100Next:|r import the soft-res sheet - click |cff33ff33Import soft-res|r."
+		elseif not inGroup then
+			nextStep = "|cffffd100Next:|r form the raid - the soft-res sheet is ready."
+		elseif method ~= "master" then
+			nextStep = Lt:IsLeader() and "|cffffd100Next:|r target a boss - Auto master loot turns master loot on."
+				or "|cffffd100Next:|r ask the raid leader for master loot, with you as looter."
+		elseif looter ~= me then
+			nextStep = "|cffaaaaaa" .. (looter or "Someone") .. " is master looter - you roll from the roll window.|r"
+		else
+			nextStep = "|cff33ff33Ready.|r Loot a boss - RollFor's loot window does the rest."
+		end
+		rVerdict:SetText(nextStep .. "\n|cff888888Raiders roll: /roll = main spec, /roll 99 = off spec, /roll 98 = transmog.|r")
+	end
+	hintText:SetText("Click the gold lines to do that step  -  hover the buttons for details")
+	hintText:Show()
+
+	local s = UI.lt.section
+	local rows
+	if s == "softres" then rows = UI:LootSoftResRows()
+	elseif s == "given" then rows = UI:LootGivenRows()
+	elseif s == "settings" then rows = UI:LootSettingsRows()
+	else rows = UI:LootGuideRows() end
+	local key = "loot|" .. s
+	mainList:SetData(rows, key == lastModeKey)
+	lastModeKey = key
+end
+
 -- Board.lua / Logs.lua didn't load (the game wasn't restarted after an update)
 function UI:RefreshMissing()
 	for i = 1, getn(UI.rankButtons) do UI.rankButtons[i]:Hide() end
 	for i = 1, getn(UI.logButtons) do UI.logButtons[i]:Hide() end
 	for i = 1, getn(UI.markButtons) do UI.markButtons[i]:Hide() end
 	for i = 1, getn(markOnly) do markOnly[i]:Hide() end
-	leftHead:SetText(UI.mode == "logs" and "Logs" or (UI.mode == "marks" and "Marks" or "Rankings"))
+	for i = 1, getn(UI.lootButtons) do UI.lootButtons[i]:Hide() end
+	for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
+	local titles = { logs = "Logs", marks = "Marks", loot = "Loot" }
+	leftHead:SetText(titles[UI.mode] or "Rankings")
 	leftCount:SetText("")
 	fightList:SetData({})
 	rTitle:SetText("Restart WoW to finish updating")
@@ -2264,7 +2582,7 @@ function UI:RefreshMissing()
 	hintText:SetText("")
 	local rows = {}
 	head(rows, "Why")
-	tinsert(rows, row("This update added new parts of WhoDidIt (Rankings, Chronicle logs, auto marking)."))
+	tinsert(rows, row("This update added new parts of WhoDidIt (Rankings, Chronicle logs, auto marking, master looting)."))
 	tinsert(rows, row("WoW reads each addon's file list once, when the game starts - /reload only re-runs files it already knows."))
 	tinsert(rows, row("Fights still work normally until then: click |cffffd100Fights|r in the title bar."))
 	lastModeKey = nil
@@ -2281,10 +2599,11 @@ function UI:Refresh()
 	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat"))
 
 	UI:ApplyMode()
-	if UI.mode ~= "fights" and not (W.Board and W.Logs and W.Marks) then return UI:RefreshMissing() end
+	if UI.mode ~= "fights" and not (W.Board and W.Logs and W.Marks and W.Loot) then return UI:RefreshMissing() end
 	if UI.mode == "rankings" then return UI:RefreshRankings() end
 	if UI.mode == "logs" then return UI:RefreshLogs() end
 	if UI.mode == "marks" then return UI:RefreshMarks() end
+	if UI.mode == "loot" then return UI:RefreshLoot() end
 	lastModeKey = nil
 	leftHead:SetText("Encounters")
 
@@ -2421,7 +2740,7 @@ f:SetScript("OnShow", function() UI:Refresh() end)
 -- live view: rebuild the in-progress report every 1.5s while it's on screen
 W:Every(1.5, function()
 	if not f:IsVisible() then return end
-	if UI.mode == "logs" or UI.mode == "marks" then
+	if UI.mode == "logs" or UI.mode == "marks" or UI.mode == "loot" then
 		UI:Refresh()   -- unsaved line count / mobs in range and current marks
 	elseif UI.mode == "fights" and W.Tracker.fight then
 		if UI.selIdx == 0 then UI.liveRec = W.Analyzer:Build(W.Tracker.fight, false) end

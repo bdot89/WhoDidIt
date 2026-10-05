@@ -32,6 +32,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 - 📣 **Shout-outs.** *Name & Shame* and *Big Them Up* awards, reports and per-player posts, sent to any channel in colour.
 - 📊 **Meters & timeline.** Damage, healing, taken, activity and utility, plus a full timeline of the fight.
 - 💀 **Auto marking.** Marks whole packs in one go, with ~365 raid packs built in, smart marks for tricky fights, and quick save for your own packs.
+- 💰 **Master looting.** RollFor is built in, with a Loot tab: soft-res import and check, rolls, awards, loot given, and a step-by-step guide.
 - 🏆 **Rankings & Chronicle.** Kill and clear times against every guild on your realm, and the Chronicle combat logger built in.
 
 ## Screenshots
@@ -64,7 +65,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#chronicle-logs) and the [auto marker's packs](#auto-marking), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#chronicle-logs), [RollFor](#master-looting-rollfor) and the [auto marker's packs](#auto-marking), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
 
 ### Requirements
 
@@ -155,9 +156,10 @@ tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (clos
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
-tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the Chronicle logger and the mob packs
+tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the built-in addons (Chronicle logger, RollFor) and the mob packs
 tools\WhoDidIt-Sync.cmd -LoggerOnly        only install / update the built-in Chronicle logger
 tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
+tools\WhoDidIt-Sync.cmd -NoRollForUpdate   leave RollFor alone
 tools\WhoDidIt-Sync.cmd -NoPackUpdate      leave the mob packs alone
 ```
 
@@ -227,7 +229,7 @@ Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one ge
 Karazhan, Timbermaw Hold and more. They're the packs collected by the [AutoMarker](https://github.com/MarcelineVQ/AutoMarker)
 addon (by Weird Vibes). `tools\WhoDidIt-Sync.cmd` downloads them into `Marks\packs.lua` and checks for new ones every
 hour. Only the pack data is used, converted to WhoDidIt's format. Your own packs are saved separately and never
-overwritten. Run `tools\WhoDidIt-Sync.cmd -UpdatesOnly` to fetch just the packs and the Chronicle logger.
+overwritten. Run `tools\WhoDidIt-Sync.cmd -UpdatesOnly` to fetch just the packs and the built-in addons.
 
 **Smart marks.** These cover what fixed packs can't, and each one can be switched off in its zone's list:
 
@@ -248,6 +250,50 @@ marks.
 
 **Coming from AutoMarker?** WhoDidIt replaces it. If it's still installed, WhoDidIt brings over any packs you saved with
 `/am add` and switches AutoMarker off; from your next `/reload` WhoDidIt does the marking.
+
+## Master looting (RollFor)
+
+The **Loot** button (or `/wdi loot`) is for master looting. WhoDidIt has [RollFor](https://github.com/sica42/roll-for-vanilla)
+built in, the master-loot roller by Obszczymucha. It's sica42's 1.12 fork (v4.8.1), the newest version that still runs on
+the 1.12 client; the original RollFor has moved to TBC only. RollFor does the rolling itself: its loot window lists every
+item and who soft-reserved it, it runs the roll, handles ties, and gives the item to the winner when you click **Award**.
+
+**The Loot tab**
+
+- **How it works**: step by step, from making the soft-res sheet to awarding the last item, plus every command. Gold
+  lines do that step when clicked (open the import window, post how to roll, and so on).
+- **Soft-res**: the imported sheet, with each player's spec and reserved items, whether they're in the raid, and who's
+  in the raid without a reserve (with a button to post that to the raid).
+- **Loot given**: every item awarded, newest first: item, winner, main spec / off spec / transmog / soft-res / raid roll,
+  and the roll.
+- **Settings**: RollFor's options, each explained, switched on or off with a click (saved per character).
+- **Header**: the loot method and looter, and the next thing to do ("import the soft-res sheet", "target a boss",
+  "Ready").
+- **Buttons**: Import soft-res, Check soft-res, Winners, RollFor options and Post how to roll across the top. Finish
+  roll, Cancel roll, SR items, Fix SR names, Auto master loot and Who has RollFor on the left.
+
+**A raid night in short**
+
+1. Make the sheet at [raidres.fly.dev](https://raidres.fly.dev), lock it, click **RollFor export** > **Copy RollFor data to clipboard**.
+2. Click **Import soft-res**, paste, click **Import!**. Then check the **Soft-res** page for anyone missing.
+3. Be raid leader: **Auto master loot** turns master loot on when you target a boss. Click **Post how to roll** (`/roll`
+   main spec, `/roll 99` off spec, `/roll 98` transmog).
+4. Loot the boss, click an item, **Roll**, then **Award** the winner. Soft-reserved items are only rolled by those players.
+5. Trash: **Raid roll** gives the item to a random raider.
+
+All of RollFor's own commands work as before: `/rf`, `/arf`, `/rr`, `/irr`, `/fr`, `/cr`, `/sr`, `/srs`, `/src`, `/sro`,
+`/rfw`, `/rfo`, `/htr`, `/rf config`. So do its minimap button and its key bindings (Esc > Key Bindings > RollFor).
+
+**How it's built in.** RollFor isn't stored in this repository. `tools\WhoDidIt-Sync.cmd` downloads its latest release
+from [sica42/roll-for-vanilla](https://github.com/sica42/roll-for-vanilla) into `WhoDidIt\RollFor\`, checks for a new
+one every hour, and installs updates while WoW is closed. Restart WoW after the first install; a `/reload` isn't enough.
+The only changes to RollFor's files: its version comes from `RollFor\wdi_version.lua`, its images are found in the new
+folder, and its library list is expanded into `WhoDidIt.toc`. Its key bindings are added to WhoDidIt's. Nothing in how
+it rolls is changed, and it still talks to raiders' copies of RollFor (roll windows, version checks).
+
+**Already have RollFor installed?** On each character's first login, WhoDidIt's copy stands down and switches the
+separate addon off. From your next `/reload`, WhoDidIt's copy takes over with that character's settings, soft-res sheet
+and winners. Once you've done this on every character you loot with, delete `Interface\AddOns\RollFor`.
 
 ## Shout-outs
 

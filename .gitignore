@@ -1,6 +1,9 @@
 # downloaded by tools\WhoDidIt-Sync: the Chronicle logger (github.com/Emyrk/ChronicleCompanion)
-# and the auto marker's built-in mob packs (from github.com/MarcelineVQ/AutoMarker)
+# and RollFor (github.com/sica42/roll-for-vanilla), and the auto marker's mob packs (github.com/MarcelineVQ/AutoMarker)
 /Chronicle/
 /Chronicle.new/
 /Chronicle.old/
 /Marks/
+/RollFor/
+/RollFor.new/
+/RollFor.old/
