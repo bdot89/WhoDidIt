@@ -107,12 +107,20 @@ function B:LoadChronicle()
 	if head == chronHead then return false end
 	chronHead = head
 
-	local data = { realms = {}, bosses = {}, zones = {}, me = {} }
+	local data = { realms = {}, bosses = {}, zones = {}, me = {}, logs = {} }
 	for line in string.gfind(s, "[^\n]+") do
 		local p = splitBar(line)
 		local t = p[1]
 		if t == "WDICHRON" then
 			data.synced, data.server, data.days, data.status = tonumber(p[3]), p[4], tonumber(p[5]), p[6]
+		elseif t == "L" then
+			-- a whole raid: L|slug|realm|instance|guild|faction|ended|players|Boss=secs=into raid=wipes;...
+			local kills = {}
+			for part in string.gfind((p[9] or "") .. ";", "(.-);") do
+				local _, _, n, secs, at, w = string.find(part, "^(.-)=([%d%.]*)=([%d%.]*)=(%d*)$")
+				if n and n ~= "" then tinsert(kills, { n = n, s = tonumber(secs), a = tonumber(at), w = tonumber(w) }) end
+			end
+			data.logs[p[2]] = { realm = p[3], zone = CHRON_ZONE[p[4]] or p[4], guild = p[5], f = p[6], d = tonumber(p[7]), n = tonumber(p[8]), kills = kills }
 		elseif t == "PC" or t == "PK" then
 			-- your characters' bests:  PC|realm|char|instance|secs|ended|guild|slug
 			--                          PK|realm|char|instance|boss|secs|ended|guild|slug
@@ -166,6 +174,25 @@ function B:LoadChronicle()
 	end
 	B.chron = data
 	return true
+end
+
+-- a whole raid from Chronicle (every boss kill in order), by its log slug
+function B:Log(slug)
+	return slug and B.chron and B.chron.logs[slug]
+end
+
+function B.LogURL(slug)
+	return "https://legacy.chronicleclassic.com/instances/" .. slug
+end
+
+-- where a time ranks on a realm's board (1 = fastest)
+function B:Place(realm, kind, key, secs)
+	local list = B:Board(realm, kind, key, "All")
+	local place = 1
+	for i = 1, getn(list) do
+		if list[i][2].t < secs then place = place + 1 end
+	end
+	return place, getn(list)
 end
 
 -- Chronicle bosses seen for a zone (names as Chronicle writes them)

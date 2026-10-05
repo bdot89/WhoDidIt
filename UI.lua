@@ -725,15 +725,15 @@ local function cycleList(list, cur)
 end
 
 UI.rankButtons = stripButtons({
-	{ "Kill times", function() UI.rk.view = "kills"; UI.rk.boss = nil; UI:Refresh() end,
+	{ "Kill times", function() UI.rk.view = "kills"; UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end,
 	  { "Best kill time on every boss: you, your guild and the realm." } },
-	{ "Full clears", function() UI.rk.view = "clears"; UI.rk.boss = nil; UI:Refresh() end,
+	{ "Full clears", function() UI.rk.view = "clears"; UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end,
 	  { "Fastest full clear of the instance: first combat inside to the last boss.", "Optional bosses aren't required." } },
 	{ "Realm", function()
 		local list = W.Board:Realms()
 		tinsert(list, 2, W.Board.ALL)   -- your realm, then all realms together, then the rest
 		UI.rk.realm = cycleList(list, UI.rk.realm or W.Board.Realm())
-		UI.rk.boss = nil
+		UI.rk.boss = nil; UI.rk.log = nil
 		UI:Refresh()
 	  end, { "Your realm, then all realms together (compare against every guild), then each other realm." } },
 	{ "Faction", function()
@@ -742,18 +742,6 @@ UI.rankButtons = stripButtons({
 		UI.rk.faction = cycleList({ mine, "All", other }, UI.rk.faction or mine)
 		UI:Refresh()
 	  end, { "Your faction first, then everyone, then the other faction." } },
-	{ "Sharing", function()
-		WhoDidItDB.opts.shareBoard = not WhoDidItDB.opts.shareBoard
-		if WhoDidItDB.opts.shareBoard then W.Board:Join() else W.Board:Leave() end
-		UI:Refresh()
-	  end, { "Share your guild's records with WhoDidIt users on this realm (and receive theirs).",
-	         "Uses a hidden chat channel; records are self-reported." } },
-	{ "Ask for times", function()
-		if UI.rk.asked and GetTime() - UI.rk.asked < 60 then W.Print("Already asked - give people a minute to answer.") return end
-		UI.rk.asked = GetTime()
-		W.Board:Ask()
-		W.Print("Asked WhoDidIt users on " .. W.Board.Realm() .. " for their guild's times.")
-	  end, { "Ask everyone online with WhoDidIt for their guild's best times right now." } },
 })
 
 UI.logButtons = stripButtons({
@@ -979,7 +967,7 @@ end
 
 function UI:SetMode(mode)
 	UI.mode = mode
-	UI.rk.boss = nil
+	UI.rk.boss = nil; UI.rk.log = nil
 	if mode == "rankings" and W.Board then W.Board:LoadChronicle() end
 	UI:Open()
 end
@@ -1755,12 +1743,17 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 			{ sel = isMine, bar = best / rec.t, ba = 0.16, cr = c[1], cg = c[2], cb = c[3], tipTitle = g,
 			  tip = rec.chron and {
 			          "|cffffd100From Chronicle|r (chronicleclassic.com) - " .. B.Date(rec.d),
-			          "Realm: " .. (rlm or "?") .. "   Faction: " .. (rec.f or "?") .. ((rec.f == "Mixed") and " (cross-faction raid)" or ""),
-			          "Log: " .. (rec.slug or "?"),
+			          "Realm: " .. B.RealmLabel(rlm) .. "   Faction: " .. (rec.f or "?") .. ((rec.f == "Mixed") and " (cross-faction raid)" or ""),
+			          "|cff33ff33Click: open this raid - every boss kill, wipes, and the Chronicle link|r",
 			      } or {
 			          "Recorded " .. B.Date(rec.d) .. (rec.by and (" by " .. rec.by) or "") .. "   Realm: " .. (rlm or "?"),
 			          rec.net and "Shared by a WhoDidIt user (self-reported)" or "Recorded by your WhoDidIt",
-			      } }))
+			          "|cff888888Click: what's known about this time|r",
+			      },
+			  click = function()
+				UI.rk.log = { slug = rec.slug, guild = g, realm = rlm, rec = rec, kind = kind, key = key }
+				UI:Refresh()
+			  end }))
 	end
 end
 
@@ -1775,7 +1768,9 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 		mine and (C_TIME .. B.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
 		"",
 		mine and (C_DIM .. B.Date(mine.d) .. ((mine.g and mine.g ~= "") and ("  with " .. mine.g) or "") .. "|r") or (C_DIM .. "none yet|r"),
-	}))
+	}), mine and mine.slug and {
+		tipTitle = "Your best", tip = { "Click: open that raid" },
+		click = function() UI.rk.log = { slug = mine.slug, guild = mine.g or "?", realm = B.Realm(), rec = mine, kind = kind, key = key }; UI:Refresh() end } or nil)
 	if guild then
 		local g = B:GuildBest(realm, kind, key, guild)
 		local rank, of = B:Rank(realm, kind, key, guild, faction)
@@ -1791,7 +1786,9 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 			g and (C_TIME .. B.Fmt(g.t) .. "|r") or (C_DIM .. "-|r"),
 			rank and (rankTxt(rank) .. C_DIM .. " of " .. of .. "|r") or (g and (C_DIM .. B.Realm() .. "|r") or ""),
 			g and note or (C_DIM .. "no " .. ((kind == "kills") and "kill" or "clear") .. " yet|r"),
-		}))
+		}), g and {
+			tipTitle = guild, tip = { "Click: open the raid this time came from" },
+			click = function() UI.rk.log = { slug = g.slug, guild = guild, realm = B.Realm(), rec = g, kind = kind, key = key }; UI:Refresh() end } or nil)
 	end
 end
 
@@ -1858,7 +1855,7 @@ function UI:RankNavRows(realm)
 			      (nRivals > 0) and ("|cffff5555! " .. nRivals .. " recent time" .. (nRivals == 1 and "" or "s") .. " beat ours here - see Rival watch|r") or " ",
 			      "|cff888888The green bar is how close your guild is to #1.|r",
 			  },
-			  click = function() UI.rk.inst = zone; UI.rk.boss = nil; UI:Refresh() end }))
+			  click = function() UI.rk.inst = zone; UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end }))
 	end
 	return rows
 end
@@ -1892,13 +1889,22 @@ function UI:RankKillRows(realm, faction, zone)
 				top and (C_TIME .. B.Fmt(top[2].t) .. "|r") or (C_DIM .. "-|r"),
 				top and facName(top[1], top[2].f, top[1] == guild and top[3] == B.Realm()) or "",
 			},
-			{ click = function() UI.rk.boss = enc; UI:Refresh() end,
+			{ click = function()
+				-- Shift-click: straight to the #1's raid
+				if IsShiftKeyDown() and top then
+					UI.rk.log = { slug = top[2].slug, guild = top[1], realm = top[3], rec = top[2], kind = "kills", key = enc }
+				else
+					UI.rk.boss = enc
+				end
+				UI:Refresh()
+			  end,
 			  bar = (g and top) and (top[2].t / g.t) or nil, ba = 0.2, cr = 0.15, cg = 0.75, cb = 0.3,
 			  tip = { "you = your best kill (WhoDidIt or Chronicle)",
 			          "guild = your guild's best, its rank and how far behind #1 it is",
 			          "#1 = the fastest guild (" .. realm .. ", " .. faction .. ")",
 			          beaten and ("|cffff5555! " .. B:RivalText(beaten) .. "|r") or " ",
-			          "|cff888888Click for the full leaderboard.|r" },
+			          "|cff888888Click: the full leaderboard (click a guild there to open its raid)|r",
+			          "|cff888888Shift-click: open the #1 guild's raid|r" },
 			  tipTitle = enc }))
 	end
 	rivalRows(rows, zone)
@@ -1909,7 +1915,7 @@ function UI:RankBossRows(realm, faction, enc)
 	local B = W.Board
 	local rows = {}
 	local guild = B.MyGuild()
-	tinsert(rows, row("|cffffd100<< Back to all bosses|r", nil, { head = true, click = function() UI.rk.boss = nil; UI:Refresh() end }))
+	tinsert(rows, row("|cffffd100<< Back to all bosses|r", nil, { head = true, click = function() UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end }))
 	head(rows, enc .. " on " .. realm .. "  |cff888888(" .. faction .. ")|r")
 	pinRows(rows, realm, faction, "kills", enc, guild)
 	head(rows, "Leaderboard")
@@ -1956,6 +1962,88 @@ function UI:RankClearRows(realm, faction, zone)
 	return rows
 end
 
+-- one guild's raid: every boss kill from its Chronicle log, against our times
+local LOG_SPEC = { { 20, "RIGHT" }, { 168, "LEFT" }, { 64, "RIGHT" }, { 66, "RIGHT" }, { 40, "RIGHT" }, { 100, "RIGHT" }, { 70, "RIGHT" } }
+
+local function clock(secs)
+	if not secs then return "-" end
+	secs = floor(secs)
+	if secs >= 3600 then return string.format("%d:%02d:%02d", floor(secs / 3600), floor(math.mod(secs, 3600) / 60), math.mod(secs, 60)) end
+	return string.format("%d:%02d", floor(secs / 60), math.mod(secs, 60))
+end
+
+function UI:RankLogRows()
+	local B = W.Board
+	local L = UI.rk.log
+	local rec = L.rec or {}
+	local rows = {}
+	local back = UI.rk.boss and ("<< Back to the " .. UI.rk.boss .. " leaderboard") or "<< Back to the leaderboard"
+	tinsert(rows, row("|cffffd100" .. back .. "|r", nil, { head = true, click = function() UI.rk.log = nil; UI:Refresh() end }))
+	local log = B:Log(L.slug)
+	local guild = B.MyGuild()
+	local home = B.Realm()
+	local mine = (L.guild == guild and L.realm == home)
+	local zone = (log and log.zone) or B:KeyZone(L.kind, L.key) or UI.rk.inst
+
+	head(rows, facName(L.guild, rec.f, mine) .. "  |cffffffff" .. instTitle(zone) .. "|r  " .. C_DIM .. B.Date(rec.d) .. "|r")
+	tinsert(rows, row("Realm", "|cffcc99ff" .. B.RealmLabel(L.realm) .. "|r"))
+	tinsert(rows, row("Faction  /  raid size", "|cffffffff" .. (rec.f or "?") .. "|r" .. C_DIM .. "  /  |r" .. C_TIME .. ((log and log.n) or rec.n or "?") .. "|r players"))
+	local place, of = B:Place(L.realm, L.kind, L.key, rec.t or 0)
+	tinsert(rows, row((L.kind == "clears") and "Full clear" or (L.key .. " kill"),
+		C_TIME .. B.Fmt(rec.t) .. "|r  " .. rankTxt(place) .. C_DIM .. " of " .. of .. " on " .. L.realm .. "|r"))
+	if L.slug then
+		local url = B.LogURL(L.slug)
+		tinsert(rows, row("Chronicle log  " .. C_DIM .. url .. "|r", "|cffffd100copy link  >|r",
+			{ tipTitle = "Chronicle log", tip = { "Opens a box with the link selected: press Ctrl+C, then paste it in your browser." },
+			  click = function() W:Prompt("Chronicle log for " .. L.guild .. "\n|cff888888Press Ctrl+C to copy, then Esc.|r", url, function() end) end }))
+	end
+
+	if not log then
+		head(rows, "Boss kills in this raid")
+		if L.slug then
+			tinsert(rows, row(C_DIM .. "This raid's boss list isn't downloaded yet. tools\\WhoDidIt-Sync fetches it on its next sync.|r"))
+		else
+			tinsert(rows, row(C_DIM .. (rec.net and ("Shared by a WhoDidIt user" .. (rec.by and (" (" .. rec.by .. ")") or "") .. " - there's no Chronicle log for it.")
+				or "Recorded by your WhoDidIt - there's no Chronicle log for it.") .. "|r"))
+		end
+		return rows
+	end
+
+	local total, wipes = 0, 0
+	for i = 1, getn(log.kills) do wipes = wipes + (log.kills[i].w or 0) end
+	local last = log.kills[getn(log.kills)]
+	head(rows, "Boss kills in this raid  " .. C_DIM .. "(" .. getn(log.kills) .. " kills" .. ((wipes > 0) and (", " .. wipes .. " wipes") or "")
+		.. ((last and last.a) and (", " .. clock(last.a) .. " start to last kill") or "") .. " - click a boss for its leaderboard)|r")
+	colHead(rows, LOG_SPEC, { "#", "Boss", "Kill", "Into raid", "Wipes", mine and "vs our best" or "vs our guild", "Rank" })
+	for i = 1, getn(log.kills) do
+		local k = log.kills[i]
+		local ours = guild and B:GuildBest(home, "kills", k.n, guild)
+		local cmp = C_DIM .. "-|r"
+		if ours and k.s then
+			local d = k.s - ours.t
+			if math.abs(d) < 0.05 then cmp = "|cffffd100our best|r"
+			elseif d < 0 then cmp = "|cffff7777" .. B.Fmt(-d) .. " faster|r"
+			else cmp = C_GUILD .. B.Fmt(d) .. " slower|r" end
+		end
+		local kp, kof = B:Place(log.realm or L.realm, "kills", k.n, k.s or 0)
+		local isKey = (L.kind == "kills" and k.n == L.key)
+		local boss = k.n
+		tinsert(rows, cells(LOG_SPEC,
+			{ C_DIM .. i .. ".|r", (isKey and "|cffffd100" or "|cffffffff") .. k.n .. "|r", C_TIME .. B.Fmt(k.s) .. "|r",
+			  k.a and (C_DIM .. clock(k.a) .. "|r") or (C_DIM .. "-|r"),
+			  (k.w and k.w > 0) and ("|cffff7777" .. k.w .. "|r") or (C_DIM .. "-|r"),
+			  cmp, rankTxt(kp) .. C_DIM .. "/" .. kof .. "|r" },
+			{ sel = isKey, tipTitle = k.n,
+			  tip = { "Killed in " .. B.Fmt(k.s) .. (k.a and (", " .. clock(k.a) .. " into the raid") or "")
+			            .. ((k.w and k.w > 0) and (" after " .. k.w .. " wipe" .. (k.w == 1 and "" or "s")) or ""),
+			          ours and ("Our guild's best: " .. B.Fmt(ours.t)) or "Our guild has no kill yet",
+			          "That time would be #" .. kp .. " of " .. kof .. " on " .. (log.realm or L.realm),
+			          "|cff888888Click: " .. k.n .. "'s leaderboard|r" },
+			  click = function() UI.rk.log = nil; UI.rk.boss = boss; UI:Refresh() end }))
+	end
+	return rows
+end
+
 function UI:RefreshRankings()
 	local B = W.Board
 	local realm, faction = rkRealm(), rkFaction()
@@ -1970,7 +2058,6 @@ function UI:RefreshRankings()
 
 	UI.rankButtons[3]:SetText("Realm: " .. realm)
 	UI.rankButtons[4]:SetText("Faction: " .. faction)
-	UI.rankButtons[5]:SetText("Sharing: " .. (WhoDidItDB.opts.shareBoard and "|cff33ff33on|r" or "|cffff5555off|r"))
 	if UI.rk.view == "kills" then
 		UI.rankButtons[1]:LockHighlight(); UI.rankButtons[2]:UnlockHighlight()
 	else
@@ -2026,13 +2113,14 @@ function UI:RefreshRankings()
 	rVerdict:SetText(verdict)
 
 	local rows
-	if UI.rk.boss then rows = UI:RankBossRows(realm, faction, UI.rk.boss)
+	if UI.rk.log then rows = UI:RankLogRows()
+	elseif UI.rk.boss then rows = UI:RankBossRows(realm, faction, UI.rk.boss)
 	elseif UI.rk.view == "kills" then rows = UI:RankKillRows(realm, faction, zone)
 	else rows = UI:RankClearRows(realm, faction, zone) end
 
-	hintText:SetText("Kills: pull to kill.  Clears: first combat to the last boss.  |cffff5555!|r = someone beat our time recently.")
+	hintText:SetText("Click a guild's time to open their raid.  Clears: first combat to the last boss.  |cffff5555!|r = beaten recently.")
 	hintText:Show()
-	local key = "rk" .. realm .. faction .. zone .. UI.rk.view .. tostring(UI.rk.boss)
+	local key = "rk" .. realm .. faction .. zone .. UI.rk.view .. tostring(UI.rk.boss) .. (UI.rk.log and (UI.rk.log.guild .. tostring(UI.rk.log.slug)) or "")
 	mainList:SetData(rows, key == lastModeKey)
 	lastModeKey = key
 end

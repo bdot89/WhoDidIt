@@ -28,6 +28,7 @@
       WhoDidIt-Sync.ps1 -NoLoggerUpdate    leave the Chronicle logger alone
       WhoDidIt-Sync.ps1 -NoRollForUpdate   leave RollFor alone
       WhoDidIt-Sync.ps1 -NoPackUpdate      leave the mob packs alone
+      WhoDidIt-Sync.ps1 -DetailsPerSync 600  read more raids in full per sync (default 150)
 
     The API allows 60 requests a minute; this stays at about one a second
     and caches everything it has read, so only new uploads are fetched
@@ -42,7 +43,8 @@ param(
     [switch]$UpdatesOnly,
     [switch]$NoLoggerUpdate,
     [switch]$NoRollForUpdate,
-    [switch]$NoPackUpdate
+    [switch]$NoPackUpdate,
+    [int]$DetailsPerSync = 150
 )
 
 $ErrorActionPreference = "Stop"
@@ -194,20 +196,52 @@ function Keep-Best($table, $key, $rec) {
     if (-not $table.ContainsKey($key) -or $rec.secs -lt $table[$key].secs) { $table[$key] = $rec }
 }
 
-function Write-Output-File($clears, $myClears, $cache, $status) {
-    # best kill per realm / boss / guild, and your characters' best kills
-    $best = @{}; $myKills = @{}
-    foreach ($log in $cache.logs.Values) {
-        foreach ($k in $log.kills) {
-            $rec = @{ realm = $log.realm; instance = $log.instance; boss = $k.n; guild = $log.guild; faction = $log.faction;
+# best kill per realm / boss / guild (or, $mine, per realm / your character / boss)
+function Get-BestKills($cache, [bool]$mine = $false) {
+    $best = @{}
+    foreach ($id in $cache.logs.Keys) {
+        $log = $cache.logs[$id]
+        foreach ($k in @($log.kills)) {
+            $rec = @{ id = $id; realm = $log.realm; instance = $log.instance; boss = $k.n; guild = $log.guild; faction = $log.faction;
                       secs = $k.s; ended = $log.ended; players = $log.players; slug = $log.slug }
-            if ($log.guild) { Keep-Best $best "$($log.realm)|$($k.n)|$($log.guild)" $rec }
-            foreach ($me in $log.mine) {
-                $r2 = $rec.Clone(); $r2.char = $me
-                Keep-Best $myKills "$($log.realm)|$me|$($k.n)" $r2
+            if (-not $mine) {
+                if ($log.guild) { Keep-Best $best "$($log.realm)|$($k.n)|$($log.guild)" $rec }
+            } else {
+                foreach ($me in @($log.mine)) {
+                    $r2 = $rec.Clone(); $r2.char = $me
+                    Keep-Best $best "$($log.realm)|$me|$($k.n)" $r2
+                }
             }
         }
     }
+    return $best
+}
+
+# one raid log's boss kills in order: name, kill time, time into the raid, wipes on it before the kill
+function Read-LogKills($inst) {
+    $encs = @(@($inst.encounters) | Where-Object { $_.start_time } | Sort-Object { [datetimeoffset]::Parse($_.start_time) })
+    $first = $null
+    if ($encs.Count -gt 0) { $first = [datetimeoffset]::Parse($encs[0].start_time) }
+    $kills = @(); $wipes = @{}
+    foreach ($enc in $encs) {
+        if (-not $enc.boss) { continue }
+        if ($enc.kill_type -eq "wipe") { $wipes[$enc.name] = 1 + [int]$wipes[$enc.name]; continue }
+        if (-not $enc.end_time) { continue }
+        $st = [datetimeoffset]::Parse($enc.start_time); $et = [datetimeoffset]::Parse($enc.end_time)
+        $secs = ($et - $st).TotalSeconds
+        if ($secs -ge 3) { $kills += @{ n = $enc.name; s = [math]::Round($secs, 1); a = [math]::Round(($et - $first).TotalSeconds); w = [int]$wipes[$enc.name] } }
+    }
+    return ,$kills
+}
+
+function Write-Output-File($clears, $myClears, $cache, $status) {
+    $best = Get-BestKills $cache
+    $myKills = Get-BestKills $cache $true
+    # logs behind any time on the boards: their whole boss list goes in too (L lines)
+    $bySlug = @{}
+    foreach ($id in $cache.logs.Keys) { $l = $cache.logs[$id]; if ($l.slug) { $bySlug[$l.slug] = $l } }
+    $shown = @{}
+    foreach ($r in @($best.Values) + @($myKills.Values) + @($clears.Values) + @($myClears.Values)) { if ($r.slug) { $shown[$r.slug] = $true } }
     $lines = New-Object System.Collections.Generic.List[string]
     $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     $lines.Add("WDICHRON|2|$now|$(Clean $Server)|$Days|$status")
@@ -226,6 +260,17 @@ function Write-Output-File($clears, $myClears, $cache, $status) {
     foreach ($m in $myKills.Values) {
         $lines.Add(("PK|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}" -f (Clean $m.realm), (Clean $m.char), (Clean $m.instance), (Clean $m.boss),
             [math]::Round($m.secs, 1), $m.ended, (Clean $m.guild), $m.slug))
+    }
+    # L|slug|realm|instance|guild|faction|ended|players|Boss=secs=into raid=wipes;Boss=...
+    foreach ($slug in $shown.Keys) {
+        $l = $bySlug[$slug]
+        if (-not $l) { continue }
+        $ks = @()
+        foreach ($k in @($l.kills)) {
+            $ks += ("{0}={1}={2}={3}" -f ((Clean $k.n) -replace '[=;]', ' '), $k.s, $k.a, $k.w)
+        }
+        $lines.Add(("L|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}" -f $slug, (Clean $l.realm), (Clean $l.instance), (Clean $l.guild), $l.faction,
+            $l.ended, $l.players, ($ks -join ";")))
     }
     $tmp = "$OutFile.tmp"
     [IO.File]::WriteAllText($tmp, ($lines -join "`n") + "`n", (New-Object Text.UTF8Encoding($false)))
@@ -310,17 +355,11 @@ function Sync {
         $done++
         $inst = Get-Api ("/raidlogs/instances/" + $a.id)
         if (-not $inst) { continue }
-        $kills = @()
-        foreach ($enc in @($inst.encounters)) {
-            if (-not $enc.boss -or $enc.kill_type -eq "wipe" -or -not $enc.end_time) { continue }
-            $secs = ([datetimeoffset]::Parse($enc.end_time) - [datetimeoffset]::Parse($enc.start_time)).TotalSeconds
-            if ($secs -ge 3) { $kills += @{ n = $enc.name; s = [math]::Round($secs, 1) } }
-        }
         $cache.logs[$a.id] = @{
             instance = $a.name; realm = $a.realmName; slug = $a.slug;
             guild = $a.guild.name; guildId = $a.guild.id; players = $a.player_count;
             faction = (Get-Faction $inst.players); mine = (Get-Mine $a.realmName $inst.players);
-            ended = (To-Epoch $a.ended_at); kills = $kills
+            ended = (To-Epoch $a.ended_at); kills = (Read-LogKills $inst); v = 2
         }
         if ($done % 25 -eq 0 -or $done -eq $todo.Count) {
             Save-Cache $cache
@@ -328,6 +367,37 @@ function Sync {
             Log "Read $done / $($todo.Count) logs ($k guild boss records)"
         }
     }
+
+    # 2b) the raids behind the times on the boards, in full detail (kill order, time into the
+    #     raid, wipes) so clicking a time in game shows that whole raid. Logs read before this
+    #     existed, and best clears older than the look-back, are fetched here, -DetailsPerSync at a time.
+    $best = Get-BestKills $cache
+    $need = [ordered]@{}
+    foreach ($b in $best.Values) { if (-not $cache.logs[$b.id].v) { $need[$b.id] = $null } }
+    foreach ($c in $clears.Values) {
+        if ($c.id -and (-not $cache.logs.ContainsKey([string]$c.id) -or -not $cache.logs[[string]$c.id].v)) { $need[[string]$c.id] = $c }
+    }
+    $left = $need.Count
+    if ($left -gt 0) { Log "Raid details to read for the boards: $left (up to $DetailsPerSync now, the rest on later syncs)" }
+    $n = 0
+    foreach ($id in @($need.Keys)) {
+        if ($n -ge $DetailsPerSync) { break }
+        $n++
+        $inst = Get-Api ("/raidlogs/instances/" + $id)
+        if (-not $inst) { continue }
+        $old = $cache.logs[$id]
+        $c = $need[$id]
+        if ($old) {
+            $cache.logs[$id] = @{ instance = $old.instance; realm = $old.realm; slug = $old.slug; guild = $old.guild; guildId = $old.guildId;
+                players = $old.players; faction = $old.faction; mine = @($old.mine); ended = $old.ended; kills = (Read-LogKills $inst); v = 2 }
+        } elseif ($c) {
+            $cache.logs[$id] = @{ instance = $c.instance; realm = $c.realm; slug = $c.slug; guild = $c.guild; guildId = $c.guildId;
+                players = $c.players; faction = $c.faction; mine = (Get-Mine $c.realm $inst.players); ended = $c.ended;
+                kills = (Read-LogKills $inst); v = 2 }
+        }
+        if ($n % 25 -eq 0) { Save-Cache $cache; Log "Raid details: $n / $([math]::Min($DetailsPerSync, $left))" }
+    }
+    if ($n -gt 0) { Save-Cache $cache }
 
     # 3) your full clears in runs that weren't your guild's best:
     #    every run of every guild you've raided with

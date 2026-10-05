@@ -113,10 +113,17 @@ Every player name in the window (blame board, Heroes, Meters, Consumes) works th
 
 The **Rankings** button (title bar, or `/wdi rankings`) shows kill times and full clears for every raid:
 
-- **Kill times:** your personal best, your guild's best and rank, and the fastest guild on the realm for every boss. Click a boss for its full leaderboard.
+- **Kill times:** your personal best, your guild's best and rank, and the fastest guild on the realm for every boss. Click a boss for its full leaderboard; Shift-click to jump straight to the #1 guild's raid.
+- **Open any raid:** click a guild's time on any leaderboard (or your own pinned times). The raid page lists every boss
+  killed in that raid, in order. For each kill it shows the time, when it happened in the raid, wipes before it, how it
+  compares with your guild's best, and where it would rank. There's also a **copy link** to the raid on Chronicle.
+  Click a boss there for its leaderboard.
 - **Full clears:** first combat inside the instance to the last required boss, all in one run. Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro) aren't required. A run in progress shows which bosses are down.
 - **Closest to you first:** it opens on your current instance, realm and faction, with your own and your guild's times pinned at the top. **Realm** and **Faction** switch the view.
-- **Every guild on your realm:** each guild's best times are shared with other WhoDidIt users over a hidden realm channel (`WDIBoard`). So the board fills up with every guild that has at least one WhoDidIt user. **Sharing** turns it off (`/wdi share off`). Shared times are self-reported: they're sanity-checked but can't be verified.
+- **Every guild on your realm:** most times come from Chronicle (see below). WhoDidIt users also share their guild's
+  bests over a hidden realm channel (`WDIBoard`), automatically and in the background. That adds times right after a
+  kill, before anyone uploads the log, and from guilds that never upload. Turn it off with `/wdi share off`. Shared
+  times are self-reported: they're sanity-checked but can't be verified.
 
 A kill or clear counts for the raid's majority guild (at least half the raid). Personal bests are kept per character.
 
@@ -174,10 +181,11 @@ tools\WhoDidIt-Sync.cmd -LoggerOnly        only install / update the built-in Ch
 tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
 tools\WhoDidIt-Sync.cmd -NoRollForUpdate   leave RollFor alone
 tools\WhoDidIt-Sync.cmd -NoPackUpdate      leave the mob packs alone
+tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (default 150)
 ```
 
 - **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.
-- **Later syncs:** only fetch new uploads.
+- **Later syncs:** only fetch new uploads, plus the raids behind the times on the boards in full detail (150 per sync, so clicking a time shows the whole raid).
 - **Rate limit:** the helper stays within Chronicle's limit (about one request a second) and caches what it has read in `CustomData\WhoDidIt_ChronicleCache.json`.
 - **Faction:** comes from the raiders' races. OctoWoW raids cross-faction, so many guilds show as **M** (mixed).
 
