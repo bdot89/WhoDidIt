@@ -274,9 +274,10 @@ function B:MyBest(kind, key)
 	return best
 end
 
--- a guild's best record for one board (WhoDidIt or Chronicle)
+-- your guild's best record for one board (WhoDidIt or Chronicle). Always
+-- from your own realm, so viewing another realm compares against it.
 function B:GuildBest(realm, kind, key, guild)
-	if realm == B.ALL then realm = B.Realm() end
+	realm = B.Realm()
 	local best = B:DB(realm)[kind][key]
 	best = best and best[guild]
 	local c = B.chron and B.chron.realms[realm]

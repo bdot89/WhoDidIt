@@ -1432,7 +1432,7 @@ function UI:RankNavRows(realm)
 			  bar = (g and top) and (top[2].t / g.t) or nil, ba = 0.28, cr = 0.15, cg = 0.75, cb = 0.3,
 			  tipTitle = instTitle(zone),
 			  tip = {
-			      "Your guild: " .. (g and (B.Fmt(g.t) .. "  #" .. rank .. " of " .. of) or "no clear yet"),
+			      "Your guild: " .. (g and (B.Fmt(g.t) .. (rank and ("  #" .. rank .. " of " .. of) or ("  (on " .. home .. ")"))) or "no clear yet"),
 			      "You: " .. (me and B.Fmt(me.t) or "no clear yet"),
 			      "#1: " .. (top and (B.Fmt(top[2].t) .. "  " .. top[1]) or "-"),
 			      "|cff888888The green bar is how close your guild is to #1.|r",
@@ -1482,7 +1482,8 @@ function UI:RankBossRows(realm, faction, enc)
 	if guild then
 		local g = B:GuildBest(realm, "kills", enc, guild)
 		local rank, of = B:Rank(realm, "kills", enc, guild, faction)
-		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  #" .. (rank or "?") .. " of " .. of) or "|cff888888no kill yet|r"))
+		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  "
+			.. (rank and (rankTxt(rank) .. " of " .. of) or ("|cff888888on " .. B.Realm() .. "|r"))) or "|cff888888no kill yet|r"))
 	end
 	head(rows, "Leaderboard")
 	boardRows(rows, realm, faction, "kills", enc, guild)
@@ -1500,7 +1501,8 @@ function UI:RankClearRows(realm, faction, zone)
 	if guild then
 		local g = B:GuildBest(realm, "clears", zone, guild)
 		local rank, of = B:Rank(realm, "clears", zone, guild, faction)
-		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  #" .. (rank or "?") .. " of " .. of) or "|cff888888no clear yet|r"))
+		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  "
+			.. (rank and (rankTxt(rank) .. " of " .. of) or ("|cff888888on " .. B.Realm() .. "|r"))) or "|cff888888no clear yet|r"))
 	end
 	local run = B:CurrentRun()
 	if run and run.zone == zone then
@@ -1577,8 +1579,12 @@ function UI:RefreshRankings()
 		if g then
 			local rank, of = B:Rank(realm, "clears", zone, guild, "All")
 			local top = B:Board(realm, "clears", zone, "All")[1]
-			verdict = "|cff33ff33" .. guild .. "|r best clear |cffffffff" .. B.Fmt(g.t) .. "|r  " .. rankTxt(rank or 0) .. " of " .. of
-				.. ((realm == B.ALL) and " on all realms" or (" on " .. realm))
+			verdict = "|cff33ff33" .. guild .. "|r best clear |cffffffff" .. B.Fmt(g.t) .. "|r  "
+			if rank then
+				verdict = verdict .. rankTxt(rank) .. " of " .. of .. ((realm == B.ALL) and " on all realms" or (" on " .. realm))
+			else
+				verdict = verdict .. "|cff888888(on " .. B.Realm() .. ")|r"
+			end
 			if top and top[2] ~= g then
 				verdict = verdict .. "  |cffff7777" .. B.Fmt(g.t - top[2].t) .. " behind|r |cffffffff" .. top[1] .. "|r"
 			end
