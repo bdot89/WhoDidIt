@@ -1100,6 +1100,8 @@ local function colorNames(text, rec)
 	return (string.gsub(text or "", "([^%s%p%d]+)", function(w)
 		local p = rec.players[w]
 		if p then return W.CName(w, p.class) end
+		-- Lua 5.0 replaces the match with "" when the callback returns nil
+		return w
 	end))
 end
 UI.ColorNames = colorNames

@@ -36,16 +36,24 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/breakdown.jpg" alt="Cause breakdown"><br><b>Cause breakdown.</b> Click any cause. Here: each healer's mana, healing and mana consumables when the wipe started.</td>
-    <td width="50%"><img src="docs/mistakes.jpg" alt="Mistakes"><br><b>Mistakes.</b> Every mistake with its time and blame points, worst first.</td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/threat.jpg" alt="Threat"><br><b>Threat.</b> Who the boss attacked and when, why (tank swap, pulled aggro, opened early), and peak threat per player.</td>
-    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> Flask / food overview, then each player's buffs and items used, colour-coded by type.</td>
-  </tr>
-  <tr>
     <td width="50%"><img src="docs/live.jpg" alt="Live fight"><br><b>Live view.</b> The report builds itself while you fight.</td>
-    <td width="50%"><img src="docs/chat.jpg" alt="Coloured chat posts"><br><b>Coloured chat posts.</b> Names in class colour, times in blue, numbers in white, so posts stand out in raid chat.</td>
+    <td width="50%"><img src="docs/breakdown.jpg" alt="Cause breakdown"><br><b>Cause breakdown.</b> Click any cause. Here: which healers died and when, and each survivor's healing and mana consumables.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/deaths.jpg" alt="Deaths"><br><b>Deaths.</b> Every death with its cause and killing blow. Deaths after the wipe point are greyed out.</td>
+    <td width="50%"><img src="docs/death.jpg" alt="Death recap"><br><b>Death recap.</b> Click a death for its last seconds: every hit, heal and crushing blow, with a health bar.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/mistakes.jpg" alt="Mistakes"><br><b>Mistakes.</b> Every mistake with its time and blame points, worst first.</td>
+    <td width="50%"><img src="docs/threat.jpg" alt="Threat"><br><b>Threat.</b> Who the boss attacked and why (tank swap, pulled aggro, opened early), plus peak threat per player.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/meters.jpg" alt="Meters"><br><b>Meters.</b> Damage, healing, taken, activity and utility, with roles marked.</td>
+    <td width="50%"><img src="docs/timeline.jpg" alt="Timeline"><br><b>Timeline.</b> Everything that happened in the fight, in order.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> Flask / food overview, then each player's buffs and items used, colour-coded by type.</td>
+    <td width="50%"><img src="docs/chat.jpg" alt="Coloured chat posts"><br><b>Coloured chat posts.</b> A Report and a Consumes post: names in class colour, times in blue, numbers in white. Long lines split instead of losing their colours.</td>
   </tr>
 </table>
 
