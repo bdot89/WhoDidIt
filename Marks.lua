@@ -492,36 +492,8 @@ function M:Restore(zone, name)
 	M:Changed()
 end
 
--- the quick-save popup: one edit box, Enter saves
-StaticPopupDialogs["WHODIDIT_MARKNAME"] = {
-	text = "%s",
-	button1 = ACCEPT, button2 = CANCEL,
-	hasEditBox = 1, maxLetters = 48,
-	OnShow = function()
-		M.popup = this
-		local eb = getglobal(this:GetName() .. "EditBox")
-		eb:SetText(M.prompt and M.prompt.default or "")
-		eb:HighlightText()
-		eb:SetFocus()
-	end,
-	OnAccept = function()
-		local eb = M.popup and getglobal(M.popup:GetName() .. "EditBox")
-		if eb and M.prompt then M.prompt.fn(eb:GetText()) end
-		M.prompt = nil
-	end,
-	EditBoxOnEnterPressed = function()
-		if M.prompt then M.prompt.fn(this:GetText()) end
-		M.prompt = nil
-		this:GetParent():Hide()
-	end,
-	EditBoxOnEscapePressed = function() this:GetParent():Hide() end,
-	timeout = 0, whileDead = 1, hideOnEscape = 1,
-}
-
-function M:Prompt(text, default, fn)
-	M.prompt = { default = default, fn = fn }
-	StaticPopup_Show("WHODIDIT_MARKNAME", text)
-end
+-- the quick-save / rename popup (W:Prompt in Core.lua: one edit box, Enter saves)
+function M:Prompt(text, default, fn) W:Prompt(text, default, fn) end
 
 -- "Save marks as pack": capture the marks now, then ask for a name
 function M:QuickSave(packName)

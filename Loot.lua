@@ -56,27 +56,127 @@ function L:Setting(key) return config()[key] end
 -- /rf config <command>: RollFor flips it, prints it and tells its windows
 function L:Toggle(cmd) L:Run("RF", "config " .. cmd) end
 
--- RollFor's settings shown in the Loot tab: { db key, /rf config command, label, what it does }
+-- RollFor's on/off settings shown in the Loot tab, in groups.
+-- Each: { db key, /rf config command, label, one-line summary, { hover lines } }
 L.SETTINGS = {
-	{ "auto_master_loot", "auto-master-loot", "Auto master loot",
-	  "Switch the raid to master loot (you as looter) when you target a boss. You need to be raid leader." },
-	{ "show_ml_warning", "ml", "Master loot warning",
-	  "Warn you when you open a boss's loot and master loot isn't on." },
-	{ "auto_raid_roll", "auto-rr", "Auto raid roll",
-	  "When nobody rolls on an item that isn't soft-reserved, raid-roll it (a random raider gets it)." },
-	{ "auto_loot", "auto-loot", "Auto-loot",
-	  "Hand out items on RollFor's auto-loot list without rolling (manage the list with /rfal)." },
-	{ "auto_loot_announce", "auto-loot-announce", "Announce auto-looted items", "Say in raid what was auto-looted." },
-	{ "auto_class_announce", "auto-class-announce", "Announce class restrictions",
-	  "For class-only items (tier tokens and the like) the roll message names the classes that can roll." },
-	{ "auto_tmog", "auto-tmog", "No transmog rolls on trash", "Trash loot only takes main-spec and off-spec rolls." },
-	{ "raid_roll_again", "raid-roll-again", "Raid roll again button", "Show a button to raid-roll the same item again." },
-	{ "show_player_roles", "show-player-roles", "Show roles while rolling", "Show each roller's spec from the soft-res sheet in the roll window." },
-	{ "handle_plus_ones", "Handle-plus-ones", "Track +1s", "Count main-spec wins (+1) per player for the rest of the raid." },
-	{ "plus_one_prompt", "plus-one-prompt", "Ask about +1 on award", "Ask whether each award should count as a +1." },
-	{ "loot_frame_cursor", "loot-frame-cursor", "Loot window at the mouse", "Open RollFor's loot window where your mouse is." },
-	{ "classic_look", "classic-look", "Classic look", "Blizzard-style look for RollFor's windows (needs a /reload)." },
+	{ title = "Switching the loot method for you",
+	  intro = { "Target a boss: the raid switches to master loot, with you as the looter.",
+	            "Give out everything in the boss's loot: it switches back to group loot for the trash." },
+	  items = {
+		{ "auto_master_loot", "auto-master-loot", "Auto master loot", "Target a boss and master loot (you) turns on.",
+		  { "When you target a boss, the raid switches to master loot with you as the looter.",
+		    "You have to be the raid leader. Default: on." } },
+		{ "auto_group_loot", "auto-group-loot", "Auto group loot", "Boss looted empty and group loot comes back on.",
+		  { "When everything in a boss's loot window has been given out, the raid switches back",
+		    "to group loot, so trash is rolled as normal. (RollFor doesn't do this in Blackwing Lair.)",
+		    "You have to be the raid leader. Default: off." } },
+		{ "show_ml_warning", "ml", "Master loot warning", "Warns you if you loot a boss without master loot.",
+		  { "Shows a warning when you open a boss's loot and master loot isn't on. Default: off." } },
+	  } },
+	{ title = "Rolling",
+	  items = {
+		{ "auto_raid_roll", "auto-rr", "Auto raid roll", "Nobody rolled? A random raider gets it.",
+		  { "When nobody rolls on an item that isn't soft-reserved, RollFor raid-rolls it:",
+		    "a random raider wins it. Default: off." } },
+		{ "auto_class_announce", "auto-class-announce", "Name the classes that can roll", "For class-only items like tier tokens.",
+		  { "For items only some classes can use (tier tokens, class books...), the roll message",
+		    "names those classes instead of the plain \"roll for\" message. Default: off." } },
+		{ "auto_tmog", "auto-tmog", "No transmog rolls on trash", "Trash drops only take main and off spec rolls.",
+		  { "Items from trash mobs can't be rolled for transmog. Default: off." } },
+		{ "show_player_roles", "show-player-roles", "Show specs in the roll window", "Each roller's spec from the soft-res sheet.",
+		  { "Shows each roller's spec (from the soft-res sheet) next to their roll. Default: off." } },
+		{ "raid_roll_again", "raid-roll-again", "Raid roll again button", "Raid-roll the same item again.",
+		  { "Adds a button to raid-roll the same item again after a raid roll. Default: off." } },
+		{ "handle_plus_ones", "Handle-plus-ones", "Track +1s", "Count each player's main-spec wins.",
+		  { "Counts main-spec wins (+1) per player, so you can favour players who haven't won yet.", "Default: off." } },
+		{ "plus_one_prompt", "plus-one-prompt", "Ask about +1 when awarding", "Choose per item whether it counts as a +1.",
+		  { "When you award an item, asks whether it should count as a +1. Default: off." } },
+	  } },
+	{ title = "Looting",
+	  items = {
+		{ "auto_loot", "auto-loot", "Auto-loot", "Items on RollFor's auto-loot list skip the roll.",
+		  { "Items on RollFor's auto-loot list are looted straight away without a roll.",
+		    "Manage the list with /rfal. Default: on." } },
+		{ "auto_loot_announce", "auto-loot-announce", "Announce auto-looted items", "Says in raid what was auto-looted.",
+		  { "Posts the auto-looted items to the raid. Default: on." } },
+		{ "loot_frame_cursor", "loot-frame-cursor", "Loot window at the mouse", "Opens RollFor's loot window where your mouse is.",
+		  { "Opens RollFor's loot window at your mouse instead of its saved spot. Default: off." } },
+		{ "classic_look", "classic-look", "Classic look", "Blizzard-style windows (needs a /reload).",
+		  { "Gives RollFor's windows the classic Blizzard look. Needs a /reload. Default: off." } },
+	  } },
 }
+
+------------------------------------------------------------------ roll numbers
+
+-- what raiders type: /roll (1-100) for main spec, /roll 99 for off spec...
+L.ROLLS = {
+	{ key = "ms_roll_threshold",   cmd = "ms",   label = "Main spec", default = 100 },
+	{ key = "os_roll_threshold",   cmd = "os",   label = "Off spec",  default = 99 },
+	{ key = "tmog_roll_threshold", cmd = "tmog", label = "Transmog",  default = 98 },
+}
+
+function L:RollNumber(r) return tonumber(config()[r.key]) or r.default end
+function L.RollCommand(n) return (n == 100) and "/roll" or ("/roll " .. n) end
+function L:TmogOn() return config().tmog_rolling_enabled ~= false end
+function L:RollTime() return tonumber(config().default_rolling_time_seconds) or 8 end
+
+-- "/roll = main spec, /roll 99 = off spec, /roll 98 = transmog"
+function L:HowToRoll()
+	local parts = {}
+	for i = 1, getn(L.ROLLS) do
+		local r = L.ROLLS[i]
+		if r.cmd ~= "tmog" or L:TmogOn() then
+			tinsert(parts, L.RollCommand(L:RollNumber(r)) .. " = " .. string.lower(r.label))
+		end
+	end
+	return table.concat(parts, ", ")
+end
+
+-- change one roll number (asks first, checks it, then /rf config <ms|os|tmog> <n>)
+function L:AskRollNumber(r)
+	W:Prompt("Roll number for |cffffd100" .. r.label .. "|r\n|cff888888Raiders type /roll <number>. 100 = plain /roll.|r",
+		L:RollNumber(r), function(text)
+			local n = tonumber(text)
+			if not n or n ~= math.floor(n) or n < 2 or n > 10000 then
+				W.Print("A roll number is a whole number from 2 to 10000.")
+				return
+			end
+			for i = 1, getn(L.ROLLS) do
+				local o = L.ROLLS[i]
+				if o ~= r and L:RollNumber(o) == n then
+					W.Print(o.label .. " already uses " .. n .. " - each roll type needs its own number.")
+					return
+				end
+			end
+			L:Run("RF", "config " .. r.cmd .. " " .. n)
+			if W.UI then W.UI:Refresh() end
+		end)
+end
+
+function L:ResetRollNumbers()
+	for i = 1, getn(L.ROLLS) do L:Run("RF", "config " .. L.ROLLS[i].cmd .. " " .. L.ROLLS[i].default) end
+end
+
+function L:ToggleTmog() L:Run("RF", "config tmog") end
+
+function L:AskRollTime()
+	W:Prompt("How long a roll lasts, in seconds\n|cff888888From 4 to 15. You can still end a roll early with Finish roll.|r",
+		L:RollTime(), function(text)
+			local n = tonumber(text)
+			if not n or n < 4 or n > 15 then W.Print("Roll time is from 4 to 15 seconds.") return end
+			L:Run("RF", "config default-rolling-time " .. math.floor(n))
+			if W.UI then W.UI:Refresh() end
+		end)
+end
+
+-- "item:19885:0:0:0" for the item tooltip (also asks the server for an item not seen yet)
+function L.ItemLink(idOrLink)
+	if type(idOrLink) == "number" then return "item:" .. idOrLink .. ":0:0:0" end
+	if type(idOrLink) == "string" then
+		local _, _, link = string.find(idOrLink, "|H(item:[%-%d:]+)|h")
+		return link or (string.find(idOrLink, "^item:") and idOrLink) or nil
+	end
+end
 
 -- the roll window raiders with RollFor see when you start a roll
 L.POPUP = { "Off", "Eligible", "Always" }

@@ -223,8 +223,17 @@ end
 
 function UI.RowEnter(b)
 	local d = b.d
-	if not d or not d.tip then return end
+	if not d or not (d.tip or d.link) then return end
 	GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+	if d.link then
+		-- an item: its real tooltip, then our lines under it
+		GameTooltip:SetHyperlink(d.link)
+		for i = 1, getn(d.tip or {}) do
+			if type(d.tip[i]) == "string" and d.tip[i] ~= "" then GameTooltip:AddLine(d.tip[i], 0.9, 0.9, 0.9, 1) end
+		end
+		GameTooltip:Show()
+		return
+	end
 	GameTooltip:SetText(d.tipTitle or d.l or "", 1, 0.82, 0, 1)
 	for i = 1, getn(d.tip) do
 		local line = d.tip[i]
@@ -385,7 +394,7 @@ local delBtn   = gridButton("Delete", 3, 1)
 local clearBtn = gridButton("Clear all", 3, 2)
 local trashBtn = gridButton("Trash: off", 2, 1)
 local annBtn   = gridButton("Announce: self", 2, 2)
-local autoBtn  = gridButton("Auto: off", 1, 1)
+local autoBtn  = gridButton("Shout: off", 1, 1)
 local demoBtn  = gridButton("|cff33ccffDemo fight|r", 1, 2)
 
 StaticPopupDialogs["WHODIDIT_CLEAR"] = {
@@ -524,14 +533,14 @@ tooltip(chanBtn, "Shout channel", {
 ------------------------------------------------------------------ right: tabs + content
 
 local TABS = {
-	{ id = "summary",  text = "Summary"  },
-	{ id = "deaths",   text = "Deaths"   },
-	{ id = "mistakes", text = "Mistakes" },
-	{ id = "heroes",   text = "Heroes"   },
-	{ id = "threat",   text = "Threat"   },
-	{ id = "meters",   text = "Meters"   },
-	{ id = "timeline", text = "Timeline" },
-	{ id = "consumes", text = "Consumes" },
+	{ id = "summary",  text = "Summary",  tip = { "The short version: why the fight was lost (or how it was won),", "the main causes ranked, the blame board and the top heroes." } },
+	{ id = "deaths",   text = "Deaths",   tip = { "Every death in order, with what killed them.", "Hover one for the last seconds before it, click it for the full recap." } },
+	{ id = "mistakes", text = "Mistakes", tip = { "Everything WhoDidIt counted against someone: standing in fire,", "pulling aggro, missed interrupts... with the blame points for each." } },
+	{ id = "heroes",   text = "Heroes",   tip = { "The plays that saved someone: clutch heals, shields, taunts,", "battle res, dispels and more." } },
+	{ id = "threat",   text = "Threat",   tip = { "Every time the boss changed target, who it went for and their threat %,", "plus each player's highest threat. Keep the boss targeted to record it." } },
+	{ id = "meters",   text = "Meters",   tip = { "Damage, healing, damage taken, activity and utility for the fight.", "Pick one with the buttons at the bottom." } },
+	{ id = "timeline", text = "Timeline", tip = { "Everything that happened, second by second." } },
+	{ id = "consumes", text = "Consumes", tip = { "Each player's flask, elixirs, food and protection potions,", "and every potion, rune and healthstone they used." } },
 }
 local TABW = floor((RW - (getn(TABS) - 1) * 4) / getn(TABS))
 UI.tabButtons = {}
@@ -545,6 +554,7 @@ for i = 1, getn(TABS) do
 		UI.detail = nil; UI.cause = nil
 		UI:Refresh()
 	end)
+	if t.tip then tooltip(b, t.text, t.tip) end
 	UI.tabButtons[i] = b
 end
 
@@ -555,11 +565,11 @@ mainList:SetPoint("TOPLEFT", content, "TOPLEFT", 5, -6)
 ------------------------------------------------------------------ bottom bar
 
 local METERS = {
-	{ id = "dmg",   text = "Damage"   },
-	{ id = "heal",  text = "Healing"  },
-	{ id = "taken", text = "Taken"    },
-	{ id = "act",   text = "Activity" },
-	{ id = "util",  text = "Utility"  },
+	{ id = "dmg",   text = "Damage",   tip = { "Damage done, per second and share of the raid's total." } },
+	{ id = "heal",  text = "Healing",  tip = { "Healing done (without overhealing), per second and share." } },
+	{ id = "taken", text = "Taken",    tip = { "Damage taken - who soaked the most." } },
+	{ id = "act",   text = "Activity", tip = { "How much of their time alive each player spent casting, swinging or healing.", "Low activity = standing around." } },
+	{ id = "util",  text = "Utility",  tip = { "Interrupts, dispels, tranquilizing shots and items used." } },
 }
 UI.meterButtons = {}
 for i = 1, getn(METERS) do
@@ -571,6 +581,7 @@ for i = 1, getn(METERS) do
 		UI.meter = this.id
 		UI:Refresh()
 	end)
+	if m.tip then tooltip(b, m.text, m.tip) end
 	UI.meterButtons[i] = b
 end
 
@@ -812,7 +823,7 @@ UI.lootButtons = stripButtons({
 	{ "RollFor options", function() W.Loot:Key("options_toggle") end,
 	  { "RollFor's own options window, with every setting (/rfo)." } },
 	{ "Post how to roll", function() W.Loot:Run("HTR", "") end,
-	  { "Tell the raid how to roll: /roll for main spec, /roll 99 off spec, /roll 98 transmog (/htr)." } },
+	  function() return { "Tell the raid how to roll (/htr):", W.Loot:HowToRoll(), "|cff888888Change the numbers on the Settings page.|r" } end },
 })
 
 -- loot quick actions take the place of the fight buttons while in Loot
@@ -821,21 +832,21 @@ local cancelBtn = gridButton("|cffff5555Cancel roll|r", 3, 2)
 local srsBtn    = gridButton("SR items", 2, 1)
 local sroBtn    = gridButton("Fix SR names", 2, 2)
 local mlBtn     = gridButton("Auto ML", 1, 1)
-local verBtn    = gridButton("Who has RollFor", 1, 2)
+local glBtn     = gridButton("Auto group", 1, 2)
 finishBtn:SetScript("OnClick", function() W.Loot:Run("FR", "") end)
 cancelBtn:SetScript("OnClick", function() W.Loot:Run("CR", "") end)
 srsBtn:SetScript("OnClick", function() W.Loot:Run("SRS", "") end)
 sroBtn:SetScript("OnClick", function() W.Loot:Run("SRO", "") end)
 mlBtn:SetScript("OnClick", function() W.Loot:Toggle("auto-master-loot"); UI:Refresh() end)
-verBtn:SetScript("OnClick", function() W.Loot:Run("RF", "versioncheck") end)
+glBtn:SetScript("OnClick", function() W.Loot:Toggle("auto-group-loot"); UI:Refresh() end)
 tooltip(finishBtn, "Finish roll", { "End the current roll now instead of waiting for the timer (/fr)." })
 tooltip(cancelBtn, "Cancel roll", { "Stop the current roll without a winner (/cr)." })
 tooltip(srsBtn, "Soft-reserved items", { "List every soft-reserved item and who reserved it, in chat (/srs)." })
 tooltip(sroBtn, "Fix soft-res names", { "Match players whose name on the soft-res sheet doesn't match their character (/sro).",
 	"RollFor fixes simple typos by itself." })
-tooltip(mlBtn, "Auto master loot", { "Switch the raid to master loot when you target a boss (you must be raid leader)." })
-tooltip(verBtn, "Who has RollFor", { "Ask the raid who has RollFor (or WhoDidIt) and which version - raiders with it get a roll window." })
-local lootOnly = { finishBtn, cancelBtn, srsBtn, sroBtn, mlBtn, verBtn }
+tooltip(mlBtn, "Auto master loot", { "When you target a boss, the raid switches to master loot", "with you as the looter. You must be raid leader." })
+tooltip(glBtn, "Auto group loot", { "When everything in the boss's loot has been given out,", "the raid switches back to group loot for the trash.", "Use it with Auto ML: master loot for bosses, group loot in between." })
+local lootOnly = { finishBtn, cancelBtn, srsBtn, sroBtn, mlBtn, glBtn }
 for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
 
 -- banter toggles take the place of the fight buttons while in Rankings
@@ -2315,7 +2326,8 @@ local function step(rows, n, lines, click, hint)
 	for i = 1, getn(lines) do
 		local first = (i == 1)
 		tinsert(rows, row((first and ("|cffffd100" .. n .. ".|r  ") or "      ") .. lines[i],
-			(first and hint) and (C_GUILD .. hint .. "  >|r") or nil, d and { click = d } or nil))
+			(first and hint) and (C_GUILD .. hint .. "  >|r") or nil,
+			d and { click = d, tipTitle = "Step " .. n, tip = { "Click to " .. hint .. "." } } or nil))
 	end
 end
 
@@ -2334,21 +2346,24 @@ function UI:LootGuideRows()
 		function() Lt:Run("SRO", "") end, "fix names")
 
 	head(rows, "In the raid")
-	step(rows, 6, { "Be raid leader. |cffffd100Auto master loot|r switches to master loot",
-		"when you target a boss (on by default)." })
-	step(rows, 7, { "Tell the raid how to roll: |cffffffff/roll|r main spec, |cffffffff/roll 99|r off spec,",
-		"|cffffffff/roll 98|r transmog." }, function() Lt:Run("HTR", "") end, "post it")
+	step(rows, 6, { "Be raid leader. With |cffffd100Auto ML|r on, targeting a boss turns on master loot (you).",
+		"With |cffffd100Auto group|r on, it goes back to group loot once the boss is looted empty." },
+		function() UI.lt.section = "settings" end, "settings")
+	step(rows, 7, { "Tell the raid how to roll: |cffffffff" .. Lt:HowToRoll() .. "|r" },
+		function() Lt:Run("HTR", "") end, "post it")
+	step(rows, 8, { "Want different numbers, e.g. transmog on |cffffffff/roll 69|r? Change them in Settings." },
+		function() UI.lt.section = "settings" end, "settings")
 
 	head(rows, "When loot drops")
-	step(rows, 8, { "Loot the boss. RollFor's loot window lists every item and who reserved it." })
-	step(rows, 9, { "Click an item, then |cffffd100Roll|r. Soft-reserved: only those players roll.",
+	step(rows, 9, { "Loot the boss. RollFor's loot window lists every item and who reserved it." })
+	step(rows, 10, { "Click an item, then |cffffd100Roll|r. Soft-reserved: only those players roll.",
 		"Not reserved: everyone rolls, and main spec beats off spec." })
-	step(rows, 10, { "Ties re-roll by themselves. When it's done, click |cffffd100Award|r next to",
+	step(rows, 11, { "Ties re-roll by themselves. When it's done, click |cffffd100Award|r next to",
 		"the winner and confirm - the item goes straight to them." })
-	step(rows, 11, { "Two of the same item? Both are rolled together; the top two rolls win." })
-	step(rows, 12, { "Trash and greens: |cffffd100Raid roll|r gives the item to a random raider." })
-	step(rows, 13, { "Gave it to the wrong person? Trade it on - RollFor updates its winners." })
-	step(rows, 14, { "Everything given out is on the |cffffd100Loot given|r page." },
+	step(rows, 12, { "Two of the same item? Both are rolled together; the top two rolls win." })
+	step(rows, 13, { "Trash and greens: |cffffd100Raid roll|r gives the item to a random raider." })
+	step(rows, 14, { "Gave it to the wrong person? Trade it on - RollFor updates its winners." })
+	step(rows, 15, { "Everything given out is on the |cffffd100Loot given|r page." },
 		function() UI.lt.section = "given" end, "show it")
 
 	head(rows, "Commands  " .. C_DIM .. "(shift-click an item into chat after the command)|r")
@@ -2389,16 +2404,16 @@ function UI:LootSoftResRows()
 		local here = roster[string.lower(p.name)]
 		reserved[string.lower(p.name)] = true
 		local names, tip = {}, {}
-		for j = 1, getn(p.items) do
-			tinsert(names, itemText(p.items[j]))
-			tinsert(tip, itemText(p.items[j]))
-		end
+		for j = 1, getn(p.items) do tinsert(names, itemText(p.items[j])) end
+		tinsert(tip, " ")
+		tinsert(tip, "Reserved by |cffffffff" .. p.name .. "|r" .. (p.role ~= "" and (" (" .. Lt.RoleText(p.role) .. ")") or ""))
+		if getn(p.items) > 1 then tinsert(tip, "Also: " .. table.concat(names, ", ", 2)) end
 		tinsert(rows, cells(SR_SPEC,
 			{ here and W.CName(here.name, here.class) or ("|cffdddddd" .. p.name .. "|r"),
 			  C_DIM .. Lt.RoleText(p.role) .. "|r",
 			  table.concat(names, ", "),
 			  here and (C_GUILD .. "yes|r") or (inGroup and "|cffff7777not here|r" or C_DIM .. "-|r") },
-			{ tipTitle = p.name, tip = tip }))
+			{ tipTitle = p.name, tip = tip, link = Lt.ItemLink(p.items[1]) }))
 	end
 	if inGroup then
 		local missing = {}
@@ -2443,7 +2458,8 @@ function UI:LootGivenRows()
 			{ C_DIM .. i .. ".|r", item, W.CName(a.player_name or "?", a.player_class),
 			  "|cffdddddd" .. (ROLL_TEXT[a.roll_type or ""] or ROLL_TEXT[a.rolling_strategy or ""] or (a.roll_type or "awarded")) .. "|r"
 			    .. ((a.plus_one and (" " .. C_GUILD .. "+1|r")) or ""),
-			  a.winning_roll and (C_TIME .. a.winning_roll .. "|r") or (C_DIM .. "-|r") }))
+			  a.winning_roll and (C_TIME .. a.winning_roll .. "|r") or (C_DIM .. "-|r") },
+			{ link = Lt.ItemLink(a.item_link) or Lt.ItemLink(a.item_id), tip = { " ", "Given to |cffffffff" .. (a.player_name or "?") .. "|r" } }))
 	end
 	return rows
 end
@@ -2451,34 +2467,75 @@ end
 function UI:LootSettingsRows()
 	local Lt = W.Loot
 	local rows = {}
-	head(rows, "RollFor settings  " .. C_DIM .. "(click to switch on / off - saved per character)|r")
-	for i = 1, getn(Lt.SETTINGS) do
-		local s = Lt.SETTINGS[i]
-		local cmd = s[2]
-		local extra = { tipTitle = s[3], tip = { s[4], C_DIM .. "/rf config " .. cmd .. "|r" }, click = function() Lt:Toggle(cmd); UI:Refresh() end }
-		tinsert(rows, row("|cffffffff" .. s[3] .. "|r", onOff(Lt:Setting(s[1])), extra))
-		tinsert(rows, row("      " .. C_DIM .. s[4] .. "|r", nil, { tipTitle = s[3], tip = extra.tip, click = extra.click }))
+	local function add(label, value, summary, tipTitle, tip, click)
+		local extra = { tipTitle = tipTitle, tip = tip, click = function() click(); UI:Refresh() end }
+		tinsert(rows, row("|cffffffff" .. label .. "|r", value, extra))
+		if summary then
+			tinsert(rows, row("      " .. C_DIM .. summary .. "|r", nil, { tipTitle = tipTitle, tip = tip, click = extra.click }))
+		end
 	end
+
+	-- the numbers raiders type
+	head(rows, "Roll numbers  " .. C_DIM .. "(click one to change it)|r")
+	for i = 1, getn(Lt.ROLLS) do
+		local r = Lt.ROLLS[i]
+		local n = Lt:RollNumber(r)
+		local off = (r.cmd == "tmog" and not Lt:TmogOn())
+		add(r.label .. " roll", off and (C_DIM .. "off|r") or ("|cffffd100" .. Lt.RollCommand(n) .. "|r"),
+			"Raiders type " .. Lt.RollCommand(n) .. " (1 to " .. n .. ")" .. (n ~= r.default and ("  -  normally " .. Lt.RollCommand(r.default)) or ""),
+			r.label .. " roll", { "The number raiders roll to " .. string.lower(r.label) .. ": they type " .. Lt.RollCommand(n) .. ".",
+				"Click to change it, e.g. transmog on /roll 69.", "Each roll type needs its own number.",
+				C_DIM .. "/rf config " .. r.cmd .. " <number>|r" },
+			function() Lt:AskRollNumber(r) end)
+	end
+	add("Transmog rolls", onOff(Lt:TmogOn()), "Let raiders roll for transmog as well as main and off spec.",
+		"Transmog rolls", { "On: raiders can roll for an item's look (lowest priority).", "Off: only main spec and off spec rolls.",
+			C_DIM .. "/rf config tmog|r" }, function() Lt:ToggleTmog() end)
+	add("Roll time", "|cffffd100" .. Lt:RollTime() .. " sec|r", "How long raiders get to roll (4 to 15 seconds).",
+		"Roll time", { "How long each roll stays open. You can always end it early with Finish roll.",
+			C_DIM .. "/rf config default-rolling-time <seconds>|r" }, function() Lt:AskRollTime() end)
+	tinsert(rows, row(C_DIM .. "Raiders see: " .. Lt:HowToRoll() .. "|r", "|cffffd100reset to 100 / 99 / 98  >|r",
+		{ tipTitle = "Reset roll numbers", tip = { "Back to /roll for main spec, /roll 99 off spec, /roll 98 transmog." },
+		  click = function() Lt:ResetRollNumbers(); UI:Refresh() end }))
+
+	-- on / off settings, in groups
+	for g = 1, getn(Lt.SETTINGS) do
+		local group = Lt.SETTINGS[g]
+		head(rows, group.title .. "  " .. C_DIM .. "(click to switch on / off)|r")
+		for i = 1, getn(group.intro or {}) do tinsert(rows, row("|cffdddddd" .. group.intro[i] .. "|r")) end
+		for i = 1, getn(group.items) do
+			local s = group.items[i]
+			local cmd = s[2]
+			local tip = {}
+			for j = 1, getn(s[5]) do tinsert(tip, s[5][j]) end
+			tinsert(tip, C_DIM .. "/rf config " .. cmd .. "|r")
+			add(s[3], onOff(Lt:Setting(s[1])), s[4], s[3], tip, function() Lt:Toggle(cmd) end)
+		end
+	end
+
 	head(rows, "For your raiders")
-	local popup = Lt:RollPopup()
 	local ptip = { "When you start a roll, raiders with RollFor (or WhoDidIt) get a window to roll from.",
-		"Off - nobody   Eligible - players who may roll on it   Always - everyone", C_DIM .. "Click to change.|r" }
-	tinsert(rows, row("|cffffffffRoll window for raiders|r", "|cffffd100" .. popup .. "|r",
-		{ tipTitle = "Roll window for raiders", tip = ptip, click = function() Lt:CycleRollPopup(); UI:Refresh() end }))
-	tinsert(rows, row("      " .. C_DIM .. "Raiders with RollFor or WhoDidIt get a roll window when you start a roll.|r", nil,
-		{ tipTitle = "Roll window for raiders", tip = ptip, click = function() Lt:CycleRollPopup(); UI:Refresh() end }))
+		"Off - nobody gets it", "Eligible - only players who may roll on the item", "Always - everyone", C_DIM .. "Click to change.|r" }
+	add("Roll window for raiders", "|cffffd100" .. Lt:RollPopup() .. "|r", "Raiders with RollFor or WhoDidIt get a window to roll from.",
+		"Roll window for raiders", ptip, function() Lt:CycleRollPopup() end)
+	add("Who has RollFor?", "|cffffd100check  >|r", "Ask the raid who has RollFor or WhoDidIt, and which version.",
+		"Who has RollFor", { "Lists everyone in the raid with RollFor (or WhoDidIt) and their version, in chat." },
+		function() Lt:Run("RF", "versioncheck") end)
+
 	head(rows, "More")
-	tinsert(rows, row("|cffffd100Open RollFor's options window|r  " .. C_DIM .. "roll times, thresholds, quick award keys|r", nil,
-		{ click = function() Lt:Key("options_toggle") end }))
-	tinsert(rows, row("|cffffd100Print every setting in chat|r", C_DIM .. "/rf config|r", { click = function() Lt:Run("RF", "config") end }))
+	add("RollFor's own options window", "|cffffd100open  >|r", "Every RollFor setting, including quick award keys and winners filters.",
+		"RollFor options", { "RollFor's own options window (/rfo). Hover each option there for what it does." },
+		function() Lt:Key("options_toggle") end)
+	add("Every setting in chat", "|cffffd100print  >|r", nil, "Print settings", { "Prints all of RollFor's settings in chat (/rf config)." },
+		function() Lt:Run("RF", "config") end)
 	return rows
 end
 
 local LOOT_SECTIONS = {
-	{ "guide",    "How it works",  "Step by step, and every command" },
+	{ "guide",    "How it works",  "Start here: step by step" },
 	{ "softres",  "Soft-res",      nil },
 	{ "given",    "Loot given",    nil },
-	{ "settings", "Settings",      "RollFor's options, explained" },
+	{ "settings", "Settings",      "Roll numbers and every option" },
 }
 
 function UI:LootNavRows()
@@ -2509,6 +2566,7 @@ function UI:RefreshLoot()
 	leftCount:SetText("")
 	fightList:SetData(UI:LootNavRows(), true)
 	mlBtn:SetText("Auto ML: " .. (Lt:Setting("auto_master_loot") ~= false and "|cff33ff33on|r" or "|cffff5555off|r"))
+	glBtn:SetText("Auto group: " .. (Lt:Setting("auto_group_loot") and "|cff33ff33on|r" or "|cffff5555off|r"))
 
 	local src = Lt:Source()
 	if not src then
@@ -2548,9 +2606,9 @@ function UI:RefreshLoot()
 		else
 			nextStep = "|cff33ff33Ready.|r Loot a boss - RollFor's loot window does the rest."
 		end
-		rVerdict:SetText(nextStep .. "\n|cff888888Raiders roll: /roll = main spec, /roll 99 = off spec, /roll 98 = transmog.|r")
+		rVerdict:SetText(nextStep .. "\n|cff888888Raiders roll: " .. Lt:HowToRoll() .. ".|r")
 	end
-	hintText:SetText("Click the gold lines to do that step  -  hover the buttons for details")
+	hintText:SetText("Hover anything to see what it does  -  click gold lines and values to use or change them")
 	hintText:Show()
 
 	local s = UI.lt.section
@@ -2610,7 +2668,7 @@ function UI:Refresh()
 	trashBtn:SetText("Trash: " .. (db.opts.trackTrash and "on" or "off"))
 	local ann = db.opts.announce
 	annBtn:SetText("Announce: " .. (ann == "channel" and "chan" or (ann == "self" and "me" or ann)))
-	autoBtn:SetText("Auto: " .. (db.opts.autoShout or "off"))
+	autoBtn:SetText("Shout: " .. (db.opts.autoShout or "off"))
 	chanBtn:SetText("To: " .. W.Shout:ChannelLabel())
 	local n = getn(db.fights)
 	leftCount:SetText(n .. " saved")

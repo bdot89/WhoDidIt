@@ -266,11 +266,18 @@ item and who soft-reserved it, it runs the roll, handles ties, and gives the ite
   in the raid without a reserve (with a button to post that to the raid).
 - **Loot given**: every item awarded, newest first: item, winner, main spec / off spec / transmog / soft-res / raid roll,
   and the roll.
-- **Settings**: RollFor's options, each explained, switched on or off with a click (saved per character).
+- **Settings**: everything explained in plain words; hover any line for a summary. Saved per character.
+  - **Roll numbers**: click one to change what raiders type, e.g. transmog on `/roll 69` instead of `/roll 98`.
+    Also: transmog rolls on or off, how long a roll lasts, and a reset back to 100 / 99 / 98. The guide, the
+    header and **Post how to roll** all use your numbers.
+  - **Switching the loot method for you**: **Auto master loot** switches the raid to master loot (you) when you
+    target a boss; **Auto group loot** switches back to group loot once the boss is looted empty. Both are also on
+    the left as **Auto ML** and **Auto group**.
+  - Rolling and looting options, the roll window for raiders, and a link to RollFor's own options window.
 - **Header**: the loot method and looter, and the next thing to do ("import the soft-res sheet", "target a boss",
   "Ready").
 - **Buttons**: Import soft-res, Check soft-res, Winners, RollFor options and Post how to roll across the top. Finish
-  roll, Cancel roll, SR items, Fix SR names, Auto master loot and Who has RollFor on the left.
+  roll, Cancel roll, SR items, Fix SR names, Auto ML and Auto group on the left. Hover any button for what it does.
 
 **A raid night in short**
 

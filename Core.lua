@@ -54,6 +54,42 @@ function W.CName(name, class)
 	return string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, name or "?")
 end
 
+------------------------------------------------------------------ "type a value" popup
+
+-- W:Prompt("Pack name", "Skull pack", function(text) ... end): one edit box, Enter or Accept saves
+StaticPopupDialogs["WHODIDIT_PROMPT"] = {
+	text = "%s",
+	button1 = ACCEPT, button2 = CANCEL,
+	hasEditBox = 1, maxLetters = 48,
+	OnShow = function()
+		W.popup = this
+		local eb = getglobal(this:GetName() .. "EditBox")
+		eb:SetText(W.prompt and W.prompt.default or "")
+		eb:HighlightText()
+		eb:SetFocus()
+	end,
+	OnAccept = function()
+		local eb = W.popup and getglobal(W.popup:GetName() .. "EditBox")
+		local p = W.prompt
+		W.prompt = nil
+		if eb and p then p.fn(eb:GetText()) end
+	end,
+	EditBoxOnEnterPressed = function()
+		local p = W.prompt
+		W.prompt = nil
+		local text = this:GetText()
+		this:GetParent():Hide()
+		if p then p.fn(text) end
+	end,
+	EditBoxOnEscapePressed = function() this:GetParent():Hide() end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+
+function W:Prompt(text, default, fn)
+	W.prompt = { default = tostring(default or ""), fn = fn }
+	StaticPopup_Show("WHODIDIT_PROMPT", text)
+end
+
 ------------------------------------------------------------------ environment
 
 function W:DetectEnv()
