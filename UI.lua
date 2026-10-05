@@ -147,10 +147,34 @@ local function CreateList(parent, nrows, rowh, width)
 			local d = self.data[self.offset + i]
 			b.d = d
 			if d then
-				b.r:SetText(d.r or "")
-				b.l:SetText(d.l or "")
-				local rw = (d.r and d.r ~= "") and (b.r:GetStringWidth() + 12) or 0
-				b.l:SetWidth(self.rowW - rw - 8)
+				b.c = b.c or {}
+				local ncols = d.cols and getn(d.cols) or 0
+				if ncols > 0 then
+					-- table row: every cell on a fixed column
+					b.l:SetText("")
+					b.r:SetText("")
+					for j = 1, ncols do
+						local c = d.cols[j]
+						local fs = b.c[j]
+						if not fs then
+							fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+							fs:SetHeight(self.rowh)
+							b.c[j] = fs
+						end
+						fs:ClearAllPoints()
+						fs:SetPoint("LEFT", b, "LEFT", c[1], 0)
+						fs:SetWidth(c[2])
+						fs:SetJustifyH(c[4] or "LEFT")
+						fs:SetText(c[3] or "")
+						fs:Show()
+					end
+				else
+					b.r:SetText(d.r or "")
+					b.l:SetText(d.l or "")
+					local rw = (d.r and d.r ~= "") and (b.r:GetStringWidth() + 12) or 0
+					b.l:SetWidth(self.rowW - rw - 8)
+				end
+				for j = ncols + 1, getn(b.c) do b.c[j]:Hide() end
 				if d.bar then
 					b.bar:SetWidth(math.max(1, self.rowW * math.min(1, d.bar)))
 					b.bar:SetVertexColor(d.cr or 0.5, d.cg or 0.5, d.cb or 0.5, d.ba or 0.45)
@@ -764,6 +788,46 @@ end
 
 local function pct(v) return floor((v or 0) * 100 + 0.5) .. "%" end
 
+-- table rows: cells on fixed columns so everything lines up.
+-- spec = { { width, "LEFT" | "RIGHT" | "CENTER" }, ... } (main list: ~570px)
+local function cells(spec, values, extra)
+	local d = extra or {}
+	local c, x = {}, 4
+	for i = 1, getn(spec) do
+		c[i] = { x, spec[i][1], values[i] or "", spec[i][2] }
+		x = x + spec[i][1] + 6
+	end
+	d.cols = c
+	return d
+end
+
+-- the column titles row
+local function colHead(rows, spec, titles)
+	local v = {}
+	for i = 1, getn(titles) do v[i] = "|cffffd100" .. titles[i] .. "|r" end
+	tinsert(rows, cells(spec, v, { head = true }))
+end
+
+-- column layouts used by more than one tab (widths add up to ~566px)
+local BLAME_SPEC = { { 24, "RIGHT" }, { 110, "LEFT" }, { 370, "LEFT" }, { 44, "RIGHT" } }        -- # / player / reason / points
+local TIMED_SPEC = { { 40, "RIGHT" }, { 470, "LEFT" }, { 44, "RIGHT" } }                        -- time / text / points
+local RECAP_SPEC = { { 44, "RIGHT" }, { 200, "LEFT" }, { 150, "LEFT" }, { 70, "RIGHT" }, { 60, "RIGHT" } }
+local DEATH_SPEC = { { 40, "RIGHT" }, { 96, "LEFT" }, { 246, "LEFT" }, { 110, "LEFT" }, { 50, "RIGHT" } }
+local MISTAKE_SPEC = { { 40, "RIGHT" }, { 78, "LEFT" }, { 390, "LEFT" }, { 40, "RIGHT" } }
+local AGGRO_SPEC = { { 40, "RIGHT" }, { 130, "LEFT" }, { 100, "LEFT" }, { 100, "LEFT" }, { 46, "RIGHT" }, { 116, "RIGHT" } }
+local PEAK_SPEC = { { 24, "RIGHT" }, { 150, "LEFT" }, { 80, "RIGHT" }, { 70, "RIGHT" } }
+local METER_SPEC = { { 24, "RIGHT" }, { 140, "LEFT" }, { 50, "LEFT" }, { 80, "RIGHT" }, { 70, "RIGHT" }, { 60, "RIGHT" }, { 60, "RIGHT" } }
+local ACT_SPEC = { { 24, "RIGHT" }, { 140, "LEFT" }, { 50, "LEFT" }, { 80, "RIGHT" }, { 70, "RIGHT" }, { 60, "RIGHT" } }
+local UTIL_SPEC = { { 24, "RIGHT" }, { 140, "LEFT" }, { 50, "LEFT" }, { 60, "RIGHT" }, { 60, "RIGHT" }, { 60, "RIGHT" }, { 60, "RIGHT" } }
+local ROLE_SHORT = { tank = "Tank", heal = "Healer", dps = "DPS" }
+local TL_SPEC = { { 40, "RIGHT" }, { 520, "LEFT" } }
+
+-- common column colours
+local C_TIME  = "|cffffffff"   -- times / numbers
+local C_DIM   = "|cff888888"   -- dates, secondary text
+local C_YOU   = "|cff66ccff"
+local C_GUILD = "|cff33ff33"
+
 local function stripColors(s)
 	s = string.gsub(s or "", "|c%x%x%x%x%x%x%x%x", "")
 	s = string.gsub(s, "|r", "")
@@ -877,16 +941,16 @@ function UI:SummaryRows(rec)
 	local maxPts = rec.blame[1] and rec.blame[1].pts or 1
 	if maxPts <= 0 then maxPts = 1 end
 	local shown = 0
+	if getn(rec.blame) > 0 then colHead(rows, BLAME_SPEC, { "#", "Player", "Main reason", "Points" }) end
 	for i = 1, getn(rec.blame) do
 		local b = rec.blame[i]
 		if shown >= 15 then break end
 		shown = shown + 1
 		local why = string.gsub(b.reasons[1] or "", "^" .. b.name .. " ", "")
-		if getn(b.reasons) > 1 then why = why .. " (+" .. (getn(b.reasons) - 1) .. " more)" end
-		tinsert(rows, row(
-			i .. ". " .. W.CName(b.name, b.class) .. "  |cffaaaaaa" .. why .. "|r",
-			string.format("%.1f", b.pts),
-			{ bar = b.pts / maxPts, cr = 0.9, cg = 0.15, cb = 0.15,
+		if getn(b.reasons) > 1 then why = why .. C_DIM .. "  (+" .. (getn(b.reasons) - 1) .. " more)|r" end
+		tinsert(rows, cells(BLAME_SPEC,
+			{ C_DIM .. i .. ".|r", W.CName(b.name, b.class), "|cffcccccc" .. why .. "|r", "|cffff7777" .. string.format("%.1f", b.pts) .. "|r" },
+			{ bar = b.pts / maxPts, cr = 0.9, cg = 0.15, cb = 0.15, ba = 0.3,
 			  tip = withLegend(b.reasons, "blame"), tipTitle = b.name .. " - " .. b.pts .. " blame points",
 			  name = b.name, click = playerClick("blame") }))
 	end
@@ -897,8 +961,8 @@ function UI:SummaryRows(rec)
 		for i = 1, math.min(3, getn(rec.heroes)) do
 			local h = rec.heroes[i]
 			local why = string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")
-			tinsert(rows, row(i .. ". " .. W.CName(h.name, h.class) .. "  |cffaaaaaa" .. why .. "|r",
-				"|cff33ff33" .. string.format("%.1f", h.pts) .. "|r",
+			tinsert(rows, cells(BLAME_SPEC,
+				{ C_DIM .. i .. ".|r", W.CName(h.name, h.class), "|cffcccccc" .. why .. "|r", C_GUILD .. string.format("%.1f", h.pts) .. "|r" },
 				{ tip = withLegend(h.list, "hero"), tipTitle = h.name .. " - hero points",
 				  name = h.name, click = playerClick("hero") }))
 		end
@@ -988,29 +1052,29 @@ function UI:DeathRows(rec)
 		local d = UI.detail
 		tinsert(rows, row("|cffffd100<< Back to deaths|r", nil, { head = true, click = function() UI.detail = nil; UI:Refresh() end }))
 		tinsert(rows, row(W.CName(d.name, d.class) .. " died at " .. FmtTime(d.t) .. " - " .. d.text, nil, { head = true }))
+		colHead(rows, RECAP_SPEC, { "Time", "What happened", "From", "Amount", "Health" })
 		for i = 1, getn(d.lines) do
 			local l = d.lines[i]
-			local dt = string.format("%5.1fs", l.t - d.t)
 			local hpf = (l.hp and l.hm and l.hm > 0) and (l.hp / l.hm) or nil
-			local left, right
+			local what, from, amt = "", "", ""
 			if l.k == "heal" then
-				left = dt .. "   |cff33ff33" .. (l.sp or "") .. "|r from " .. (l.s or "?")
-				right = "|cff33ff33+" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r"
+				what = C_GUILD .. (l.sp or "") .. "|r"
+				from = l.s or "?"
+				amt = C_GUILD .. "+" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r"
 			elseif l.k == "debuff" then
-				left = dt .. "   |cffcc99ffgains " .. (l.sp or "") .. "|r"
-				right = ""
+				what = "|cffcc99ffgains " .. (l.sp or "") .. ((l.a and l.a > 1) and (" (" .. l.a .. ")") or "") .. "|r"
 			elseif l.k == "item" then
-				left = dt .. "   |cff66ccffused " .. (l.sp or "") .. "|r"
-				right = ""
+				what = C_YOU .. "used " .. (l.sp or "") .. "|r"
 			elseif l.k == "buff" then
-				left = dt .. "   |cffffcc66gains " .. (l.sp or "") .. "|r"
-				right = ""
+				what = "|cffffcc66gains " .. (l.sp or "") .. "|r"
 			else
-				left = dt .. "   |cffff7777" .. (l.sp or "") .. "|r from " .. (l.s or "?") .. (l.x == "crushing" and " |cffff9933(crushing)|r" or "")
-				right = "|cffff5555-" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r"
+				what = "|cffff7777" .. (l.sp or "") .. "|r" .. (l.x == "crushing" and " |cffff9933crushing|r" or "")
+				from = l.s or "?"
+				amt = "|cffff5555-" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r"
 			end
-			if hpf then right = right .. "  |cffaaaaaa" .. pct(hpf) .. "|r" end
-			tinsert(rows, row(left, right, { bar = hpf, cr = 0.1, cg = 0.75, cb = 0.1 }))
+			tinsert(rows, cells(RECAP_SPEC,
+				{ C_DIM .. string.format("%.1fs", l.t - d.t) .. "|r", what, "|cffcccccc" .. from .. "|r", amt, hpf and (C_TIME .. pct(hpf) .. "|r") or "" },
+				{ bar = hpf, cr = 0.1, cg = 0.75, cb = 0.1, ba = 0.3 }))
 		end
 		if getn(d.lines) == 0 then tinsert(rows, row("|cff888888No combat events recorded before this death.|r")) end
 		return rows
@@ -1020,13 +1084,17 @@ function UI:DeathRows(rec)
 		tinsert(rows, row("|cff33ff33Nobody died.|r"))
 		return rows
 	end
+	colHead(rows, DEATH_SPEC, { "Time", "Player", "Cause", "Killing blow", "Amount" })
 	for i = 1, getn(rec.deaths) do
 		local d = rec.deaths[i]
-		local col = d.late and "|cff777777" or ((d.kind == "avoid" or d.kind == "aggro" or d.kind == "splash") and "|cffff7777" or "|cffffffff")
+		local col = d.late and "|cff777777" or ((d.kind == "avoid" or d.kind == "aggro" or d.kind == "splash") and "|cffff7777" or "|cffdddddd")
 		local dd = d
-		tinsert(rows, row(
-			"|cff999999" .. FmtTime(d.t) .. "|r  " .. W.CName(d.name, d.class) .. "  " .. col .. d.text .. (d.late and " (after wipe)" or "") .. "|r",
-			"|cffaaaaaa" .. (d.killer or "") .. (d.killAmt and (" " .. FmtNum(d.killAmt)) or "") .. "|r",
+		tinsert(rows, cells(DEATH_SPEC,
+			{ C_DIM .. FmtTime(d.t) .. "|r",
+			  W.CName(d.name, d.class),
+			  col .. d.text .. (d.late and " (after wipe)" or "") .. "|r",
+			  "|cffaaaaaa" .. (d.killer or "") .. "|r",
+			  d.killAmt and ("|cffff5555" .. FmtNum(d.killAmt) .. "|r") or "" },
 			{ tip = recapTip(d), tipTitle = d.name .. " died at " .. FmtTime(d.t),
 			  click = function() UI.detail = dd; UI:Refresh() end }))
 	end
@@ -1039,17 +1107,20 @@ function UI:MistakeRows(rec)
 		tinsert(rows, row("|cff33ff33No mistakes found.|r"))
 		return rows
 	end
+	colHead(rows, MISTAKE_SPEC, { "Time", "Type", "What happened", "Points" })
 	for i = 1, getn(rec.findings) do
 		local fd = rec.findings[i]
 		local who = fd.who and rec.players[fd.who]
-		local text = fd.text
+		local text = "|cffdddddd" .. fd.text .. "|r"
 		if fd.who and who then
 			local s, e = string.find(text, fd.who, 1, true)
-			if s then text = string.sub(text, 1, s - 1) .. W.CName(fd.who, who.class) .. string.sub(text, e + 1) end
+			if s then text = string.sub(text, 1, s - 1) .. W.CName(fd.who, who.class) .. "|cffdddddd" .. string.sub(text, e + 1) end
 		end
-		tinsert(rows, row(
-			(fd.t and ("|cff999999" .. FmtTime(fd.t) .. "|r  ") or "|cff999999 --  |r") .. "|cffffd100[" .. fd.cat .. "]|r " .. text,
-			fd.pts > 0 and ("|cffff5555+" .. fd.pts .. "|r") or "|cff888888info|r",
+		tinsert(rows, cells(MISTAKE_SPEC,
+			{ fd.t and (C_DIM .. FmtTime(fd.t) .. "|r") or (C_DIM .. "-|r"),
+			  "|cffffd100" .. fd.cat .. "|r",
+			  text,
+			  fd.pts > 0 and ("|cffff5555+" .. fd.pts .. "|r") or (C_DIM .. "info|r") },
 			{ tip = fd.tip, tipTitle = stripColors(fd.text) }))
 	end
 	return rows
@@ -1069,11 +1140,17 @@ function UI:ThreatRows(rec)
 	if getn(rec.aggro) == 0 then
 		tinsert(rows, row("|cff888888No boss target changes recorded (needs SuperWoW).|r"))
 	end
+	if getn(rec.aggro) > 0 then colHead(rows, AGGRO_SPEC, { "Time", "Boss", "Attacked", "Took it from", "Threat", "Why" }) end
 	for i = 1, getn(rec.aggro) do
 		local a = rec.aggro[i]
-		tinsert(rows, row(
-			"|cff999999" .. FmtTime(a.t) .. "|r  " .. a.boss .. " -> " .. W.CName(a.to, a.class) .. (a.from and ("  |cff888888(from " .. a.from .. ")|r") or ""),
-			(a.perc and (a.perc .. "%  ") or "") .. (VERDICT[a.verdict] or ""),
+		local from = a.from and rec.players[a.from]
+		tinsert(rows, cells(AGGRO_SPEC,
+			{ C_DIM .. FmtTime(a.t) .. "|r",
+			  "|cffdddddd" .. a.boss .. "|r",
+			  W.CName(a.to, a.class),
+			  a.from and W.CName(a.from, from and from.class) or (C_DIM .. "-|r"),
+			  a.perc and (((a.perc >= 100) and "|cffff5555" or C_TIME) .. a.perc .. "%|r") or "",
+			  VERDICT[a.verdict] or "" },
 			{ tip = { "Detected by: " .. (a.how == "melee" and "boss melee swing" or "boss target"), a.perc and ("Threat at the time: " .. a.perc .. "%") or "No threat reading at the time" } }))
 	end
 
@@ -1084,14 +1161,14 @@ function UI:ThreatRows(rec)
 	if getn(list) == 0 then
 		tinsert(rows, row("|cff888888No threat data. Target the boss during the fight - threat comes from the Turtle server for your target.|r"))
 	end
+	if getn(list) > 0 then colHead(rows, PEAK_SPEC, { "#", "Player", "Peak threat", "When" }) end
 	for i = 1, getn(list) do
 		local name, t = list[i][1], list[i][2]
 		local r, g, b = W.ClassRGB(t.class)
-		local col = t.perc >= 100 and "|cffff5555" or (t.perc >= 90 and "|cffff9933" or "|cffffffff")
-		tinsert(rows, row(
-			i .. ". " .. W.CName(name, t.class),
-			col .. t.perc .. "%|r  |cff888888at " .. FmtTime(t.t) .. "|r",
-			{ bar = t.perc / 130, cr = r, cg = g, cb = b }))
+		local col = t.perc >= 100 and "|cffff5555" or (t.perc >= 90 and "|cffff9933" or C_TIME)
+		tinsert(rows, cells(PEAK_SPEC,
+			{ C_DIM .. i .. ".|r", W.CName(name, t.class), col .. t.perc .. "%|r", C_DIM .. FmtTime(t.t) .. "|r" },
+			{ bar = t.perc / 130, cr = r, cg = g, cb = b, ba = 0.3 }))
 	end
 	return rows
 end
@@ -1113,15 +1190,35 @@ function UI:MeterRows(rec)
 	local max = list[1] and list[1].v or 1
 	if mode == "act" then max = 1 end
 	if getn(list) == 0 then tinsert(rows, row("|cff888888No data.|r")) end
+	local total = 0
+	for i = 1, getn(list) do total = total + list[i].v end
+	if total <= 0 then total = 1 end
+	local spec = (mode == "act") and ACT_SPEC or ((mode == "util") and UTIL_SPEC or METER_SPEC)
+	if getn(list) > 0 then
+		if mode == "act" then
+			colHead(rows, spec, { "#", "Player", "Role", "Active", "Alive", "Deaths" })
+		elseif mode == "util" then
+			colHead(rows, spec, { "#", "Player", "Role", "Kicks", "Dispels", "Tranqs", "Items" })
+		else
+			colHead(rows, spec, { "#", "Player", "Role", "Total", "Per sec", "Share", "Deaths" })
+		end
+	end
 
 	for i = 1, getn(list) do
 		local it = list[i]
 		local p = it.p
 		local r, g, b = W.ClassRGB(p.class)
-		local right, tip
+		local tip
 		local alive = (p.alive and p.alive > 0) and p.alive or rec.dur
+		local role = C_DIM .. (ROLE_SHORT[p.role] or "") .. "|r"
+		local deaths = ((p.deaths or 0) > 0) and ("|cffff5555" .. p.deaths .. "|r") or (C_DIM .. "-|r")
+		local vals = { C_DIM .. i .. ".|r", W.CName(it.name, p.class), role }
 		if mode == "dmg" or mode == "heal" or mode == "taken" then
-			right = FmtNum(it.v) .. "  |cffaaaaaa(" .. FmtNum(it.v / alive) .. "/s)|r"
+			local vc = (mode == "heal") and C_GUILD or ((mode == "taken") and "|cffff7777" or C_TIME)
+			tinsert(vals, vc .. FmtNum(it.v) .. "|r")
+			tinsert(vals, C_TIME .. FmtNum(it.v / alive) .. "|r")
+			tinsert(vals, "|cffaaaaaa" .. pct(it.v / total) .. "|r")
+			tinsert(vals, deaths)
 			local src = (mode == "dmg" and p.ds) or (mode == "heal" and p.hs) or p.ts
 			tip = {}
 			for j = 1, getn(src or {}) do
@@ -1129,10 +1226,17 @@ function UI:MeterRows(rec)
 			end
 			if mode == "dmg" then tinsert(tip, { "Damage to bosses", FmtNum(p.boss) }) end
 		elseif mode == "act" then
-			right = pct(it.v)
+			local ac = (it.v >= 0.85) and C_GUILD or ((it.v >= 0.6) and C_TIME or "|cffff9933")
+			tinsert(vals, ac .. pct(it.v) .. "|r")
+			tinsert(vals, C_DIM .. FmtTime(alive) .. "|r")
+			tinsert(vals, deaths)
 			tip = { "Share of their time alive spent casting / swinging / healing.", "Alive: " .. FmtTime(alive) }
 		else
-			right = (p.kicks or 0) .. " kicks  " .. (p.dispels or 0) .. " dispels  " .. (p.tranqs or 0) .. " tranqs  " .. (p.cons or 0) .. " items"
+			local function n(x, c) return ((x or 0) > 0) and (c .. x .. "|r") or (C_DIM .. "-|r") end
+			tinsert(vals, n(p.kicks, C_TIME))
+			tinsert(vals, n(p.dispels, C_TIME))
+			tinsert(vals, n(p.tranqs, C_TIME))
+			tinsert(vals, n(p.cons, C_YOU))
 			tip = {}
 			for j = 1, getn(p.consList or {}) do tinsert(tip, { p.consList[j][1], p.consList[j][2] .. "x" }) end
 		end
@@ -1140,10 +1244,8 @@ function UI:MeterRows(rec)
 		tinsert(tip, "Role: " .. (p.role or "?") .. (WhoDidItDB.tanks[it.name] and " (marked tank)" or "") .. "   Deaths: " .. (p.deaths or 0))
 		if (p.aggro or 0) > 0 then tinsert(tip, "Held boss aggro for " .. FmtTime(p.aggro)) end
 		tip = withLegend(tip, "stats")
-		tinsert(rows, row(
-			i .. ". " .. W.CName(it.name, p.class) .. (p.role == "tank" and " |cff888888(T)|r" or (p.role == "heal" and " |cff888888(H)|r" or "")),
-			right,
-			{ bar = it.v / max, cr = r, cg = g, cb = b, tip = tip, tipTitle = it.name, name = it.name, click = playerClick("stats") }))
+		tinsert(rows, cells(spec, vals,
+			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = it.name, name = it.name, click = playerClick("stats") }))
 	end
 	return rows
 end
@@ -1151,7 +1253,9 @@ end
 local BUFF_COL = { Flask = "cc99ff", Elixir = "66ccff", Food = "ffcc66", Buff = "ff9933", Protection = "ff6666", Potion = "33ff33" }
 local USED_COL = { Mana = "66aaff", Health = "33ff33", Protection = "ff6666", Other = "dddddd" }
 local ROLE_ORDER = { tank = 1, heal = 2, dps = 3 }
-local ROLE_TAG = { tank = "Tank", heal = "Healer", dps = "DPS" }
+local ROLE_TAG = ROLE_SHORT
+local CONS_SPEC = { { 140, "LEFT" }, { 50, "LEFT" }, { 70, "LEFT" }, { 70, "RIGHT" }, { 80, "RIGHT" } }
+local CONS_DETAIL = { { 56, "RIGHT" }, { 500, "LEFT" } }
 
 function UI:ConsumeRows(rec)
 	local rows = {}
@@ -1200,6 +1304,7 @@ function UI:ConsumeRows(rec)
 
 	-- per player
 	head(rows, "Players")
+	colHead(rows, CONS_SPEC, { "Player", "Role", "Flask", "Buffs", "Items used" })
 	for i = 1, n do
 		local it = list[i]
 		local p = it.p
@@ -1232,14 +1337,19 @@ function UI:ConsumeRows(rec)
 		tip = withLegend(tip, "consumes")
 		local click = playerClick("consumes")
 
-		local summary = (hasFlask and "|cffcc99ffflask|r" or "|cffff5555no flask|r")
-			.. "  |cffaaaaaa" .. getn(cb) .. " buffs, " .. nUsed .. " used|r"
-		tinsert(rows, row(W.CName(it.name, p.class) .. "  |cff888888" .. (ROLE_TAG[p.role] or "") .. "|r", summary,
-			{ tip = tip, tipTitle = it.name .. " - consumables", name = it.name, click = click }))
-		tinsert(rows, row("      |cffaaaaaaBuffs:|r " .. (getn(bparts) > 0 and table.concat(bparts, ", ") or "|cffff5555none|r"),
-			nil, { tip = tip, tipTitle = it.name .. " - consumables", name = it.name, click = click }))
-		tinsert(rows, row("      |cffaaaaaaUsed:|r " .. (getn(uparts) > 0 and table.concat(uparts, ", ") or "|cff888888nothing|r"),
-			nil, { tip = tip, tipTitle = it.name .. " - consumables", name = it.name, click = click }))
+		local extra = { tip = tip, tipTitle = it.name .. " - consumables", name = it.name, click = click }
+		tinsert(rows, cells(CONS_SPEC,
+			{ W.CName(it.name, p.class),
+			  C_DIM .. (ROLE_TAG[p.role] or "") .. "|r",
+			  hasFlask and "|cffcc99ffFlask|r" or "|cffff5555No flask|r",
+			  C_TIME .. getn(cb) .. "|r" .. C_DIM .. " buffs|r",
+			  ((nUsed > 0) and (C_YOU .. nUsed .. "|r") or (C_DIM .. "0|r")) .. C_DIM .. " used|r" },
+			{ tip = tip, tipTitle = extra.tipTitle, name = it.name, click = click }))
+		tinsert(rows, cells(CONS_DETAIL,
+			{ C_DIM .. "Buffs|r", getn(bparts) > 0 and table.concat(bparts, ", ") or "|cffff5555none|r" }, extra))
+		tinsert(rows, cells(CONS_DETAIL,
+			{ C_DIM .. "Used|r", getn(uparts) > 0 and table.concat(uparts, ", ") or (C_DIM .. "nothing|r") },
+			{ tip = tip, tipTitle = extra.tipTitle, name = it.name, click = click }))
 	end
 	return rows
 end
@@ -1255,6 +1365,11 @@ local function colorNames(text, rec)
 end
 UI.ColorNames = colorNames
 
+-- colour a sentence, picking the colour back up after every coloured name
+local function tint(text, col)
+	return col .. (string.gsub(text, "|r", "|r" .. col)) .. "|r"
+end
+
 function UI:HeroRows(rec)
 	local rows = {}
 	if not rec.saves then
@@ -1265,24 +1380,34 @@ function UI:HeroRows(rec)
 	local hs = rec.heroes or {}
 	local max = hs[1] and hs[1].pts or 1
 	if max <= 0 then max = 1 end
-	if getn(hs) == 0 then tinsert(rows, row("|cff888888No game-saving plays detected this fight.|r")) end
+	if getn(hs) == 0 then
+		tinsert(rows, row("|cff888888No game-saving plays detected this fight.|r"))
+	else
+		colHead(rows, BLAME_SPEC, { "#", "Player", "Best moment", "Points" })
+	end
 	for i = 1, getn(hs) do
 		local h = hs[i]
 		local why = string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")
-		if getn(h.list) > 1 then why = why .. " (+" .. (getn(h.list) - 1) .. " more)" end
-		tinsert(rows, row(i .. ". " .. W.CName(h.name, h.class) .. "  |cffaaaaaa" .. why .. "|r",
-			string.format("%.1f", h.pts),
-			{ bar = h.pts / max, cr = 0.15, cg = 0.8, cb = 0.3, tip = withLegend(h.list, "hero"),
+		if getn(h.list) > 1 then why = why .. C_DIM .. "  (+" .. (getn(h.list) - 1) .. " more)|r" end
+		tinsert(rows, cells(BLAME_SPEC,
+			{ C_DIM .. i .. ".|r", W.CName(h.name, h.class), tint(colorNames(why, rec), "|cffdddddd"),
+			  C_GUILD .. string.format("%.1f", h.pts) .. "|r" },
+			{ bar = h.pts / max, cr = 0.15, cg = 0.8, cb = 0.3, ba = 0.25, tip = withLegend(h.list, "hero"),
 			  tipTitle = h.name .. " - " .. h.pts .. " hero points", name = h.name, click = playerClick("hero") }))
 	end
 
 	head(rows, "Game-saving moments")
-	if getn(rec.saves) == 0 then tinsert(rows, row("|cff888888Nothing this time.|r")) end
+	if getn(rec.saves) == 0 then
+		tinsert(rows, row("|cff888888Nothing this time.|r"))
+	else
+		colHead(rows, TIMED_SPEC, { "Time", "What happened", "Points" })
+	end
 	for i = 1, getn(rec.saves) do
 		local s = rec.saves[i]
-		tinsert(rows, row(
-			(s.t and ("|cff999999" .. FmtTime(s.t) .. "|r  ") or "|cff999999 --  |r") .. colorNames(s.text, rec),
-			"|cff33ff33+" .. s.pts .. "|r",
+		tinsert(rows, cells(TIMED_SPEC,
+			{ s.t and (C_DIM .. FmtTime(s.t) .. "|r") or (C_DIM .. "-|r"),
+			  tint(colorNames(s.text, rec), "|cffdddddd"),
+			  C_GUILD .. "+" .. s.pts .. "|r" },
 			{ tip = s.tip, tipTitle = "Save" }))
 	end
 
@@ -1296,11 +1421,15 @@ end
 function UI:TimelineRows(rec)
 	local rows = {}
 	local tl = rec.timeline or {}
+	if getn(tl) == 0 then
+		tinsert(rows, row("|cff888888Nothing recorded.|r"))
+		return rows
+	end
+	colHead(rows, TL_SPEC, { "Time", "Event" })
 	for i = 1, getn(tl) do
 		local l = tl[i]
-		tinsert(rows, row("|cff999999" .. FmtTime(l.t) .. "|r  " .. (KIND_COLOR[l.k] or "|cffffffff") .. (l.x or "") .. "|r"))
+		tinsert(rows, cells(TL_SPEC, { C_DIM .. FmtTime(l.t) .. "|r", tint(colorNames(l.x or "", rec), KIND_COLOR[l.k] or "|cffffffff") }))
 	end
-	if getn(rows) == 0 then tinsert(rows, row("|cff888888Nothing recorded.|r")) end
 	return rows
 end
 
@@ -1353,40 +1482,57 @@ local function rankTxt(i, suffix)
 	return (RANK_COL[i] or "|cffaaaaaa") .. "#" .. i .. "|r" .. (suffix or "")
 end
 
+-- guild names in their faction's colour
+local function facName(g, fac, mine)
+	if mine then return "|cffffd100" .. g .. "|r" end
+	return (FAC_COL[fac] or "|cffdddddd") .. g .. "|r"
+end
+
+local KILL_SPEC = { { 150, "LEFT" }, { 58, "RIGHT" }, { 58, "RIGHT" }, { 34, "RIGHT" }, { 62, "RIGHT" }, { 58, "RIGHT" }, { 104, "LEFT" } }
+local LB_SPEC = { { 28, "RIGHT" }, { 14, "CENTER" }, { 176, "LEFT" }, { 86, "LEFT" }, { 50, "RIGHT" }, { 70, "RIGHT" }, { 104, "RIGHT" } }
+local LB_SPEC_ALL = { { 28, "RIGHT" }, { 14, "CENTER" }, { 120, "LEFT" }, { 76, "LEFT" }, { 70, "LEFT" }, { 40, "RIGHT" }, { 70, "RIGHT" }, { 100, "RIGHT" } }
+
 -- the ranked leaderboard for one boss or one instance's clears, every
 -- time compared with your guild's ("1:38.6 faster" / "3:51.1 slower")
 local function boardRows(rows, realm, faction, kind, key, myGuild)
 	local B = W.Board
 	local list = B:Board(realm, kind, key, faction)
 	if getn(list) == 0 then
-		tinsert(rows, row("|cff888888No times yet. They show up when you or a WhoDidIt user on your realm gets one,|r"))
-		tinsert(rows, row("|cff888888or when tools\\WhoDidIt-Sync pulls them from Chronicle.|r"))
+		tinsert(rows, row(C_DIM .. "No times yet. They show up when you or a WhoDidIt user on your realm gets one,|r"))
+		tinsert(rows, row(C_DIM .. "or when tools\\WhoDidIt-Sync pulls them from Chronicle.|r"))
 		return
 	end
 	local home = B.Realm()
 	local mine = myGuild and B:GuildBest(home, kind, key, myGuild)
 	local best = list[1][2].t
 	local allRealms = (realm == B.ALL)
+	local spec = allRealms and LB_SPEC_ALL or LB_SPEC
+	if allRealms then
+		colHead(rows, spec, { "#", "", "Guild", "Realm", "Date", "Raid", "Time", "vs your guild" })
+	else
+		colHead(rows, spec, { "#", "", "Guild", "Date", "Raid", "Time", "vs your guild" })
+	end
 	for i = 1, getn(list) do
 		local g, rec, rlm = list[i][1], list[i][2], list[i][3]
 		local isMine = (g == myGuild and rlm == home)
-		local name = (isMine and "|cffffd100" or "|cffffffff") .. g .. "|r"
-		if allRealms then name = name .. "  |cff888888" .. rlm .. "|r" end
-		local cmp
+		local cmp = ""
 		if isMine then
-			cmp = "|cffffd100<< you|r"
+			cmp = "|cffffd100your guild|r"
 		elseif mine then
 			local d = rec.t - mine.t
 			cmp = (d < 0) and ("|cffff5555" .. B.Fmt(-d) .. " faster|r") or ("|cff33ff33" .. B.Fmt(d) .. " slower|r")
 		elseif i > 1 then
-			cmp = "|cff888888+" .. B.Fmt(rec.t - best) .. "|r"
+			cmp = C_DIM .. "+" .. B.Fmt(rec.t - best) .. "|r"
 		end
+		local vals = { rankTxt(i), facTag(rec.f), facName(g, rec.f, isMine) }
+		if allRealms then tinsert(vals, C_DIM .. rlm .. "|r") end
+		tinsert(vals, C_DIM .. B.Date(rec.d) .. "|r")
+		tinsert(vals, (rec.n and rec.n > 0) and (C_DIM .. rec.n .. "|r") or "")
+		tinsert(vals, C_TIME .. B.Fmt(rec.t) .. "|r")
+		tinsert(vals, cmp)
 		local c = FAC_BAR[rec.f] or { 0.5, 0.5, 0.5 }
-		tinsert(rows, row(
-			rankTxt(i) .. "  " .. facTag(rec.f) .. "  " .. name .. "   |cff777777" .. B.Date(rec.d)
-				.. ((rec.n and rec.n > 0) and (", " .. rec.n .. " players") or "") .. "|r",
-			"|cffffffff" .. B.Fmt(rec.t) .. "|r" .. (cmp and ("    " .. cmp) or ""),
-			{ sel = isMine, bar = best / rec.t, ba = 0.2, cr = c[1], cg = c[2], cb = c[3], tipTitle = g,
+		tinsert(rows, cells(spec, vals,
+			{ sel = isMine, bar = best / rec.t, ba = 0.16, cr = c[1], cg = c[2], cb = c[3], tipTitle = g,
 			  tip = rec.chron and {
 			          "|cffffd100From Chronicle|r (chronicleclassic.com) - " .. B.Date(rec.d),
 			          "Realm: " .. (rlm or "?") .. "   Faction: " .. (rec.f or "?") .. ((rec.f == "Mixed") and " (cross-faction raid)" or ""),
@@ -1395,6 +1541,37 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 			          "Recorded " .. B.Date(rec.d) .. (rec.by and (" by " .. rec.by) or "") .. "   Realm: " .. (rlm or "?"),
 			          rec.net and "Shared by a WhoDidIt user (self-reported)" or "Recorded by your WhoDidIt",
 			      } }))
+	end
+end
+
+-- "your best" / "your guild" rows above a leaderboard
+local PIN_SPEC = { { 180, "LEFT" }, { 70, "RIGHT" }, { 80, "LEFT" }, { 222, "LEFT" } }
+
+local function pinRows(rows, realm, faction, kind, key, guild)
+	local B = W.Board
+	local mine = B:MyBest(kind, key)
+	tinsert(rows, cells(PIN_SPEC, {
+		C_YOU .. "Your best " .. ((kind == "kills") and "kill" or "clear") .. "|r",
+		mine and (C_TIME .. B.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
+		"",
+		mine and (C_DIM .. B.Date(mine.d) .. ((mine.g and mine.g ~= "") and ("  with " .. mine.g) or "") .. "|r") or (C_DIM .. "none yet|r"),
+	}))
+	if guild then
+		local g = B:GuildBest(realm, kind, key, guild)
+		local rank, of = B:Rank(realm, kind, key, guild, faction)
+		local top = B:Board(realm, kind, key, faction)[1]
+		local note = ""
+		if g and top and top[2] ~= g then
+			note = "|cffff7777" .. B.Fmt(g.t - top[2].t) .. " behind|r " .. facName(top[1], top[2].f)
+		elseif g and rank == 1 then
+			note = "|cffffd100fastest on the board|r"
+		end
+		tinsert(rows, cells(PIN_SPEC, {
+			C_GUILD .. guild .. "|r",
+			g and (C_TIME .. B.Fmt(g.t) .. "|r") or (C_DIM .. "-|r"),
+			rank and (rankTxt(rank) .. C_DIM .. " of " .. of .. "|r") or (g and (C_DIM .. B.Realm() .. "|r") or ""),
+			g and note or (C_DIM .. "no " .. ((kind == "kills") and "kill" or "clear") .. " yet|r"),
+		}))
 	end
 end
 
@@ -1446,7 +1623,8 @@ function UI:RankKillRows(realm, faction, zone)
 	local B = W.Board
 	local rows = {}
 	local guild = B.MyGuild()
-	head(rows, "Boss kill times  |cff888888(click a boss for its full leaderboard)|r")
+	local spec = KILL_SPEC
+	colHead(rows, spec, { "Boss", "You", "Guild", "Rank", "Gap to #1", "#1", "Held by" })
 	local bosses = instBosses(zone)
 	for i = 1, getn(bosses) do
 		local enc = bosses[i]
@@ -1455,11 +1633,20 @@ function UI:RankKillRows(realm, faction, zone)
 		local g = guild and B:GuildBest(realm, "kills", enc, guild)
 		local rank = g and B:Rank(realm, "kills", enc, guild, faction)
 		local gap = ""
-		if g and top and top[2] ~= g then gap = "  |cffff7777+" .. B.Fmt(g.t - top[2].t) .. "|r" end
-		tinsert(rows, row("|cffffffff" .. enc .. "|r",
-			"|cff66ccffyou|r " .. (mine and B.Fmt(mine.t) or "-")
-				.. "    |cff33ff33guild|r " .. (g and (B.Fmt(g.t) .. (rank and (" " .. rankTxt(rank)) or "") .. gap) or "-")
-				.. "    |cffffd100#1|r " .. (top and (B.Fmt(top[2].t) .. " |cffffffff" .. top[1] .. "|r") or "-"),
+		if g and top and top[2] ~= g then
+			gap = "|cffff7777+" .. B.Fmt(g.t - top[2].t) .. "|r"
+		elseif g and rank == 1 then
+			gap = "|cffffd100fastest|r"
+		end
+		tinsert(rows, cells(spec, {
+				"|cffffffff" .. enc .. "|r",
+				mine and (C_YOU .. B.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
+				g and (C_GUILD .. B.Fmt(g.t) .. "|r") or (C_DIM .. "-|r"),
+				rank and rankTxt(rank) or "",
+				gap,
+				top and (C_TIME .. B.Fmt(top[2].t) .. "|r") or (C_DIM .. "-|r"),
+				top and facName(top[1], top[2].f, top[1] == guild and top[3] == B.Realm()) or "",
+			},
 			{ click = function() UI.rk.boss = enc; UI:Refresh() end,
 			  bar = (g and top) and (top[2].t / g.t) or nil, ba = 0.2, cr = 0.15, cg = 0.75, cb = 0.3,
 			  tip = { "you = your best kill (WhoDidIt or Chronicle)",
@@ -1477,14 +1664,7 @@ function UI:RankBossRows(realm, faction, enc)
 	local guild = B.MyGuild()
 	tinsert(rows, row("|cffffd100<< Back to all bosses|r", nil, { head = true, click = function() UI.rk.boss = nil; UI:Refresh() end }))
 	head(rows, enc .. " on " .. realm .. "  |cff888888(" .. faction .. ")|r")
-	local mine = B:MyBest("kills", enc)
-	tinsert(rows, row("|cff66ccffYour best kill|r", mine and ("|cffffffff" .. B.Fmt(mine.t) .. "|r  |cff888888" .. B.Date(mine.d) .. "|r") or "|cff888888none yet|r"))
-	if guild then
-		local g = B:GuildBest(realm, "kills", enc, guild)
-		local rank, of = B:Rank(realm, "kills", enc, guild, faction)
-		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  "
-			.. (rank and (rankTxt(rank) .. " of " .. of) or ("|cff888888on " .. B.Realm() .. "|r"))) or "|cff888888no kill yet|r"))
-	end
+	pinRows(rows, realm, faction, "kills", enc, guild)
 	head(rows, "Leaderboard")
 	boardRows(rows, realm, faction, "kills", enc, guild)
 	return rows
@@ -1496,19 +1676,17 @@ function UI:RankClearRows(realm, faction, zone)
 	local guild = B.MyGuild()
 	local need = W.Data.clears[zone] or {}
 	head(rows, "Full clears of " .. instTitle(zone))
-	local mine = B:MyBest("clears", zone)
-	tinsert(rows, row("|cff66ccffYour best clear|r", mine and ("|cffffffff" .. B.Fmt(mine.t) .. "|r  |cff888888" .. B.Date(mine.d) .. "|r") or "|cff888888none yet|r"))
-	if guild then
-		local g = B:GuildBest(realm, "clears", zone, guild)
-		local rank, of = B:Rank(realm, "clears", zone, guild, faction)
-		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  "
-			.. (rank and (rankTxt(rank) .. " of " .. of) or ("|cff888888on " .. B.Realm() .. "|r"))) or "|cff888888no clear yet|r"))
-	end
+	pinRows(rows, realm, faction, "clears", zone, guild)
 	local run = B:CurrentRun()
 	if run and run.zone == zone then
 		local done = 0
 		for i = 1, getn(need) do if run.kills[need[i]] then done = done + 1 end end
-		tinsert(rows, row("|cff33ccffRun in progress|r  " .. done .. " / " .. getn(need) .. " bosses", "|cffffffff" .. B.Fmt(time() - run.start) .. "|r so far"))
+		tinsert(rows, cells(PIN_SPEC, {
+			"|cff33ccffRun in progress|r",
+			C_TIME .. B.Fmt(time() - run.start) .. "|r",
+			C_TIME .. done .. "|r" .. C_DIM .. " / " .. getn(need) .. "|r",
+			C_DIM .. "bosses down so far|r",
+		}))
 	end
 	head(rows, "Leaderboard")
 	boardRows(rows, realm, faction, "clears", zone, guild)
