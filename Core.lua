@@ -270,6 +270,7 @@ local DEFAULTS = {
 	chronSaveOnFight = true,  -- save the Chronicle log after every boss fight
 	banterKills  = true,    -- fun line in the shout channel after every boss kill
 	banterClears = true,    -- ...and after every full clear
+	rivalAlerts  = true,    -- post the rival watch when the raid enters an instance
 }
 
 W:On("ADDON_LOADED", function(name)

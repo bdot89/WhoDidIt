@@ -150,6 +150,14 @@ D.clears = {
 -- Rankings list name for instances whose zone text is short
 D.instanceTitle = { ["Ahn'Qiraj"] = "Temple of Ahn'Qiraj" }
 
+-- what kind of realm each one is, so banter can say "N'Zoth (PvE)". Chronicle's
+-- data doesn't include it; realms not listed are just called by their name.
+D.realmTypes = {
+	["Y'Shaarj"] = "PvP",        -- OctoWoW
+	["N'Zoth"]   = "PvE",
+	["C'Thun"]   = "Hardcore",
+}
+
 ------------------------------------------------------------------ avoidable damage
 -- Damage from these (cast by an enemy) is the victim's fault.
 -- notTank = tanks are expected to take it. w = blame weight per instance.

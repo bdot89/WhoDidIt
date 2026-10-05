@@ -14,7 +14,7 @@ local FmtNum = W.FmtNum
 local WIDTH, HEIGHT = 860, 540
 local LEFTW = 230
 local ROWH, NROWS = 16, 21
-local FROWH, FROWS = 30, 12
+local FROWH, FROWS = 30, 10
 
 UI.tab = "summary"
 UI.meter = "dmg"
@@ -266,8 +266,7 @@ local TOP = -36
 local RX = PAD + LEFTW + GAP
 local RW = WIDTH - RX - PAD
 local HEADH = 78
-local SHOUTW = 120
-local HEADW = RW - SHOUTW - 30
+local HEADW = RW - 24
 local TABY = TOP - HEADH - 6
 local TABH = 22
 local CONTY = TABY - TABH - 4
@@ -377,25 +376,60 @@ leftCount:SetJustifyH("RIGHT")
 local fightList = CreateList(left, FROWS, FROWH, LEFTW - 12)
 fightList:SetPoint("TOPLEFT", left, "TOPLEFT", 6, -28)
 
+--[[ the panel under the list - the same on every tab:
+	  [ Post to: Raid                ]   <- where WhoDidIt posts (every tab)
+	  [ row 4 ]  [ row 4 ]               <- this tab's buttons (2 x 4 grid)
+	  ...
+	  [ row 1 ]  [ row 1 ]                                                    ]]
 local sep = left:CreateTexture(nil, "ARTWORK")
 sep:SetTexture(1, 1, 1, 0.12)
 sep:SetHeight(1)
-sep:SetPoint("BOTTOMLEFT", left, "BOTTOMLEFT", 8, 84)
-sep:SetPoint("BOTTOMRIGHT", left, "BOTTOMRIGHT", -8, 84)
+sep:SetPoint("BOTTOMLEFT", left, "BOTTOMLEFT", 8, 132)
+sep:SetPoint("BOTTOMRIGHT", left, "BOTTOMRIGHT", -8, 132)
 
--- 3 x 2 button grid
+-- smaller text, so labels like "Auto shout-outs: smart" fit
+local function smallText(b)
+	if b.SetTextFontObject then b:SetTextFontObject(GameFontNormalSmall) end
+	if b.SetHighlightFontObject then b:SetHighlightFontObject(GameFontHighlightSmall) end
+	if b.SetDisabledFontObject then b:SetDisabledFontObject(GameFontDisableSmall) end
+	return b
+end
+
+-- 2 x 4 button grid, row 1 at the bottom
 local function gridButton(text, row, col)
-	local b = button(left, text, BW, 20)
+	local b = smallText(button(left, text, BW, 20))
 	b:SetPoint("BOTTOMLEFT", left, "BOTTOMLEFT", 8 + (col - 1) * (BW + 6), 8 + (row - 1) * 24)
 	return b
 end
 
-local delBtn   = gridButton("Delete", 3, 1)
-local clearBtn = gridButton("Clear all", 3, 2)
-local trashBtn = gridButton("Trash: off", 2, 1)
-local annBtn   = gridButton("Announce: self", 2, 2)
-local autoBtn  = gridButton("Shout: off", 1, 1)
-local demoBtn  = gridButton("|cff33ccffDemo fight|r", 1, 2)
+-- where WhoDidIt posts: one selector, same place on every tab
+local chanBtn = smallText(button(left, "Post to: Raid", BW * 2 + 6, 20))
+chanBtn:SetPoint("BOTTOMLEFT", left, "BOTTOMLEFT", 8, 8 + 4 * 24)
+chanBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+chanBtn:SetScript("OnClick", function()
+	W.Shout:CycleChannel(arg1 == "RightButton")
+	UI:Refresh()
+end)
+tooltip(chanBtn, "Post to", function()
+	return {
+		"Where everything WhoDidIt posts goes: fight summaries, Report, Name & Shame,",
+		"Big Them Up, shout-outs, kill and clear banter, and the rival watch.",
+		"Now: |cffffffff" .. W.Shout:ChannelLabel() .. "|r",
+		"Click: next channel   Right-click: previous",
+		"Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me (a preview just for you).",
+		"|cff888888A custom channel: /wdi channel <name>. If you're not in the group or guild it names, posts show only to you.|r",
+	}
+end)
+
+-- Fights tab
+local shameBtn  = gridButton("|cffff5555Name & Shame|r", 4, 1)
+local praiseBtn = gridButton("|cff33ff33Big Them Up|r", 4, 2)
+local annBtn    = gridButton("Auto summary: me", 3, 1)
+local autoBtn   = gridButton("Auto shout-outs: off", 3, 2)
+local trashBtn  = gridButton("Track trash: off", 2, 1)
+local demoBtn   = gridButton("|cff33ccffDemo fight|r", 2, 2)
+local delBtn    = gridButton("Delete fight", 1, 1)
+local clearBtn  = gridButton("Clear all fights", 1, 2)
 
 StaticPopupDialogs["WHODIDIT_CLEAR"] = {
 	text = "Delete ALL saved WhoDidIt fights?",
@@ -417,26 +451,29 @@ delBtn:SetScript("OnClick", function()
 		UI:Refresh()
 	end
 end)
-tooltip(delBtn, "Delete", { "Delete the selected fight." })
+tooltip(delBtn, "Delete fight", { "Delete the fight selected in the list above." })
 
 clearBtn:SetScript("OnClick", function() StaticPopup_Show("WHODIDIT_CLEAR") end)
-tooltip(clearBtn, "Clear all", { "Delete every saved fight (asks first)." })
+tooltip(clearBtn, "Clear all fights", { "Delete every saved fight. Asks first." })
 
 trashBtn:SetScript("OnClick", function()
 	WhoDidItDB.opts.trackTrash = not WhoDidItDB.opts.trackTrash
 	UI:Refresh()
 end)
-tooltip(trashBtn, "Track trash", { "on - elite trash pulls are recorded too", "off - raid bosses only" })
+tooltip(trashBtn, "Track trash", { "On: elite trash pulls are recorded and analysed too.", "Off: raid bosses only (recommended)." })
 
 annBtn:SetScript("OnClick", function()
 	WhoDidItDB.opts.announce = cycle({ "self", "channel", "off" }, WhoDidItDB.opts.announce)
 	UI:Refresh()
 end)
-tooltip(annBtn, "Announce after each fight", function()
+tooltip(annBtn, "Auto summary after each fight", function()
 	return {
-		"me - short summary in your own chat",
-		"chan - short summary posted to the shout channel (" .. W.Shout:ChannelLabel() .. ")",
-		"off - silent",
+		"A short summary after every boss fight: kill or wipe, time, deaths, who's to blame.",
+		"on - posted to " .. W.Shout:ChannelLabel() .. " (the Post to channel)",
+		"me only - in your own chat, nobody else sees it",
+
+		"off - nothing",
+		"|cff888888Click to change. Report (bottom right) posts the full report any time.|r",
 	}
 end)
 
@@ -446,10 +483,11 @@ autoBtn:SetScript("OnClick", function()
 end)
 tooltip(autoBtn, "Auto shout-outs after each fight", function()
 	return {
+		"Name & Shame or Big Them Up posted by themselves after each fight.",
 		"off - never",
-		"smart - Name & Shame on wipes, Big Them Up on kills",
-		"shame / praise / both - after every fight",
-		"|cff888888Posted to: " .. W.Shout:ChannelLabel() .. "|r",
+		"smart - Name & Shame after wipes, Big Them Up after kills",
+		"shame / praise / both - that one (or both) after every fight",
+		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. ". Demo fights only post to your own chat.|r",
 	}
 end)
 
@@ -491,44 +529,31 @@ local function finishedRec()
 	return rec
 end
 
-local shameBtn = button(header, "|cffff5555Name & Shame|r", SHOUTW, 20)
-shameBtn:SetPoint("TOPRIGHT", header, "TOPRIGHT", -8, -7)
+-- Name & Shame / Big Them Up live in the panel under the fight list
 shameBtn:SetScript("OnClick", function()
 	local rec = finishedRec()
 	if rec then W.Shout:Shame(rec) end
 end)
 tooltip(shameBtn, "Name & Shame", function()
 	return {
-		"Hall-of-shame awards for this fight: Most to blame, Threat Junkie, Floor Inspector, Fire Enthusiast, Bomb Squad, AFK Award, Participation Trophy.",
-		"Shift-click any name in the window to shame just them.",
+		"Post this fight's hall of shame: Most to blame, Threat Junkie, Floor Inspector,",
+		"Fire Enthusiast, Bomb Squad, AFK Award, Participation Trophy.",
+		"Shame one player: Shift-click their name anywhere in the window.",
 		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
 	}
-end, "ANCHOR_LEFT")
-
-local praiseBtn = button(header, "|cff33ff33Big Them Up|r", SHOUTW, 20)
-praiseBtn:SetPoint("TOP", shameBtn, "BOTTOM", 0, -2)
+end)
 praiseBtn:SetScript("OnClick", function()
 	local rec = finishedRec()
 	if rec then W.Shout:Praise(rec) end
 end)
 tooltip(praiseBtn, "Big Them Up", function()
 	return {
-		"Celebrates the stars of this fight: Damage King, Top Healer, Iron Wall, Kick Master, Cleanser, Tranq Sniper, Never Stops and everyone who played flawlessly.",
-		"Alt-click any name in the window to big up just them.",
+		"Post this fight's stars: Damage King, Top Healer, Iron Wall, Kick Master,",
+		"Cleanser, Tranq Sniper, Never Stops, and everyone who played flawlessly.",
+		"Big up one player: Alt-click their name anywhere in the window.",
 		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
 	}
-end, "ANCHOR_LEFT")
-
-local chanBtn = button(header, "To: Raid", SHOUTW, 20)
-chanBtn:SetPoint("TOP", praiseBtn, "BOTTOM", 0, -2)
-chanBtn:SetScript("OnClick", function()
-	W.Shout:CycleChannel()
-	UI:Refresh()
 end)
-tooltip(chanBtn, "Shout channel", {
-	"Where Report and the shout-outs are posted. Click to cycle.",
-	"|cff888888Custom channel: /wdi channel <name>|r",
-}, "ANCHOR_LEFT")
 
 ------------------------------------------------------------------ right: tabs + content
 
@@ -849,10 +874,13 @@ tooltip(glBtn, "Auto group loot", { "When everything in the boss's loot has been
 local lootOnly = { finishBtn, cancelBtn, srsBtn, sroBtn, mlBtn, glBtn }
 for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
 
--- banter toggles take the place of the fight buttons while in Rankings
-local banterKillBtn  = gridButton("Kill banter", 3, 1)
-local banterClearBtn = gridButton("Clear banter", 3, 2)
-local banterTestBtn  = gridButton("Test banter", 2, 1)
+-- Rankings tab: banter and rival watch take the place of the fight buttons
+local banterKillBtn  = gridButton("Kill banter", 4, 1)
+local banterClearBtn = gridButton("Clear banter", 4, 2)
+local rivalBtn       = gridButton("Rival alerts", 3, 1)
+local banterTestBtn  = gridButton("Test banter", 3, 2)
+local postRivalBtn   = gridButton("Post rivals", 2, 1)
+local postBoardBtn   = gridButton("Post standings", 2, 2)
 banterKillBtn:SetScript("OnClick", function()
 	WhoDidItDB.opts.banterKills = not WhoDidItDB.opts.banterKills
 	UI:Refresh()
@@ -861,17 +889,59 @@ banterClearBtn:SetScript("OnClick", function()
 	WhoDidItDB.opts.banterClears = not WhoDidItDB.opts.banterClears
 	UI:Refresh()
 end)
+rivalBtn:SetScript("OnClick", function()
+	WhoDidItDB.opts.rivalAlerts = not WhoDidItDB.opts.rivalAlerts
+	UI:Refresh()
+end)
 banterTestBtn:SetScript("OnClick", function() W.Board:BanterTest() end)
-local function banterTip()
+postRivalBtn:SetScript("OnClick", function() W.Board:PostRivals(UI.rk.inst) end)
+postBoardBtn:SetScript("OnClick", function()
+	local B = W.Board
+	local realm, zone = UI.rk.realm or B.Realm(), UI.rk.inst
+	local line
+	if UI.rk.boss then line = B:TopLine("kills", UI.rk.boss, realm, UI.rk.faction)
+	elseif UI.rk.view == "clears" then line = B:TopLine("clears", zone, realm, UI.rk.faction)
+	else line = B:StandingsLine(zone, realm) end
+	if line then W:Send({ line }, nil, {}) else W.Print("Nothing to post for this board yet.") end
+end)
+local function banterTip(what)
+	return function()
+		return {
+			"After every " .. what .. ", post one fun line about our time. It picks from:",
+			"- our own best (new record, or how much slower)",
+			"- the other guilds on " .. W.Board.RealmLabel(W.Board.Realm()) .. " (passed them, still behind, #1)",
+			"- the other realms' fastest (\"faster than anyone on N'Zoth (PvE)\")",
+			"- anyone who recently beat us (revenge, or still chasing them)",
+			"It mocks us when we're slow and bigs us up when we're fast.",
+			"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. ". With several WhoDidIt users in the raid only one posts.|r",
+		}
+	end
+end
+tooltip(banterKillBtn, "Kill banter", banterTip("boss kill"))
+tooltip(banterClearBtn, "Clear banter", banterTip("full clear"))
+tooltip(rivalBtn, "Rival alerts", function()
 	return {
-		"After every boss kill / full clear, post a fun line comparing our time with our best and with other guilds on the realm - trolling us when we're slow, bigging us up when we're fast.",
+		"Watches for new times (from the Chronicle sync or WhoDidIt users) that beat",
+		"our guild's best - on " .. W.Board.Realm() .. " or the fastest on another realm.",
+		"On: when the raid enters that instance, post who beat us and taunt us to win it back.",
+		"Off: they're still listed under Rival watch, but nothing is posted.",
 		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
 	}
-end
-tooltip(banterKillBtn, "Kill banter", banterTip)
-tooltip(banterClearBtn, "Clear banter", banterTip)
-tooltip(banterTestBtn, "Test banter", { "Show a random banter line for a made-up kill - in your own chat only." })
-local rankOnly = { banterKillBtn, banterClearBtn, banterTestBtn }
+end)
+tooltip(banterTestBtn, "Test banter", { "Show a random banter line for a made-up kill, in your own chat only." })
+tooltip(postRivalBtn, "Post rivals", function()
+	return { "Post who has beaten our times in " .. (UI.rk.inst or "this instance") .. " recently, with a taunt.",
+		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+end)
+tooltip(postBoardBtn, "Post standings", function()
+	return { "Post what you're looking at:",
+		"- a boss's leaderboard: its top 3 (and our place)",
+		"- Full clears: the instance's top 3 clears",
+		"- Kill times: on how many bosses we're #1, and who has the rest",
+		"|cff888888Uses the Realm button: your realm, or All realms to compare across " .. W.Board.ServerName() .. ".|r",
+		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+end)
+local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn }
 for i = 1, getn(rankOnly) do rankOnly[i]:Hide() end
 
 -- show the controls that belong to the current mode
@@ -891,12 +961,14 @@ function UI:ApplyMode()
 	local loot = (UI.mode == "loot" and W.Loot ~= nil)
 	for i = 1, getn(UI.lootButtons) do vis(UI.lootButtons[i], loot) end
 	for i = 1, getn(lootOnly) do vis(lootOnly[i], loot) end
-	local fightOnly = { shameBtn, praiseBtn, chanBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
+	local fightOnly = { shameBtn, praiseBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
 	for i = 1, getn(fightOnly) do vis(fightOnly[i], fights) end
 	for i = 1, getn(rankOnly) do vis(rankOnly[i], UI.mode == "rankings" and W.Board ~= nil) end
 	local o = WhoDidItDB.opts
 	banterKillBtn:SetText("Kill banter: " .. (o.banterKills and "|cff33ff33on|r" or "|cffff5555off|r"))
 	banterClearBtn:SetText("Clear banter: " .. (o.banterClears and "|cff33ff33on|r" or "|cffff5555off|r"))
+	rivalBtn:SetText("Rival alerts: " .. (o.rivalAlerts and "|cff33ff33on|r" or "|cffff5555off|r"))
+	chanBtn:SetText("Post to: |cffffffff" .. W.Shout:ChannelLabel() .. "|r")
 	if not fights then
 		for i = 1, getn(UI.meterButtons) do UI.meterButtons[i]:Hide() end
 		for _, list in pairs(UI.actionButtons) do
@@ -1723,6 +1795,27 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 	end
 end
 
+-- "Rival watch": who recently beat our times here (click one to taunt the raid with it)
+local function rivalRows(rows, zone, kind, key)
+	local B = W.Board
+	if not B.Rivals then return end
+	local list = B:Rivals(zone, kind, key)
+	head(rows, "Rival watch  " .. C_DIM .. "(beat our time in the last 3 weeks - click one to post a taunt)|r")
+	if getn(list) == 0 then
+		tinsert(rows, row(C_DIM .. "Nobody has beaten our times here recently. New Chronicle times are checked every minute.|r"))
+		return
+	end
+	for i = 1, getn(list) do
+		local e = list[i]
+		local who = facName(e.g, nil) .. ((e.realm ~= B.Realm()) and (C_DIM .. " of " .. B.RealmLabel(e.realm) .. "|r") or "")
+		local what = (e.kind == "clears") and "the clear" or e.key
+		tinsert(rows, row(who .. "  |cffdddddd" .. what .. "|r  " .. C_TIME .. B.Fmt(e.t) .. "|r  " .. C_DIM .. "vs our|r " .. C_GUILD .. B.Fmt(e.cur or e.ours) .. "|r",
+			C_DIM .. B.Ago(e.d) .. "|r  |cffffd100taunt >|r",
+			{ tipTitle = "Rival watch", tip = { B:RivalText(e), " ", "Click: post this with a taunt to " .. W.Shout:ChannelLabel() .. "." },
+			  click = function() B:PostRivals(zone, { e }) end }))
+	end
+end
+
 function UI:RankNavRows(realm)
 	local B = W.Board
 	local rows = {}
@@ -1743,6 +1836,8 @@ function UI:RankNavRows(realm)
 		elseif rank then
 			right = rankTxt(rank, "|cff777777/" .. of .. "|r")
 		end
+		local nRivals = B.Rivals and getn(B:Rivals(zone)) or 0
+		if nRivals > 0 then right = "|cffff5555! |r" .. right end
 		local line2
 		if g then
 			line2 = "|cff33ff33" .. B.Fmt(g.t) .. "|r"
@@ -1760,6 +1855,7 @@ function UI:RankNavRows(realm)
 			      "Your guild: " .. (g and (B.Fmt(g.t) .. (rank and ("  #" .. rank .. " of " .. of) or ("  (on " .. home .. ")"))) or "no clear yet"),
 			      "You: " .. (me and B.Fmt(me.t) or "no clear yet"),
 			      "#1: " .. (top and (B.Fmt(top[2].t) .. "  " .. top[1]) or "-"),
+			      (nRivals > 0) and ("|cffff5555! " .. nRivals .. " recent time" .. (nRivals == 1 and "" or "s") .. " beat ours here - see Rival watch|r") or " ",
 			      "|cff888888The green bar is how close your guild is to #1.|r",
 			  },
 			  click = function() UI.rk.inst = zone; UI.rk.boss = nil; UI:Refresh() end }))
@@ -1786,8 +1882,9 @@ function UI:RankKillRows(realm, faction, zone)
 		elseif g and rank == 1 then
 			gap = "|cffffd100fastest|r"
 		end
+		local beaten = B.Rivals and B:Rivals(nil, "kills", enc)[1]
 		tinsert(rows, cells(spec, {
-				"|cffffffff" .. enc .. "|r",
+				(beaten and "|cffff5555! |r" or "") .. "|cffffffff" .. enc .. "|r",
 				mine and (C_YOU .. B.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
 				g and (C_GUILD .. B.Fmt(g.t) .. "|r") or (C_DIM .. "-|r"),
 				rank and rankTxt(rank) or "",
@@ -1800,9 +1897,11 @@ function UI:RankKillRows(realm, faction, zone)
 			  tip = { "you = your best kill (WhoDidIt or Chronicle)",
 			          "guild = your guild's best, its rank and how far behind #1 it is",
 			          "#1 = the fastest guild (" .. realm .. ", " .. faction .. ")",
+			          beaten and ("|cffff5555! " .. B:RivalText(beaten) .. "|r") or " ",
 			          "|cff888888Click for the full leaderboard.|r" },
 			  tipTitle = enc }))
 	end
+	rivalRows(rows, zone)
 	return rows
 end
 
@@ -1815,6 +1914,7 @@ function UI:RankBossRows(realm, faction, enc)
 	pinRows(rows, realm, faction, "kills", enc, guild)
 	head(rows, "Leaderboard")
 	boardRows(rows, realm, faction, "kills", enc, guild)
+	rivalRows(rows, nil, "kills", enc)
 	return rows
 end
 
@@ -1852,6 +1952,7 @@ function UI:RankClearRows(realm, faction, zone)
 			line = {}
 		end
 	end
+	rivalRows(rows, nil, "clears", zone)
 	return rows
 end
 
@@ -1929,7 +2030,7 @@ function UI:RefreshRankings()
 	elseif UI.rk.view == "kills" then rows = UI:RankKillRows(realm, faction, zone)
 	else rows = UI:RankClearRows(realm, faction, zone) end
 
-	hintText:SetText("Kills: pull to kill.  Clears: first combat inside to the last boss.  Shared times are self-reported.")
+	hintText:SetText("Kills: pull to kill.  Clears: first combat to the last boss.  |cffff5555!|r = someone beat our time recently.")
 	hintText:Show()
 	local key = "rk" .. realm .. faction .. zone .. UI.rk.view .. tostring(UI.rk.boss)
 	mainList:SetData(rows, key == lastModeKey)
@@ -2665,11 +2766,10 @@ function UI:Refresh()
 	lastModeKey = nil
 	leftHead:SetText("Encounters")
 
-	trashBtn:SetText("Trash: " .. (db.opts.trackTrash and "on" or "off"))
+	trashBtn:SetText("Track trash: " .. (db.opts.trackTrash and "|cff33ff33on|r" or "off"))
 	local ann = db.opts.announce
-	annBtn:SetText("Announce: " .. (ann == "channel" and "chan" or (ann == "self" and "me" or ann)))
-	autoBtn:SetText("Shout: " .. (db.opts.autoShout or "off"))
-	chanBtn:SetText("To: " .. W.Shout:ChannelLabel())
+	annBtn:SetText("Auto summary: " .. (ann == "channel" and "|cff33ff33on|r" or (ann == "self" and "me only" or "off")))
+	autoBtn:SetText("Auto shout-outs: " .. ((db.opts.autoShout or "off") == "off" and "off" or ("|cff33ff33" .. db.opts.autoShout .. "|r")))
 	local n = getn(db.fights)
 	leftCount:SetText(n .. " saved")
 

@@ -81,7 +81,7 @@ WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `
 
 1. Type **`/wdi`** and click **Demo fight** (bottom-left). Two sample fights load, a messy wipe and a cleaner kill, and every tab has something to show. **Shift-click** it to watch the wipe play out live at 4× speed.
 2. Mark your main tanks: **`/wdi tank <name>`**, or right-click a name in the window. Tanks are auto-detected, but setting them makes aggro blame much more accurate.
-3. Pick where posts go with the **To:** button (top-right): Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me, or a custom channel (`/wdi channel <name>`).
+3. Pick where posts go with the **Post to** button (bottom left, the same on every tab): Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me, or a custom channel (`/wdi channel <name>`).
 4. Raid. Fights are recorded automatically when your group engages a boss. **Keep the boss targeted** so threat % gets recorded.
 
 ## The window
@@ -126,18 +126,31 @@ shows your guild's clear, its rank (gold / silver / bronze) and a green bar for 
 
 ### Banter
 
-After every boss kill and full clear, WhoDidIt posts a fun line to your shout channel. It compares the time with your
-guild's previous best and with the other guilds on the realm, then picks a random message type so it doesn't get
-repetitive:
-- new guild best (and by how much)
-- slower than our best ("…{d} of sightseeing")
-- beat another guild ("Sorry not sorry, Care Bears")
-- behind the guild just ahead
-- #1 on the realm
-- our rank
+After every boss kill and full clear, WhoDidIt posts a fun line to the **Post to** channel. It picks a random message
+type so it doesn't get repetitive:
+- **our own best**: a new guild best (and by how much), or how much slower ("…{d} of sightseeing")
+- **our realm**: passed another guild ("Sorry not sorry, Care Bears"), still behind one, #1, or our rank
+- **the other realms**: faster than anyone on N'Zoth (PvE), behind a guild on C'Thun (Hardcore), or the fastest on
+  every OctoWoW realm. Realm types are set in `Data.lua` (`D.realmTypes`).
+- **rivals**: if someone recently beat our time, the next kill either takes it back ("Took Lucifron back from Care
+  Bears! …") or rubs it in ("Care Bears beat our Lucifron 2 days ago and still own it by 0:05.0")
 
-It trolls you when you're slow and bigs you up when you're fast. Toggle it with **Kill banter / Clear banter** in
-Rankings or `/wdi banter kills|clears on|off`, and preview a line with **Test banter** or `/wdi banter test`.
+It trolls you when you're slow and bigs you up when you're fast. With several WhoDidIt users in the raid, only one of
+them posts each line. Toggle it with **Kill banter / Clear banter** in Rankings or `/wdi banter kills|clears on|off`,
+and preview a line with **Test banter** or `/wdi banter test`.
+
+### Rival watch
+
+Every minute WhoDidIt checks the new times from the Chronicle sync and from WhoDidIt users on the realm. Any time that
+beats our guild's best, and was set after it, goes on the **Rival watch**. On another realm, it counts when that
+realm's fastest guild gets under our time.
+- Rankings marks those instances and bosses with a red **!** and lists them under **Rival watch**. Click one to post
+  it with a taunt.
+- **Rival alerts** on: when the raid enters that instance, WhoDidIt posts who beat us and taunts us to win it back
+  (once per instance visit).
+- **Post rivals** posts them for the instance you're looking at. **Post standings** posts what's on screen: a boss's
+  top 3, the instance's top 3 clears, or on how many bosses we're #1 and who has the rest. Use **Realm: All realms**
+  to compare across the server.
 
 ### Every guild's times from Chronicle (optional helper)
 
@@ -301,6 +314,17 @@ it rolls is changed, and it still talks to raiders' copies of RollFor (roll wind
 **Already have RollFor installed?** On each character's first login, WhoDidIt's copy stands down and switches the
 separate addon off. From your next `/reload`, WhoDidIt's copy takes over with that character's settings, soft-res sheet
 and winners. Once you've done this on every character you loot with, delete `Interface\AddOns\RollFor`.
+
+## The panel under the list
+
+The bottom of the left column is laid out the same way on every tab. Hover any button for what it does.
+
+| | |
+| --- | --- |
+| **Post to: Raid** | Where everything WhoDidIt posts goes. Click for the next channel, right-click for the previous one: Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me (a preview), or a custom channel (`/wdi channel <name>`). |
+| **Fights** | **Name & Shame**, **Big Them Up**, **Auto summary** (on / me only / off), **Auto shout-outs** (off / smart / shame / praise / both), **Track trash**, **Demo fight**, **Delete fight**, **Clear all fights** |
+| **Rankings** | **Kill banter**, **Clear banter**, **Rival alerts**, **Test banter**, **Post rivals**, **Post standings** |
+| **Marks / Loot** | That tab's quick actions |
 
 ## Shout-outs
 

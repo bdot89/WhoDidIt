@@ -33,14 +33,18 @@ function S:ChannelLabel(ch)
 	return S.LABELS[ch] or ch
 end
 
-function S:CycleChannel()
+-- next channel (back = the previous one)
+function S:CycleChannel(back)
 	local list = {}
 	for i = 1, getn(S.CHANNELS) do list[i] = S.CHANNELS[i] end
 	if WhoDidItDB.opts.customChannel then tinsert(list, "#" .. WhoDidItDB.opts.customChannel) end
 	local cur = S:Channel()
+	local n = getn(list)
 	local nxt = list[1]
-	for i = 1, getn(list) do
-		if list[i] == cur then nxt = list[i + 1] or list[1] end
+	for i = 1, n do
+		if list[i] == cur then
+			if back then nxt = list[i - 1] or list[n] else nxt = list[i + 1] or list[1] end
+		end
 	end
 	WhoDidItDB.opts.shoutChannel = nxt
 	return nxt
