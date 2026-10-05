@@ -116,7 +116,31 @@ The **Rankings** button (title bar, or `/wdi rankings`) shows kill times and ful
 
 A kill or clear counts for the raid's majority guild (at least half the raid). Personal bests are kept per character.
 
-> Chronicle's own rankings can't be shown in game: addons have no internet access, and Chronicle's API only accepts requests from its own website.
+### Every guild's times from Chronicle (optional helper)
+
+WoW addons can't go online, so a small helper does it for them. `tools\WhoDidIt-Sync.cmd` (PowerShell, built into
+Windows) uses Chronicle's public [External API](https://legacy.chronicleclassic.com/developers/api) to pull:
+
+- **full clears** from Chronicle's speedrun leaderboards
+- **boss kill times** from every uploaded raid log on your server (OctoWoW: C'Thun, N'Zoth, Y'Shaarj)
+
+It writes them to `CustomData\WhoDidIt_Chronicle.txt`, and WhoDidIt reads that file live through Nampower, with no
+`/reload`. Rankings then shows every guild's Chronicle times next to the WhoDidIt-shared ones (hover a row to see its
+source), plus Turtle's custom bosses and the Karazhan towers.
+
+```
+tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (close the window to stop)
+tools\WhoDidIt-Sync.cmd -Once              sync once and exit
+tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
+tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
+```
+
+- **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.
+- **Later syncs:** only fetch new uploads.
+- **Rate limit:** the helper stays within Chronicle's limit (about one request a second) and caches what it has read in `CustomData\WhoDidIt_ChronicleCache.json`.
+- **Faction:** comes from the raiders' races. OctoWoW raids cross-faction, so many guilds show as **M** (mixed).
+
+The API is marked experimental by Chronicle, so it may change.
 
 ## Chronicle logs
 

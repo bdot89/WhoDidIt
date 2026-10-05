@@ -705,6 +705,7 @@ end
 function UI:SetMode(mode)
 	UI.mode = mode
 	UI.rk.boss = nil
+	if mode == "rankings" and W.Board then W.Board:LoadChronicle() end
 	UI:Open()
 end
 
@@ -1277,10 +1278,11 @@ end
 ------------------------------------------------------------------ Rankings view
 
 local lastModeKey
-local FAC_COL = { Alliance = "|cff3399ff", Horde = "|cffff4444" }
+local FAC_COL = { Alliance = "|cff3399ff", Horde = "|cffff4444", Mixed = "|cffcc77ff" }
+local FAC_TAG = { Alliance = "A", Horde = "H", Mixed = "M" }
 
 local function facTag(fac)
-	return (FAC_COL[fac] or "|cffaaaaaa") .. (fac == "Alliance" and "A" or (fac == "Horde" and "H" or "?")) .. "|r"
+	return (FAC_COL[fac] or "|cffaaaaaa") .. (FAC_TAG[fac] or "?") .. "|r"
 end
 local function rkRealm() return UI.rk.realm or W.Board.Realm() end
 local function rkFaction() return UI.rk.faction or W.Board.Faction() end
@@ -1298,8 +1300,18 @@ local function instBosses(zone)
 	for enc, def in pairs(W.Data.encounters) do
 		if def.zone == zone and not have[enc] then tinsert(extra, enc) end
 	end
+	-- bosses only Chronicle knows (Turtle's custom ones, Karazhan...)
+	local chron = W.Board:ChronBosses(zone)
+	for i = 1, getn(chron) do
+		if not have[chron[i]] then tinsert(extra, chron[i]) end
+	end
 	table.sort(extra)
-	for i = 1, getn(extra) do tinsert(list, extra[i]) end
+	for i = 1, getn(extra) do
+		if not have[extra[i]] then
+			tinsert(list, extra[i])
+			have[extra[i]] = true
+		end
+	end
 	return list
 end
 
@@ -1308,7 +1320,8 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 	local B = W.Board
 	local list = B:Board(realm, kind, key, faction)
 	if getn(list) == 0 then
-		tinsert(rows, row("|cff888888No times yet. They show up as soon as you - or any WhoDidIt user on " .. realm .. " - gets one.|r"))
+		tinsert(rows, row("|cff888888No times yet. They show up when you or a WhoDidIt user on " .. realm .. " gets one,|r"))
+		tinsert(rows, row("|cff888888or when tools\\WhoDidIt-Sync pulls them from Chronicle.|r"))
 		return
 	end
 	local best = list[1][2].t
@@ -1321,8 +1334,14 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 				.. "  |cff888888" .. B.Date(rec.d) .. ((rec.n and rec.n > 0) and (", " .. rec.n .. " players") or "") .. "|r",
 			"|cffffffff" .. B.Fmt(rec.t) .. "|r" .. ((i > 1) and ("  |cff888888+" .. B.Fmt(rec.t - best) .. "|r") or ""),
 			{ sel = mine, bar = best / rec.t, cr = horde and 0.85 or 0.2, cg = horde and 0.2 or 0.5, cb = horde and 0.2 or 1,
-			  tip = { "Recorded " .. B.Date(rec.d) .. (rec.by and (" by " .. rec.by) or ""),
-			          rec.net and "Shared by a WhoDidIt user (self-reported)" or "Recorded by your WhoDidIt" } }))
+			  tip = rec.chron and {
+			          "|cffffd100From Chronicle|r (chronicleclassic.com) - " .. B.Date(rec.d),
+			          "Log: " .. (rec.slug or "?"),
+			          "Faction: " .. (rec.f or "?") .. ((rec.f == "Mixed") and " (cross-faction raid)" or ""),
+			      } or {
+			          "Recorded " .. B.Date(rec.d) .. (rec.by and (" by " .. rec.by) or ""),
+			          rec.net and "Shared by a WhoDidIt user (self-reported)" or "Recorded by your WhoDidIt",
+			      } }))
 	end
 end
 
@@ -1331,11 +1350,11 @@ function UI:RankNavRows(realm)
 	local rows = {}
 	local guild, pb = B.MyGuild(), B:PB()
 	local run = B:CurrentRun()
-	local clears = B:DB(realm).clears
-	for i = 1, getn(W.Data.clearOrder) do
-		local zone = W.Data.clearOrder[i]
+	local zones = B:Zones()
+	for i = 1, getn(zones) do
+		local zone = zones[i]
 		local mine = pb.clears[zone]
-		local g = guild and clears[zone] and clears[zone][guild]
+		local g = guild and B:GuildBest(realm, "clears", zone, guild)
 		local right = ""
 		if run and run.zone == zone then
 			right = "|cff33ccffrun|r"
@@ -1354,14 +1373,13 @@ function UI:RankKillRows(realm, faction, zone)
 	local B = W.Board
 	local rows = {}
 	local guild, pb = B.MyGuild(), B:PB()
-	local kills = B:DB(realm).kills
 	head(rows, "Boss kill times  |cff888888(click a boss for its full leaderboard)|r")
 	local bosses = instBosses(zone)
 	for i = 1, getn(bosses) do
 		local enc = bosses[i]
 		local top = B:Board(realm, "kills", enc, faction)[1]
 		local mine = pb.kills[enc]
-		local g = guild and kills[enc] and kills[enc][guild]
+		local g = guild and B:GuildBest(realm, "kills", enc, guild)
 		local rank = g and B:Rank(realm, "kills", enc, guild, faction)
 		tinsert(rows, row(enc,
 			"|cff66ccffyou|r " .. (mine and B.Fmt(mine.t) or "-")
@@ -1383,8 +1401,7 @@ function UI:RankBossRows(realm, faction, enc)
 	local mine = pb.kills[enc]
 	tinsert(rows, row("|cff66ccffYour best kill|r", mine and ("|cffffffff" .. B.Fmt(mine.t) .. "|r  |cff888888" .. B.Date(mine.d) .. "|r") or "|cff888888none yet|r"))
 	if guild then
-		local g = B:DB(realm).kills[enc]
-		g = g and g[guild]
+		local g = B:GuildBest(realm, "kills", enc, guild)
 		local rank, of = B:Rank(realm, "kills", enc, guild, faction)
 		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  #" .. (rank or "?") .. " of " .. of) or "|cff888888no kill yet|r"))
 	end
@@ -1402,8 +1419,7 @@ function UI:RankClearRows(realm, faction, zone)
 	local mine = pb.clears[zone]
 	tinsert(rows, row("|cff66ccffYour best clear|r", mine and ("|cffffffff" .. B.Fmt(mine.t) .. "|r  |cff888888" .. B.Date(mine.d) .. "|r") or "|cff888888none yet|r"))
 	if guild then
-		local g = B:DB(realm).clears[zone]
-		g = g and g[guild]
+		local g = B:GuildBest(realm, "clears", zone, guild)
 		local rank, of = B:Rank(realm, "clears", zone, guild, faction)
 		tinsert(rows, row("|cff33ff33" .. guild .. "|r", g and ("|cffffffff" .. B.Fmt(g.t) .. "|r  #" .. (rank or "?") .. " of " .. of) or "|cff888888no clear yet|r"))
 	end
@@ -1454,22 +1470,31 @@ function UI:RefreshRankings()
 	end
 
 	local guilds = {}
-	local r = B:DB(realm)
-	for g in pairs(r.clears[zone] or {}) do guilds[g] = true end
+	local all = B:Board(realm, "clears", zone, "All")
+	for i = 1, getn(all) do guilds[all[i][1]] = true end
 	local bosses = instBosses(zone)
 	for i = 1, getn(bosses) do
-		for g in pairs(r.kills[bosses[i]] or {}) do guilds[g] = true end
+		all = B:Board(realm, "kills", bosses[i], "All")
+		for j = 1, getn(all) do guilds[all[j][1]] = true end
 	end
 	local ng = 0
 	for _ in pairs(guilds) do ng = ng + 1 end
 
+	local c = B.chron
+	local chron
+	if c and c.synced then
+		local mins = floor((time() - c.synced) / 60)
+		chron = "Chronicle " .. ((c.status ~= "ok") and ("|cffffd100" .. (c.status or "") .. "|r") or (mins < 2 and "just synced" or (mins .. " min ago")))
+	else
+		chron = "Chronicle not synced"
+	end
 	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. (UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
-	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. ng .. " guild(s) with times   |   sharing "
-		.. (WhoDidItDB.opts.shareBoard and "on" or "off") .. "|r")
+	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. ng .. " guild(s)   |   " .. chron
+		.. "   |   sharing " .. (WhoDidItDB.opts.shareBoard and "on" or "off") .. "|r")
 	local guild = B.MyGuild()
 	local verdict
 	if guild then
-		local g = r.clears[zone] and r.clears[zone][guild]
+		local g = B:GuildBest(realm, "clears", zone, guild)
 		if g then
 			local rank, of = B:Rank(realm, "clears", zone, guild, "All")
 			verdict = "|cff33ff33" .. guild .. "|r best clear |cffffffff" .. B.Fmt(g.t) .. "|r - #" .. rank .. " of " .. of .. " on " .. realm

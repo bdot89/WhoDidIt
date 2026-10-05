@@ -74,14 +74,127 @@ function B:PB()
 	return p
 end
 
--- realms we have data for (current realm first)
-function B:Realms()
-	local list = { B.Realm() }
-	for realm in pairs(WhoDidItDB.board or {}) do
-		if realm ~= list[1] then tinsert(list, realm) end
+------------------------------------------------------------------ Chronicle data
+-- tools/WhoDidIt-Sync.ps1 pulls Chronicle's public External API and writes
+-- CustomData/WhoDidIt_Chronicle.txt; Nampower lets us read it while playing.
+--   WDICHRON|1|<synced epoch>|<server>|<days>|<status>
+--   C|realm|instance|guild|faction|secs|ended|players|slug       (full clear)
+--   K|realm|instance|boss|guild|faction|secs|ended|players|slug  (boss kill)
+
+local CHRON_FILE = "WhoDidIt_Chronicle.txt"
+local CHRON_ZONE = { ["Temple of Ahn'Qiraj"] = "Ahn'Qiraj" }   -- Chronicle name -> WhoDidIt zone
+B.chron = nil
+local chronHead
+
+local function splitBar(line)
+	local out = {}
+	for part in string.gfind(line .. "|", "(.-)|") do tinsert(out, part) end
+	return out
+end
+
+-- (re)read the sync file; true if it changed
+function B:LoadChronicle()
+	if not ReadCustomFile then return false end
+	local ok, s = pcall(ReadCustomFile, CHRON_FILE)
+	if not ok or type(s) ~= "string" or s == "" then
+		local had = B.chron ~= nil
+		B.chron = nil
+		chronHead = nil
+		return had
+	end
+	local _, _, head = string.find(s, "^([^\n]*)")
+	if head == chronHead then return false end
+	chronHead = head
+
+	local data = { realms = {}, bosses = {}, zones = {} }
+	for line in string.gfind(s, "[^\n]+") do
+		local p = splitBar(line)
+		local t = p[1]
+		if t == "WDICHRON" then
+			data.synced, data.server, data.days, data.status = tonumber(p[3]), p[4], tonumber(p[5]), p[6]
+		elseif t == "C" or t == "K" then
+			local realm = p[2]
+			local zone = CHRON_ZONE[p[3]] or p[3]
+			local kind, key, guild, fac, secs, d, n, slug
+			if t == "C" then
+				kind, key, guild, fac, secs, d, n, slug = "clears", zone, p[4], p[5], tonumber(p[6]), tonumber(p[7]), tonumber(p[8]), p[9]
+			else
+				kind, key, guild, fac, secs, d, n, slug = "kills", p[4], p[5], p[6], tonumber(p[7]), tonumber(p[8]), tonumber(p[9]), p[10]
+				data.bosses[zone] = data.bosses[zone] or {}
+				data.bosses[zone][key] = true
+			end
+			if realm ~= "" and guild and guild ~= "" and secs then
+				local r = data.realms[realm]
+				if not r then
+					r = { kills = {}, clears = {} }
+					data.realms[realm] = r
+				end
+				local list = r[kind][key]
+				if not list then
+					list = {}
+					r[kind][key] = list
+				end
+				local old = list[guild]
+				if not old or secs < old.t then
+					list[guild] = { t = secs, d = d, f = fac, n = n, slug = slug, chron = true }
+				end
+				data.zones[zone] = true
+			end
+		end
+	end
+	B.chron = data
+	return true
+end
+
+-- Chronicle bosses seen for a zone (names as Chronicle writes them)
+function B:ChronBosses(zone)
+	local out = {}
+	local set = B.chron and B.chron.bosses[zone]
+	if set then
+		for name in pairs(set) do tinsert(out, name) end
+		table.sort(out)
+	end
+	return out
+end
+
+-- every zone with data: WhoDidIt's raids, then Chronicle-only ones (Karazhan towers...)
+function B:Zones()
+	local list, have = {}, {}
+	for i = 1, getn(W.Data.clearOrder) do
+		tinsert(list, W.Data.clearOrder[i])
+		have[W.Data.clearOrder[i]] = true
+	end
+	if B.chron then
+		local extra = {}
+		for zone in pairs(B.chron.zones) do
+			if not have[zone] then tinsert(extra, zone) end
+		end
+		table.sort(extra)
+		for i = 1, getn(extra) do tinsert(list, extra[i]) end
 	end
 	return list
 end
+
+-- realms we have data for (current realm first)
+function B:Realms()
+	local list, have = { B.Realm() }, {}
+	have[list[1]] = true
+	for realm in pairs(WhoDidItDB.board or {}) do
+		if not have[realm] then tinsert(list, realm); have[realm] = true end
+	end
+	if B.chron then
+		for realm in pairs(B.chron.realms) do
+			if not have[realm] then tinsert(list, realm); have[realm] = true end
+		end
+	end
+	return list
+end
+
+-- re-read the sync file every minute; refresh the window when it changed
+W:Every(60, function()
+	if not WhoDidItDB then return end
+	if B:LoadChronicle() and W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
+end)
 
 -- keep a record if it's that guild's best; true if it improved
 function B:Merge(kind, realm, key, guild, rec)
@@ -97,15 +210,37 @@ function B:Merge(kind, realm, key, guild, rec)
 	return true
 end
 
--- sorted { guild, rec } list, faction "All" or a faction name
+-- sorted { guild, rec } list, faction "All" or a faction name. Each guild's
+-- best of its WhoDidIt record and its Chronicle record. Cross-faction
+-- ("Mixed") and unknown-faction guilds show in every faction view.
 function B:Board(realm, kind, key, faction)
-	local r = B:DB(realm)
+	local merged = {}
+	for g, rec in pairs(B:DB(realm)[kind][key] or {}) do merged[g] = rec end
+	local c = B.chron and B.chron.realms[realm]
+	if c and c[kind][key] then
+		for g, rec in pairs(c[kind][key]) do
+			local old = merged[g]
+			if not old or rec.t < old.t then merged[g] = rec end
+		end
+	end
 	local list = {}
-	for g, rec in pairs(r[kind][key] or {}) do
-		if faction == "All" or rec.f == faction then tinsert(list, { g, rec }) end
+	for g, rec in pairs(merged) do
+		if faction == "All" or rec.f == faction or rec.f == "Mixed" or rec.f == "Unknown" or not rec.f then
+			tinsert(list, { g, rec })
+		end
 	end
 	table.sort(list, function(a, b) return a[2].t < b[2].t end)
 	return list
+end
+
+-- a guild's best record for one board (WhoDidIt or Chronicle)
+function B:GuildBest(realm, kind, key, guild)
+	local best = B:DB(realm)[kind][key]
+	best = best and best[guild]
+	local c = B.chron and B.chron.realms[realm]
+	local cr = c and c[kind][key] and c[kind][key][guild]
+	if cr and (not best or cr.t < best.t) then best = cr end
+	return best
 end
 
 -- rank (1-based) of a guild on a board, and how many guilds are on it
@@ -323,6 +458,7 @@ end)
 local joinAt
 W:On("PLAYER_ENTERING_WORLD", function()
 	if not joinAt then joinAt = GetTime() + 15 end
+	B:LoadChronicle()
 end)
 
 W:Every(2, function()
