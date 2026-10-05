@@ -1,8 +1,9 @@
 --[[--------------------------------------------------------------------
 	WhoDidIt - Chronicle log controls
 
-	Drives the ChronicleCompanion addon (which writes the combat logs you
-	upload to chronicleclassic.com) from the WhoDidIt window: start/stop
+	Drives the Chronicle logger (ChronicleCompanion, which writes the combat
+	logs you upload to chronicleclassic.com) from the WhoDidIt window. It is
+	built in (see ChronicleLoader.lua); the separate addon works too: start/stop
 	logging, save, archive, delete and its auto-logging settings, plus two
 	WhoDidIt extras - start logging on a boss pull and save after every
 	boss fight. Uploading has to be done on the website: addons can't
@@ -19,6 +20,19 @@ L.history = {}   -- this session's saves, newest first: { time, lines, what }
 
 function L:Available()
 	return ChronicleLog ~= nil and ChronicleLog.Enable ~= nil and ChronicleLog.FlushToFile ~= nil
+end
+
+-- which logger is running: "builtin" (WhoDidIt's Chronicle\ copy),
+-- "standalone" (the separate ChronicleCompanion addon) or nil
+function L:Source()
+	if not L:Available() then return nil end
+	if not WDI_CHRON_SKIP and WDI_CHRON_VERSION then return "builtin" end
+	return "standalone"
+end
+
+function L:Version()
+	if L:Source() == "builtin" then return WDI_CHRON_VERSION end
+	return GetAddOnMetadata("ChronicleCompanion", "Version")
 end
 
 function L:Enabled()
@@ -93,6 +107,21 @@ function L:ToggleSetting(key)
 	if not L:Available() then return end
 	ChronicleLog:SetSetting(key, not ChronicleLog:GetSetting(key))
 end
+
+------------------------------------------------------------------ hand-over from the separate addon
+
+-- The separate ChronicleCompanion is still switched on next to the built-in
+-- copy: it keeps logging this session (the built-in one stood down) and is
+-- switched off from the next /reload. Both declare Chronicle's saved
+-- variables, so its settings are saved with WhoDidIt's on the way out.
+local handedOver
+W:On("PLAYER_ENTERING_WORLD", function()
+	if handedOver or not (WDI_CHRON_SKIP and WDI_CHRON_VERSION) then return end
+	handedOver = true
+	DisableAddOn("ChronicleCompanion")
+	W.Print("WhoDidIt now has the Chronicle logger built in (v" .. WDI_CHRON_VERSION .. "), so the separate |cffffd100ChronicleCompanion|r addon has been switched off.")
+	W.Print("It keeps logging until your next /reload, then WhoDidIt's copy takes over and your Chronicle settings carry across. You can delete the Interface\\AddOns\\ChronicleCompanion folder.")
+end)
 
 ------------------------------------------------------------------ hooks from the tracker
 

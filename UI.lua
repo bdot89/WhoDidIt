@@ -1809,15 +1809,32 @@ function UI:LogRows()
 	local L = W.Logs
 	local rows = {}
 	if not L:Available() then
-		head(rows, "ChronicleCompanion isn't loaded")
-		tinsert(rows, row("WhoDidIt drives the |cffffd100ChronicleCompanion|r addon, which writes the logs you upload to chronicleclassic.com."))
-		tinsert(rows, row("Install it in Interface/AddOns (it needs Nampower for file access), then /reload."))
+		head(rows, "The Chronicle logger isn't installed yet")
+		tinsert(rows, row("WhoDidIt has Chronicle's logger (|cffffd100ChronicleCompanion|r) built in - it writes the logs you upload to chronicleclassic.com."))
+		tinsert(rows, row("It's downloaded from the official source by the helper: run |cffffd100tools\\WhoDidIt-Sync.cmd|r once,"))
+		tinsert(rows, row("then exit WoW and start it again. The helper keeps it up to date from then on."))
+		if WDI_CHRON_VERSION then
+			tinsert(rows, row("|cffff7777v" .. WDI_CHRON_VERSION .. " is downloaded but didn't load - restart WoW (a /reload isn't enough).|r"))
+		end
 		return rows
 	end
 	local opts = WhoDidItDB.opts
 	local file = L:File() or "?"
+	local src = L:Source()
 	head(rows, "Status")
 	tinsert(rows, row("Chronicle logging", L:Enabled() and "|cff33ff33ON|r" or "|cffff5555OFF|r"))
+	if src == "builtin" then
+		tinsert(rows, row("Logger", "|cff33ff33built into WhoDidIt|r  |cffffffffv" .. (L:Version() or "?") .. "|r"
+			.. (WDI_CHRON_DATE and ("  |cff888888" .. WDI_CHRON_DATE .. "|r") or ""),
+			{ tipTitle = "Built-in Chronicle logger", tip = {
+				"ChronicleCompanion by Emyrk, from github.com/Emyrk/ChronicleCompanion.",
+				"tools\\WhoDidIt-Sync checks for a new version every hour and installs it when WoW is closed.",
+				"Commit: " .. string.sub(WDI_CHRON_COMMIT or "?", 1, 7) } }))
+	elseif WDI_CHRON_VERSION then
+		tinsert(rows, row("Logger", "|cffffd100ChronicleCompanion addon|r  |cffffffffv" .. (L:Version() or "?") .. "|r  |cff888888built-in v" .. WDI_CHRON_VERSION .. " takes over after /reload|r"))
+	else
+		tinsert(rows, row("Logger", "|cffffd100ChronicleCompanion addon|r  |cffffffffv" .. (L:Version() or "?") .. "|r  |cff888888run tools\\WhoDidIt-Sync to build it in|r"))
+	end
 	tinsert(rows, row("Log file", "|cffffffffWoW folder\\CustomData\\" .. file .. "|r"))
 	tinsert(rows, row("Lines logged but not saved yet", "|cffffffff" .. FmtNum(L:Unsaved()) .. "|r"))
 	tinsert(rows, row("Saved by WhoDidIt this session",
@@ -1861,7 +1878,7 @@ function UI:RefreshLogs()
 		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. FmtNum(L:Unsaved()) .. " unsaved lines|r")
 	else
 		rTitle:SetText("Chronicle logs  |cffff5555not found|r")
-		rInfo:SetText("|cffaaaaaaChronicleCompanion addon not loaded|r")
+		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once to install the Chronicle logger|r")
 	end
 	rVerdict:SetText("Upload the log at |cffffd100chronicleclassic.com|r after your raid.\n|cff888888Addons can't reach the internet, so uploading happens on the website.|r")
 	hintText:SetText("Click an option to switch it on or off.  Hover the buttons for details.")

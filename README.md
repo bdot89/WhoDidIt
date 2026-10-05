@@ -62,6 +62,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
+4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#chronicle-logs) and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
 
 ### Requirements
 
@@ -152,6 +153,8 @@ tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (clos
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
+tools\WhoDidIt-Sync.cmd -LoggerOnly        only install / update the built-in Chronicle logger
+tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
 ```
 
 - **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.
@@ -163,7 +166,25 @@ The API is marked experimental by Chronicle, so it may change.
 
 ## Chronicle logs
 
-The **Logs** button (or `/wdi logs`) controls the [ChronicleCompanion](https://chronicleclassic.com) addon, which writes the combat logs you upload to chronicleclassic.com:
+WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official addon for
+[chronicleclassic.com](https://chronicleclassic.com), made by Emyrk. You don't need to install it separately.
+
+- **Install:** `tools\WhoDidIt-Sync.cmd` downloads it from the official source,
+  [github.com/Emyrk/ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion), into `WhoDidIt\Chronicle\`.
+  Restart WoW afterwards; a `/reload` isn't enough the first time. To install or update only the logger, run
+  `tools\WhoDidIt-Sync.cmd -LoggerOnly`.
+- **Updates:** while the helper runs, it checks Chronicle's repository every hour and fetches any new version. A version
+  that arrives while you're playing installs when you close WoW, so the logger never changes mid-raid. If a new
+  version can't be adapted safely, the helper keeps the current one and says why.
+- **What's changed:** nothing in Chronicle's logging. The helper only lets its files run from inside WhoDidIt: they
+  start with WhoDidIt, take their version from `Chronicle\wdi_version.lua`, and find their minimap icons in the new
+  folder. `/chronicle`, `/chron`, `/clog`, the minimap button, the options panel and the log files are all exactly as before.
+- **Already have ChronicleCompanion installed?** WhoDidIt's copy stands down for that session, so nothing is logged
+  twice. It also switches the separate addon off; from your next `/reload` the built-in copy takes over and your
+  Chronicle settings carry across. You can then delete `Interface\AddOns\ChronicleCompanion`.
+- Chronicle's code isn't stored in this repository. It's always downloaded fresh from its source.
+
+The **Logs** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
 
 - **Start logging / Stop & save**, **Save now**, **Archive log** (between lockouts) and **Delete log**
 - Chronicle's auto-logging settings (raids, dungeons, save after combat, one file per realm)

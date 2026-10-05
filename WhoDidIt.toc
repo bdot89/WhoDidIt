@@ -1,10 +1,30 @@
 ## Interface: 11200
 ## Title: |cffff5555Who|cffffd100DidIt|r
-## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. /whodidit
+## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. Includes the Chronicle logger. /whodidit
 ## Author: bdot1
-## Version: 1.0.0
-## SavedVariables: WhoDidItDB
+## Version: 1.1.0
+## SavedVariables: WhoDidItDB, ChronicleCompanionDB
+## SavedVariablesPerCharacter: ChronicleCompanionCharDB
 ## OptionalDeps: ChronicleCompanion, TWThreat
+
+# Built-in Chronicle logger (ChronicleCompanion by Emyrk). tools\WhoDidIt-Sync
+# downloads it into Chronicle\ and rewrites the list below when it updates.
+ChronicleLoader.lua
+# >>> Chronicle files (generated)
+Chronicle\wdi_version.lua
+Chronicle\util.lua
+Chronicle\file.lua
+Chronicle\minimap.lua
+Chronicle\advancedlogging\core.lua
+Chronicle\advancedlogging\units.lua
+Chronicle\advancedlogging\combatant.lua
+Chronicle\advancedlogging\talents.lua
+Chronicle\advancedlogging\config.lua
+Chronicle\core.lua
+Chronicle\debug.lua
+Chronicle\slash.lua
+Chronicle\init.lua
+# <<< Chronicle files
 
 Core.lua
 Data.lua

@@ -11,11 +11,17 @@
     It also finds your own characters (from the WTF folder) in Chronicle's
     raid rosters, so your personal best kills and clears show up too.
 
+    It also installs and updates WhoDidIt's built-in Chronicle logger
+    (ChronicleCompanion, from github.com/Emyrk/ChronicleCompanion) - see
+    ChronicleUpdate.ps1. It checks for a new version every hour.
+
     Usage (or just double-click WhoDidIt-Sync.cmd):
       WhoDidIt-Sync.ps1                    sync now, then every 10 minutes
       WhoDidIt-Sync.ps1 -Once              sync once and exit
       WhoDidIt-Sync.ps1 -Server "OctoWoW"  another Chronicle server
       WhoDidIt-Sync.ps1 -Days 30           only raids from the last 30 days
+      WhoDidIt-Sync.ps1 -LoggerOnly        only install / update the Chronicle logger
+      WhoDidIt-Sync.ps1 -NoLoggerUpdate    leave the Chronicle logger alone
 
     The API allows 60 requests a minute; this stays at about one a second
     and caches everything it has read, so only new uploads are fetched
@@ -25,7 +31,9 @@ param(
     [string]$Server = "OctoWoW",
     [int]$Days = 90,
     [int]$IntervalMinutes = 10,
-    [switch]$Once
+    [switch]$Once,
+    [switch]$LoggerOnly,
+    [switch]$NoLoggerUpdate
 )
 
 $ErrorActionPreference = "Stop"
@@ -340,8 +348,20 @@ function Sync {
 
 # ------------------------------------------------------------------ main
 
+. (Join-Path $PSScriptRoot "ChronicleUpdate.ps1")
+if ($LoggerOnly) {
+    Update-Chronicle
+    return
+}
+
 Log "WhoDidIt-Sync for $Server (WoW folder: $WowDir)"
+$loggerEvery = [math]::Max(1, [math]::Ceiling(60 / [math]::Max(1, $IntervalMinutes)))
+$round = 0
 while ($true) {
+    if (-not $NoLoggerUpdate -and ($round % $loggerEvery) -eq 0) {
+        try { Update-Chronicle } catch { Log ("Chronicle logger check failed: " + $_.Exception.Message) }
+    }
+    $round++
     try { Sync } catch { Log ("Sync failed: " + $_.Exception.Message) }
     if ($Once) { break }
     Log "Next sync in $IntervalMinutes minutes (close this window to stop)"
