@@ -31,6 +31,8 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 - 🧪 **Consumes.** Every player's flask, elixirs, food, juju and protection potions, plus every potion, rune, tea and healthstone they used.
 - 📣 **Shout-outs.** *Name & Shame* and *Big Them Up* awards, reports and per-player posts, sent to any channel in colour.
 - 📊 **Meters & timeline.** Damage, healing, taken, activity and utility, plus a full timeline of the fight.
+- 💀 **Auto marking.** Marks whole packs in one go, with ~365 raid packs built in, smart marks for tricky fights, and quick save for your own packs.
+- 🏆 **Rankings & Chronicle.** Kill and clear times against every guild on your realm, and the Chronicle combat logger built in.
 
 ## Screenshots
 
@@ -62,7 +64,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#chronicle-logs) and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#chronicle-logs) and the [auto marker's packs](#auto-marking), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
 
 ### Requirements
 
@@ -153,8 +155,10 @@ tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (clos
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
+tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the Chronicle logger and the mob packs
 tools\WhoDidIt-Sync.cmd -LoggerOnly        only install / update the built-in Chronicle logger
 tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
+tools\WhoDidIt-Sync.cmd -NoPackUpdate      leave the mob packs alone
 ```
 
 - **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.
@@ -191,6 +195,59 @@ The **Logs** button (or `/wdi logs`) drives it from the WhoDidIt window. It show
 - WhoDidIt extras: **start logging when a boss is pulled** and **save after every boss fight**
 - Live status: logging on/off, the log file, unsaved lines, and what was saved this session
 - Step-by-step upload instructions. The upload itself is done on the website.
+
+## Auto marking
+
+The **Marks** button (or `/wdi marks`) is WhoDidIt's auto marker. It puts raid marks on a whole pack of mobs at once.
+Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one gets.
+
+**Marking a pack**
+
+- Hold **Shift + Ctrl** (or **Shift + Alt**) and move the mouse over a mob to mark its whole pack.
+- Or press a key, or click **Mark target's pack** (the mob under your mouse, else your target).
+- **Mark next pack** works through the zone's packs in route order. **Clear marks** removes them all.
+- Raid lead and assists mark for everyone. Otherwise the marks are only visible to you (SuperWoW local marks), and you can mark solo too.
+
+**Saving your own packs (quick save)**
+
+1. Mark the mobs in game the way you want them (right-click a portrait > Raid Target Icon).
+2. Click **Save marks as pack**. The window also lists what's marked right now; click that row.
+3. Type a name and press Enter. Using an existing pack's name updates that pack.
+
+**The Marks window**
+
+- **Zones** on the left: where you are first, then zones with your packs.
+- **Packs**: each pack's marks as icons, its mob count, how many of its mobs are in range right now, and whether it's
+  built in or yours. Click a pack to open it; Shift-click marks it.
+- **Inside a pack**: every mob with its mark, NPC id and status (in range, marked, dead). Click a mob for the next mark;
+  right-click takes it out. You can also add your target, rename the pack, or delete it. Changing a built-in pack saves
+  your own copy, and **Restore** brings the original back.
+
+**Built-in packs.** About 1,800 mobs in about 365 packs: Naxx, AQ40, AQ20, BWL, MC, ZG, Onyxia, Emerald Sanctum,
+Karazhan, Timbermaw Hold and more. They're the packs collected by the [AutoMarker](https://github.com/MarcelineVQ/AutoMarker)
+addon (by Weird Vibes). `tools\WhoDidIt-Sync.cmd` downloads them into `Marks\packs.lua` and checks for new ones every
+hour. Only the pack data is used, converted to WhoDidIt's format. Your own packs are saved separately and never
+overwritten. Run `tools\WhoDidIt-Sync.cmd -UpdatesOnly` to fetch just the packs and the Chronicle logger.
+
+**Smart marks.** These cover what fixed packs can't, and each one can be switched off in its zone's list:
+
+| Where | What |
+| --- | --- |
+| Naxxramas | Razuvious' Understudies, Anub'Rekhan's Crypt Guards, Faerlina's adds (new GUIDs every pull), Plague Quarter gargoyles (whole pack on wake-up), Kel'Thuzad's soldiers that get close |
+| AQ40 / AQ20 | Skeram's images after each split, Fankriss' worms, Buru's eggs (a killed egg's mark goes to the next one that respawns) |
+| MC / BWL | Majordomo's Flamewakers, skull on the highest-health Core Hound (shared with other WhoDidIt markers), Nefarius |
+| ZG / Onyxia / ES | Arlokk when she reappears, Onyxian Hatchers, Solnius' adds in kill order |
+| Karazhan / Rock of Desolation | Gnarlmoon's owls, Ley-Seekers, Incantagos' affinities, Sanv Tas'dal's adds, Rupturan's fragments, exiles and mounds, Mephistroth's doomguards |
+| Timbermaw Hold | Rotgrowl's Kodiak, the chieftain's Illuminators and Shadowkeepers, Ursol's Corrupters |
+| Dungeons | BRD Flame Keepers, DM Ironbark Protectors, a Jed Runewatcher alert in UBRS |
+
+**Keys:** Esc > Key Bindings > WhoDidIt has keys for marking the pack, marking the next pack, saving marks and clearing
+marks.
+
+**Commands:** `/wdi mark`, `/wdi marks next|clear|save [name]|add <pack>|info|type|name <mob>|on|off`. `/am` works too.
+
+**Coming from AutoMarker?** WhoDidIt replaces it. If it's still installed, WhoDidIt brings over any packs you saved with
+`/am add` and switches AutoMarker off; from your next `/reload` WhoDidIt does the marking.
 
 ## Shout-outs
 

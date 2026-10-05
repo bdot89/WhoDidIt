@@ -1,0 +1,7 @@
+<Bindings>
+	<Binding name="WHODIDIT_TOGGLE" header="WHODIDIT">WhoDidIt.UI:Toggle()</Binding>
+	<Binding name="WHODIDIT_MARKPACK">WhoDidIt_MarkPack()</Binding>
+	<Binding name="WHODIDIT_MARKNEXT">WhoDidIt_MarkNext()</Binding>
+	<Binding name="WHODIDIT_SAVEMARKS">WhoDidIt_SaveMarks()</Binding>
+	<Binding name="WHODIDIT_CLEARMARKS">WhoDidIt_ClearMarks()</Binding>
+</Bindings>

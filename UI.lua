@@ -175,6 +175,26 @@ local function CreateList(parent, nrows, rowh, width)
 					b.l:SetWidth(self.rowW - rw - 8)
 				end
 				for j = ncols + 1, getn(b.c) do b.c[j]:Hide() end
+				-- raid mark icons: d.icons = { { x, mark }, ... }
+				b.ic = b.ic or {}
+				local nic = d.icons and getn(d.icons) or 0
+				for j = 1, nic do
+					local tex = b.ic[j]
+					if not tex then
+						tex = b:CreateTexture(nil, "OVERLAY")
+						tex:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+						tex:SetWidth(14)
+						tex:SetHeight(14)
+						b.ic[j] = tex
+					end
+					local m = d.icons[j][2]
+					local cx, cy = math.mod(m - 1, 4), floor((m - 1) / 4)
+					tex:SetTexCoord(cx * 0.25, cx * 0.25 + 0.25, cy * 0.25, cy * 0.25 + 0.25)
+					tex:ClearAllPoints()
+					tex:SetPoint("LEFT", b, "LEFT", d.icons[j][1], 0)
+					tex:Show()
+				end
+				for j = nic + 1, getn(b.ic) do b.ic[j]:Hide() end
 				if d.bar then
 					b.bar:SetWidth(math.max(1, self.rowW * math.min(1, d.bar)))
 					b.bar:SetVertexColor(d.cr or 0.5, d.cg or 0.5, d.cb or 0.5, d.ba or 0.45)
@@ -624,6 +644,7 @@ local MODES = {
 	{ id = "fights",   text = "Fights"   },
 	{ id = "rankings", text = "Rankings" },
 	{ id = "logs",     text = "Logs"     },
+	{ id = "marks",    text = "Marks"    },
 }
 UI.modeButtons = {}
 for i = 1, getn(MODES) do
@@ -637,6 +658,8 @@ end
 tooltip(UI.modeButtons[1], "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
 tooltip(UI.modeButtons[2], "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
 tooltip(UI.modeButtons[3], "Logs", { "Chronicle combat logging: start, stop, save, archive and delete the log you upload to chronicleclassic.com." })
+tooltip(UI.modeButtons[4], "Marks", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
+	"and quick save - mark mobs in game, click Save marks as pack." })
 
 -- a row of buttons in the tab strip, used by Rankings and Logs
 local function stripButtons(defs)
@@ -707,6 +730,72 @@ UI.logButtons = stripButtons({
 	  { "Delete the current log file and anything unsaved (Chronicle asks first)." } },
 })
 
+UI.mk = {}   -- marks view state: zone, pack, showHidden
+
+UI.markButtons = stripButtons({
+	{ "|cff33ff33Save marks as pack|r", function() W.Marks:QuickSave() end,
+	  { "Save the mobs that have raid marks right now as a pack - with their marks.",
+	    "1. Mark the mobs in game (right-click a portrait > Raid Target Icon).",
+	    "2. Click this and type a name (Enter saves).",
+	    "Saving with an existing pack's name updates that pack.",
+	    "|cff888888Keybind: Esc > Key Bindings > WhoDidIt|r" } },
+	{ "Mark target's pack", function() W.Marks:MarkGroup(); UI:Refresh() end,
+	  { "Mark every mob in the pack of the mob under your mouse (or your target).",
+	    "Or hold Shift + Ctrl (or Alt) and move the mouse over a mob." } },
+	{ "Mark next pack", function() W.Marks:MarkNext(); UI:Refresh() end,
+	  { "Mark the next pack along the route in this zone (the order in the list)." } },
+	{ "|cffff5555Clear marks|r", function() W.Marks:ClearMarks() end, { "Remove every raid mark." } },
+	{ "Auto marking", function()
+		local o = WhoDidItDB.marks.opts
+		o.enabled = not o.enabled
+		UI:Refresh()
+	  end, { "Switch all auto marking on or off: mouseover marking and smart marks.", "Keys and buttons still work when it's off." } },
+})
+
+-- marks toggles take the place of the fight buttons while in Marks
+local mouseBtn  = gridButton("Mouseover", 3, 1)
+local smartBtn  = gridButton("Smart marks", 3, 2)
+local hiddenBtn = gridButton("Hidden", 2, 1)
+local findBtn   = gridButton("Find target", 2, 2)
+local hereBtn   = gridButton("This zone", 1, 1)
+local kindBtn   = gridButton("Mark same kind", 1, 2)
+mouseBtn:SetScript("OnClick", function()
+	local o = WhoDidItDB.marks.opts
+	o.mouseover = not o.mouseover
+	UI:Refresh()
+end)
+smartBtn:SetScript("OnClick", function()
+	local o = WhoDidItDB.marks.opts
+	o.smart = not o.smart
+	UI:Refresh()
+end)
+hiddenBtn:SetScript("OnClick", function()
+	UI.mk.showHidden = not UI.mk.showHidden
+	UI:Refresh()
+end)
+findBtn:SetScript("OnClick", function()
+	local ok, guid = UnitExists("target")
+	local zone = GetRealZoneText()
+	local name = ok and W.Marks:Find(zone, guid)
+	if name then UI:ShowPack(zone, name) else W.Print("Your target isn't in a saved pack.") end
+end)
+hereBtn:SetScript("OnClick", function()
+	UI.mk.zone = GetRealZoneText()
+	UI.mk.pack = nil
+	UI:Refresh()
+end)
+kindBtn:SetScript("OnClick", function() W.Marks:MarkType() end)
+tooltip(mouseBtn, "Mouseover marking", { "Hold Shift + Ctrl (or Shift + Alt) and move the mouse over a mob to mark its whole pack." })
+tooltip(smartBtn, "Smart marks", { "Automatic marks for fights where fixed packs can't work: adds that respawn with new",
+	"GUIDs, Buru's eggs, the biggest Core Hound, KT's soldiers, Solnius' adds and more.",
+	"Switch single ones off in the list under each zone." })
+tooltip(hiddenBtn, "Hidden packs", { "Show the built-in packs you've hidden, so you can bring them back." })
+tooltip(findBtn, "Find target's pack", { "Open the pack your target belongs to." })
+tooltip(hereBtn, "This zone", { "Jump back to the zone you're in." })
+tooltip(kindBtn, "Mark same kind", { "Mark every mob nearby of the same kind as your target, closest first (/wdi marks type)." })
+local markOnly = { mouseBtn, smartBtn, hiddenBtn, findBtn, hereBtn, kindBtn }
+for i = 1, getn(markOnly) do markOnly[i]:Hide() end
+
 -- banter toggles take the place of the fight buttons while in Rankings
 local banterKillBtn  = gridButton("Kill banter", 3, 1)
 local banterClearBtn = gridButton("Clear banter", 3, 2)
@@ -743,6 +832,9 @@ function UI:ApplyMode()
 	for i = 1, getn(UI.tabButtons) do vis(UI.tabButtons[i], fights) end
 	for i = 1, getn(UI.rankButtons) do vis(UI.rankButtons[i], UI.mode == "rankings") end
 	for i = 1, getn(UI.logButtons) do vis(UI.logButtons[i], UI.mode == "logs") end
+	local marks = (UI.mode == "marks" and W.Marks ~= nil)
+	for i = 1, getn(UI.markButtons) do vis(UI.markButtons[i], marks) end
+	for i = 1, getn(markOnly) do vis(markOnly[i], marks) end
 	local fightOnly = { shameBtn, praiseBtn, chanBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
 	for i = 1, getn(fightOnly) do vis(fightOnly[i], fights) end
 	for i = 1, getn(rankOnly) do vis(rankOnly[i], UI.mode == "rankings" and W.Board ~= nil) end
@@ -1888,11 +1980,282 @@ function UI:RefreshLogs()
 	lastModeKey = key
 end
 
+------------------------------------------------------------------ Marks view
+
+local PACK_SPEC = { { 176, "LEFT" }, { 118, "LEFT" }, { 40, "RIGHT" }, { 60, "RIGHT" }, { 124, "LEFT" } }
+local MOB_SPEC  = { { 16, "LEFT" }, { 62, "LEFT" }, { 170, "LEFT" }, { 58, "RIGHT" }, { 70, "RIGHT" }, { 150, "LEFT" } }
+local CUR_SPEC  = { { 120, "LEFT" }, { 440, "LEFT" } }
+local SRC_TEXT  = {
+	builtin = "|cff888888built in|r", yours = "|cff33ff33yours|r", edited = "|cffffd100yours (edited)|r",
+	live = "|cff66ccffbuilt in, this pull|r", hidden = "|cff666666hidden|r",
+}
+
+-- distinct marks (skull first), mob count, mobs alive in range
+local function packInfo(pack)
+	local marks, have, total, near = {}, {}, 0, 0
+	for g, m in pairs(pack.mobs) do
+		total = total + 1
+		if m > 0 and not have[m] then have[m] = true; tinsert(marks, m) end
+		if UnitExists(g) and not UnitIsDead(g) then near = near + 1 end
+	end
+	table.sort(marks, function(a, b) return a > b end)
+	return marks, total, near
+end
+
+function UI:ShowPack(zone, name)
+	UI.mk.zone, UI.mk.pack = zone, name
+	UI:SetMode("marks")
+end
+
+function UI:MarksChanged()
+	if f:IsVisible() and UI.mode == "marks" then UI:Refresh() end
+end
+
+-- left column: the zone you're in, zones with your packs, then the rest
+function UI:MarkNavRows()
+	local M = W.Marks
+	local here = GetRealZoneText()
+	local mine = WhoDidItDB.marks.packs
+	local list = { here }
+	local zones = M:Zones()
+	for pass = 1, 2 do
+		for i = 1, getn(zones) do
+			local z = zones[i]
+			if z ~= here and ((pass == 1) == (mine[z] ~= nil)) then tinsert(list, z) end
+		end
+	end
+	local rows = {}
+	for i = 1, getn(list) do
+		local z = list[i]
+		local n, yours = getn(M:PackNames(z)), 0
+		for _ in pairs(mine[z] or {}) do yours = yours + 1 end
+		local zz = z
+		tinsert(rows, row(
+			"|cffffffff" .. z .. "|r" .. (z == here and "  |cff33ff33(here)|r" or "")
+				.. "\n" .. C_DIM .. n .. " pack" .. (n == 1 and "" or "s") .. "|r" .. (yours > 0 and ("  " .. C_GUILD .. yours .. " yours|r") or ""),
+			nil,
+			{ sel = (z == UI.mk.zone), click = function() UI.mk.zone = zz; UI.mk.pack = nil; UI:Refresh() end }))
+	end
+	return rows
+end
+
+-- a zone: what's marked now (quick save), its packs, its smart marks
+function UI:ZoneRows(zone)
+	local M = W.Marks
+	local rows = {}
+	if zone == GetRealZoneText() then
+		local cur = M:CurrentMarks()
+		head(rows, "Marked right now")
+		if getn(cur) == 0 then
+			tinsert(rows, row(C_DIM .. "No mobs marked. Mark a pack in game (right-click a portrait > Raid Target Icon), then save it here.|r"))
+		else
+			local icons, parts = {}, {}
+			for i = 1, getn(cur) do
+				tinsert(icons, { 4 + (i - 1) * 15, cur[i][2] })
+				tinsert(parts, cur[i][3])
+			end
+			tinsert(rows, cells(CUR_SPEC, { "", C_GUILD .. "Click to save these " .. getn(cur) .. " as a pack|r  " .. C_DIM .. table.concat(parts, ", ") .. "|r" },
+				{ icons = icons, sel = true, click = function() M:QuickSave() end,
+				  tipTitle = "Save as a pack", tip = { "Saves these mobs with their marks. You'll be asked for a name.", "Use an existing pack's name to update it." } }))
+		end
+	end
+
+	local names = M:PackNames(zone)
+	head(rows, "Packs in " .. zone .. "  " .. C_DIM .. "(click to open  -  Shift-click to mark it now)|r")
+	if getn(names) == 0 then
+		tinsert(rows, row(C_DIM .. "No packs here yet. Mark the mobs of a pack, then click Save marks as pack.|r"))
+	else
+		colHead(rows, PACK_SPEC, { "Pack", "Marks", "Mobs", "In range", "Source" })
+	end
+	for i = 1, getn(names) do
+		local name = names[i]
+		local pack, src = M:Pack(zone, name)
+		local marks, total, near = packInfo(pack)
+		local icons = {}
+		for k = 1, math.min(8, getn(marks)) do tinsert(icons, { 186 + (k - 1) * 15, marks[k] }) end
+		local isLast = (M.last[zone] == name)
+		tinsert(rows, cells(PACK_SPEC,
+			{ (isLast and "|cffffd100>|r " or "") .. "|cffffffff" .. name .. "|r",
+			  (getn(marks) == 0) and (C_DIM .. "no marks|r") or "",
+			  C_TIME .. total .. "|r",
+			  near > 0 and (C_GUILD .. near .. " / " .. total .. "|r") or (C_DIM .. "-|r"),
+			  SRC_TEXT[src] or "" },
+			{ icons = icons, bar = (near > 0) and (near / total) or nil, cr = 0.2, cg = 0.8, cb = 0.2, ba = 0.14,
+			  tipTitle = name, tip = { "Click: open the pack  -  see every mob and edit it", "Shift-click: mark it now",
+			    (near > 0) and (near .. " of its " .. total .. " mobs are in range") or "None of its mobs are in range" },
+			  click = function()
+				if IsShiftKeyDown() then
+					M:MarkPack(pack)
+					M.last[zone] = name
+				else
+					UI.mk.pack = name
+				end
+				UI:Refresh()
+			  end }))
+	end
+
+	if UI.mk.showHidden then
+		head(rows, "Hidden built-in packs  " .. C_DIM .. "(click to bring one back)|r")
+		local all, n = M:PackNames(zone, true), 0
+		for i = 1, getn(all) do
+			local name = all[i]
+			if M:IsHidden(zone, name) then
+				n = n + 1
+				tinsert(rows, row(C_DIM .. name .. "|r", C_GUILD .. "restore|r", { click = function() M:Restore(zone, name); UI:Refresh() end }))
+			end
+		end
+		if n == 0 then tinsert(rows, row(C_DIM .. "None hidden here.|r")) end
+	end
+
+	local rules = M:RulesFor(zone)
+	local o = WhoDidItDB.marks.opts
+	head(rows, "Smart marks  " .. C_DIM .. "(click to switch on / off)|r" .. ((o.smart and o.enabled) and "" or "  |cffff5555all off|r"))
+	if getn(rules) == 0 then
+		tinsert(rows, row(C_DIM .. "None in this zone. They run in Naxx, AQ, MC, BWL, ZG, Onyxia, Emerald Sanctum, Karazhan, Timbermaw, BRD, DM and UBRS.|r"))
+	end
+	for i = 1, getn(rules) do
+		local r = rules[i]
+		local key = r.key
+		tinsert(rows, row("|cffffffff" .. r.label .. "|r  " .. C_DIM .. r.desc .. "|r", onOff(WhoDidItDB.marks.smart[key] ~= false),
+			{ tipTitle = r.label, tip = { r.desc }, click = function() M:ToggleRule(key); UI:Refresh() end }))
+	end
+
+	head(rows, "Built-in packs")
+	local info = M.dataInfo
+	if info then
+		tinsert(rows, row("From |cffffd100AutoMarker|r " .. (info.version or "?") .. "  " .. C_DIM .. "(by Weird Vibes, github.com/MarcelineVQ/AutoMarker)|r",
+			C_TIME .. info.packs .. "|r packs, " .. C_TIME .. info.mobs .. "|r mobs  " .. C_DIM .. (info.date or "") .. "|r",
+			{ tipTitle = "Built-in packs", tip = { "tools\\WhoDidIt-Sync downloads them and checks for new ones every hour.", "Your own packs are saved separately and never overwritten." } }))
+	else
+		tinsert(rows, row("|cffff7777Not installed.|r Run |cffffd100tools\\WhoDidIt-Sync.cmd|r once, then /reload.  " .. C_DIM .. "Your own packs work without them.|r"))
+	end
+	return rows
+end
+
+-- one pack: actions, then every mob with its mark
+function UI:PackRows(zone, name)
+	local M = W.Marks
+	local rows = {}
+	tinsert(rows, row("|cff66ccff<  Back to all packs in " .. zone .. "|r", nil, { click = function() UI.mk.pack = nil; UI:Refresh() end }))
+	local pack, src = M:Pack(zone, name)
+	if not pack then
+		tinsert(rows, row(C_DIM .. "This pack doesn't exist any more.|r"))
+		return rows
+	end
+	local here = (zone == GetRealZoneText())
+	head(rows, name .. "   " .. (SRC_TEXT[src] or ""))
+	local function action(label, hint, fn)
+		tinsert(rows, row(label, C_DIM .. hint .. "|r", { click = function() fn(); UI:Refresh() end }))
+	end
+	action(C_GUILD .. "Mark this pack now|r", "every mob of it that's in range", function()
+		M:MarkPack(pack)
+		M.last[zone] = name
+	end)
+	action("|cffffd100Save my current marks into this pack|r", "adds the mobs you've marked, or updates their marks", function()
+		if not here then W.Print("Go to " .. zone .. " first.") return end
+		M:Save(zone, name, M:CurrentMarks())
+	end)
+	action("|cffffd100Add my target|r", "with the mark it has now (or none)", function()
+		if not here then W.Print("Go to " .. zone .. " first.") return end
+		M:AddTarget(zone, name)
+	end)
+	action("|cffffffffRename|r", "", function()
+		M:Prompt("Rename pack |cffffd100" .. name .. "|r", name, function(new)
+			if M:Rename(zone, name, new) then UI:ShowPack(zone, string.gsub(new, "^%s*(.-)%s*$", "%1")) end
+		end)
+	end)
+	if src == "edited" then
+		action("|cffff9933Restore the built-in version|r", "drops your changes to it", function() M:Restore(zone, name) end)
+	elseif src == "builtin" or src == "live" then
+		action("|cffff5555Hide this pack|r", "it's built in: bring it back with Hidden", function() M:Delete(zone, name); UI.mk.pack = nil end)
+	else
+		action("|cffff5555Delete this pack|r", "", function() M:Delete(zone, name); UI.mk.pack = nil end)
+	end
+
+	head(rows, "Mobs  " .. C_DIM .. "(click a mob for the next mark, right-click to take it out)|r")
+	colHead(rows, MOB_SPEC, { "", "Mark", "Mob", "NPC", "Status", "GUID" })
+	local list = {}
+	for g, m in pairs(pack.mobs) do tinsert(list, { g, m, M:MobName(pack, g) }) end
+	table.sort(list, function(a, b)
+		if a[2] ~= b[2] then return a[2] > b[2] end
+		if a[3] ~= b[3] then return a[3] < b[3] end
+		return a[1] < b[1]
+	end)
+	for i = 1, getn(list) do
+		local g, m, who = list[i][1], list[i][2], list[i][3]
+		local status
+		if not UnitExists(g) then status = C_DIM .. "not here|r"
+		elseif UnitIsDead(g) then status = "|cffaa6666dead|r"
+		elseif m > 0 and GetRaidTargetIndex(g) == m then status = C_GUILD .. "marked|r"
+		else status = "|cff66ccffin range|r" end
+		local tip = { "Click: next mark (skull, cross, square ... star, none)", "Right-click: take it out of the pack" }
+		if src == "builtin" or src == "live" then tinsert(tip, C_DIM .. "Changing a built-in pack saves your own copy of it.|r") end
+		tinsert(rows, cells(MOB_SPEC,
+			{ "", m > 0 and M.MarkText(m) or (C_DIM .. "none|r"), "|cffffffff" .. who .. "|r", C_DIM .. (M.NpcHex(g) or "") .. "|r", status, C_DIM .. g .. "|r" },
+			{ icons = (m > 0) and { { 5, m } } or nil, tipTitle = who, tip = tip,
+			  click = function(d, btn)
+				if btn == "RightButton" then
+					M:RemoveMob(zone, name, g)
+				else
+					local nm = m - 1
+					if nm < 0 then nm = 8 end
+					M:SetMobMark(zone, name, g, nm)
+				end
+				UI:Refresh()
+			  end }))
+	end
+	if getn(list) == 0 then tinsert(rows, row(C_DIM .. "No mobs in this pack.|r")) end
+	return rows
+end
+
+local MODE_TEXT = {
+	raid = "|cff33ff33Everyone sees your marks|r (you're lead / assist)",
+	["local"] = "|cffff9933Only you see your marks|r - you aren't lead or assist",
+	solo = "|cffaaaaaaSolo: your marks are only visible to you|r",
+	nosuperwow = "|cffff5555SuperWoW isn't loaded - marking can't work|r",
+}
+
+function UI:RefreshMarks()
+	local M = W.Marks
+	local here = GetRealZoneText()
+	UI.mk.zone = UI.mk.zone or here
+	local zone = UI.mk.zone
+	local o = WhoDidItDB.marks.opts
+
+	leftHead:SetText("Zones")
+	leftCount:SetText("")
+	fightList:SetData(UI:MarkNavRows(), true)
+	UI.markButtons[5]:SetText("Auto marking: " .. (o.enabled and "|cff33ff33on|r" or "|cffff5555off|r"))
+	mouseBtn:SetText("Mouseover: " .. (o.mouseover and "|cff33ff33on|r" or "|cffff5555off|r"))
+	smartBtn:SetText("Smart: " .. (o.smart and "|cff33ff33on|r" or "|cffff5555off|r"))
+	hiddenBtn:SetText("Hidden: " .. (UI.mk.showHidden and "shown" or "off"))
+
+	local names = M:PackNames(zone)
+	local yours = 0
+	for _ in pairs(WhoDidItDB.marks.packs[zone] or {}) do yours = yours + 1 end
+	rTitle:SetText("Marks  |cffffffff" .. zone .. "|r")
+	rInfo:SetText((MODE_TEXT[M:MarkMode()] or "") .. "   |cff888888|   " .. getn(names) .. " packs" .. (yours > 0 and (", " .. yours .. " yours") or "") .. "|r")
+	if M.standDown then
+		rVerdict:SetText("|cffff9933The separate AutoMarker addon is still loaded, so WhoDidIt is standing by.|r\n|cff888888It has been switched off - /reload and WhoDidIt takes over.|r")
+	else
+		rVerdict:SetText("|cffffd100Quick save:|r mark the mobs in game, click |cff33ff33Save marks as pack|r, type a name, Enter.\n"
+			.. "|cffffd100Mark a pack:|r hold Shift + Ctrl over a mob, or click |cffffd100Mark target's pack|r.")
+	end
+	hintText:SetText(UI.mk.pack and "Click a mob to change its mark  -  right-click to take it out" or "Click a pack to open it  -  Shift-click a pack to mark it now")
+	hintText:Show()
+	local rows = UI.mk.pack and UI:PackRows(zone, UI.mk.pack) or UI:ZoneRows(zone)
+	local key = "marks|" .. zone .. "|" .. (UI.mk.pack or "")
+	mainList:SetData(rows, key == lastModeKey)
+	lastModeKey = key
+end
+
 -- Board.lua / Logs.lua didn't load (the game wasn't restarted after an update)
 function UI:RefreshMissing()
 	for i = 1, getn(UI.rankButtons) do UI.rankButtons[i]:Hide() end
 	for i = 1, getn(UI.logButtons) do UI.logButtons[i]:Hide() end
-	leftHead:SetText(UI.mode == "logs" and "Logs" or "Rankings")
+	for i = 1, getn(UI.markButtons) do UI.markButtons[i]:Hide() end
+	for i = 1, getn(markOnly) do markOnly[i]:Hide() end
+	leftHead:SetText(UI.mode == "logs" and "Logs" or (UI.mode == "marks" and "Marks" or "Rankings"))
 	leftCount:SetText("")
 	fightList:SetData({})
 	rTitle:SetText("Restart WoW to finish updating")
@@ -1901,7 +2264,7 @@ function UI:RefreshMissing()
 	hintText:SetText("")
 	local rows = {}
 	head(rows, "Why")
-	tinsert(rows, row("This update added Rankings (Board.lua) and Chronicle log controls (Logs.lua)."))
+	tinsert(rows, row("This update added new parts of WhoDidIt (Rankings, Chronicle logs, auto marking)."))
 	tinsert(rows, row("WoW reads each addon's file list once, when the game starts - /reload only re-runs files it already knows."))
 	tinsert(rows, row("Fights still work normally until then: click |cffffd100Fights|r in the title bar."))
 	lastModeKey = nil
@@ -1918,9 +2281,10 @@ function UI:Refresh()
 	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat"))
 
 	UI:ApplyMode()
-	if UI.mode ~= "fights" and not (W.Board and W.Logs) then return UI:RefreshMissing() end
+	if UI.mode ~= "fights" and not (W.Board and W.Logs and W.Marks) then return UI:RefreshMissing() end
 	if UI.mode == "rankings" then return UI:RefreshRankings() end
 	if UI.mode == "logs" then return UI:RefreshLogs() end
+	if UI.mode == "marks" then return UI:RefreshMarks() end
 	lastModeKey = nil
 	leftHead:SetText("Encounters")
 
@@ -2057,8 +2421,8 @@ f:SetScript("OnShow", function() UI:Refresh() end)
 -- live view: rebuild the in-progress report every 1.5s while it's on screen
 W:Every(1.5, function()
 	if not f:IsVisible() then return end
-	if UI.mode == "logs" then
-		UI:Refresh()   -- unsaved line count
+	if UI.mode == "logs" or UI.mode == "marks" then
+		UI:Refresh()   -- unsaved line count / mobs in range and current marks
 	elseif UI.mode == "fights" and W.Tracker.fight then
 		if UI.selIdx == 0 then UI.liveRec = W.Analyzer:Build(W.Tracker.fight, false) end
 		UI:Refresh()

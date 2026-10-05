@@ -12,16 +12,20 @@
     raid rosters, so your personal best kills and clears show up too.
 
     It also installs and updates WhoDidIt's built-in Chronicle logger
-    (ChronicleCompanion, from github.com/Emyrk/ChronicleCompanion) - see
-    ChronicleUpdate.ps1. It checks for a new version every hour.
+    (ChronicleCompanion, from github.com/Emyrk/ChronicleCompanion - see
+    ChronicleUpdate.ps1) and the auto marker's built-in mob packs (from
+    github.com/MarcelineVQ/AutoMarker - see MarkDataUpdate.ps1). It checks
+    for new versions of both every hour.
 
     Usage (or just double-click WhoDidIt-Sync.cmd):
       WhoDidIt-Sync.ps1                    sync now, then every 10 minutes
       WhoDidIt-Sync.ps1 -Once              sync once and exit
       WhoDidIt-Sync.ps1 -Server "OctoWoW"  another Chronicle server
       WhoDidIt-Sync.ps1 -Days 30           only raids from the last 30 days
+      WhoDidIt-Sync.ps1 -UpdatesOnly       only install / update the Chronicle logger and mob packs
       WhoDidIt-Sync.ps1 -LoggerOnly        only install / update the Chronicle logger
       WhoDidIt-Sync.ps1 -NoLoggerUpdate    leave the Chronicle logger alone
+      WhoDidIt-Sync.ps1 -NoPackUpdate      leave the mob packs alone
 
     The API allows 60 requests a minute; this stays at about one a second
     and caches everything it has read, so only new uploads are fetched
@@ -33,7 +37,9 @@ param(
     [int]$IntervalMinutes = 10,
     [switch]$Once,
     [switch]$LoggerOnly,
-    [switch]$NoLoggerUpdate
+    [switch]$UpdatesOnly,
+    [switch]$NoLoggerUpdate,
+    [switch]$NoPackUpdate
 )
 
 $ErrorActionPreference = "Stop"
@@ -349,8 +355,14 @@ function Sync {
 # ------------------------------------------------------------------ main
 
 . (Join-Path $PSScriptRoot "ChronicleUpdate.ps1")
+. (Join-Path $PSScriptRoot "MarkDataUpdate.ps1")
 if ($LoggerOnly) {
     Update-Chronicle
+    return
+}
+if ($UpdatesOnly) {
+    Update-Chronicle
+    Update-MarkData
     return
 }
 
@@ -358,8 +370,13 @@ Log "WhoDidIt-Sync for $Server (WoW folder: $WowDir)"
 $loggerEvery = [math]::Max(1, [math]::Ceiling(60 / [math]::Max(1, $IntervalMinutes)))
 $round = 0
 while ($true) {
-    if (-not $NoLoggerUpdate -and ($round % $loggerEvery) -eq 0) {
-        try { Update-Chronicle } catch { Log ("Chronicle logger check failed: " + $_.Exception.Message) }
+    if (($round % $loggerEvery) -eq 0) {
+        if (-not $NoLoggerUpdate) {
+            try { Update-Chronicle } catch { Log ("Chronicle logger check failed: " + $_.Exception.Message) }
+        }
+        if (-not $NoPackUpdate) {
+            try { Update-MarkData } catch { Log ("Mob pack check failed: " + $_.Exception.Message) }
+        }
     }
     $round++
     try { Sync } catch { Log ("Sync failed: " + $_.Exception.Message) }

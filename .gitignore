@@ -1,4 +1,6 @@
-# downloaded from github.com/Emyrk/ChronicleCompanion by tools\WhoDidIt-Sync
+# downloaded by tools\WhoDidIt-Sync: the Chronicle logger (github.com/Emyrk/ChronicleCompanion)
+# and the auto marker's built-in mob packs (from github.com/MarcelineVQ/AutoMarker)
 /Chronicle/
 /Chronicle.new/
 /Chronicle.old/
+/Marks/
