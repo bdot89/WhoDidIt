@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: |cffff5555Who|cffffd100DidIt|r
+## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. /whodidit
+## Author: bdot1
+## Version: 1.0.0
+## SavedVariables: WhoDidItDB
+
+Core.lua
+Data.lua
+Tracker.lua
+Analyzer.lua
+Shoutout.lua
+UI.lua
+Demo.lua
