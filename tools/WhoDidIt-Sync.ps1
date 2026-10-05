@@ -8,6 +8,9 @@
     them. Leave it running while you play; WhoDidIt picks up new data on its
     own - no /reload needed.
 
+    It also finds your own characters (from the WTF folder) in Chronicle's
+    raid rosters, so your personal best kills and clears show up too.
+
     Usage (or just double-click WhoDidIt-Sync.cmd):
       WhoDidIt-Sync.ps1                    sync now, then every 10 minutes
       WhoDidIt-Sync.ps1 -Once              sync once and exit
@@ -15,7 +18,7 @@
       WhoDidIt-Sync.ps1 -Days 30           only raids from the last 30 days
 
     The API allows 60 requests a minute; this stays at about one a second
-    and caches every raid log it has read, so only new uploads are fetched
+    and caches everything it has read, so only new uploads are fetched
     after the first sync.
 #>
 param(
@@ -28,8 +31,9 @@ param(
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$Api       = "https://legacy.chronicleclassic.com/api/external/v1"
-$UserAgent = "WhoDidIt-Sync/1.0 (+https://github.com/bdot89/WhoDidIt)"
+$Api          = "https://legacy.chronicleclassic.com/api/external/v1"
+$UserAgent    = "WhoDidIt-Sync/1.1 (+https://github.com/bdot89/WhoDidIt)"
+$CacheVersion = 2
 
 # raids shown in WhoDidIt's Rankings (Chronicle's instance names)
 $Instances = @(
@@ -48,6 +52,20 @@ $CacheFile = Join-Path $DataDir "WhoDidIt_ChronicleCache.json"
 if (-not (Test-Path $DataDir)) { New-Item -ItemType Directory -Path $DataDir | Out-Null }
 
 function Log($msg) { Write-Host ("[{0}] {1}" -f (Get-Date -Format "HH:mm:ss"), $msg) }
+
+# your characters: WTF\Account\<account>\<realm>\<character>
+$MyChars = @{}   # "realm|name(lowercase)" -> "Name"
+$wtf = Join-Path $WowDir "WTF\Account"
+if (Test-Path $wtf) {
+    foreach ($acct in Get-ChildItem $wtf -Directory) {
+        foreach ($realmDir in Get-ChildItem $acct.FullName -Directory) {
+            if ($realmDir.Name -eq "SavedVariables") { continue }
+            foreach ($char in Get-ChildItem $realmDir.FullName -Directory) {
+                $MyChars["$($realmDir.Name)|$($char.Name.ToLower())"] = $char.Name
+            }
+        }
+    }
+}
 
 # ------------------------------------------------------------------ HTTP (rate limited)
 
@@ -86,7 +104,7 @@ function To-Epoch($iso) {
     [int64]([datetimeoffset]::Parse($iso).ToUnixTimeSeconds())
 }
 
-# Alliance / Horde / Mixed from the raiders' races (OctoWoW raids cross-faction)
+# Alliance / Horde from the raiders' races; Mixed for cross-faction raids
 function Get-Faction($players) {
     $a = 0; $h = 0
     if ($players) {
@@ -102,54 +120,95 @@ function Get-Faction($players) {
     return "Mixed"
 }
 
+# which of your characters were in a raid
+function Get-Mine($realm, $players) {
+    $out = @()
+    if ($players) {
+        foreach ($p in $players.PSObject.Properties) {
+            $name = $p.Value.name
+            if ($name -and $MyChars.ContainsKey("$realm|$($name.ToLower())")) { $out += $name }
+        }
+    }
+    return ,$out
+}
+
 # ------------------------------------------------------------------ cache
+
+function New-Cache { @{ version = $CacheVersion; server = $Server; lastUpload = $null; days = 0; logs = @{}; att = @{} } }
 
 function Load-Cache {
     if (Test-Path $CacheFile) {
         try {
             $c = Get-Content $CacheFile -Raw -Encoding UTF8 | ConvertFrom-Json
-            $logs = @{}
+            if ([int]$c.version -ne $CacheVersion) { Log "Cache is from an older version - re-reading Chronicle"; return New-Cache }
+            $logs = @{}; $att = @{}
             if ($c.logs) { foreach ($p in $c.logs.PSObject.Properties) { $logs[$p.Name] = $p.Value } }
-            return @{ server = $c.server; lastUpload = $c.lastUpload; days = [int]$c.days; logs = $logs }
+            if ($c.att) { foreach ($p in $c.att.PSObject.Properties) { $att[$p.Name] = $p.Value } }
+            return @{ version = $CacheVersion; server = $c.server; lastUpload = $c.lastUpload; days = [int]$c.days; logs = $logs; att = $att }
         } catch { Log "Cache unreadable - starting fresh" }
     }
-    return @{ server = $Server; lastUpload = $null; days = 0; logs = @{} }
+    return New-Cache
 }
 
 function Save-Cache($cache) {
-    $obj = [pscustomobject]@{ server = $cache.server; lastUpload = $cache.lastUpload; days = $cache.days; logs = $cache.logs }
+    $obj = [pscustomobject]@{ version = $CacheVersion; server = $cache.server; lastUpload = $cache.lastUpload;
+                              days = $cache.days; logs = $cache.logs; att = $cache.att }
     $tmp = "$CacheFile.tmp"
     [IO.File]::WriteAllText($tmp, ($obj | ConvertTo-Json -Depth 6 -Compress), (New-Object Text.UTF8Encoding($false)))
     Move-Item -Force $tmp $CacheFile
+}
+
+# faction + your characters for one raid (roster only: ~4 KB), cached
+function Get-Attendance($id, $realm, $cache) {
+    if (-not $id) { return $null }
+    if ($cache.att.ContainsKey($id)) { return $cache.att[$id] }
+    $i = Get-Api ("/raidlogs/instances/" + $id + "?attendance_only=true")
+    if (-not $i) { return $null }
+    $a = @{ faction = (Get-Faction $i.players); mine = (Get-Mine $realm $i.players) }
+    $cache.att[$id] = $a
+    return $a
 }
 
 # ------------------------------------------------------------------ output for the addon
 
 function Clean([string]$s) { if ($null -eq $s) { return "" }; ($s -replace '[\|\r\n]', ' ').Trim() }
 
-function Write-Output-File($clears, $cache, $status) {
+function Keep-Best($table, $key, $rec) {
+    if (-not $table.ContainsKey($key) -or $rec.secs -lt $table[$key].secs) { $table[$key] = $rec }
+}
+
+function Write-Output-File($clears, $myClears, $cache, $status) {
+    # best kill per realm / boss / guild, and your characters' best kills
+    $best = @{}; $myKills = @{}
+    foreach ($log in $cache.logs.Values) {
+        foreach ($k in $log.kills) {
+            $rec = @{ realm = $log.realm; instance = $log.instance; boss = $k.n; guild = $log.guild; faction = $log.faction;
+                      secs = $k.s; ended = $log.ended; players = $log.players; slug = $log.slug }
+            if ($log.guild) { Keep-Best $best "$($log.realm)|$($k.n)|$($log.guild)" $rec }
+            foreach ($me in $log.mine) {
+                $r2 = $rec.Clone(); $r2.char = $me
+                Keep-Best $myKills "$($log.realm)|$me|$($k.n)" $r2
+            }
+        }
+    }
     $lines = New-Object System.Collections.Generic.List[string]
     $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-    $lines.Add("WDICHRON|1|$now|$(Clean $Server)|$Days|$status")
+    $lines.Add("WDICHRON|2|$now|$(Clean $Server)|$Days|$status")
     foreach ($c in $clears.Values) {
         $lines.Add(("C|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}" -f (Clean $c.realm), (Clean $c.instance), (Clean $c.guild), $c.faction,
             [math]::Round($c.secs, 1), $c.ended, $c.players, $c.slug))
     }
-    # best kill per realm / boss / guild
-    $best = @{}
-    foreach ($log in $cache.logs.Values) {
-        if (-not $log.guild) { continue }
-        foreach ($k in $log.kills) {
-            $key = "$($log.realm)|$($k.n)|$($log.guild)"
-            if (-not $best.ContainsKey($key) -or $k.s -lt $best[$key].secs) {
-                $best[$key] = @{ realm = $log.realm; instance = $log.instance; boss = $k.n; guild = $log.guild;
-                                 faction = $log.faction; secs = $k.s; ended = $log.ended; players = $log.players; slug = $log.slug }
-            }
-        }
-    }
     foreach ($b in $best.Values) {
         $lines.Add(("K|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}" -f (Clean $b.realm), (Clean $b.instance), (Clean $b.boss), (Clean $b.guild),
             $b.faction, [math]::Round($b.secs, 1), $b.ended, $b.players, $b.slug))
+    }
+    foreach ($m in $myClears.Values) {
+        $lines.Add(("PC|{0}|{1}|{2}|{3}|{4}|{5}|{6}" -f (Clean $m.realm), (Clean $m.char), (Clean $m.instance),
+            [math]::Round($m.secs, 1), $m.ended, (Clean $m.guild), $m.slug))
+    }
+    foreach ($m in $myKills.Values) {
+        $lines.Add(("PK|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}" -f (Clean $m.realm), (Clean $m.char), (Clean $m.instance), (Clean $m.boss),
+            [math]::Round($m.secs, 1), $m.ended, (Clean $m.guild), $m.slug))
     }
     $tmp = "$OutFile.tmp"
     [IO.File]::WriteAllText($tmp, ($lines -join "`n") + "`n", (New-Object Text.UTF8Encoding($false)))
@@ -161,7 +220,7 @@ function Write-Output-File($clears, $cache, $status) {
 
 function Sync {
     $cache = Load-Cache
-    if ($cache.server -ne $Server) { $cache = @{ server = $Server; lastUpload = $null; days = 0; logs = @{} } }
+    if ($cache.server -ne $Server) { $cache = New-Cache }
     # a longer look-back than last time: rescan everything (cached logs are still skipped)
     if ($Days -gt $cache.days) { $cache.lastUpload = $null; $cache.days = $Days }
 
@@ -170,13 +229,11 @@ function Sync {
     if (-not $srv) { throw "Server '$Server' isn't on Chronicle. Servers: $(($servers.servers | ForEach-Object name) -join ', ')" }
     $realms = @($srv.realms)
     Log ("{0}: {1}" -f $Server, (($realms | ForEach-Object name) -join ", "))
-
-    # guild faction from the logs we've read (for the clear boards)
-    $guildFaction = @{}
-    foreach ($log in $cache.logs.Values) { if ($log.guildId) { $guildFaction[$log.guildId] = $log.faction } }
+    $mine = @($MyChars.Values | Sort-Object -Unique)
+    Log ("Your characters: {0}" -f $(if ($mine.Count) { $mine -join ", " } else { "none found in WTF" }))
 
     # 1) full clears: Chronicle's speedrun boards, best per realm / instance / guild
-    $clears = @{}
+    $clears = @{}; $myClears = @{}
     $realmQs = ($realms | ForEach-Object { "realm_name=" + (Q $_.name) }) -join "&"
     foreach ($inst in $Instances) {
         for ($page = 1; $page -le 10; $page++) {
@@ -184,20 +241,31 @@ function Sync {
             $entries = @($r.entries)
             foreach ($e in $entries) {
                 if (-not $e.guild_name -or -not $e.canonical) { continue }
-                $key = "$($e.realm_name)|$inst|$($e.guild_name)"
-                $secs = $e.canonical.duration_ms / 1000.0
-                if (-not $clears.ContainsKey($key) -or $secs -lt $clears[$key].secs) {
-                    $fac = $guildFaction[$e.guild_id]; if (-not $fac) { $fac = "Unknown" }
-                    $clears[$key] = @{ realm = $e.realm_name; instance = $inst; guild = $e.guild_name; faction = $fac;
-                                       secs = $secs; ended = (To-Epoch $e.canonical.completion_time);
-                                       players = $e.player_count; slug = $e.canonical.slug }
-                }
+                Keep-Best $clears "$($e.realm_name)|$inst|$($e.guild_name)" @{
+                    realm = $e.realm_name; instance = $inst; guild = $e.guild_name; guildId = $e.guild_id; faction = "Unknown";
+                    secs = $e.canonical.duration_ms / 1000.0; ended = (To-Epoch $e.canonical.completion_time);
+                    players = $e.player_count; slug = $e.canonical.slug; id = $e.canonical.id }
             }
             if ($entries.Count -lt 50) { break }
         }
     }
+    # faction (and whether you were there) from each best run's roster
+    $n = 0
+    foreach ($c in $clears.Values) {
+        $att = Get-Attendance $c.id $c.realm $cache
+        if ($att) {
+            $c.faction = $att.faction
+            foreach ($me in $att.mine) {
+                $p = $c.Clone(); $p.char = $me
+                Keep-Best $myClears "$($c.realm)|$me|$($c.instance)" $p
+            }
+        }
+        $n++
+        if ($n % 50 -eq 0) { Log "Clear rosters: $n / $($clears.Count)"; Save-Cache $cache }
+    }
+    Save-Cache $cache
     Log "Full clears: $($clears.Count) guild records"
-    Write-Output-File $clears $cache "syncing" | Out-Null
+    Write-Output-File $clears $myClears $cache "syncing" | Out-Null
 
     # 2) boss kills: every new raid log on these realms
     $since = (Get-Date).ToUniversalTime().AddDays(-$Days).ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -234,28 +302,40 @@ function Sync {
         $cache.logs[$a.id] = @{
             instance = $a.name; realm = $a.realmName; slug = $a.slug;
             guild = $a.guild.name; guildId = $a.guild.id; players = $a.player_count;
-            faction = (Get-Faction $inst.players); ended = (To-Epoch $a.ended_at); kills = $kills
+            faction = (Get-Faction $inst.players); mine = (Get-Mine $a.realmName $inst.players);
+            ended = (To-Epoch $a.ended_at); kills = $kills
         }
         if ($done % 25 -eq 0 -or $done -eq $todo.Count) {
             Save-Cache $cache
-            $n = Write-Output-File $clears $cache "syncing $done/$($todo.Count)"
-            Log "Read $done / $($todo.Count) logs ($n guild boss records)"
+            $k = Write-Output-File $clears $myClears $cache "syncing $done/$($todo.Count)"
+            Log "Read $done / $($todo.Count) logs ($k guild boss records)"
         }
     }
 
-    # clear boards again, now that guild factions are known from the logs
-    foreach ($log in $cache.logs.Values) { if ($log.guildId) { $guildFaction[$log.guildId] = $log.faction } }
-    foreach ($c in $clears.Values) {
-        if ($c.faction -eq "Unknown") {
-            foreach ($log in $cache.logs.Values) {
-                if ($log.guild -eq $c.guild -and $log.realm -eq $c.realm) { $c.faction = $log.faction; break }
+    # 3) your full clears in runs that weren't your guild's best:
+    #    every run of every guild you've raided with
+    $myGuilds = @{}
+    foreach ($log in $cache.logs.Values) { if ($log.mine.Count -gt 0 -and $log.guildId) { $myGuilds[$log.guildId] = $log.guild } }
+    foreach ($gid in $myGuilds.Keys) {
+        foreach ($inst in $Instances) {
+            $r = Get-Api ("/leaderboards/speedruns?instance_name={0}&timing=full&guild_id={1}&page_size=50" -f (Q $inst), $gid)
+            foreach ($e in @($r.entries)) {
+                if (-not $e.canonical) { continue }
+                $att = Get-Attendance $e.canonical.id $e.realm_name $cache
+                if (-not $att) { continue }
+                foreach ($me in $att.mine) {
+                    Keep-Best $myClears "$($e.realm_name)|$me|$inst" @{
+                        realm = $e.realm_name; char = $me; instance = $inst; guild = $e.guild_name;
+                        secs = $e.canonical.duration_ms / 1000.0; ended = (To-Epoch $e.canonical.completion_time); slug = $e.canonical.slug }
+                }
             }
         }
     }
+
     if ($newest) { $cache.lastUpload = $newest }
     Save-Cache $cache
-    $n = Write-Output-File $clears $cache "ok"
-    Log "Done: $($clears.Count) clear records, $n boss kill records -> $OutFile"
+    $k = Write-Output-File $clears $myClears $cache "ok"
+    Log "Done: $($clears.Count) clears, $k boss kill records, $($myClears.Count) of your clears -> $OutFile"
 }
 
 # ------------------------------------------------------------------ main

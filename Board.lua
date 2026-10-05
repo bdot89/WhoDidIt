@@ -106,12 +106,30 @@ function B:LoadChronicle()
 	if head == chronHead then return false end
 	chronHead = head
 
-	local data = { realms = {}, bosses = {}, zones = {} }
+	local data = { realms = {}, bosses = {}, zones = {}, me = {} }
 	for line in string.gfind(s, "[^\n]+") do
 		local p = splitBar(line)
 		local t = p[1]
 		if t == "WDICHRON" then
 			data.synced, data.server, data.days, data.status = tonumber(p[3]), p[4], tonumber(p[5]), p[6]
+		elseif t == "PC" or t == "PK" then
+			-- your characters' bests:  PC|realm|char|instance|secs|ended|guild|slug
+			--                          PK|realm|char|instance|boss|secs|ended|guild|slug
+			local realm, char = p[2], strlower(p[3] or "")
+			data.me[realm] = data.me[realm] or {}
+			local me = data.me[realm][char]
+			if not me then
+				me = { kills = {}, clears = {} }
+				data.me[realm][char] = me
+			end
+			local zone = CHRON_ZONE[p[4]] or p[4]
+			if t == "PC" then
+				local secs = tonumber(p[5])
+				if secs and secs <= CLEAR_MAX then me.clears[zone] = { t = secs, d = tonumber(p[6]), g = p[7], slug = p[8], chron = true } end
+			else
+				local secs = tonumber(p[6])
+				if secs and secs <= KILL_MAX then me.kills[p[5]] = { t = secs, d = tonumber(p[7]), g = p[8], slug = p[9], chron = true } end
+			end
 		elseif t == "C" or t == "K" then
 			local realm = p[2]
 			local zone = CHRON_ZONE[p[3]] or p[3]
@@ -123,7 +141,9 @@ function B:LoadChronicle()
 				data.bosses[zone] = data.bosses[zone] or {}
 				data.bosses[zone][key] = true
 			end
-			if realm ~= "" and guild and guild ~= "" and secs then
+			-- broken logs (a "clear" spanning days) would wreck the boards
+			local maxSecs = (kind == "clears") and CLEAR_MAX or KILL_MAX
+			if realm ~= "" and guild and guild ~= "" and secs and secs <= maxSecs then
 				local r = data.realms[realm]
 				if not r then
 					r = { kills = {}, clears = {} }
@@ -210,12 +230,13 @@ function B:Merge(kind, realm, key, guild, rec)
 	return true
 end
 
--- sorted { guild, rec } list, faction "All" or a faction name. Each guild's
--- best of its WhoDidIt record and its Chronicle record. Cross-faction
--- ("Mixed") and unknown-faction guilds show in every faction view.
-function B:Board(realm, kind, key, faction)
+B.ALL = "All realms"
+
+-- guild -> best record on one realm, WhoDidIt and Chronicle merged
+local function realmBoard(realm, kind, key)
 	local merged = {}
-	for g, rec in pairs(B:DB(realm)[kind][key] or {}) do merged[g] = rec end
+	local mine = WhoDidItDB.board and WhoDidItDB.board[realm]
+	for g, rec in pairs(mine and mine[kind][key] or {}) do merged[g] = rec end
 	local c = B.chron and B.chron.realms[realm]
 	if c and c[kind][key] then
 		for g, rec in pairs(c[kind][key]) do
@@ -223,18 +244,39 @@ function B:Board(realm, kind, key, faction)
 			if not old or rec.t < old.t then merged[g] = rec end
 		end
 	end
+	return merged
+end
+
+-- sorted { guild, rec, realm } list. realm may be B.ALL; faction "All" or a
+-- faction name. Cross-faction ("Mixed") guilds show in both faction views;
+-- guilds of unknown faction only under "All".
+function B:Board(realm, kind, key, faction)
+	local realms = (realm == B.ALL) and B:Realms() or { realm }
 	local list = {}
-	for g, rec in pairs(merged) do
-		if faction == "All" or rec.f == faction or rec.f == "Mixed" or rec.f == "Unknown" or not rec.f then
-			tinsert(list, { g, rec })
+	for i = 1, getn(realms) do
+		for g, rec in pairs(realmBoard(realms[i], kind, key)) do
+			if faction == "All" or rec.f == faction or rec.f == "Mixed" then
+				tinsert(list, { g, rec, realms[i] })
+			end
 		end
 	end
 	table.sort(list, function(a, b) return a[2].t < b[2].t end)
 	return list
 end
 
+-- your current character's best: WhoDidIt's own record or Chronicle's
+function B:MyBest(kind, key)
+	local best = B:PB()[kind][key]
+	local me = B.chron and B.chron.me[B.Realm()]
+	me = me and me[strlower(UnitName("player") or "")]
+	local cr = me and me[kind][key]
+	if cr and (not best or cr.t < best.t) then best = cr end
+	return best
+end
+
 -- a guild's best record for one board (WhoDidIt or Chronicle)
 function B:GuildBest(realm, kind, key, guild)
+	if realm == B.ALL then realm = B.Realm() end
 	local best = B:DB(realm)[kind][key]
 	best = best and best[guild]
 	local c = B.chron and B.chron.realms[realm]
@@ -244,10 +286,12 @@ function B:GuildBest(realm, kind, key, guild)
 end
 
 -- rank (1-based) of a guild on a board, and how many guilds are on it
+-- (on the all-realms board, your guild = the one on your realm)
 function B:Rank(realm, kind, key, guild, faction)
 	local list = B:Board(realm, kind, key, faction)
+	local home = B.Realm()
 	for i = 1, getn(list) do
-		if list[i][1] == guild then return i, getn(list) end
+		if list[i][1] == guild and (realm ~= B.ALL or list[i][3] == home) then return i, getn(list) end
 	end
 	return nil, getn(list)
 end
@@ -302,6 +346,143 @@ local function announce(text)
 	W.Print("|cff33ccffRankings:|r " .. text)
 end
 
+------------------------------------------------------------------ banter
+-- A fun line in the shout channel after every boss kill and full clear:
+-- our time against our own best and against the other guilds on the realm,
+-- mocking us or bigging us up. Placeholders: {what} boss / instance,
+-- {time} our time, {d} the difference, {prev} our old best, {g} the other
+-- guild, {rank} / {of} our place on the realm.
+
+local BANTER = {
+	first = {
+		"First {what} on the books: {time}. Every speedrun starts somewhere.",
+		"{what} down for the very first time in {time}. Somebody frame it.",
+		"New record unlocked: {what} in {time}. Admittedly it's our only record.",
+		"{what} in {time}. Our best ever, our worst ever, our only ever.",
+	},
+	pb = {
+		"{what} in {time} - {d} faster than our old best. Who even are we?!",
+		"New guild best on {what}: {time}. {d} shaved off. Barbers are jealous.",
+		"{d} faster than ever on {what} ({time}). Somebody check if the boss was AFK.",
+		"{what} at {time}, our best ever by {d}. The grind is paying off.",
+		"PB! {what} in {time}, {d} quicker than last time. Screenshot it before we wipe again.",
+		"{what} melted in {time}. That's {d} off our record. Pump it.",
+	},
+	slower = {
+		"{what} in {time}. Our best is {prev}, so that was {d} of sightseeing.",
+		"{what} down in {time} - only {d} slower than our record. Only.",
+		"{time} on {what}. {d} off our best. Did someone stop for a snack?",
+		"{what} took {time}. Our record is {prev}. We'll pretend this one didn't happen.",
+		"{d} slower than our best on {what}. The boss must have eaten its vegetables today.",
+		"{what} in {time}. {d} slower than we've done it. Consumables are not decorations, people.",
+	},
+	beat = {
+		"{what} in {time} - {d} faster than {g}. Sorry not sorry, {g}.",
+		"{time} on {what}. {g} took {d} longer. Somebody tell {g}.",
+		"We just out-killed {g} on {what} by {d}. Respectfully.",
+		"{what} in {time}: {g}, you've been passed. By {d}.",
+		"{d} quicker than {g} on {what}. Get those parses up, {g}.",
+		"{g} called, they want their {what} time back. It's {d} slower than ours.",
+	},
+	behind = {
+		"{what} in {time}. {g} still did it {d} faster. Pain.",
+		"{g} beat us on {what} by {d}. We'll get them next week. Probably.",
+		"{d} behind {g} on {what}. So close, yet so far.",
+		"{what} at {time}. {g} is {d} ahead and laughing at us right now.",
+		"Only {d} slower than {g} on {what}. Only. {d}.",
+		"{g} would like us to know they did {what} {d} faster. Thanks, {g}.",
+	},
+	top = {
+		"{what} in {time} - #1 on the realm! Bow down.",
+		"Fastest {what} on the server: {time}. Everyone else is playing for second.",
+		"{time} on {what}. #1 out of {of}. Somebody call the server.",
+		"Realm record on {what}: {time}. Put it on the guild banner.",
+	},
+	rank = {
+		"{what} in {time} puts us #{rank} of {of} on the realm.",
+		"#{rank} of {of} on {what} with {time}. Climbing.",
+		"{what}: {time}, #{rank} of {of}. {g} is next on the hit list.",
+		"{time} on {what} - #{rank} of {of}. Not bad, not legendary.",
+	},
+}
+B.BANTER = BANTER
+
+local lastBanter = {}
+
+local function pick(cat)
+	local list = BANTER[cat]
+	local n = getn(list)
+	local i = math.random(n)
+	if n > 1 and i == lastBanter[cat] then i = math.mod(i, n) + 1 end
+	lastBanter[cat] = i
+	return list[i]
+end
+
+-- kind "kill" or "clear"; key = board key; old = our guild's best before this one
+function B:BanterLine(kind, key, what, secs, old, realm, guild)
+	local board = B:Board(realm, (kind == "kill") and "kills" or "clears", key, "All")
+	local ahead, behind, passed
+	local rank, of = 1, 1
+	for i = 1, getn(board) do
+		local g, r = board[i][1], board[i][2]
+		if g ~= guild then
+			of = of + 1
+			if r.t < secs then
+				ahead = board[i]
+				rank = rank + 1
+			elseif not behind then
+				behind = board[i]
+			end
+			if old and r.t > secs and r.t < old.t and not passed then passed = board[i] end
+		end
+	end
+
+	local improved = (not old) or secs < old.t
+	local cats, total = {}, 0
+	local function add(c, w) tinsert(cats, { c, w }); total = total + w end
+	if not old then add("first", 2) end
+	if old and improved then add("pb", 3) end
+	if not improved then add("slower", 3) end
+	if rank == 1 and of > 1 then add("top", 5) end
+	if passed then add("beat", 4) elseif behind then add("beat", 1) end
+	if ahead then add("behind", improved and 1 or 3) end
+	if of > 2 then add("rank", 1) end
+
+	local roll, cat = math.random() * total, cats[1][1]
+	for i = 1, getn(cats) do
+		roll = roll - cats[i][2]
+		if roll <= 0 then cat = cats[i][1]; break end
+	end
+
+	local other = passed or behind
+	local v = {
+		what = what, time = B.Fmt(secs), prev = old and B.Fmt(old.t) or "-",
+		rank = tostring(rank), of = tostring(of), g = ahead and ahead[1] or (other and other[1]) or "the next guild",
+	}
+	if cat == "pb" then v.d = B.Fmt(old.t - secs)
+	elseif cat == "slower" then v.d = B.Fmt(secs - old.t)
+	elseif cat == "beat" then v.g = other[1]; v.d = B.Fmt(other[2].t - secs)
+	elseif cat == "behind" then v.g = ahead[1]; v.d = B.Fmt(secs - ahead[2].t)
+	else v.d = "" end
+
+	local line = string.gsub(pick(cat), "{(%w+)}", function(k) return v[k] or "" end)
+	return ((kind == "clear") and "[WhoDidIt] CLEAR: " or "[WhoDidIt] ") .. line
+end
+
+function B:Banter(kind, key, what, secs, old, realm, guild, channel)
+	local line = B:BanterLine(kind, key, what, secs, old, realm, guild)
+	W:Send({ line }, channel, {})   -- {} = colour times and numbers
+end
+
+-- a made-up kill so you can preview the banter (your own chat only)
+function B:BanterTest()
+	local bosses = { "Ragnaros", "Nefarian", "Onyxia", "Hakkar", "Patchwerk", "C'Thun" }
+	local what = bosses[math.random(getn(bosses))]
+	local secs = 60 + math.random(240)
+	local old = (math.random(4) > 1) and { t = secs + math.random(-40, 40) } or nil
+	W:Send({ B:BanterLine("kill", what, what, secs, old, B.Realm(), B.MyGuild() or "Your Guild") }, "SELF", {})
+end
+
 -- called for every finished fight
 function B:OnFight(rec)
 	if rec.demo or rec.result ~= "KILL" then return end
@@ -321,11 +502,15 @@ function B:OnFight(rec)
 		announce("new personal best on " .. rec.enc .. ": |cffffffff" .. B.Fmt(secs) .. "|r" .. (old and (" (was " .. B.Fmt(old.t) .. ")") or ""))
 	end
 
-	-- guild best
+	-- guild best (and the banter, which compares against the best *before* this kill)
+	local oldKill = guild and B:GuildBest(realm, "kills", rec.enc, guild)
 	if guild and B:Merge("kills", realm, rec.enc, guild, { t = secs, d = now, f = fac, n = size, by = me }) then
 		local rank, of = B:Rank(realm, "kills", rec.enc, guild, "All")
 		announce("new " .. guild .. " best on " .. rec.enc .. ": |cffffffff" .. B.Fmt(secs) .. "|r (#" .. rank .. " of " .. of .. " on " .. realm .. ")")
 		B:Share("K", guild, fac, rec.enc, secs, now, size)
+	end
+	if guild and WhoDidItDB.opts.banterKills then
+		B:Banter("kill", rec.enc, rec.enc, secs, oldKill, realm, guild)
 	end
 
 	-- full clear?
@@ -345,6 +530,10 @@ function B:OnFight(rec)
 		pb.clears[r.zone] = { t = cs, d = now, g = guild, n = size }
 	end
 	announce(title .. " cleared in |cffffffff" .. B.Fmt(cs) .. "|r" .. ((oc and cs < oc.t) and " - new personal best!" or ""))
+	local oldClear = guild and B:GuildBest(realm, "clears", r.zone, guild)
+	if guild and WhoDidItDB.opts.banterClears then
+		B:Banter("clear", r.zone, title, cs, oldClear, realm, guild)
+	end
 	if guild and B:Merge("clears", realm, r.zone, guild, { t = cs, d = now, f = fac, n = size, by = me }) then
 		local rank, of = B:Rank(realm, "clears", r.zone, guild, "All")
 		announce("new " .. guild .. " clear record: #" .. rank .. " of " .. of .. " on " .. realm)

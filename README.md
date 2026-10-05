@@ -116,6 +116,25 @@ The **Rankings** button (title bar, or `/wdi rankings`) shows kill times and ful
 
 A kill or clear counts for the raid's majority guild (at least half the raid). Personal bests are kept per character.
 
+**Realm** cycles your realm → **All realms** (every guild on the server ranked together, with realm names) → each
+other realm. Every leaderboard time is compared with your guild's ("1:38.6 faster" / "3:51.1 slower"). The left column
+shows your guild's clear, its rank (gold / silver / bronze) and a green bar for how close you are to #1.
+
+### Banter
+
+After every boss kill and full clear, WhoDidIt posts a fun line to your shout channel. It compares the time with your
+guild's previous best and with the other guilds on the realm, then picks a random message type so it doesn't get
+repetitive:
+- new guild best (and by how much)
+- slower than our best ("…{d} of sightseeing")
+- beat another guild ("Sorry not sorry, Care Bears")
+- behind the guild just ahead
+- #1 on the realm
+- our rank
+
+It trolls you when you're slow and bigs you up when you're fast. Toggle it with **Kill banter / Clear banter** in
+Rankings or `/wdi banter kills|clears on|off`, and preview a line with **Test banter** or `/wdi banter test`.
+
 ### Every guild's times from Chronicle (optional helper)
 
 WoW addons can't go online, so a small helper does it for them. `tools\WhoDidIt-Sync.cmd` (PowerShell, built into

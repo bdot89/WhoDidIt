@@ -232,6 +232,8 @@ local DEFAULTS = {
 	shareBoard  = true,     -- share guild kill/clear records with WhoDidIt users on the realm
 	chronStartOnPull = true,  -- start Chronicle logging when a boss is pulled
 	chronSaveOnFight = true,  -- save the Chronicle log after every boss fight
+	banterKills  = true,    -- fun line in the shout channel after every boss kill
+	banterClears = true,    -- ...and after every full clear
 }
 
 W:On("ADDON_LOADED", function(name)
@@ -318,6 +320,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi trash on|off|r - also track elite trash pulls")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi banter kills|clears [on|off]|r - fun kill / clear time announcements,  " .. c .. "/wdi banter test|r - preview one")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi demo|r - add two sample fights to try every feature, " .. c .. "/wdi demo live|r - watch one play out live, " .. c .. "/wdi demo clear|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi start|r / " .. c .. "/wdi stop|r - manually track your target / end tracking")
@@ -400,8 +403,19 @@ local function slash(msg)
 	elseif cmd == "threat" then
 		db.opts.queryThreat = (rest ~= "off")
 		W.Print("Threat queries: " .. (db.opts.queryThreat and "on" or "off"))
-	elseif (cmd == "log" or cmd == "share") and not (W.Board and W.Logs) then
+	elseif (cmd == "log" or cmd == "share" or cmd == "banter") and not (W.Board and W.Logs) then
 		W.Print(W.RESTART_MSG)
+	elseif cmd == "banter" then
+		local _, _, what, onoff = string.find(rest, "^(%a+)%s*(%a*)$")
+		if what == "test" then
+			W.Board:BanterTest()
+		elseif what == "kills" or what == "clears" then
+			local key = (what == "kills") and "banterKills" or "banterClears"
+			if onoff == "on" or onoff == "off" then db.opts[key] = (onoff == "on") else db.opts[key] = not db.opts[key] end
+			W.Print("Banter after " .. (what == "kills" and "boss kills" or "full clears") .. ": " .. (db.opts[key] and "on" or "off") .. " (posts to " .. W.Shout:ChannelLabel() .. ")")
+		else
+			W.Print("Usage: /wdi banter kills|clears [on|off]  or  /wdi banter test")
+		end
 	elseif cmd == "rankings" or cmd == "ranks" then
 		W.UI:SetMode("rankings")
 	elseif cmd == "logs" then
