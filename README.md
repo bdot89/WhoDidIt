@@ -1,114 +1,156 @@
+<div align="center">
+
 # WhoDidIt
 
-Raid wipe & death analyser for Turtle WoW / OctoWoW (1.12 client). It records every
-boss fight automatically and tells you **why** it went wrong and **who** caused it.
+**Raid wipe & death analyser for World of Warcraft 1.12**
+<br>OctoWoW · Turtle WoW · vanilla
 
-Open it with `/whodidit` or `/wdi`.
+Records every boss fight, then tells you **why** the raid wiped and **who** did it.
 
-## Requirements
+![WoW 1.12.1](https://img.shields.io/badge/WoW-1.12.1-c79c6e?style=flat-square)
+![Lua 5.0](https://img.shields.io/badge/Lua-5.0-2c2d72?style=flat-square)
+![Nampower](https://img.shields.io/badge/needs-Nampower-8a2be2?style=flat-square)
+![SuperWoW](https://img.shields.io/badge/needs-SuperWoW-1e90ff?style=flat-square)
+![TWThreat](https://img.shields.io/badge/optional-TWThreat-555?style=flat-square)
 
-| Mod | Needed for |
+<img src="docs/summary.jpg" alt="WhoDidIt summary: why the raid wiped and the blame board" width="100%">
+
+<sub>Type <code>/wdi</code> in game · click <b>Demo fight</b> to try every feature without raiding</sub>
+
+</div>
+
+---
+
+## Highlights
+
+- 🔍 **Why did it go wrong?** A ranked list of wipe causes: tank deaths, healers out of mana, enrage timers, mechanics, aggro pulls, missed interrupts. Click any cause for the full breakdown: who healed the tank in their last 5 seconds, or each healer's mana and potions.
+- ☠️ **Death recaps.** The last 15 seconds before every death (hits, heals, debuffs, items, health %), with the cause worked out for you.
+- 🎯 **Aggro & threat.** Every time the boss switched target, with the server's threat % at that moment. Non-tanks who rip aggro get blamed.
+- 📋 **Blame board.** Points for standing in fire, pulling aggro, bombing the raid, idling and low DPS, with a "Most to blame" verdict.
+- 🦸 **Heroes.** Game-saving plays: clutch heals, shields that ate a killing blow, taunt rescues, Blessing of Protection, battle res, Innervate, dispelled mind control.
+- 🧪 **Consumes.** Every player's flask, elixirs, food, juju and protection potions, plus every potion, rune, tea and healthstone they used.
+- 📣 **Shout-outs.** *Name & Shame* and *Big Them Up* awards, reports and per-player posts, sent to any channel in colour.
+- 📊 **Meters & timeline.** Damage, healing, taken, activity and utility, plus a full timeline of the fight.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/breakdown.jpg" alt="Cause breakdown"><br><b>Cause breakdown.</b> Click any cause. Here: each healer's mana, healing and mana consumables when the wipe started.</td>
+    <td width="50%"><img src="docs/mistakes.jpg" alt="Mistakes"><br><b>Mistakes.</b> Every mistake with its time and blame points, worst first.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/threat.jpg" alt="Threat"><br><b>Threat.</b> Who the boss attacked and when, why (tank swap, pulled aggro, opened early), and peak threat per player.</td>
+    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> Flask / food overview, then each player's buffs and items used, colour-coded by type.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/live.jpg" alt="Live fight"><br><b>Live view.</b> The report builds itself while you fight.</td>
+    <td width="50%"><img src="docs/chat.jpg" alt="Coloured chat posts"><br><b>Coloured chat posts.</b> Names in class colour, times in blue, numbers in white, so posts stand out in raid chat.</td>
+  </tr>
+</table>
+
+## Install
+
+1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
+2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
+3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
+
+### Requirements
+
+| Mod | What WhoDidIt uses it for |
 | --- | --- |
-| **Nampower** (dll) | damage, healing, swings, debuffs, deaths, consumables. Without it only deaths are tracked. |
-| **SuperWoW** (dll) | GUID → name lookups, boss target polling (aggro), cast events (interrupts, activity, tranqs). |
-| TWThreat (addon, optional) | If loaded, WhoDidIt reads the same server threat packets. If not, WhoDidIt asks the server itself (`/wdi threat off` to stop). |
+| **Nampower** (dll) | Damage, healing, swings, buffs/debuffs, deaths and consumables. Without it, only deaths are tracked. |
+| **SuperWoW** (dll) | Player and mob names from GUIDs, who the boss is targeting, cast events (interrupts, activity, tranqs, saves). |
+| TWThreat (addon, optional) | If it's loaded, WhoDidIt reads the same server threat packets. If not, WhoDidIt asks the server itself (`/wdi threat off` to stop). |
 
-WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`,
-`NP_EnableSpellHealEvents`, `NP_EnableSpellGoEvents`).
+WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `NP_EnableSpellHealEvents`, `NP_EnableSpellGoEvents`).
 
-## What it detects
+## Quick start
 
-- **Deaths** – full recap of the last 15 s (damage, heals, debuffs, items, HP %), with the cause:
-  stood in avoidable damage, killed by a bomb/injection carrier, meleed to death after pulling aggro,
-  tank death (no heals / crushing blows / damage vs healing), mind-controlled players, falling/lava, or plain "overwhelmed".
-- **Aggro** – every boss target change, from boss melee swings and target polling, with the Turtle server threat % at that moment.
-  Non-tanks who pull aggro are blamed (boss mechanics with threat wipes are excused unless they were over 100 %).
-- **Mechanics** – avoidable damage (Void Zone, Shadow Fissure, Heigan dance, Chromaggus breaths…),
-  carriers who splash the raid (Living Bomb, Detonate Mana, Mutating Injection), stacking marks (Four Horsemen, Firemaw).
-- **Raid-wide failures** – uninterrupted heals/frostbolts, slow decurses/dispels, Frenzy not tranquilized,
-  Magma Blast / Ball Lightning (nobody in melee), boss enrage timers, healers out of mana at the wipe.
-- **Playing badly** – low activity (idle time while alive), DPS far below the raid median, early pulls, near-aggro threat peaks.
-- **Meters** – damage, healing, damage taken, activity, and utility (kicks, dispels, tranqs, items used).
-- **Pull check** – missing Fortitude / Mark / Intellect and flasks at pull. Boss debuff uptimes (Sunder, curses, Faerie Fire…).
+1. Type **`/wdi`** and click **Demo fight** (bottom-left). Two sample fights load, a messy wipe and a cleaner kill, and every tab has something to show. **Shift-click** it to watch the wipe play out live at 4× speed.
+2. Mark your main tanks: **`/wdi tank <name>`**, or right-click a name in the window. Tanks are auto-detected, but setting them makes aggro blame much more accurate.
+3. Pick where posts go with the **To:** button (top-right): Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me, or a custom channel (`/wdi channel <name>`).
+4. Raid. Fights are recorded automatically when your group engages a boss. **Keep the boss targeted** so threat % gets recorded.
 
-## Demo / test mode
+## The window
 
-Click **Demo fight** (bottom-left of the window) or type `/wdi demo` to add two scripted sample fights
-against a "Grand Demonstrator", with a fake 20-player raid. They run through the real analyser, so every tab and
-every feature has something to show:
-
-- **Wipe:** a rogue pulls before the tank, a mage rips aggro at 112% and gets flattened, a Living Bomb carrier
-  kills a healer, a warrior dies in Void Zone, a priest stands in Rain of Fire, a mind-controlled priest kills a shaman,
-  Dark Mending goes uninterrupted, Frenzy isn't tranqed, Magma Blast, slow decursing, a tank dies with no heals,
-  healers run out of mana, the boss enrages, and an AFK mage.
-- **Kill:** a cleaner fight with a single death, good interrupts and fast tranqs, to show Big Them Up.
-
-**Shift-click** Demo fight (or `/wdi demo live`) to watch the wipe play out as a LIVE fight at 4x speed (~48s).
-Demo fights are labelled *(demo)*. Automatic post-fight messages for demo fights stay in your own chat. Clicking Report, Name & Shame or Big Them Up posts them for real to your shout channel, tagged `DEMO`.
-`/wdi demo clear` removes them.
-
-## Heroes
-
-The **Heroes** tab finds game-saving plays and gives hero points:
-
-| Play | Points |
+| Tab | What it shows |
 | --- | --- |
-| Heal landing on someone under 20% health who then survives | 2 |
-| Power Word: Shield / Ice Barrier soaking a hit that would have killed | 3 |
-| Tank taunting the boss off a non-tank who then survives | 3 (1.5 without a taunt cast) |
-| Lay on Hands / Blessing of Protection on someone under 35% (or BoP on whoever has aggro) | 3 |
-| Battle res (Rebirth) | 3 |
-| Dispelling mind control | 2 |
-| Innervate on someone under 30% mana | 1.5 |
-| Interrupting a dangerous cast | 0.5 each (max 3) |
-| Tranquilizing a Frenzy within 3s | 1 |
-| Last-second potion / healthstone / Shield Wall etc. under 30% health, and surviving | 1 |
+| **Summary** | The verdict, the ranked wipe causes (click for details), the blame board, the top heroes and raid notes (missing buffs, boss debuff uptime) |
+| **Deaths** | Every death with its cause. Hover for the recap, click for the second-by-second timeline with health bars |
+| **Mistakes** | Every finding with its time and blame points |
+| **Heroes** | The hero board and every game-saving moment |
+| **Threat** | Boss target changes with threat % and a verdict, plus peak threat per player |
+| **Meters** | Damage, Healing, Taken, Activity, Utility (interrupts, dispels, tranqs, items) |
+| **Timeline** | Everything that happened, in order |
+| **Consumes** | Raid flask/food overview, then each player's buffs and items used. **Post summary / missing / everyone** buttons |
 
-The top hero shows on the Summary, and as **Lifesaver** in Big Them Up. **Post heroes** shares the board.
+### Clicking names
 
-## Consumes
+Every player name in the window (blame board, Heroes, Meters, Consumes) works the same way:
 
-The **Consumes** tab lists every player's consumable buffs during the fight (flask, elixirs, food, juju/zanza,
-protection potions…) and every item they used. Three post buttons share it:
-- **Post summary:** counts, protection potions, items used, the most prepared players
-- **Post missing:** who had no flask, food or elixirs
-- **Post everyone:** one line per player
-
-## Chat colours
-
-Every post uses the same scheme:
-- the `[WhoDidIt]` tag in red, with the post's kind (REPORT, NAME & SHAME, BIG UPS, CONSUMES, HEROES) in gold
-- line labels (`Verdict:`, `Blame:`, `Flasks:`…) in gold
-- player names in their class colour, times in light blue, numbers in white
-- WIPE / KILL in red / green
+| Click | Does |
+| --- | --- |
+| **Click** | Post that player's overview for the current tab (blame, hero plays, stats or consumes) to your channel |
+| **Ctrl-click** | Preview that post in your own chat only |
+| **Shift-click** | Name & Shame just them |
+| **Alt-click** | Big them up |
+| **Right-click** | Mark / unmark as a tank |
 
 ## Shout-outs
 
-Two buttons in the top-right of the window post data-driven awards to your **designated channel**
-(the `To:` button below them: Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me, or a custom channel).
+<table>
+<tr>
+<td width="50%" valign="top">
 
-**Name & Shame** – the hall of shame for the selected fight:
-- *Most to blame* – the top of the blame board, with their top two reasons
-- *Threat Junkie* – the most aggro pulls (or the highest non-tank threat %)
-- *Floor Inspector* – the first person to die, and why
-- *Fire Enthusiast* – the most avoidable damage taken, and from what
-- *Bomb Squad* – whose bomb/injection hit the most raiders
-- *AFK Award* – the lowest activity
-- *Participation Trophy* – DPS under half the raid median
+**🔴 Name & Shame**
 
-**Big Them Up** – the stars of the fight:
-- *Damage King* – DPS and % of raid damage
-- *Top Healer* – total healing and % of all healing
-- *Iron Wall* – the tank who took the most damage and never died
-- *Kick Master* / *Cleanser* / *Tranq Sniper* – the most interrupts / dispels / Tranquilizing Shots
-- *Never Stops* – the highest activity
-- *Flawless* – everyone with no deaths, no avoidable damage, no aggro pulls and no blame
+- *Most to blame*: the top of the blame board
+- *Threat Junkie*: the most aggro pulls
+- *Floor Inspector*: the first to die, and why
+- *Fire Enthusiast*: the most avoidable damage taken
+- *Bomb Squad*: whose bomb hit the most raiders
+- *AFK Award*: the lowest activity
+- *Participation Trophy*: DPS under half the raid median
 
-Shift-click a name on the Summary blame board to shame just that player. Shift-click a name in Meters to
-big just them up. **Auto shout-outs** (left panel) can post them after every fight. `smart` shames
-on wipes and praises on kills. Lines are sent 0.3s apart so chat flood protection doesn't kick in.
+</td>
+<td width="50%" valign="top">
 
-## Blame points
+**🟢 Big Them Up**
+
+- *Lifesaver*: the top hero and their best save
+- *Damage King*: top DPS and % of raid damage
+- *Top Healer*: top healing and % of all healing
+- *Iron Wall*: the tank who never went down
+- *Kick Master / Cleanser / Tranq Sniper*
+- *Never Stops*: the highest activity
+- *Flawless*: everyone who made zero mistakes
+
+</td>
+</tr>
+</table>
+
+**Auto shout-outs** (left panel) can post them after every fight. `smart` shames on wipes and praises on kills. Lines are sent 0.3 s apart so chat flood protection doesn't kick in.
+
+### Chat colours
+
+Every post (Report, shout-outs, Consumes, Heroes, per-player posts) uses the same scheme:
+
+| Part | Colour |
+| --- | --- |
+| `[WhoDidIt]` tag | red |
+| Post kind (`REPORT`, `BIG UPS`, …) and line labels (`Verdict:`, `Blame:`, `Flasks:`) | gold |
+| Player names | their class colour |
+| Times | light blue |
+| Numbers and % | white |
+| WIPE / KILL | red / green |
+
+If your server doesn't allow coloured chat, WhoDidIt notices and switches to plain text (`/wdi colors on|off`).
+
+## How the verdict works
+
+<details>
+<summary><b>Blame points</b></summary>
 
 | Mistake | Points |
 | --- | --- |
@@ -124,31 +166,86 @@ on wipes and praises on kills. Lines are sent 0.3s apart so chat flood protectio
 
 The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 
+</details>
+
+<details>
+<summary><b>Hero points</b></summary>
+
+| Play | Points |
+| --- | --- |
+| Heal landing on someone under 20% health who then survives | 2 |
+| Power Word: Shield / Ice Barrier soaking a hit that would have killed | 3 |
+| Tank taunting the boss off a non-tank who then survives | 3 (1.5 without a taunt cast) |
+| Lay on Hands / Blessing of Protection on someone under 35% (or BoP on whoever has aggro) | 3 |
+| Battle res (Rebirth) | 3 |
+| Dispelling mind control | 2 |
+| Innervate on someone under 30% mana | 1.5 |
+| Interrupting a dangerous cast | 0.5 each (max 3) |
+| Tranquilizing a Frenzy within 3s | 1 |
+| Last-second potion / healthstone / Shield Wall etc. under 30% health, and surviving | 1 |
+
+</details>
+
+<details>
+<summary><b>What gets detected</b></summary>
+
+- **Deaths:** stood in avoidable damage, killed by a bomb/injection carrier, meleed to death after pulling aggro, tank deaths (no heals / crushing blows / damage vs healing), mind control, falling / lava, or plain "overwhelmed".
+- **Mechanics:** avoidable damage (Void Zone, Shadow Fissure, Heigan's dance, Chromaggus breaths…), carriers splashing the raid (Living Bomb, Detonate Mana, Mutating Injection) and stacking marks (Four Horsemen, Firemaw). Covers MC, Onyxia, BWL, ZG, AQ20, AQ40 and Naxxramas.
+- **Raid-wide failures:** uninterrupted heals and Frostbolts, slow decurses/dispels, Frenzy not tranquilized, Magma Blast / Ball Lightning (nobody in melee range), enrage timers, healers out of mana.
+- **Playing badly:** idle time while alive, DPS far below the raid median, early pulls, near-aggro threat peaks.
+- **At the pull:** missing Fortitude / Mark of the Wild / Arcane Intellect and flasks. Boss debuff uptimes (Sunder Armor, curses, Faerie Fire…).
+
+</details>
+
 ## Commands
 
+<details>
+<summary><b>All slash commands</b> (<code>/wdi</code> or <code>/whodidit</code>)</summary>
+
 ```
-/wdi                     open / close
-/wdi tank <name>         mark a main tank (or right-click a name in Meters)
+/wdi                       open / close the window
+/wdi demo                  add two sample fights (a wipe and a kill)
+/wdi demo live             watch the wipe play out live at 4x speed
+/wdi demo clear            remove demo fights
+/wdi tank <name>           mark a main tank (or right-click a name)
 /wdi untank <name>
-/wdi avoid <spell>       add your own "don't stand in it" spell (exact name)
-/wdi report              post the latest fight summary to the shout channel
-/wdi shame [name]        Name & Shame (whole raid, or one player)
-/wdi bigup [name]        Big Them Up (whole raid, or one player)
+/wdi tanks                 list tanks
+/wdi avoid <spell>         add your own "don't stand in it" spell (exact name)
+/wdi unavoid <spell> | avoids
+/wdi report                post the latest fight summary to the shout channel
+/wdi shame [name]          Name & Shame (whole raid, or one player)
+/wdi bigup [name]          Big Them Up (whole raid, or one player)
 /wdi channel <raid|rw|party|guild|officer|say|yell|self|custom name>
 /wdi autoshout off|smart|shame|praise|both
-/wdi announce self|channel|off   summary after each fight: your chat, the shout channel, or nothing
-/wdi trash on|off        also track elite trash pulls
-/wdi threat on|off       ask the server for threat when TWThreat isn't loaded
-/wdi start | stop        manually track your target / end tracking
+/wdi announce self|channel|off   summary after each fight
+/wdi colors on|off         coloured chat posts
+/wdi trash on|off          also track elite trash pulls
+/wdi threat on|off         ask the server for threat when TWThreat isn't loaded
+/wdi start | stop          manually track your target / end tracking
 /wdi status | clear
 ```
 
-Tanks are auto-detected (tank-capable classes that held boss aggro for a while), but
-setting them with `/wdi tank` makes aggro blame much more accurate.
+</details>
+
+## Demo mode
+
+**Demo fight** adds two scripted fights against a *Grand Demonstrator* with a fake 20-player raid. They go through the real analyser, so they show exactly what a real fight would:
+
+- **Wipe:**
+  - a rogue opens before the tank, and a mage rips aggro at 112% and gets flattened
+  - a Living Bomb carrier kills a healer, and players die in Void Zone and Rain of Fire
+  - a mind-controlled priest kills a shaman
+  - Dark Mending goes uninterrupted, Frenzy isn't tranqed, and decurses are slow
+  - a tank dies with no heals, healers run out of mana, and the boss enrages
+  - one mage is AFK
+  - the heroes save the day where they can
+- **Kill:** a cleaner fight with a single death, good interrupts, fast tranqs and a battle res.
+
+Demo fights are labelled *(demo)*. Automatic post-fight messages for them stay in your own chat. Clicking a post button sends it for real, tagged `DEMO`.
 
 ## Notes
 
 - Spell and boss names are matched in English (enUS client).
-- Threat comes from the Turtle server for **your current target**, so keep the boss targeted for threat data.
-- Custom Turtle raids (Karazhan, Emerald Sanctum) are detected as world bosses. Their mechanics aren't
-  in the database yet. Add avoidable spells with `/wdi avoid`, or edit `Data.lua`.
+- Threat comes from the Turtle server for **your current target**, so keep the boss targeted.
+- Turtle's custom raids (Karazhan, Emerald Sanctum) are detected as world bosses, but their mechanics aren't in the database yet. Add avoidable spells with `/wdi avoid <spell>`, or edit [`Data.lua`](Data.lua). Pull requests with mechanics are welcome!
+- Weapon oils and sharpening stones can't be seen on other players in the 1.12 client, so they don't show on the Consumes tab.
