@@ -235,11 +235,11 @@ realm's fastest guild gets under our time.
 
 ### Every guild's times from Chronicle
 
-WoW addons can't go online, so WhoDidIt's GitHub repository does it for everyone: every 4 hours a scheduled GitHub
-Action ([`.github/workflows/chronicle-sync.yml`](.github/workflows/chronicle-sync.yml)) uses Chronicle's public
-[External API](https://legacy.chronicleclassic.com/developers/api) and saves the times in the addon as
-`ChronicleData.lua`. **Updating WhoDidIt gets you the newest times; nothing runs on your PC.** It holds guild times
-only: no player characters, and nothing about you is ever sent anywhere. It pulls:
+WoW addons can't go online, so the times come **with the addon**, in `ChronicleData.lua`: they're fetched from
+Chronicle's public [External API](https://legacy.chronicleclassic.com/developers/api) and updated in the repository
+regularly. **Updating WhoDidIt gets you the newest times; nothing runs on your PC.** The file holds guild times only:
+no player characters, and nothing about you is ever sent anywhere. (GitHub can't fetch them itself: Chronicle's site
+is behind Cloudflare, which blocks requests from GitHub's servers.) It pulls:
 
 - **full clears** from Chronicle's speedrun leaderboards
 - **boss kill times** from every uploaded raid log on your server (OctoWoW: C'Thun, N'Zoth, Y'Shaarj)
@@ -265,6 +265,7 @@ tools\WhoDidIt-Sync.cmd -NoRollForUpdate   leave RollFor alone
 tools\WhoDidIt-Sync.cmd -NoPackUpdate      leave the mob packs alone
 tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (default 150)
 tools\WhoDidIt-Sync.cmd -IncludeMyCharacters also find your own characters' personal bests (off by default)
+tools\Publish-RaidTimes.cmd                (maintainer) refresh ChronicleData.lua and push it to GitHub
 ```
 
 - **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.

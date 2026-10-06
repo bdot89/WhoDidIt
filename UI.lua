@@ -1303,7 +1303,7 @@ local function syncNow()
 	local B = W.Board
 	local st = B:SyncStatus()
 	if not (st and st.alive) then
-		W.Print("Raid times come with the addon and are refreshed on GitHub every few hours - update WhoDidIt to get the newest. "
+		W.Print("Raid times come with the addon - update WhoDidIt to get the newest. "
 			.. "|cff888888(Optional: the helper tools\\WhoDidIt-Sync.cmd keeps them fresher on your PC, and makes Sync now work.)|r")
 		return
 	end
@@ -1319,7 +1319,7 @@ syncBtn:SetScript("OnClick", syncNow)
 syncBar:SetScript("OnClick", syncNow)
 local function syncTip()
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
-		"They come with the addon: GitHub fetches them every few hours, so updating WhoDidIt",
+		"They come with the addon and are updated regularly, so updating WhoDidIt"
 		"gets you the newest. Nothing runs on your PC and nothing about you is sent anywhere.",
 		" ",
 		"|cff888888Optional: the helper tools\\WhoDidIt-Sync.cmd fetches them on your PC every 10 minutes|r",
@@ -1343,7 +1343,7 @@ function UI:UpdateSync()
 		syncBar.top:SetText("|cffff7777Needs Nampower|r")
 		syncBar.bot:SetText("to read the Chronicle times")
 	elseif (not st or not st.alive) and c and B.chronBundled then
-		-- the times that came with the addon (GitHub refreshes them every few hours)
+		-- the times that came with the addon (ChronicleData.lua)
 		bar(1, 0.15, 0.55, 0.25)
 		syncBar.top:SetText("|cff33ff33Raid times from " .. ago(c.synced or 0) .. "|r")
 		syncBar.bot:SetText("came with the addon - update it for newer")

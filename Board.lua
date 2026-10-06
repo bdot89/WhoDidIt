@@ -95,7 +95,7 @@ end
 
 -- (re)read the sync file; true if it changed
 function B:LoadChronicle()
-	-- the times shipped in the addon (ChronicleData.lua, refreshed by a GitHub
+	-- the times shipped in the addon (ChronicleData.lua, updated in the repository
 	-- Action), or the optional helper's file when it's newer
 	local s
 	if ReadCustomFile then

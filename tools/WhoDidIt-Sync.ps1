@@ -13,9 +13,10 @@
     so your personal bests show up too. It's off unless you ask for it.
     Nothing is ever uploaded: the helper only downloads public Chronicle data.
 
-    The same data is also fetched for everyone by a scheduled GitHub Action
-    (-CI) and shipped in the addon as ChronicleData.lua, so running this is
-    optional: it just keeps the times fresher and adds Sync now in game.
+    The same data also ships in the addon as ChronicleData.lua (written with
+    -CI and committed to the repository), so running this is optional: it
+    just keeps the times fresher and adds Sync now in game. (GitHub Actions
+    can't fetch it: Chronicle's Cloudflare blocks GitHub's servers.)
 
     It also installs and updates what's built into WhoDidIt, each from its
     official source, checking every hour:
@@ -40,7 +41,7 @@
       WhoDidIt-Sync.ps1 -NoPackUpdate      leave the mob packs alone
       WhoDidIt-Sync.ps1 -DetailsPerSync 600  read more raids in full per sync (default 150)
       WhoDidIt-Sync.ps1 -IncludeMyCharacters  also find your own characters' personal bests
-      WhoDidIt-Sync.ps1 -CI -DataDir <dir> -LuaOut <file>   one sync for the GitHub Action:
+      WhoDidIt-Sync.ps1 -CI -DataDir <dir> -LuaOut <file>   one sync for the repository:
                                            no updates, no characters, writes ChronicleData.lua
 
     The API allows 60 requests a minute; this stays at about one a second
@@ -330,12 +331,12 @@ function Write-Output-File($clears, $myClears, $cache, $status) {
         $lines.Add(("L|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}" -f $slug, (Clean $l.realm), (Clean $l.instance), (Clean $l.guild), $l.faction,
             $l.ended, $l.players, ($ks -join ";")))
     }
-    # the GitHub Action ships it inside the addon too, as a Lua string
+    # -LuaOut: the copy that ships inside the addon, as a Lua string
     # (Lua 5.0 long strings can't hold [[ or ]], so those are broken up)
     if ($LuaOut) {
         $body = ($lines -join "`n") -replace '\[\[', '[ [' -replace '\]\]', '] ]'
         $lua = "-- Every guild's raid times from Chronicle (chronicleclassic.com), fetched by`n" +
-               "-- WhoDidIt's GitHub Action (tools\WhoDidIt-Sync.ps1 -CI). Generated - do not edit.`n" +
+               "-- tools\WhoDidIt-Sync.ps1 -CI. Generated - do not edit.`n" +
                "WDI_CHRON_DATA = [[`n" + $body + "`n]]`n"
         [IO.File]::WriteAllText($LuaOut, $lua, (New-Object Text.UTF8Encoding($false)))
     }
@@ -521,7 +522,7 @@ if ($UpdatesOnly) {
     return
 }
 
-# the GitHub Action: one sync, nothing else
+# -CI: one sync for the repository's ChronicleData.lua, nothing else
 if ($CI) {
     Log "WhoDidIt-Sync (CI) for $Server -> $LuaOut"
     Sync

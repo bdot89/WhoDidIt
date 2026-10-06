@@ -169,7 +169,7 @@ Tracker.lua
 Analyzer.lua
 Career.lua
 Shoutout.lua
-# every guild's raid times, refreshed by a GitHub Action (see .github/workflows)
+# every guild's raid times from Chronicle (tools\WhoDidIt-Sync.ps1 -CI writes it)
 ChronicleData.lua
 Board.lua
 Logs.lua

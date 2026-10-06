@@ -1,62 +1,41 @@
-# Fetches every guild's raid times from Chronicle's public API and ships them
-# in the addon (ChronicleData.lua), so players don't have to run anything on
-# their PC. Also keeps the built-in DopingControl (MIT) up to date.
-# No player characters are read or written: guild times only.
-name: Chronicle raid times
+# Keeps the built-in DopingControl (MIT) up to date from its author's GitHub.
+#
+# Chronicle's raid times can't be fetched from here: chronicleclassic.com sits
+# behind Cloudflare, which challenges requests from GitHub's servers. They're
+# fetched on a normal PC instead (tools\WhoDidIt-Sync.ps1) and ChronicleData.lua
+# is updated from there.
+name: Update DopingControl
 
 on:
   schedule:
-    - cron: "17 */4 * * *"   # every 4 hours
+    - cron: "17 5 * * *"     # once a day
   workflow_dispatch:          # "Run workflow" button on GitHub
 
 permissions:
   contents: write
 
 concurrency:
-  group: chronicle-sync
+  group: embed-update
   cancel-in-progress: false
 
 jobs:
-  sync:
+  update:
     runs-on: windows-latest
-    timeout-minutes: 300
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
-      # what earlier runs already read from Chronicle, so only new uploads are fetched
-      - name: Restore the Chronicle cache
-        uses: actions/cache/restore@v4
-        with:
-          path: .ci/WhoDidIt_ChronicleCache.json
-          key: chronicle-cache-${{ github.run_id }}
-          restore-keys: chronicle-cache-
-
-      - name: Sync from Chronicle
-        shell: powershell
-        run: |
-          New-Item -ItemType Directory -Force .ci | Out-Null
-          & .\tools\WhoDidIt-Sync.ps1 -CI -DataDir "$PWD\.ci" -LuaOut "$PWD\ChronicleData.lua" -DetailsPerSync 600
-
-      - name: Save the Chronicle cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: .ci/WhoDidIt_ChronicleCache.json
-          key: chronicle-cache-${{ github.run_id }}
 
       - name: Update DopingControl
         shell: powershell
         run: |
           & .\tools\EmbedUpdate.ps1 -Only Doping
 
-      # commit only when something besides the "synced at" stamp changed
       - name: Commit
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A ChronicleData.lua DopingControl WhoDidIt.toc
-          real=$(git diff --cached -U0 | grep -E '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -v 'WDICHRON|' | wc -l)
-          if [ "$real" -eq 0 ]; then echo "Nothing new"; exit 0; fi
-          git commit -m "Chronicle raid times $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git add -A DopingControl WhoDidIt.toc
+          if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
+          git commit -m "DopingControl update"
           git push

@@ -1,5 +1,5 @@
 -- Every guild's raid times from Chronicle (chronicleclassic.com), fetched by
--- WhoDidIt's GitHub Action (tools\WhoDidIt-Sync.ps1 -CI). Generated - do not edit.
+-- tools\WhoDidIt-Sync.ps1 -CI. Generated - do not edit.
 WDI_CHRON_DATA = [[
 WDICHRON|2|1791298068|OctoWoW|90|ok
 C|N'Zoth|Lower Tower of Karazhan|Repentance|Mixed|2417.9|1790969965|10|1ML2vlB5C1gVvP5g
