@@ -91,8 +91,8 @@ WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `
 | --- | --- |
 | **Summary** | The verdict, the ranked wipe causes (click for details), the blame board, the top heroes and raid notes (missing buffs, boss debuff uptime) |
 | **Deaths** | Every death with its cause. Hover for the recap, click for the second-by-second timeline with health bars |
-| **Mistakes** | Every finding with its time and blame points |
-| **Heroes** | The hero board and every game-saving moment |
+| **Mistakes** | Every finding with its time and blame points. Click one to post it (Ctrl-click previews it) |
+| **Heroes** | The hero board and every game-saving moment. Click a moment to post it (Ctrl-click previews it) |
 | **Threat** | Boss target changes with threat % and a verdict, plus peak threat per player |
 | **Meters** | Damage, Healing, Taken, Activity, Utility (interrupts, dispels, tranqs, items) |
 | **Timeline** | Everything that happened, in order |

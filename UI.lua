@@ -716,11 +716,11 @@ end, "ANCHOR_LEFT")
 local HINTS = {
 	summary  = "Click a cause for details  -  click a name to post it (Ctrl preview, Shift shame, Alt praise)",
 	deaths   = "Hover a death for its recap  -  click it for the full timeline",
-	mistakes = "Sorted by blame points  -  hover for advice",
+	mistakes = "Click a mistake to post it (Ctrl-click: preview)  -  hover for advice",
 	threat   = "Threat % comes from the server for your target  -  keep the boss targeted",
 	timeline = "Everything that happened, in order",
 	consumes = "Buffs active during the fight, then items used  -  hover a player for the full list",
-	heroes   = "Click a name to post their plays  -  hover a name for every click option",
+	heroes   = "Click a name or a game-saving moment to post it (Ctrl-click: preview)  -  hover for details",
 }
 
 ------------------------------------------------------------------ data helpers
@@ -1109,6 +1109,25 @@ local function stripColors(s)
 	return s
 end
 
+-- post one mistake / game-saving moment: click = the Post to channel,
+-- Ctrl-click = a preview in your own chat
+local function postMoment(rec, kind, t, text, pts)
+	local lines = {
+		W.Analyzer.ChatHeader(kind, rec),
+		(t and (FmtTime(t) .. " - ") or "") .. stripColors(text) .. (pts and pts ~= 0 and ("  (" .. pts .. ")") or ""),
+	}
+	W:Send(lines, IsControlKeyDown() and "SELF" or nil, W.Shout.ClassMap(rec))
+end
+
+local function momentTip(tip, what)
+	local out = {}
+	for i = 1, getn(tip or {}) do out[i] = tip[i] end
+	tinsert(out, " ")
+	tinsert(out, "|cff33ff33Click: post this " .. what .. " to " .. W.Shout:ChannelLabel() .. "|r")
+	tinsert(out, "|cff888888Ctrl-click: preview it in your own chat|r")
+	return out
+end
+
 ------------------------------------------------------------------ tab builders
 
 function UI:FightRows()
@@ -1396,7 +1415,10 @@ function UI:MistakeRows(rec)
 			  "|cffffd100" .. fd.cat .. "|r",
 			  text,
 			  fd.pts > 0 and ("|cffff5555+" .. fd.pts .. "|r") or (C_DIM .. "info|r") },
-			{ tip = fd.tip, tipTitle = stripColors(fd.text) }))
+			{ tip = momentTip(fd.tip, "mistake"), tipTitle = stripColors(fd.text),
+			  click = function()
+				postMoment(rec, "MISTAKE", fd.t, "[" .. fd.cat .. "] " .. fd.text, (fd.pts > 0) and ("+" .. fd.pts .. " blame points") or nil)
+			  end }))
 	end
 	return rows
 end
@@ -1715,7 +1737,8 @@ function UI:HeroRows(rec)
 			{ s.t and (C_DIM .. FmtTime(s.t) .. "|r") or (C_DIM .. "-|r"),
 			  tint(colorNames(s.text, rec), "|cffdddddd"),
 			  C_GUILD .. "+" .. s.pts .. "|r" },
-			{ tip = s.tip, tipTitle = "Save" }))
+			{ tip = momentTip(s.tip, "game-saving moment"), tipTitle = "Game-saving moment",
+			  click = function() postMoment(rec, "HERO MOMENT", s.t, s.text, "+" .. s.pts .. " hero points") end }))
 	end
 
 	head(rows, "What counts")
