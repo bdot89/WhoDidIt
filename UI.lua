@@ -89,7 +89,11 @@ local function CreateList(parent, nrows, rowh, width)
 		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
 		b:SetScript("OnClick", function()
 			local d = this.d
-			if d and d.click then d.click(d, arg1) end
+			if not (d and d.click) then return end
+			-- x = where on the row it was clicked, so a row can tell its columns apart
+			local cx = GetCursorPosition()
+			local x = cx / this:GetEffectiveScale() - (this:GetLeft() or 0)
+			d.click(d, arg1, x)
 		end)
 		L.rows[i] = b
 	end
@@ -627,6 +631,7 @@ for i = 1, getn(TABS) do
 	b:SetScript("OnClick", function()
 		UI.tab = this.id
 		UI.detail = nil; UI.cause = nil
+		UI.tl = nil   -- the Timeline tab button shows everyone
 		UI:Refresh()
 	end)
 	if t.tip then tooltip(b, t.text, t.tip) end
@@ -725,7 +730,7 @@ local HINTS = {
 	summary  = "Click a cause for details  -  click a name to post it (Ctrl preview, Shift shame, Alt praise)",
 	deaths   = "Hover a death for its recap  -  click it for the full timeline",
 	mistakes = "Click a mistake to post it (Ctrl-click: preview)  -  hover for advice",
-	threat   = "Threat % comes from the server for your target  -  keep the boss targeted",
+	threat   = "Click a name to open their timeline at that moment  -  keep the boss targeted for threat %",
 	timeline = "Everything that happened, in order",
 	consumes = "Buffs active during the fight, then items used  -  hover a player for the full list",
 	heroes   = "Click a name or a game-saving moment to post it (Ctrl-click: preview)  -  hover for details",
@@ -1089,6 +1094,17 @@ local function colHead(rows, spec, titles)
 	local v = {}
 	for i = 1, getn(titles) do v[i] = "|cffffd100" .. titles[i] .. "|r" end
 	tinsert(rows, cells(spec, v, { head = true }))
+end
+
+-- which column of a cells() row x falls in (x from a row click)
+local function colAt(spec, x)
+	local left = 4
+	for i = 1, getn(spec) do
+		local right = left + spec[i][1] + 6
+		if x and x < right then return i end
+		left = right
+	end
+	return getn(spec)
 end
 
 -- column layouts used by more than one tab (widths add up to ~566px)
@@ -1484,7 +1500,14 @@ function UI:ThreatRows(rec)
 			  a.from and W.CName(a.from, from and from.class) or (C_DIM .. "-|r"),
 			  a.perc and (((a.perc >= 100) and "|cffff5555" or C_TIME) .. a.perc .. "%|r") or "",
 			  VERDICT[a.verdict] or "" },
-			{ tip = { "Detected by: " .. (a.how == "melee" and "boss melee swing" or "boss target"), a.perc and ("Threat at the time: " .. a.perc .. "%") or "No threat reading at the time" } }))
+				{ tipTitle = a.boss .. " at " .. FmtTime(a.t),
+			  tip = { "Detected by: " .. (a.how == "melee" and "boss melee swing" or "boss target"), a.perc and ("Threat at the time: " .. a.perc .. "%") or "No threat reading at the time",
+			          " ", "|cff33ff33Click a name: their timeline, at " .. FmtTime(a.t) .. "|r",
+			          "|cff888888(Attacked = " .. a.to .. (a.from and (", Took it from = " .. a.from) or "") .. ")|r" },
+			  click = function(d, btn, x)
+				local col = colAt(AGGRO_SPEC, x)
+				UI:ShowTimeline((col == 4 and a.from) or a.to, a.t)
+			  end }))
 	end
 
 	head(rows, "Peak threat (% of the aggro holder)")
@@ -1501,7 +1524,9 @@ function UI:ThreatRows(rec)
 		local col = t.perc >= 100 and "|cffff5555" or (t.perc >= 90 and "|cffff9933" or C_TIME)
 		tinsert(rows, cells(PEAK_SPEC,
 			{ C_DIM .. i .. ".|r", W.CName(name, t.class), col .. t.perc .. "%|r", C_DIM .. FmtTime(t.t) .. "|r" },
-			{ bar = t.perc / 130, cr = r, cg = g, cb = b, ba = 0.3 }))
+			{ bar = t.perc / 130, cr = r, cg = g, cb = b, ba = 0.3, tipTitle = name,
+			  tip = { "Highest threat: " .. t.perc .. "% of the aggro holder, at " .. FmtTime(t.t), "|cff33ff33Click: " .. name .. "'s timeline at that moment|r" },
+			  click = function() UI:ShowTimeline(name, t.t) end }))
 	end
 	return rows
 end
@@ -1799,6 +1824,25 @@ function UI:HeroRows(rec)
 	return rows
 end
 
+-- open the Timeline on one player, scrolled to a moment (from Threat and elsewhere)
+function UI:ShowTimeline(who, t)
+	UI.tab = "timeline"
+	UI.detail = nil; UI.cause = nil
+	UI.tl = { who = who, t = t, fight = UI.selIdx, scroll = true }
+	UI:Refresh()
+end
+
+-- does a timeline line mention this player (as a whole word)?
+local function mentions(text, name)
+	local s, e = string.find(text or "", name, 1, true)
+	while s do
+		local before, after = string.sub(text, s - 1, s - 1), string.sub(text, e + 1, e + 1)
+		if not string.find(before, "%a") and not string.find(after, "%a") then return true end
+		s, e = string.find(text, name, e + 1, true)
+	end
+	return false
+end
+
 function UI:TimelineRows(rec)
 	local rows = {}
 	local tl = rec.timeline or {}
@@ -1806,10 +1850,39 @@ function UI:TimelineRows(rec)
 		tinsert(rows, row("|cff888888Nothing recorded.|r"))
 		return rows
 	end
+	local focus = UI.tl
+	if focus and focus.fight ~= UI.selIdx then focus = nil; UI.tl = nil end
+	local who = focus and focus.who
+	if focus then
+		local p = who and rec.players[who]
+		local title = who and ("Timeline for " .. W.CName(who, p and p.class) .. (focus.t and (C_DIM .. "  - focused on " .. FmtTime(focus.t) .. "|r") or ""))
+			or ("Everyone" .. (focus.t and (C_DIM .. "  - focused on " .. FmtTime(focus.t) .. "|r") or ""))
+		tinsert(rows, row("|cffffd100" .. title .. "|r", "|cffffd100" .. (who and "show everyone  >" or "show everything, unfocused  >") .. "|r",
+			{ head = true, click = function()
+				if UI.tl and UI.tl.who then UI.tl.who = nil; UI.tl.scroll = true else UI.tl = nil end
+				UI:Refresh()
+			  end }))
+	end
 	colHead(rows, TL_SPEC, { "Time", "Event" })
+	local best, bestGap
 	for i = 1, getn(tl) do
 		local l = tl[i]
-		tinsert(rows, cells(TL_SPEC, { C_DIM .. FmtTime(l.t) .. "|r", tint(colorNames(l.x or "", rec), KIND_COLOR[l.k] or "|cffffffff") }))
+		if not who or mentions(l.x, who) then
+			tinsert(rows, cells(TL_SPEC, { C_DIM .. FmtTime(l.t) .. "|r", tint(colorNames(l.x or "", rec), KIND_COLOR[l.k] or "|cffffffff") }))
+			if focus and focus.t then
+				local gap = math.abs((l.t or 0) - focus.t)
+				if not bestGap or gap < bestGap then best, bestGap = getn(rows), gap end
+			end
+		end
+	end
+	if who and best == nil and getn(rows) <= 2 then
+		tinsert(rows, row(C_DIM .. "Nothing on the timeline mentions " .. who .. ". Click \"show everyone\" above.|r"))
+	end
+	-- the moment you came for: highlighted, and scrolled into view once
+	if best then
+		rows[best].sel = true
+		if focus.scroll then UI.tlScrollTo = best end
+		focus.scroll = nil
 	end
 	return rows
 end
@@ -3092,8 +3165,16 @@ function UI:Refresh()
 	else rows = UI:TimelineRows(rec) end
 
 	local key = UI.tab .. (UI.tab == "meters" and UI.meter or "") .. tostring(UI.selIdx) .. tostring(UI.detail) .. tostring(UI.cause)
+		.. ((UI.tab == "timeline" and UI.tl) and (tostring(UI.tl.who) .. tostring(UI.tl.t)) or "")
 	mainList:SetData(rows, key == lastTab)
 	lastTab = key
+	-- a focused timeline: put the moment a few rows from the top
+	if UI.tlScrollTo then
+		local off = math.max(0, math.min(mainList:MaxOffset(), UI.tlScrollTo - 4))
+		UI.tlScrollTo = nil
+		mainList.offset = off
+		mainList:Refresh()
+	end
 end
 
 ------------------------------------------------------------------ hooks from the tracker

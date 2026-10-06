@@ -93,9 +93,9 @@ WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `
 | **Deaths** | Every death with its cause. Hover for the recap, click for the second-by-second timeline with health bars |
 | **Mistakes** | The blame board (with bars), then every mistake with its time, type and points, laid out like Heroes. Click a mistake to post it (Ctrl-click previews). **Post mistakes** / **Name & Shame** buttons |
 | **Heroes** | The hero board (with bars), then every game-saving moment with its time, type and points. Click a moment to post it (Ctrl-click previews). **Post heroes** / **Big Them Up** buttons |
-| **Threat** | Boss target changes with threat % and a verdict, plus peak threat per player |
+| **Threat** | Boss target changes with threat % and a verdict, plus peak threat per player. Click a name (Attacked or Took it from) to open that player's timeline, filtered to them and scrolled to that moment |
 | **Meters** | Damage, Healing, Taken, Activity, Utility (interrupts, dispels, tranqs, items) |
-| **Timeline** | Everything that happened, in order |
+| **Timeline** | Everything that happened, in order. Opened from Threat it shows one player, with the moment highlighted ("show everyone" widens it) |
 | **Consumes** | Raid flask/food overview and the **slacker check** (who's missing what their role needs), then each player's buffs, items used and what they were missing. **Post summary / missing / everyone** and **Check raid now** buttons |
 
 ### Clicking names
