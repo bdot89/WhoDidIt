@@ -415,7 +415,7 @@ The bottom of the left column is laid out the same way on every tab. Hover any b
 
 ### Chat colours
 
-Every post (Report, shout-outs, Consumes, Heroes, per-player posts) uses the same scheme:
+Every post (Report, shout-outs, Consumes, Heroes, banter, rival watch, standings, per-player posts) uses the same scheme:
 
 | Part | Colour |
 | --- | --- |
@@ -425,8 +425,13 @@ Every post (Report, shout-outs, Consumes, Heroes, per-player posts) uses the sam
 | Times | light blue |
 | Numbers and % | white |
 | WIPE / KILL | red / green |
+| Bosses and instances | gold |
+| Your guild / other guilds | green / orange |
+| Realms (`N'Zoth (PvE)`) | purple |
 
-If your server doesn't allow coloured chat, WhoDidIt notices and switches to plain text (`/wdi colors on|off`).
+WhoDidIt checks each chat separately. If a coloured post doesn't show up in one chat, or comes back without its
+colours, that chat gets plain text from then on, the lost lines are sent again in plain text, and every other chat
+stays coloured. `/wdi colors on` tries every chat again; `/wdi colors off` posts plain text everywhere.
 
 ## How the verdict works
 

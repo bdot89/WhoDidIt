@@ -287,6 +287,13 @@ W:On("ADDON_LOADED", function(name)
 	end
 	-- "raid" announce used to ignore the shout channel; it now follows it
 	if db.opts.announce == "raid" then db.opts.announce = "channel" end
+	-- colours used to switch off for every chat after one missed line; now it's
+	-- per chat (opts.plainKinds), so turn them back on once
+	if not db.opts.colorsPerChat then
+		db.opts.colorsPerChat = true
+		db.opts.chatColors = true
+		db.opts.plainKinds = {}
+	end
 end)
 
 W:On("PLAYER_ENTERING_WORLD", function()
@@ -427,8 +434,14 @@ local function slash(msg)
 		W.Print("Shout channel: " .. W.Shout:ChannelLabel())
 		W.UI:Refresh()
 	elseif cmd == "colors" or cmd == "colours" then
-		if rest == "on" or rest == "off" then db.opts.chatColors = (rest == "on") end
-		W.Print("Coloured chat posts: " .. (db.opts.chatColors and "on" or "off"))
+		if rest == "on" or rest == "off" then
+			db.opts.chatColors = (rest == "on")
+			if rest == "on" then db.opts.plainKinds = {} end   -- try every chat again
+		end
+		local plain = {}
+		for k in pairs(db.opts.plainKinds or {}) do tinsert(plain, W.Shout.LABELS[k] or k) end
+		W.Print("Coloured chat posts: " .. (db.opts.chatColors and "on" or "off")
+			.. ((db.opts.chatColors and getn(plain) > 0) and (" (plain text in: " .. table.concat(plain, ", ") .. ")") or ""))
 	elseif cmd == "autoshout" then
 		if rest == "off" or rest == "smart" or rest == "shame" or rest == "praise" or rest == "both" then
 			db.opts.autoShout = rest

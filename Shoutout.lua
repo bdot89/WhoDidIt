@@ -77,6 +77,10 @@ end
 
 ------------------------------------------------------------------ chat colours
 
+-- one palette for every post: tag red, titles gold, times light blue, numbers
+-- white, players in class colour, and these for names in posts
+S.PALETTE = { us = "#33ff33", guild = "#ff9966", realm = "#cc99ff", boss = "#ffd100" }
+
 local COL = { tag = "ff5555", title = "ffd100", time = "66ccff", num = "ffffff" }
 local RESULT_COL = { WIPE = "ff4444", KILL = "33ff33", RESET = "ff9933" }
 
@@ -241,14 +245,34 @@ function S.ClassMap(rec)
 	local m = {}
 	for name, p in pairs(rec and rec.players or {}) do m[name] = p.class end
 	-- the boss stands out from the players in every post about the fight
-	if rec and rec.enc and not m[rec.enc] then m[rec.enc] = "#ff9966" end
+	if rec and rec.enc and not m[rec.enc] then m[rec.enc] = S.PALETTE.boss end
 	return m
 end
 
 ------------------------------------------------------------------ sending
 
 local queue = {}
-local echo  -- first coloured line waiting to show up in chat
+-- Colour check, per channel: every line we post (coloured or not) waits for
+-- its echo - our own message showing up in that chat. If a coloured line
+-- never shows up, or comes back with the colours stripped, that channel
+-- gets plain text from then on (WhoDidItDB.opts.plainKinds) and the lost
+-- lines are sent again in plain text. Other channels stay coloured.
+local waiting = {}   -- { at, kind, colored, plain, target }, oldest first
+
+-- can this channel take coloured text?
+local function colorsOK(kind)
+	local o = WhoDidItDB.opts
+	return o.chatColors and not (o.plainKinds and o.plainKinds[kind])
+end
+
+local function goPlain(kind, why)
+	local o = WhoDidItDB.opts
+	o.plainKinds = o.plainKinds or {}
+	if o.plainKinds[kind] then return end
+	o.plainKinds[kind] = true
+	W.Print("|cffff9933" .. (S.LABELS[kind] or string.lower(kind)) .. " chat " .. why
+		.. ", so WhoDidIt posts plain text there from now on. Every other chat stays coloured.|r  |cff888888(/wdi colors on to try again)|r")
+end
 
 -- Sends lines to a channel (default: the designated shout channel), one
 -- every 0.3s so a burst of lines doesn't trip the chat flood protection.
@@ -290,31 +314,54 @@ function W:Send(lines, channel, classes)
 end
 
 W:Every(0.3, function()
-	-- a coloured line never appeared in chat: the server blocks colour codes
-	if echo and GetTime() - echo > 5 then
-		echo = nil
-		WhoDidItDB.opts.chatColors = false
-		W.Print("Your server didn't accept coloured chat, so WhoDidIt switched to plain text. Post again to resend. (/wdi colors on to retry)")
+	-- a coloured line that never showed up: that chat drops colour codes.
+	-- Send what was lost again, in plain text.
+	local now = GetTime()
+	while waiting[1] and now - waiting[1].at > 5 do
+		local w = tremove(waiting, 1)
+		if w.colored then
+			goPlain(w.kind, "didn't show coloured text")
+			tinsert(queue, 1, { nil, w.plain, w.kind, w.target })
+		end
 	end
 	local q = tremove(queue, 1)
 	if not q then return end
-	local msg = q[2]
-	if q[1] and WhoDidItDB.opts.chatColors then
-		msg = q[1]
-		if not echo then echo = GetTime() end
-	end
-	SendChatMessage(msg, q[3], nil, q[4])
+	local colored = q[1] and colorsOK(q[3])
+	local text = colored and q[1] or q[2]
+	SendChatMessage(text, q[3], nil, q[4])
+	tinsert(waiting, { at = now, kind = q[3], colored = colored, sent = text, plain = q[2], target = q[4] })
 end)
 
--- our own messages echo back through these events: a coloured line made it
-local function onEcho(msg, sender)
-	if echo and sender == UnitName("player") then echo = nil end
-end
+-- our own messages come back through these events: the line made it
 local ECHO_EVENTS = {
-	"CHAT_MSG_GUILD", "CHAT_MSG_OFFICER", "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER",
-	"CHAT_MSG_RAID_WARNING", "CHAT_MSG_PARTY", "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_CHANNEL",
+	CHAT_MSG_GUILD = "GUILD", CHAT_MSG_OFFICER = "OFFICER", CHAT_MSG_RAID = "RAID", CHAT_MSG_RAID_LEADER = "RAID",
+	CHAT_MSG_RAID_WARNING = "RAID_WARNING", CHAT_MSG_PARTY = "PARTY", CHAT_MSG_SAY = "SAY", CHAT_MSG_YELL = "YELL",
+	CHAT_MSG_CHANNEL = "CHANNEL",
 }
-for i = 1, getn(ECHO_EVENTS) do W:On(ECHO_EVENTS[i], onEcho) end
+local function trimmed(s) return (string.gsub(s or "", "%s+$", "")) end
+
+for ev, kind in pairs(ECHO_EVENTS) do
+	local k = kind
+	W:On(ev, function(msg, sender)
+		if sender ~= UnitName("player") or not msg then return end
+		local m = trimmed(msg)
+		for i = 1, getn(waiting) do
+			local w = waiting[i]
+			-- a raid warning can come back as raid, and the other way round
+			if w.kind == k or (k == "RAID" and w.kind == "RAID_WARNING") or (k == "RAID_WARNING" and w.kind == "RAID") then
+				-- only our own line counts (not something you typed, or the rankings channel)
+				if m == trimmed(w.sent) then
+					tremove(waiting, i)
+					return
+				elseif w.colored and m == trimmed(w.plain) then
+					tremove(waiting, i)
+					goPlain(w.kind, "strips colours")
+					return
+				end
+			end
+		end
+	end)
+end
 
 ------------------------------------------------------------------ data helpers
 

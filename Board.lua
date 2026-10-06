@@ -599,9 +599,9 @@ end
 -- orange, realms purple, bosses and instances gold (plus raid members in
 -- their class colour). Multi-word names and "N'Zoth (PvE)" work too.
 
-local CHAT_US, CHAT_THEM, CHAT_REALM, CHAT_BOSS = "#33ff33", "#ff9966", "#cc99ff", "#ffd100"
-
 function B:ChatColours()
+	local P = W.Shout.PALETTE   -- the same colours as every other post
+	local CHAT_US, CHAT_THEM, CHAT_REALM, CHAT_BOSS = P.us, P.guild, P.realm, P.boss
 	local m = {}
 	for enc in pairs(W.Data.encounters) do m[enc] = CHAT_BOSS end
 	for zone in pairs(W.Data.clears) do
