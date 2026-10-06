@@ -1474,7 +1474,11 @@ function UI:UpdateSync()
 	UI.syncState = st and st.state
 end
 W:Every(3, function()
-	if UI.mode == "rankings" and f:IsVisible() and syncBar:IsVisible() then UI:UpdateSync() end
+	if UI.mode == "rankings" and f:IsVisible() and syncBar:IsVisible() then
+		UI:UpdateSync()
+		-- no times yet: refresh the "getting the raid times" panel too
+		if W.Board and not W.Board.chron then UI:Refresh() end
+	end
 end)
 
 local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn, syncBar, syncBtn, masterBtn }
@@ -3225,6 +3229,12 @@ function UI:RefreshRankings()
 	elseif UI.rk.boss then rows = UI:RankBossRows(realm, faction, UI.rk.boss)
 	elseif UI.rk.view == "kills" then rows = UI:RankKillRows(realm, faction, zone)
 	else rows = UI:RankClearRows(realm, faction, zone) end
+	-- no Chronicle times yet: say what's happening and how the sharing works, on top
+	if not B.chron and not UI.rk.log then
+		local top = UI:FeedPanel()
+		for i = 1, getn(rows) do tinsert(top, rows[i]) end
+		rows = top
+	end
 
 	hintText:SetText("Click a guild's time to open their raid.  Clears: first combat to the last boss.  |cffff5555!|r = beaten recently.")
 	hintText:Show()
@@ -3946,6 +3956,60 @@ function UI:RefreshMissing()
 	tinsert(rows, row("Fights still work normally until then: click |cffffd100Fights|r in the title bar."))
 	lastModeKey = nil
 	mainList:SetData(rows)
+end
+
+------------------------------------------------------------------ Rankings: waiting for the raid times
+
+-- shown on Rankings while there are no Chronicle times yet: where they'll
+-- come from, how far along it is, and what the sharing does and doesn't do
+function UI:FeedPanel()
+	local B = W.Board
+	local rows = {}
+	local o = WhoDidItDB.opts
+	local realm = B.Realm()
+	local names = {}
+	for n in pairs(B.MASTERS and B.MASTERS[realm] or {}) do tinsert(names, n) end
+	table.sort(names)
+	local who = (getn(names) > 0) and table.concat(names, " / ") or nil
+	local fs = B.FeedStatus and B:FeedStatus()
+	local m = B.master and (GetTime() - B.master.at) < 150 and B.master or nil
+
+	head(rows, "Getting every guild's raid times")
+	if not o.shareBoard then
+		tinsert(rows, row("|cffff9933Sharing is off|r, so the raid times can't reach you.", C_DIM .. "/wdi share on|r"))
+	elseif o.noFeed then
+		tinsert(rows, row("|cffff9933You switched the feed off|r (/wdi feed off).", C_DIM .. "/wdi feed on|r"))
+	elseif fs and not fs.master and fs.total > 0 then
+		local left = math.max(1, floor((fs.total - fs.got) / 60 + 0.5))
+		tinsert(rows, row("|cff66ccffReceiving them from " .. (fs.from or "?") .. "|r - the boards fill in when it's done.",
+			C_TIME .. floor(fs.got / fs.total * 100) .. "%|r  " .. C_DIM .. "about " .. left .. " min left|r",
+			{ bar = fs.got / fs.total, cr = 0.2, cg = 0.55, cb = 1, ba = 0.45 }))
+		tinsert(rows, row(C_DIM .. fs.got .. " of " .. fs.total .. " messages. Keep playing as normal - it comes in quietly in the background.|r"))
+	elseif m then
+		tinsert(rows, row("|cff33ff33" .. m.name .. " is online|r with times from " .. B.Ago(m.synced) .. ". Your WhoDidIt is asking for them.",
+			C_DIM .. "starts within a minute|r"))
+		tinsert(rows, row(C_DIM .. "The first copy takes about 10 minutes; after that only changes are sent (seconds).|r"))
+	elseif who then
+		tinsert(rows, row("Waiting for |cffffd100" .. who .. "|r to come online on " .. realm .. ".",
+			C_DIM .. "nothing to do|r"))
+		tinsert(rows, row(C_DIM .. "The raid times come from their WhoDidIt. When they log in, yours notices within a minute and they arrive by themselves.|r"))
+	else
+		tinsert(rows, row("No master on " .. realm .. " yet, so the raid times can't arrive in game here.",
+			C_DIM .. "or run the helper|r"))
+	end
+
+	head(rows, "How the sharing works")
+	local function info(a, b) tinsert(rows, row("|cffffd100" .. a .. "|r  " .. C_DIM .. b .. "|r")) end
+	info("What arrives:", "guild names, raid and boss names, kill and clear times, dates, raid sizes and Chronicle log links.")
+	info("", "Nothing about any player - no characters, no gear, nothing personal.")
+	info("What you send:", "only a short request (\"send me what's new since ...\"). Nothing about you, your character or your PC.")
+	info("Who from:", "only " .. (who or "the WhoDidIt maintainer's characters") .. ". Anyone else trying to send times is ignored.")
+	info("Where it goes:", "saved with your WhoDidIt settings on your PC, so Rankings is full next login, even when they're offline.")
+	info("Never posted:", "other guilds' names never go into chat by themselves; anything you post shows you the text first.")
+	info("Live:", "after the first copy, new times arrive within minutes of being uploaded to Chronicle, while they're online.")
+	info("Your choice:", "/wdi feed off ignores the feed. Rather fetch them yourself? tools\\WhoDidIt-Sync.cmd (optional).")
+	head(rows, "Times recorded in game")
+	return rows
 end
 
 ------------------------------------------------------------------ Hall of Fame

@@ -1436,8 +1436,14 @@ end
 
 local function applyStream(s, sender)
 	local f = store()
+	local first = (f.synced or 0) == 0
 	for key, line in pairs(s.lines) do f.lines[key] = line end
 	f.synced, f.server, f.from, f.dirty = s.synced, s.server, sender, true
+	if first then
+		local n = 0
+		for _ in pairs(s.lines) do n = n + 1 end
+		W.Print("Raid times are in: |cffffffff" .. n .. "|r guild records from " .. sender .. ". Open |cffffd100Rankings|r to see them; they stay up to date while " .. sender .. " is online.")
+	end
 	if B:LoadChronicle() then
 		B.rivalsDirty = true
 		if W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
@@ -1511,6 +1517,12 @@ function B:FeedReceive(msg, sender)
 		if synced <= mine or (since > 0 and since > mine) then return end
 		recv[p[3]] = { since = since, synced = synced, total = tonumber(p[6]) or 0, server = p[7], got = 0, dict = {}, lines = {}, from = sender, at = GetTime() }
 		want = nil
+		-- the first copy takes a while: say so (once)
+		if mine == 0 and not B.toldFeed then
+			B.toldFeed = true
+			W.Print("Getting every guild's raid times from |cffffd100" .. sender .. "|r (about " .. math.max(1, floor((tonumber(p[6]) or 0) / 60 + 0.5))
+				.. " min, in the background). Rankings shows the progress and how the sharing works.")
+		end
 	elseif kind == "D" then
 		local s = recv[p[3]]
 		if s then
