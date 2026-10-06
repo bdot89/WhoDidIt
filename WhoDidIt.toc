@@ -2,10 +2,10 @@
 ## Title: |cffff5555Who|cffffd100DidIt|r
 ## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. Includes the Chronicle logger, an auto marker and RollFor for master looting. /whodidit
 ## Author: bdot1
-## Version: 1.3.0
+## Version: 1.4.0
 ## SavedVariables: WhoDidItDB, ChronicleCompanionDB, RollForDb
 ## SavedVariablesPerCharacter: ChronicleCompanionCharDB, RollForCharDb
-## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, TWThreat
+## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, AutoMasterLooter, TWThreat
 
 # Built-in Chronicle logger (ChronicleCompanion by Emyrk). tools\WhoDidIt-Sync
 # downloads it into Chronicle\ and rewrites the list below when it updates.
@@ -129,6 +129,7 @@ RollFor\main.lua
 
 Core.lua
 Data.lua
+Consumes.lua
 Tracker.lua
 Analyzer.lua
 Shoutout.lua
@@ -138,5 +139,6 @@ Logs.lua
 Marks\packs.lua
 Marks.lua
 Loot.lua
+AutoML.lua
 UI.lua
 Demo.lua

@@ -443,6 +443,94 @@ function M:SetMobMark(zone, name, guid, mark)
 	M:Changed()
 end
 
+-- a small bar of every mark at the mouse: click one to pick it
+-- fn(mark) with 1..8, or 0 for no mark; removeFn = "take it out of the pack"
+function M:PickMark(current, fn, removeFn, who)
+	local p = M.picker
+	if not p then
+		p = CreateFrame("Frame", "WhoDidItMarkPicker", UIParent)
+		p:SetFrameStrata("TOOLTIP")
+		p:SetToplevel(true)
+		p:EnableMouse(true)
+		p:SetWidth(9 * 26 + 92)
+		p:SetHeight(52)
+		p:SetBackdrop({
+			bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+			tile = true, tileSize = 16, edgeSize = 14,
+			insets = { left = 3, right = 3, top = 3, bottom = 3 },
+		})
+		p:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+		p:SetBackdropBorderColor(0.6, 0.6, 0.65, 1)
+		p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 8, -6)
+		p.sel = p:CreateTexture(nil, "BACKGROUND")
+		p.sel:SetTexture(1, 0.82, 0, 0.35)
+		p.sel:SetWidth(26)
+		p.sel:SetHeight(26)
+		p.btns = {}
+		for k = 1, 9 do
+			local mark = (k <= 8) and (9 - k) or 0   -- skull first, "none" last
+			local b = CreateFrame("Button", nil, p)
+			b:SetWidth(22)
+			b:SetHeight(22)
+			b:SetPoint("TOPLEFT", p, "TOPLEFT", 8 + (k - 1) * 26, -22)
+			if mark > 0 then
+				local t = b:CreateTexture(nil, "ARTWORK")
+				t:SetAllPoints(b)
+				t:SetTexture(M.ICONS)
+				t:SetTexCoord(M.IconCoords(mark))
+			else
+				local fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				fs:SetPoint("CENTER", b, "CENTER", 0, 0)
+				fs:SetText("|cff999999none|r")
+			end
+			local hl = b:CreateTexture(nil, "HIGHLIGHT")
+			hl:SetAllPoints(b)
+			hl:SetTexture(1, 1, 1, 0.25)
+			b.mark = mark
+			b:SetScript("OnClick", function()
+				local f = M.picker.fn
+				M.picker:Hide()
+				if f then f(this.mark) end
+			end)
+			b:SetScript("OnEnter", function()
+				GameTooltip:SetOwner(this, "ANCHOR_TOP")
+				GameTooltip:SetText(this.mark > 0 and M.MarkText(this.mark) or "No mark (stays in the pack, unmarked)")
+				GameTooltip:Show()
+			end)
+			b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			p.btns[k] = b
+		end
+		p.rem = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
+		p.rem:SetWidth(78)
+		p.rem:SetHeight(20)
+		p.rem:SetPoint("TOPLEFT", p, "TOPLEFT", 8 + 9 * 26 + 2, -23)
+		p.rem:SetText("|cffff7777Take out|r")
+		if p.rem.SetTextFontObject then p.rem:SetTextFontObject(GameFontNormalSmall) end
+		p.rem:SetScript("OnClick", function()
+			local f = M.picker.removeFn
+			M.picker:Hide()
+			if f then f() end
+		end)
+		tinsert(UISpecialFrames, "WhoDidItMarkPicker")
+		M.picker = p
+	end
+	p.fn, p.removeFn = fn, removeFn
+	p.title:SetText("Mark for |cffffffff" .. (who or "this mob") .. "|r  |cff888888(Esc to cancel)|r")
+	-- highlight the current mark
+	p.sel:ClearAllPoints()
+	local k = (current and current > 0) and (9 - current) or 9
+	p.sel:SetPoint("CENTER", p.btns[k], "CENTER", 0, 0)
+	if removeFn then p.rem:Show() else p.rem:Hide() end
+	-- at the mouse
+	local x, y = GetCursorPosition()
+	local s = UIParent:GetEffectiveScale()
+	p:ClearAllPoints()
+	p:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x / s - 30, y / s + 8)
+	p:Show()
+end
+
 function M:RemoveMob(zone, name, guid)
 	local pack = M:Editable(zone, name)
 	pack.mobs[guid] = nil

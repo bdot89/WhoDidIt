@@ -318,6 +318,40 @@ envText:SetJustifyH("RIGHT")
 local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -2, -2)
 
+-- auto master looting: on/off at a glance, click to pick who gets the loot
+local amlBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+amlBtn:SetWidth(118)
+amlBtn:SetHeight(18)
+amlBtn:SetPoint("RIGHT", envText, "LEFT", -10, 0)
+if amlBtn.SetTextFontObject then amlBtn:SetTextFontObject(GameFontNormalSmall) end
+if amlBtn.SetHighlightFontObject then amlBtn:SetHighlightFontObject(GameFontHighlightSmall) end
+amlBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+amlBtn:SetScript("OnClick", function()
+	if not W.AutoML then W.Print(W.RESTART_MSG) return end
+	if arg1 == "RightButton" then W.AutoML:SetOn(not W.AutoML:On()) else W.AutoML:TogglePanel(this) end
+end)
+amlBtn:SetScript("OnEnter", function()
+	local A = W.AutoML
+	GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT")
+	GameTooltip:SetText("Auto master looting", 1, 0.82, 0)
+	if not A then GameTooltip:AddLine("Restart WoW to load it.", 1, 0.5, 0.5) GameTooltip:Show() return end
+	GameTooltip:AddLine(A:On() and "|cff33ff33On|r - while you're the master looter, greys, whites and greens are handed out as soon as you open a corpse."
+		or "|cffff5555Off|r - loot is handed out by hand as normal.", 0.9, 0.9, 0.9, 1)
+	GameTooltip:AddLine("Loot goes to: |cffffffff" .. A.Who(A:Target()) .. "|r", 0.9, 0.9, 0.9)
+	GameTooltip:AddLine("If your bags are full: |cffffffff" .. (A:Backup() or "nobody") .. "|r", 0.9, 0.9, 0.9)
+	GameTooltip:AddLine("Epics are never handed out - you get a warning and a sound.", 0.6, 0.6, 0.6, 1)
+	GameTooltip:AddLine("Click: choose who gets the loot   Right-click: on / off", 0.6, 0.6, 0.6)
+	GameTooltip:Show()
+end)
+amlBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+function UI:UpdateAML()
+	local A = W.AutoML
+	if not A then amlBtn:SetText("|cff888888Auto-loot: ?|r") return end
+	local who = A:Target()
+	amlBtn:SetText(A:On() and ("Auto-loot: |cff33ff33ON|r" .. (who and ("|cffffffff > " .. string.sub(who, 1, 8) .. "|r") or "")) or "Auto-loot: |cff888888off|r")
+end
+
 local function panel(x, y, w, h)
 	local p = CreateFrame("Frame", nil, f)
 	p:SetPoint("TOPLEFT", f, "TOPLEFT", x, y)
@@ -616,9 +650,12 @@ local ACTIONS = {
 		{ "Post summary", function(rec) W.Shout:Consumes(rec, "summary") end,
 		  "Flask / food / elixir counts, protection potions, items used and the most prepared players." },
 		{ "Post missing", function(rec) W.Shout:Consumes(rec, "missing") end,
-		  "Who had no flask, no food buff and no elixirs." },
+		  "Who was missing what their role needs: flask, food, role elixir, weapon oil / stone." },
 		{ "Post everyone", function(rec) W.Shout:Consumes(rec, "full") end,
 		  "One line per player: every consumable buff they had and every item they used. Long!" },
+		{ "Check raid now", function() W.Cons:Check(IsShiftKeyDown()) end,
+		  "Scan everyone's buffs right now (before the pull) and list who's missing what their role needs. Only you see it - Shift-click to post it. Also runs by itself on every ready check.",
+		  true },
 	},
 	heroes = {
 		{ "Post heroes", function(rec) W.Shout:Heroes(rec) end,
@@ -632,13 +669,14 @@ for tab, list in pairs(ACTIONS) do
 		local a = list[i]
 		local b = button(f, a[1], 112, 20)
 		b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + (i - 1) * 116, PAD)
-		local fn = a[2]
+		local fn, live = a[2], a[4]
 		b:SetScript("OnClick", function()
+			if live then fn() return end   -- works on the raid right now, not a saved fight
 			local rec = finishedRec()
 			if rec then fn(rec) end
 		end)
 		tooltip(b, a[1], function()
-			return { a[3], "|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "  (coloured, like every WhoDidIt post)|r" }
+			return { a[3], "|cff888888" .. (live and "Shift-click posts to: " or "Posts to: ") .. W.Shout:ChannelLabel() .. "  (coloured, like every WhoDidIt post)|r" }
 		end, "ANCHOR_TOP")
 		b:Hide()
 		tinsert(UI.actionButtons[tab], b)
@@ -1462,11 +1500,15 @@ local BUFF_COL = { Flask = "cc99ff", Elixir = "66ccff", Food = "ffcc66", Buff = 
 local USED_COL = { Mana = "66aaff", Health = "33ff33", Protection = "ff6666", Other = "dddddd" }
 local ROLE_ORDER = { tank = 1, heal = 2, dps = 3 }
 local ROLE_TAG = ROLE_SHORT
-local CONS_SPEC = { { 140, "LEFT" }, { 50, "LEFT" }, { 70, "LEFT" }, { 70, "RIGHT" }, { 80, "RIGHT" } }
+local CONS_SPEC = { { 128, "LEFT" }, { 48, "LEFT" }, { 58, "LEFT" }, { 54, "RIGHT" }, { 62, "RIGHT" }, { 182, "LEFT" } }
 local CONS_DETAIL = { { 56, "RIGHT" }, { 500, "LEFT" } }
 
 function UI:ConsumeRows(rec)
 	local rows = {}
+	if not W.Cons then
+		tinsert(rows, row("|cffff7777Exit WoW and start it again to finish updating (a /reload isn't enough).|r"))
+		return rows
+	end
 	local list = {}
 	for name, p in pairs(rec.players) do tinsert(list, { name = name, p = p }) end
 	table.sort(list, function(a, b)
@@ -1506,13 +1548,27 @@ function UI:ConsumeRows(rec)
 	tinsert(rows, row("Flasked", frac(getn(flask), n), { tip = getn(noFlask) > 0 and { "No flask: " .. table.concat(noFlask, ", ") } or nil, tipTitle = "Flasks" }))
 	tinsert(rows, row("Food buff", frac(getn(food), n), { tip = getn(noFood) > 0 and { "No food buff: " .. table.concat(noFood, ", ") } or nil, tipTitle = "Food" }))
 	tinsert(rows, row("Protection potion active", getn(prot) .. " player(s)", { tip = getn(prot) > 0 and { table.concat(prot, ", ") } or nil, tipTitle = "Protection potions" }))
+	-- the slacker check: what each role should bring (DopingControl-style)
+	local slack, unknown = W.Cons.Slackers(rec)
+	local stip = { "Each role's must-haves: flask (big raids), food, the role's elixir,", "and a weapon oil / stone (seen with SuperWoW)." }
+	if getn(slack) > 0 then
+		tinsert(stip, " ")
+		local order, groups = W.Cons.ByNeed(slack)
+		for i = 1, getn(order) do tinsert(stip, "|cffff7777No " .. order[i] .. ":|r " .. table.concat(groups[order[i]], ", ")) end
+	end
+	if unknown > 0 then tinsert(stip, C_DIM .. unknown .. " out of range at the pull - not counted|r") end
+	tinsert(stip, "|cffffd100Click: post it (" .. W.Shout:ChannelLabel() .. ")|r")
+	tinsert(rows, row("Missing something for their role",
+		((getn(slack) == 0) and (C_GUILD .. "nobody|r") or ("|cffff7777" .. getn(slack) .. " player(s)|r"))
+			.. ((unknown > 0) and (C_DIM .. "  (" .. unknown .. " out of range)|r") or ""),
+		{ tipTitle = "Slacker check", tip = stip, click = function() W.Shout:Consumes(rec, "missing") end }))
 	tinsert(rows, row("Items used",
 		"|cff" .. USED_COL.Mana .. usedTotals.Mana .. " mana|r   |cff" .. USED_COL.Health .. usedTotals.Health .. " health|r   |cff"
 		.. USED_COL.Protection .. usedTotals.Protection .. " protection|r   |cff" .. USED_COL.Other .. usedTotals.Other .. " other|r"))
 
 	-- per player
 	head(rows, "Players")
-	colHead(rows, CONS_SPEC, { "Player", "Role", "Flask", "Buffs", "Items used" })
+	colHead(rows, CONS_SPEC, { "Player", "Role", "Flask", "Buffs", "Items used", "Missing for their role" })
 	for i = 1, n do
 		local it = list[i]
 		local p = it.p
@@ -1541,6 +1597,19 @@ function UI:ConsumeRows(rec)
 			tinsert(uparts, "|cff" .. (USED_COL[u[3]] or "ffffff") .. txt .. "|r")
 			tinsert(tip, { "used |cff" .. (USED_COL[u[3]] or "ffffff") .. u[1] .. "|r", u[2] .. "x  |cff888888" .. u[3] .. "|r" })
 		end
+		-- what their role should have brought (unknown when they were out of range)
+		local miss = W.Cons.Missing(p, rec.zone)
+		local missText
+		if not miss then
+			missText = C_DIM .. "? out of range at the pull|r"
+			tinsert(tip, 1, C_DIM .. "Out of range at the pull - can't say what they had, so they're not counted as missing anything.|r")
+		elseif getn(miss) == 0 then
+			missText = C_GUILD .. "nothing|r"
+		else
+			missText = "|cffff7777" .. table.concat(miss, ", ") .. "|r"
+			tinsert(tip, 1, "|cffff7777Missing for a " .. string.lower(W.Cons.ROLE_TEXT[W.Cons.Role(p) or ""] or "raider") .. ": " .. table.concat(miss, ", ") .. "|r")
+		end
+		if p.wpn and type(p.wpn) == "string" then tinsert(tip, "Weapon: |cffcc99ff" .. p.wpn .. "|r") end
 		if getn(tip) == 0 then tip = { "No consumables seen." } end
 		tip = withLegend(tip, "consumes")
 		local click = playerClick("consumes")
@@ -1548,10 +1617,11 @@ function UI:ConsumeRows(rec)
 		local extra = { tip = tip, tipTitle = it.name .. " - consumables", name = it.name, click = click }
 		tinsert(rows, cells(CONS_SPEC,
 			{ W.CName(it.name, p.class),
-			  C_DIM .. (ROLE_TAG[p.role] or "") .. "|r",
-			  hasFlask and "|cffcc99ffFlask|r" or "|cffff5555No flask|r",
+			  C_DIM .. (W.Cons.ROLE_TEXT[W.Cons.Role(p) or ""] or ROLE_TAG[p.role] or "") .. "|r",
+			  (p.read == false) and (C_DIM .. "?|r") or (hasFlask and "|cffcc99ffFlask|r" or "|cffff5555No flask|r"),
 			  C_TIME .. getn(cb) .. "|r" .. C_DIM .. " buffs|r",
-			  ((nUsed > 0) and (C_YOU .. nUsed .. "|r") or (C_DIM .. "0|r")) .. C_DIM .. " used|r" },
+			  ((nUsed > 0) and (C_YOU .. nUsed .. "|r") or (C_DIM .. "0|r")) .. C_DIM .. " used|r",
+			  missText },
 			{ tip = tip, tipTitle = extra.tipTitle, name = it.name, click = click }))
 		tinsert(rows, cells(CONS_DETAIL,
 			{ C_DIM .. "Buffs|r", getn(bparts) > 0 and table.concat(bparts, ", ") or "|cffff5555none|r" }, extra))
@@ -1768,9 +1838,9 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 		mine and (C_TIME .. B.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
 		"",
 		mine and (C_DIM .. B.Date(mine.d) .. ((mine.g and mine.g ~= "") and ("  with " .. mine.g) or "") .. "|r") or (C_DIM .. "none yet|r"),
-	}), mine and mine.slug and {
+	}, mine and mine.slug and {
 		tipTitle = "Your best", tip = { "Click: open that raid" },
-		click = function() UI.rk.log = { slug = mine.slug, guild = mine.g or "?", realm = B.Realm(), rec = mine, kind = kind, key = key }; UI:Refresh() end } or nil)
+		click = function() UI.rk.log = { slug = mine.slug, guild = mine.g or "?", realm = B.Realm(), rec = mine, kind = kind, key = key }; UI:Refresh() end } or nil))
 	if guild then
 		local g = B:GuildBest(realm, kind, key, guild)
 		local rank, of = B:Rank(realm, kind, key, guild, faction)
@@ -1786,9 +1856,9 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 			g and (C_TIME .. B.Fmt(g.t) .. "|r") or (C_DIM .. "-|r"),
 			rank and (rankTxt(rank) .. C_DIM .. " of " .. of .. "|r") or (g and (C_DIM .. B.Realm() .. "|r") or ""),
 			g and note or (C_DIM .. "no " .. ((kind == "kills") and "kill" or "clear") .. " yet|r"),
-		}), g and {
+		}, g and {
 			tipTitle = guild, tip = { "Click: open the raid this time came from" },
-			click = function() UI.rk.log = { slug = g.slug, guild = guild, realm = B.Realm(), rec = g, kind = kind, key = key }; UI:Refresh() end } or nil)
+			click = function() UI.rk.log = { slug = g.slug, guild = guild, realm = B.Realm(), rec = g, kind = kind, key = key }; UI:Refresh() end } or nil))
 	end
 end
 
@@ -2417,12 +2487,12 @@ function UI:PackRows(zone, name)
 		action("|cffff5555Delete this pack|r", "", function() M:Delete(zone, name); UI.mk.pack = nil end)
 	end
 
-	head(rows, "Mobs  " .. C_DIM .. "(click a mob for the next mark, right-click to take it out)|r")
+	head(rows, "Mobs  " .. C_DIM .. "(click a mob to pick its mark, right-click to take it out)|r")
 	colHead(rows, MOB_SPEC, { "", "Mark", "Mob", "NPC", "Status", "GUID" })
 	local list = {}
 	for g, m in pairs(pack.mobs) do tinsert(list, { g, m, M:MobName(pack, g) }) end
+	-- a fixed order (by name), so rows never jump while you change marks
 	table.sort(list, function(a, b)
-		if a[2] ~= b[2] then return a[2] > b[2] end
 		if a[3] ~= b[3] then return a[3] < b[3] end
 		return a[1] < b[1]
 	end)
@@ -2433,7 +2503,7 @@ function UI:PackRows(zone, name)
 		elseif UnitIsDead(g) then status = "|cffaa6666dead|r"
 		elseif m > 0 and GetRaidTargetIndex(g) == m then status = C_GUILD .. "marked|r"
 		else status = "|cff66ccffin range|r" end
-		local tip = { "Click: next mark (skull, cross, square ... star, none)", "Right-click: take it out of the pack" }
+		local tip = { "Click: pick its mark from all eight (or none)", "Right-click: take it out of the pack" }
 		if src == "builtin" or src == "live" then tinsert(tip, C_DIM .. "Changing a built-in pack saves your own copy of it.|r") end
 		tinsert(rows, cells(MOB_SPEC,
 			{ "", m > 0 and M.MarkText(m) or (C_DIM .. "none|r"), "|cffffffff" .. who .. "|r", C_DIM .. (M.NpcHex(g) or "") .. "|r", status, C_DIM .. g .. "|r" },
@@ -2441,12 +2511,11 @@ function UI:PackRows(zone, name)
 			  click = function(d, btn)
 				if btn == "RightButton" then
 					M:RemoveMob(zone, name, g)
+					UI:Refresh()
 				else
-					local nm = m - 1
-					if nm < 0 then nm = 8 end
-					M:SetMobMark(zone, name, g, nm)
+					M:PickMark(m, function(nm) M:SetMobMark(zone, name, g, nm); UI:Refresh() end,
+						function() M:RemoveMob(zone, name, g); UI:Refresh() end, who)
 				end
-				UI:Refresh()
 			  end }))
 	end
 	if getn(list) == 0 then tinsert(rows, row(C_DIM .. "No mobs in this pack.|r")) end
@@ -2486,7 +2555,7 @@ function UI:RefreshMarks()
 		rVerdict:SetText("|cffffd100Quick save:|r mark the mobs in game, click |cff33ff33Save marks as pack|r, type a name, Enter.\n"
 			.. "|cffffd100Mark a pack:|r hold Shift + Ctrl over a mob, or click |cffffd100Mark target's pack|r.")
 	end
-	hintText:SetText(UI.mk.pack and "Click a mob to change its mark  -  right-click to take it out" or "Click a pack to open it  -  Shift-click a pack to mark it now")
+	hintText:SetText(UI.mk.pack and "Click a mob to pick its mark  -  right-click to take it out" or "Click a pack to open it  -  Shift-click a pack to mark it now")
 	hintText:Show()
 	local rows = UI.mk.pack and UI:PackRows(zone, UI.mk.pack) or UI:ZoneRows(zone)
 	local key = "marks|" .. zone .. "|" .. (UI.mk.pack or "")
@@ -2844,6 +2913,7 @@ function UI:Refresh()
 	local e = W.env
 	local function yn(v, n) return (v and "|cff33ff33" or "|cffff3333") .. n .. "|r" end
 	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat"))
+	UI:UpdateAML()
 
 	UI:ApplyMode()
 	if UI.mode ~= "fights" and not (W.Board and W.Logs and W.Marks and W.Loot) then return UI:RefreshMissing() end

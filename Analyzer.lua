@@ -1000,7 +1000,7 @@ function A:Build(F, final)
 				alive = p._alive, act = p._act, deaths = deathsN,
 				kicks = p.kicks, dispels = p.dispels, tranqs = p.tranqs,
 				cons = p.nCons, consList = topList(p.consumes, 10),
-				cbuffs = buffList(p), used = usedList(p),
+				cbuffs = buffList(p), used = usedList(p), read = p.read, wpn = p.wpn,
 				hero = hero[name] and round1(hero[name].pts) or 0,
 				saves = hero[name] and getn(hero[name].list) or 0,
 				ds = topList(p.ds, 8), hs = topList(p.hs, 8), ts = topList(p.ts, 8),

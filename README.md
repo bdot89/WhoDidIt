@@ -28,7 +28,8 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 - 🎯 **Aggro & threat.** Every time the boss switched target, with the server's threat % at that moment. Non-tanks who rip aggro get blamed.
 - 📋 **Blame board.** Points for standing in fire, pulling aggro, bombing the raid, idling and low DPS, with a "Most to blame" verdict.
 - 🦸 **Heroes.** Game-saving plays: clutch heals, shields that ate a killing blow, taunt rescues, Blessing of Protection, battle res, Innervate, dispelled mind control.
-- 🧪 **Consumes.** Every player's flask, elixirs, food, juju and protection potions, plus every potion, rune, tea and healthstone they used.
+- 🧪 **Consumes.** Every player's flask, elixirs, food, juju and protection potions, plus every potion, rune, tea and healthstone they used. A **slacker check** says who's missing what their role needs, at every pull and every ready check.
+- 🎒 **Auto master looting.** Greys, whites and greens (and raid mats) handed out by themselves to you or anyone you pick, with a backup for when your bags are full.
 - 📣 **Shout-outs.** *Name & Shame* and *Big Them Up* awards, reports and per-player posts, sent to any channel in colour.
 - 📊 **Meters & timeline.** Damage, healing, taken, activity and utility, plus a full timeline of the fight.
 - 💀 **Auto marking.** Marks whole packs in one go, with ~365 raid packs built in, smart marks for tricky fights, and quick save for your own packs.
@@ -95,7 +96,7 @@ WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `
 | **Threat** | Boss target changes with threat % and a verdict, plus peak threat per player |
 | **Meters** | Damage, Healing, Taken, Activity, Utility (interrupts, dispels, tranqs, items) |
 | **Timeline** | Everything that happened, in order |
-| **Consumes** | Raid flask/food overview, then each player's buffs and items used. **Post summary / missing / everyone** buttons |
+| **Consumes** | Raid flask/food overview and the **slacker check** (who's missing what their role needs), then each player's buffs, items used and what they were missing. **Post summary / missing / everyone** and **Check raid now** buttons |
 
 ### Clicking names
 
@@ -242,7 +243,7 @@ Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one ge
 - **Zones** on the left: where you are first, then zones with your packs.
 - **Packs**: each pack's marks as icons, its mob count, how many of its mobs are in range right now, and whether it's
   built in or yours. Click a pack to open it; Shift-click marks it.
-- **Inside a pack**: every mob with its mark, NPC id and status (in range, marked, dead). Click a mob for the next mark;
+- **Inside a pack**: every mob with its mark, NPC id and status (in range, marked, dead). Click a mob to pick its mark from all eight;
   right-click takes it out. You can also add your target, rename the pack, or delete it. Changing a built-in pack saves
   your own copy, and **Restore** brings the original back.
 
@@ -271,6 +272,46 @@ marks.
 
 **Coming from AutoMarker?** WhoDidIt replaces it. If it's still installed, WhoDidIt brings over any packs you saved with
 `/am add` and switches AutoMarker off; from your next `/reload` WhoDidIt does the marking.
+
+## Consume check (slackers)
+
+Every pull, WhoDidIt reads each raider's consumable buffs, and their weapon oil or stone with SuperWoW. It then
+checks them against what their role should bring:
+
+| Role | Must-haves |
+| --- | --- |
+| Tank | flask, food, a defense elixir, an agility / strength buff |
+| Melee | flask, food, Mongoose / agility, strength / AP, a weapon stone |
+| Ranged | food, Mongoose / agility |
+| Caster | flask, food, an arcane elixir, a wizard oil |
+| Healer | flask, food, Mageblood, a mana oil |
+
+Flasks are only expected in the big raids (MC, BWL, AQ40, Naxx, ES, Karazhan).
+- **Consumes tab:** a "Missing something for their role" line (click it to post it), plus a **Missing** column for
+  each player.
+- **Name & Shame:** a **Consume Slacker** award.
+- **Ready checks:** every ready check (and **Check raid now**, or `/wdi check`) scans the raid and shows you who's
+  missing what. Only you see it; Shift-click or `/wdi check post` posts it. Turn it off with `/wdi readycheck off`.
+- **Fairness:** a player who can't be read (out of range) shows **?**. They're never counted as missing anything.
+
+The spell IDs, the aura names this server really uses and the per-role idea come from **DopingControl** by ShempError
+(MIT licence, [octowow.st/git/ShempError/DopingControl](https://octowow.st/git/ShempError/DopingControl)). For a full
+pre-raid matrix (gear enchants, hit, resistances), use DopingControl itself.
+
+## Auto master looting
+
+The **Auto-loot** button in the title bar (next to Nampower) shows whether it's on.
+- When it's on and you're the master looter, every grey, white and green item is handed out as soon as you open a
+  corpse, bind on pickup included. So are raid mats: Wartorn scraps, AQ idols, Fiery / Lava Cores, Elementium.
+- Epics are never handed out. You get a warning and a sound instead.
+- **Click** the button to choose who gets the loot (you, or anyone in the raid). You can also choose who gets it
+  **if your bags are full**: once you run out of space, the loot goes to them instead. So someone else can collect all
+  the trash loot, or you can collect it for them.
+- **Right-click** turns it on or off.
+- Commands: `/wdi aml` (on / off), `/wdi aml to <name|me>`, `/wdi aml backup <name|none>`, `/wdi aml always|never <item>`,
+  `/wdi aml list`. `/automl` works too.
+
+It replaces the AutoMasterLooter addon (by balake).
 
 ## Master looting (RollFor)
 

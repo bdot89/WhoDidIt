@@ -265,44 +265,33 @@ end
 
 function T:SnapshotBuffs()
 	F.buffs = {}
+	if not W.Cons then return end   -- new file: loads after a full restart
 	for name, e in pairs(W.roster.byName) do
 		local set = {}
-		if GetUnitData and e.guid then
-			local ok, ud = pcall(GetUnitData, e.guid)
-			if ok and type(ud) == "table" and type(ud.aura) == "table" then
-				for i = 1, 32 do
-					local id = ud.aura[i]
-					if id and id > 0 then
-						set[W.SpellName(id)] = true
-						F.buffsOk = true
-					end
-				end
-			end
-		elseif W.env.superwow then
-			for i = 1, 32 do
-				local tex, _, id = UnitBuff(e.unit, i)
-				if not tex then break end
-				if id then
-					set[W.SpellName(id)] = true
-					F.buffsOk = true
-				end
-			end
+		local p = T:P(name)
+		local ids = W.Cons.Auras(e.unit, e.guid)
+		for i = 1, getn(ids or {}) do
+			set[W.SpellName(ids[i])] = true
+			F.buffsOk = true
+			local b = W.Cons.BuffName(ids[i])
+			if b then p.cbuffs[b] = 0 end
 		end
 		F.buffs[name] = set
-		local p = T:P(name)
-		for b in pairs(set) do
-			if W.Data.consumeBuffs[b] then p.cbuffs[b] = 0 end
-		end
+		-- unreadable (out of range) = unknown, never "missing" in the consume check
+		p.read = ids and true or false
+		p.wpn = W.Cons.Weapon(e.unit)
 	end
 end
 
 -- a raid member gained a buff: remember consumables (protection potions etc.)
 function T:RaidBuff(guid, spellId)
+	if not W.Cons then return end
 	local e = W.roster.byGuid[guid]
 	if not e then return end
-	local sp = W.SpellName(spellId)
-	if not W.Data.consumeBuffs[sp] then return end
+	local sp = W.Cons.BuffName(spellId)
+	if not sp then return end
 	local p = T:P(e.name)
+	p.read = true   -- we saw them gain it, so they're readable
 	if not p.cbuffs[sp] then
 		p.cbuffs[sp] = GetTime() - F.t0
 		push(p, "buff", nil, sp)

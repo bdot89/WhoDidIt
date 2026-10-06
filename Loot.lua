@@ -94,7 +94,7 @@ L.SETTINGS = {
 	  } },
 	{ title = "Looting",
 	  items = {
-		{ "auto_loot", "auto-loot", "Auto-loot", "Items on RollFor's auto-loot list skip the roll.",
+		{ "auto_loot", "auto-loot", "RollFor's auto-loot list", "Items on RollFor's own list skip the roll.",
 		  { "Items on RollFor's auto-loot list are looted straight away without a roll.",
 		    "Manage the list with /rfal. Default: on." } },
 		{ "auto_loot_announce", "auto-loot-announce", "Announce auto-looted items", "Says in raid what was auto-looted.",

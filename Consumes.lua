@@ -1,0 +1,234 @@
+--[[--------------------------------------------------------------------
+	WhoDidIt - consume check
+
+	Reads a raider's consumable buffs and weapon oil / stone, and says what
+	they're missing for their role (D.consumeNeeds). Used by the pull
+	snapshot (Tracker), the Consumes tab, Name & Shame, and the ready-check
+	scan. Ideas from DopingControl by ShempError (MIT):
+	  - match buffs by spell ID as well as name
+	  - a player who can't be read (out of range) is "unknown", never
+	    "missing" - nobody is blamed on data we don't have
+	  - weapon oils / stones of other players via SuperWoW
+	    GetWeaponEnchantInfo(unit); no name + a readable main hand = none
+	  - a scan on every ready check
+----------------------------------------------------------------------]]
+
+local W = WhoDidIt
+local C = {}
+W.Cons = C
+
+local getn, tinsert = table.getn, table.insert
+
+------------------------------------------------------------------ reading a unit
+
+-- a buff's consumable name (or nil): by name, by spell ID, trimmed name
+function C.BuffName(id)
+	local D = W.Data
+	local name = W.SpellName(id)
+	local only = D.consumeIdOnly[name]
+	if only then return only[id] and name or nil end
+	if D.consumeBuffs[name] then return name end
+	local byId = D.consumeById[id]
+	if byId then return byId end
+	local trimmed = string.gsub(name or "", "^%s*(.-)%s*$", "%1")
+	if D.consumeBuffs[trimmed] then return trimmed end
+end
+
+-- main-hand oil / stone: a name or true = has one, false = has none,
+-- nil = can't tell (out of range, or no SuperWoW)
+function C.Weapon(unit)
+	if not GetWeaponEnchantInfo then return nil end
+	if UnitIsUnit(unit, "player") then
+		local ok, has = pcall(GetWeaponEnchantInfo)
+		if ok then return has and true or false end
+		return nil
+	end
+	if not W.env.superwow then return nil end
+	local ok, name = pcall(GetWeaponEnchantInfo, unit)
+	if not ok then return nil end
+	if type(name) == "string" and name ~= "" then return name end
+	if name == nil then
+		-- no imbue name: only a real "none" if we can see their main hand at all
+		local lok, link = pcall(GetInventoryItemLink, unit, 16)
+		if lok and link then return false end
+	end
+	return nil
+end
+
+-- every buff (spell ID) on a unit, or nil when it can't be read
+function C.Auras(unit, guid)
+	local ids = {}
+	if GetUnitData and guid then
+		local ok, ud = pcall(GetUnitData, guid)
+		if ok and type(ud) == "table" and type(ud.aura) == "table" then
+			for i = 1, 32 do
+				local id = ud.aura[i]
+				if id and id > 0 then tinsert(ids, id) end
+			end
+		end
+	end
+	if getn(ids) == 0 and W.env.superwow then
+		for i = 1, 32 do
+			local tex, _, id = UnitBuff(unit, i)
+			if not tex then break end
+			if id then tinsert(ids, id) end
+		end
+	end
+	if getn(ids) == 0 then return nil end   -- everyone has some buff: none = not readable
+	return ids
+end
+
+------------------------------------------------------------------ roles and needs
+
+local MELEE = { WARRIOR = true, ROGUE = true, PALADIN = true }
+local CASTER = { MAGE = true, WARLOCK = true, PRIEST = true }
+
+-- tank / healer / melee / ranged / caster (p = a report's player)
+function C.Role(p)
+	if not p then return nil end
+	if p.role == "tank" then return "tank" end
+	if p.role == "heal" then return "healer" end
+	local c = p.class
+	if c == "HUNTER" then return "ranged" end
+	if MELEE[c] then return "melee" end
+	if CASTER[c] then return "caster" end
+	-- druids and shamans: melee if their top damage was melee swings
+	if p.ds and p.ds[1] and p.ds[1][1] == "Melee" then return "melee" end
+	if c == "DRUID" or c == "SHAMAN" then return "caster" end
+	return nil
+end
+
+C.ROLE_TEXT = { tank = "Tank", healer = "Healer", melee = "Melee", ranged = "Ranged", caster = "Caster" }
+
+-- what a player is missing for their role: list of labels, or nil when
+-- they couldn't be read (unknown). cbuffs = { { name, cat, t }, ... }
+function C.Missing(p, zone)
+	if not p or p.read == false then return nil end
+	local role = C.Role(p)
+	local needs = role and W.Data.consumeNeeds[role]
+	if not needs then
+		needs = { { "flask", { "FLASK" } }, { "food", { "FOOD" } } }
+	end
+	local have = {}
+	for i = 1, getn(p.cbuffs or {}) do
+		local slot = W.Data.consumeSlot[p.cbuffs[i][1]]
+		if slot then have[slot] = true end
+	end
+	local out = {}
+	for i = 1, getn(needs) do
+		local label, slots = needs[i][1], needs[i][2]
+		if slots == "WPN" then
+			if p.wpn == false then tinsert(out, label) end
+		elseif not (label == "flask" and zone and not W.Data.flaskZones[zone]) then
+			local ok = false
+			for j = 1, getn(slots) do if have[slots[j]] then ok = true end end
+			if not ok then tinsert(out, label) end
+		end
+	end
+	return out
+end
+
+-- players missing something: { { name, class, missing = {...} } }, most missing first;
+-- plus how many couldn't be read
+function C.Slackers(rec)
+	local out, unknown = {}, 0
+	for name, p in pairs(rec.players or {}) do
+		local miss = C.Missing(p, rec.zone)
+		if not miss then
+			unknown = unknown + 1
+		elseif getn(miss) > 0 then
+			tinsert(out, { name = name, class = p.class, role = C.Role(p), missing = miss })
+		end
+	end
+	table.sort(out, function(a, b)
+		if getn(a.missing) ~= getn(b.missing) then return getn(a.missing) > getn(b.missing) end
+		return a.name < b.name
+	end)
+	return out, unknown
+end
+
+-- "No flask: A, B   No food: C" groups for chat
+function C.ByNeed(list)
+	local order, groups = {}, {}
+	for i = 1, getn(list) do
+		for j = 1, getn(list[i].missing) do
+			local m = list[i].missing[j]
+			if not groups[m] then groups[m] = {}; tinsert(order, m) end
+			tinsert(groups[m], list[i].name)
+		end
+	end
+	return order, groups
+end
+
+------------------------------------------------------------------ ready-check scan
+
+-- the latest role we saw each player in (from saved fights)
+local function lastRoles()
+	local roles = {}
+	local fights = WhoDidItDB and WhoDidItDB.fights or {}
+	for i = getn(fights), 1, -1 do
+		for name, p in pairs(fights[i].players or {}) do roles[name] = p.role end
+	end
+	return roles
+end
+
+-- scan the raid right now: a fake "report" the checks above understand
+function C:Scan()
+	local roles = lastRoles()
+	local rec = { players = {}, zone = GetRealZoneText(), enc = "Ready check" }
+	for name, e in pairs(W.roster.byName) do
+		local p = { class = e.class, role = roles[name], cbuffs = {} }
+		local ids = C.Auras(e.unit, e.guid)
+		if ids then
+			for i = 1, getn(ids) do
+				local b = C.BuffName(ids[i])
+				if b then tinsert(p.cbuffs, { b, W.Data.consumeBuffs[b], 0 }) end
+			end
+		else
+			p.read = false
+		end
+		p.wpn = C.Weapon(e.unit)
+		-- healers / tanks we haven't seen yet only get the flask + food check
+		if not p.role and (e.class == "PRIEST" or e.class == "DRUID" or e.class == "SHAMAN" or e.class == "PALADIN") then
+			p.role = "unknown"
+		end
+		rec.players[name] = p
+	end
+	return rec
+end
+
+-- chat lines for a check: grouped by what's missing
+function C:Lines(rec, title)
+	local list, unknown = C.Slackers(rec)
+	local n = 0
+	for _ in pairs(rec.players) do n = n + 1 end
+	local out = { "[WhoDidIt] " .. (title or "CONSUME CHECK") .. ": " .. (n - unknown - getn(list)) .. " of " .. n .. " ready"
+		.. ((unknown > 0) and (", " .. unknown .. " out of range") or "") }
+	if getn(list) == 0 then
+		tinsert(out, "Everyone in range has their consumables. Nice.")
+		return out
+	end
+	local order, groups = C.ByNeed(list)
+	for i = 1, getn(order) do
+		tinsert(out, "No " .. order[i] .. ": " .. table.concat(groups[order[i]], ", "))
+	end
+	return out
+end
+
+-- /wdi check [post]: scan now, show (or post) who's missing what
+function C:Check(post)
+	if GetNumRaidMembers() == 0 and GetNumPartyMembers() == 0 then
+		W.Print("Join a group first - the check looks at your raid.")
+		return
+	end
+	W:UpdateRoster()
+	local rec = C:Scan()
+	local classes = {}
+	for name, p in pairs(rec.players) do classes[name] = p.class end
+	W:Send(C:Lines(rec, "READY CHECK - CONSUMES"), post and nil or "SELF", classes)
+end
+
+-- a ready check: scan and show it to you (only you - nobody gets spammed)
+W:On("READY_CHECK", function()
+	if WhoDidItDB and WhoDidItDB.opts.readyCheckScan ~= false then C:Check(false) end
+end)

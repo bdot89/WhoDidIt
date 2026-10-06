@@ -368,6 +368,89 @@ D.consumeBuffs = {
 	["Greater Stoneshield"] = "Potion", ["Stoneshield"] = "Potion", ["Mighty Rage"] = "Potion",
 }
 
+-- Which consumable "slot" each buff fills (one of each slot can be up at a
+-- time), the aura names this server really uses (often not the item's name)
+-- and spell IDs - from DopingControl by ShempError (MIT licence,
+-- octowow.st/git/ShempError/DopingControl), measured on OctoWoW / Turtle.
+D.consumeSlot = {
+	["Flask of the Titans"] = "FLASK", ["Flask of Supreme Power"] = "FLASK", ["Supreme Power"] = "FLASK",
+	["Flask of Distilled Wisdom"] = "FLASK", ["Distilled Wisdom"] = "FLASK", ["Flask of Chromatic Resistance"] = "FLASK",
+	["Chromatic Resistance"] = "FLASK", ["Flask of Petrification"] = "FLASK", ["Petrification"] = "FLASK",
+	["Well Fed"] = "FOOD", ["Increased Stamina"] = "FOOD", ["Increased Intellect"] = "FOOD", ["Increased Agility"] = "FOOD",
+	["Increased Strength"] = "FOOD", ["Dragonbreath Chili"] = "FOOD",
+	["Winterfall Firewater"] = "AP", ["Juju Might"] = "AP",
+	["Juju Power"] = "STR", ["Elixir of Giants"] = "STR", ["Elixir of the Giants"] = "STR", ["Elixir of Brute Force"] = "STR",
+	["Elixir of the Mongoose"] = "AGI", ["Elixir of Greater Agility"] = "AGI", ["Greater Agility"] = "AGI", ["Elixir of Agility"] = "AGI",
+	["Rage of Ages"] = "BL", ["R.O.I.D.S."] = "BL", ["Strike of the Scorpok"] = "BL", ["Ground Scorpok Assay"] = "BL",
+	["Spirit of Boar"] = "BL", ["Spirit of the Boar"] = "BL", ["Lung Juice Cocktail"] = "BL", ["Infallible Mind"] = "BL",
+	["Cerebral Cortex Compound"] = "BL", ["Spiritual Domination"] = "BL", ["Gizzard Gum"] = "BL",
+	["Spirit of Zanza"] = "ZANZA", ["Swiftness of Zanza"] = "ZANZA", ["Sheen of Zanza"] = "ZANZA",
+	["Greater Arcane Elixir"] = "GAE", ["Arcane Elixir"] = "GAE",
+	["Elixir of Shadow Power"] = "SCHOOL", ["Shadow Power"] = "SCHOOL", ["Elixir of Frost Power"] = "SCHOOL", ["Frost Power"] = "SCHOOL",
+	["Greater Frost Power"] = "SCHOOL", ["Elixir of Greater Firepower"] = "SCHOOL", ["Greater Firepower"] = "SCHOOL",
+	["Elixir of Firepower"] = "SCHOOL",
+	["Dreamtonic"] = "DREAMT", ["Dreamshard Elixir"] = "SHARD",
+	["Mageblood Potion"] = "MP5", ["Mageblood"] = "MP5", ["Mana Regeneration"] = "MP5",
+	["Elixir of Superior Defense"] = "ARM", ["Elixir of Greater Defense"] = "ARM", ["Greater Armor"] = "ARM",
+	["Elixir of Fortitude"] = "HPELX", ["Health II"] = "HPELX",
+	["Medivh's Merlot"] = "ALC", ["Medivh's Merlot Blue"] = "ALC", ["Medivh's Merlot Blue Label"] = "ALC",
+	["Rumsey Rum Black Label"] = "ALC", ["Rumsey Rum"] = "ALC", ["Rumsey Rum Light"] = "ALC", ["Gordok Green Grog"] = "ALC",
+	["Kreeg's Stout Beatdown"] = "ALC",
+	["Greater Fire Protection"] = "PROT", ["Fire Protection"] = "PROT", ["Greater Frost Protection"] = "PROT",
+	["Frost Protection"] = "PROT", ["Greater Nature Protection"] = "PROT", ["Nature Protection"] = "PROT",
+	["Greater Shadow Protection"] = "PROT", ["Shadow Protection"] = "PROT", ["Holy Protection"] = "PROT",
+	["Greater Arcane Protection"] = "PROT", ["Arcane Protection"] = "PROT",
+}
+local SLOT_CAT = {
+	FLASK = "Flask", FOOD = "Food", ALC = "Food", AP = "Buff", BL = "Buff", ZANZA = "Buff", STR = "Elixir", AGI = "Elixir",
+	GAE = "Elixir", SCHOOL = "Elixir", DREAMT = "Elixir", SHARD = "Elixir", MP5 = "Elixir", ARM = "Elixir", HPELX = "Elixir",
+	PROT = "Protection",
+}
+for name, slot in pairs(D.consumeSlot) do
+	if not D.consumeBuffs[name] then D.consumeBuffs[name] = SLOT_CAT[slot] end
+end
+
+-- spell ID -> aura name, for when the client reports a name we don't know
+-- (a trailing space, a different rank name...)
+D.consumeById = {
+	[17626] = "Flask of the Titans", [17628] = "Flask of Supreme Power", [17627] = "Flask of Distilled Wisdom",
+	[17629] = "Flask of Chromatic Resistance", [17624] = "Flask of Petrification", [15852] = "Dragonbreath Chili",
+	[17038] = "Winterfall Firewater", [16329] = "Juju Might", [16323] = "Juju Power", [11405] = "Elixir of the Giants",
+	[17537] = "Elixir of Brute Force", [17538] = "Elixir of the Mongoose", [11334] = "Greater Agility",
+	[11328] = "Elixir of Agility", [10667] = "Rage of Ages", [10669] = "Strike of the Scorpok", [10668] = "Spirit of Boar",
+	[10692] = "Infallible Mind", [10693] = "Spiritual Domination", [24382] = "Spirit of Zanza",
+	[17539] = "Greater Arcane Elixir", [11390] = "Arcane Elixir", [11474] = "Elixir of Shadow Power",
+	[21920] = "Elixir of Frost Power", [56544] = "Greater Frost Power", [26276] = "Elixir of Greater Firepower",
+	[7844] = "Elixir of Firepower", [45489] = "Dreamtonic", [45427] = "Dreamshard Elixir", [24363] = "Mageblood Potion",
+	[11348] = "Elixir of Superior Defense", [11349] = "Elixir of Greater Defense", [3593] = "Health II",
+	[57106] = "Medivh's Merlot", [57107] = "Medivh's Merlot Blue Label", [25804] = "Rumsey Rum Black Label",
+	[20875] = "Rumsey Rum", [25037] = "Rumsey Rum Light", [22789] = "Gordok Green Grog", [22790] = "Kreeg's Stout Beatdown",
+	[17543] = "Greater Fire Protection", [7233] = "Fire Protection", [17544] = "Greater Frost Protection",
+	[7239] = "Frost Protection", [17546] = "Greater Nature Protection", [7254] = "Nature Protection",
+	[17548] = "Greater Shadow Protection", [7242] = "Shadow Protection", [7245] = "Holy Protection",
+	[17549] = "Greater Arcane Protection",
+}
+-- names shared with a class buff: only these spell IDs are the consumable
+-- (the priest's Shadow Protection is not a Shadow Protection Potion)
+D.consumeIdOnly = { ["Shadow Protection"] = { [7242] = true, [17548] = true } }
+
+-- what each role is expected to bring, for the slacker check. Each need is
+-- met by any one of its slots ("WPN" = an oil or stone on the main hand).
+-- Flasks are only expected in the big raids (D.flaskZones).
+D.consumeNeeds = {
+	tank   = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "defense elixir", { "ARM", "HPELX" } },
+	           { "agility / strength", { "AGI", "STR", "AP", "BL" } } },
+	melee  = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "Mongoose / agility", { "AGI" } },
+	           { "strength / AP", { "STR", "AP", "BL" } }, { "weapon stone", "WPN" } },
+	ranged = { { "food", { "FOOD" } }, { "Mongoose / agility", { "AGI" } } },
+	caster = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "arcane elixir", { "GAE" } }, { "wizard oil", "WPN" } },
+	healer = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "Mageblood", { "MP5" } }, { "mana oil", "WPN" } },
+}
+D.flaskZones = {
+	["Molten Core"] = true, ["Blackwing Lair"] = true, ["Ahn'Qiraj"] = true, ["Naxxramas"] = true,
+	["Emerald Sanctum"] = true, ["Tower of Karazhan"] = true,
+}
+
 -- used items on the Consumes tab are grouped by these name patterns
 D.protItems = { "Protection Potion", "Free Action", "Invulnerability", "Restorative", "Stoneshield", "Mighty Rage" }
 

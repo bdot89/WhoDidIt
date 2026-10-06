@@ -409,6 +409,8 @@ function S:ShameLines(rec, who)
 			if d.name == who then tinsert(bits, "died at " .. FmtTime(d.t) .. " (" .. d.text .. ")") break end
 		end
 		if p.act and p.act < 0.6 then tinsert(bits, "only active " .. pct(p.act) .. " of the fight") end
+		local miss = W.Cons and W.Cons.Missing(p, rec.zone)
+		if miss and getn(miss) > 0 then tinsert(bits, "no " .. table.concat(miss, ", no ")) end
 		local med = medianDps(rec)
 		if p.role == "dps" and med and dps(rec, p) < med * 0.6 then
 			tinsert(bits, floor(dps(rec, p)) .. " DPS vs a raid median of " .. floor(med))
@@ -463,6 +465,11 @@ function S:ShameLines(rec, who)
 		if p.role ~= "tank" and p.act and p.act < 0.6 then return 1 - p.act end
 	end)
 	if n then tinsert(out, "AFK Award: " .. n .. " was only doing something " .. pct(p.act) .. " of the time") end
+
+	local slack = W.Cons and W.Cons.Slackers(rec)
+	if slack and slack[1] and getn(slack[1].missing) >= 2 then
+		tinsert(out, "Consume Slacker: " .. slack[1].name .. " turned up without " .. table.concat(slack[1].missing, ", "))
+	end
 
 	local med = medianDps(rec)
 	if med and med > 0 then
@@ -628,11 +635,22 @@ function S:ConsumeLines(rec, mode)
 		tinsert(prep, { it.name, getn(it.p.cbuffs), nu })
 	end
 
-	if mode == "missing" then
+	if mode == "missing" and not W.Cons then
 		tinsert(out, header("CONSUMES CHECK", rec))
-		addList(out, "No flask", noFlask, "everyone was flasked!")
-		addList(out, "No food buff", noFood, "everyone ate!")
-		addList(out, "No elixirs", noElixir, "everyone had elixirs!")
+		tinsert(out, "Restart WoW to load the consume check.")
+		return out
+	end
+	if mode == "missing" then
+		-- what each player's role needs (flask, food, role elixir, weapon oil/stone)
+		tinsert(out, header("CONSUMES CHECK", rec))
+		local slack, unknown = W.Cons.Slackers(rec)
+		if getn(slack) == 0 then
+			tinsert(out, "Everyone had the consumables their role needs!")
+		else
+			local order, groups = W.Cons.ByNeed(slack)
+			for i = 1, getn(order) do addList(out, "No " .. order[i], groups[order[i]], "") end
+		end
+		if unknown > 0 then tinsert(out, unknown .. " player(s) were out of range at the pull, so they aren't counted.") end
 	elseif mode == "full" then
 		tinsert(out, header("CONSUMES", rec))
 		for i = 1, n do
