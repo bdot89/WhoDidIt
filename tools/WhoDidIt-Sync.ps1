@@ -387,7 +387,7 @@ function Sync {
         $att = Get-Attendance $c.id $c.realm $cache
         if ($att) {
             $c.faction = $att.faction
-            foreach ($me in $att.mine) {
+            foreach ($me in @($att.mine | Where-Object { $MyChars.Count -gt 0 })) {
                 $p = $c.Clone(); $p.char = $me
                 Keep-Best $myClears "$($c.realm)|$me|$($c.instance)" $p
             }
@@ -501,7 +501,8 @@ function Sync {
     if ($newest) { $cache.lastUpload = $newest }
     Save-Cache $cache
     $k = Write-Output-File $clears $myClears $cache "ok"
-    Log "Done: $($clears.Count) clears, $k boss kill records, $($myClears.Count) of your clears -> $OutFile"
+    $mineNote = if ($MyChars.Count -gt 0) { ", $($myClears.Count) of your clears" } else { "" }
+    Log "Done: $($clears.Count) clears, $k boss kill records$mineNote -> $OutFile"
 }
 
 # ------------------------------------------------------------------ main

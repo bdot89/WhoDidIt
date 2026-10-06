@@ -19,8 +19,9 @@ $lua = Join-Path $repo "ChronicleData.lua"
 & (Join-Path $PSScriptRoot "WhoDidIt-Sync.ps1") -CI -DataDir $ci -LuaOut $lua -DetailsPerSync 600
 
 Push-Location $repo
+$ErrorActionPreference = "Continue"   # git prints line-ending warnings on stderr
 try {
-    git add ChronicleData.lua
+    git add ChronicleData.lua 2>$null
     # only the "synced at" stamp changed: nothing worth publishing
     $real = @(git diff --cached -U0 -- ChronicleData.lua | Where-Object { $_ -match '^[+-]' -and $_ -notmatch '^(\+\+\+|---)' -and $_ -notmatch 'WDICHRON\|' }).Count
     if ($real -eq 0) {
@@ -28,8 +29,10 @@ try {
         Write-Host "No new raid times - nothing to publish."
         return
     }
-    git commit -q -m ("Chronicle raid times " + (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm") + " UTC") -- ChronicleData.lua
-    git push -q
+    git commit -q -m ("Chronicle raid times " + (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm") + " UTC") -- ChronicleData.lua 2>$null
+    if ($LASTEXITCODE -ne 0) { throw "git commit failed" }
+    git push -q 2>$null
+    if ($LASTEXITCODE -ne 0) { throw "git push failed - check you can push to the repository" }
     Write-Host "Published new raid times ($real changed lines)."
 } finally {
     Pop-Location
