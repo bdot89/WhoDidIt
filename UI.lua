@@ -728,7 +728,8 @@ end)
 tooltip(shameBtn, "Name & Shame", function()
 	return {
 		"Post this fight's hall of shame: Most to blame, Threat Junkie, Floor Inspector,",
-		"Fire Enthusiast, Bomb Squad, AFK Award, Participation Trophy.",
+		"Fire Enthusiast, Bomb Squad, AFK Award, Participation Trophy, plus two bonus awards",
+		"(Glass Cannon, Potion Hoarder, Splattered...). Award names change every post.",
 		"Shame one player: Shift-click their name anywhere in the window.",
 		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
 	}
@@ -740,7 +741,8 @@ end)
 tooltip(praiseBtn, "Big Them Up", function()
 	return {
 		"Post this fight's stars: Damage King, Top Healer, Iron Wall, Kick Master,",
-		"Cleanser, Tranq Sniper, Never Stops, and everyone who played flawlessly.",
+		"Cleanser, Tranq Sniper, Never Stops, everyone who played flawlessly, plus two bonus",
+		"awards (Biggest Hit, Crit Machine, Last One Standing...). Award names change every post.",
 		"Big up one player: Alt-click their name anywhere in the window.",
 		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
 	}

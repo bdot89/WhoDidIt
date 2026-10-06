@@ -18,8 +18,67 @@ S.LABELS = {
 	OFFICER = "Officer", SAY = "Say", YELL = "Yell", SELF = "Only me",
 }
 
-local MAX_SHAME  = 11   -- header, top 3, up to 7 awards
-local MAX_PRAISE = 8
+local MAX_SHAME  = 12   -- header, top 3, up to 8 awards
+local MAX_PRAISE = 10
+
+-- every award has a few names; one is picked at random each post so the
+-- shout-outs stay fresh. Letters, spaces, ' and & only (the title colouring
+-- stops at anything else), 31 characters at most.
+local TITLES = {
+	-- name & shame
+	junkie  = { "Threat Junkie", "Aggro Magnet", "Tank Wannabe", "Boss's New Best Friend", "Threat Meter Ignorer" },
+	floor   = { "Floor Inspector", "Carpet Tester", "Dirt Nap Champion", "Spirit Healer's Regular", "Professional Corpse", "First Class to the Graveyard" },
+	fire    = { "Fire Enthusiast", "Puddle Jumper", "Bad Stuff Connoisseur", "Floor Is Lava Champion", "Hot Tub Enjoyer" },
+	bomb    = { "Bomb Squad", "Walking Disaster", "Human Grenade", "Friendly Fire Expert" },
+	afk     = { "AFK Award", "Screensaver", "Statue of the Week", "Raid Decoration" },
+	slacker = { "Consume Slacker", "Raiding Naked", "Buffless Wonder", "Too Cheap for Flasks" },
+	trophy  = { "Participation Trophy", "Pacifist", "Gentle Soul", "Damage Optional" },
+	thinice = { "Living on the Edge", "Thin Ice", "Threat Tightrope" },
+	tankcos = { "Tank Cosplayer", "Off Tank Volunteer", "Boss Babysitter" },
+	chewtoy = { "Chew Toy", "Punching Bag", "Boss's Favourite Snack" },
+	hoarder = { "Potion Hoarder", "Died Rich", "Saving It for Later" },
+	splat   = { "Splattered", "One Shot Wonder", "Flattened", "Pancake of the Day" },
+	glass   = { "Glass Cannon", "All Gas No Brakes", "Pumped Then Dumped" },
+	-- big them up
+	life    = { "Lifesaver", "Guardian Angel", "Clutch God", "Raid Insurance" },
+	dmg     = { "Damage King", "Big Pumper", "Meter Melter", "Top of the Charts" },
+	heal    = { "Top Healer", "Green Machine", "Health Bar Hero", "Spirit Healer's Rival" },
+	wall    = { "Iron Wall", "Unbreakable", "Brick Wall", "Boss's Worst Nightmare" },
+	busy    = { "Never Stops", "Energizer Bunny", "Button Masher", "No Rest Days" },
+	clean   = { "Flawless", "Clean Hands", "Not a Scratch" },
+	bighit  = { "Biggest Hit", "One Punch", "Heavy Hitter" },
+	bigheal = { "Biggest Heal", "Mega Heal", "Big Splash" },
+	crit    = { "Crit Machine", "Lucky Dice", "Crit Happens" },
+	bossdmg = { "Boss Specialist", "Eyes on the Prize", "Boss Hunter" },
+	last    = { "Last One Standing", "Turned Off the Lights", "Final Boss of the Raid" },
+	pharm   = { "Walking Pharmacy", "Potion Sommelier", "Came Prepared" },
+	kick    = { "Kick Master", "Silencer", "Spell Thief" },
+	cleanse = { "Cleanser", "Curse Janitor", "Dispel Machine" },
+	tranq   = { "Tranq Sniper", "Frenzy Fixer", "Calm Bringer" },
+}
+S.TITLES = TITLES
+
+local function title(key)
+	local l = TITLES[key]
+	return l[math.random(getn(l))]
+end
+
+local function shuffle(l)
+	for i = getn(l), 2, -1 do
+		local j = math.random(i)
+		l[i], l[j] = l[j], l[i]
+	end
+end
+
+-- the main awards first, then up to 2 extra ones picked at random, within max
+local function fill(out, main, extra, max)
+	shuffle(extra)
+	local room = max - getn(out)
+	local nExtra = math.min(getn(extra), 2, math.max(0, room))
+	local nMain = math.min(getn(main), room - nExtra)
+	for i = 1, nMain do tinsert(out, main[i]) end
+	for i = 1, nExtra do tinsert(out, extra[i]) end
+end
 
 ------------------------------------------------------------------ channel handling
 
@@ -546,42 +605,48 @@ function S:ShameLines(rec, who)
 		tinsert(out, PODIUM[shown] .. ": " .. b.name .. " - " .. b.pts .. " pts - " .. groupedReasons(b, 2))
 	end
 
+	local main, extra = {}, {}
+
 	local n, p, v = best(rec, function(p) return p.pulls end)
+	local junkie = n
 	if n then
-		tinsert(out, "Threat Junkie: " .. n .. " - ripped aggro off the tank " .. v .. "x")
+		tinsert(main, title("junkie") .. ": " .. n .. " - ripped aggro off the tank " .. v .. "x")
 	else
 		local tn, tv
 		for name, t in pairs(rec.threat or {}) do
 			local tp = P[name]
 			if tp and tp.role ~= "tank" and t.perc >= 100 and (not tv or t.perc > tv) then tn, tv = name, t.perc end
 		end
-		if tn then tinsert(out, "Threat Junkie: " .. tn .. " - hit " .. tv .. "% threat, living dangerously") end
+		if tn then tinsert(main, title("junkie") .. ": " .. tn .. " - hit " .. tv .. "% threat, living dangerously") end
+		junkie = tn
 	end
 
+	-- the deaths that were somebody's own doing (not mind control, not the mechanic, not the wipe)
+	local real = {}
 	for i = 1, getn(rec.deaths) do
 		local d = rec.deaths[i]
-		if not d.late and d.kind ~= "mc" and d.kind ~= "expected" then
-			tinsert(out, "Floor Inspector: " .. d.name .. " - first to die, at " .. FmtTime(d.t) .. " (" .. d.text .. ")")
-			break
-		end
+		if not d.late and d.kind ~= "mc" and d.kind ~= "expected" then tinsert(real, d) end
+	end
+	if real[1] then
+		tinsert(main, title("floor") .. ": " .. real[1].name .. " - first to die, at " .. FmtTime(real[1].t) .. " (" .. real[1].text .. ")")
 	end
 
 	n, p, v = best(rec, function(p) return p.avoidDmg end)
 	if n then
-		tinsert(out, "Fire Enthusiast: " .. n .. " - soaked " .. FmtNum(v) .. " avoidable damage (" .. (p.worstSpell or "?") .. " x" .. (p.worstHits or p.avoidHits or 0) .. ")")
+		tinsert(main, title("fire") .. ": " .. n .. " - soaked " .. FmtNum(v) .. " avoidable damage (" .. (p.worstSpell or "?") .. " x" .. (p.worstHits or p.avoidHits or 0) .. ")")
 	end
 
 	n, p, v = best(rec, function(p) return p.splash end)
-	if n then tinsert(out, "Bomb Squad: " .. n .. " - took " .. v .. " raider(s) with them") end
+	if n then tinsert(main, title("bomb") .. ": " .. n .. " - took " .. v .. " raider(s) with them") end
 
 	n, p, v = best(rec, function(p)
 		if p.role ~= "tank" and p.act and p.act < 0.6 then return 1 - p.act end
 	end)
-	if n then tinsert(out, "AFK Award: " .. n .. " - only doing something " .. pct(p.act) .. " of the time") end
+	if n then tinsert(main, title("afk") .. ": " .. n .. " - only doing something " .. pct(p.act) .. " of the time") end
 
 	local slack = W.Cons and W.Cons.Slackers(rec)
 	if slack and slack[1] and getn(slack[1].missing) >= 2 then
-		tinsert(out, "Consume Slacker: " .. slack[1].name .. " - turned up without " .. table.concat(slack[1].missing, ", "))
+		tinsert(main, title("slacker") .. ": " .. slack[1].name .. " - turned up without " .. table.concat(slack[1].missing, ", "))
 	end
 
 	local med = medianDps(rec)
@@ -589,11 +654,55 @@ function S:ShameLines(rec, who)
 		n, p, v = best(rec, function(p)
 			if p.role == "dps" and (p.alive or 0) >= 30 and dps(rec, p) < med * 0.5 then return med - dps(rec, p) end
 		end)
-		if n then tinsert(out, "Participation Trophy: " .. n .. " - " .. floor(dps(rec, p)) .. " DPS (raid median " .. floor(med) .. ")") end
+		if n then tinsert(main, title("trophy") .. ": " .. n .. " - " .. floor(dps(rec, p)) .. " DPS (raid median " .. floor(med) .. ")") end
 	end
 
+	-- extras: two of these, picked at random, when there's room
+
+	-- close to pulling, but didn't
+	local tn, tv
+	for name, t in pairs(rec.threat or {}) do
+		local tp = P[name]
+		if tp and tp.role ~= "tank" and name ~= junkie and t.perc >= 90 and t.perc < 100 and (not tv or t.perc > tv) then tn, tv = name, t.perc end
+	end
+	if tn then tinsert(extra, title("thinice") .. ": " .. tn .. " - peaked at " .. tv .. "% threat and lived to tell the tale") end
+
+	n, p, v = best(rec, function(p) if p.role ~= "tank" and (p.aggro or 0) >= 3 then return p.aggro end end)
+	if n then tinsert(extra, title("tankcos") .. ": " .. n .. " - had the boss's attention for " .. floor(v) .. " seconds") end
+
+	n, p, v = best(rec, function(p) if p.role ~= "tank" then return p.taken end end)
+	if n and v >= 5000 then tinsert(extra, title("chewtoy") .. ": " .. n .. " - took " .. FmtNum(v) .. " damage without being a tank") end
+
+	-- died with their potion or healthstone off cooldown (not used within its cooldown)
+	for i = 1, getn(real) do
+		local d, item = real[i], nil
+		for j = 1, getn(d.ready or {}) do
+			local r = d.ready[j]
+			if r[2] == "potion" then item = "their potion"
+			elseif r[2] == "healthstone" and not item then item = "a healthstone" end
+		end
+		if item then
+			tinsert(extra, title("hoarder") .. ": " .. d.name .. " - died at " .. FmtTime(d.t) .. " with " .. item .. " off cooldown")
+			break
+		end
+	end
+
+	local big
+	for i = 1, getn(real) do
+		if (real[i].killAmt or 0) >= 3000 and (not big or real[i].killAmt > big.killAmt) then big = real[i] end
+	end
+	if big then tinsert(extra, title("splat") .. ": " .. big.name .. " - one hit of " .. FmtNum(big.killAmt) .. " from " .. (big.killer or "something big")) end
+
+	for i = 1, getn(real) do
+		local r = rankOf(rec, real[i].name, "dmg")
+		if r and r <= 3 and P[real[i].name] and P[real[i].name].role == "dps" then
+			tinsert(extra, title("glass") .. ": " .. real[i].name .. " - #" .. r .. " on damage, then died at " .. FmtTime(real[i].t))
+			break
+		end
+	end
+
+	fill(out, main, extra, MAX_SHAME)
 	if getn(out) == 1 then tinsert(out, "Nobody to shame - clean fight. Suspicious.") end
-	while getn(out) > MAX_SHAME do tremove(out) end
 	return out
 end
 
@@ -634,36 +743,39 @@ function S:PraiseLines(rec, who)
 
 	tinsert(out, header("BIG UPS", rec))
 
+	local main, extra = {}, {}
+
 	local h = rec.heroes and rec.heroes[1]
 	if h and h.pts >= 2 then
 		local what = string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")
-		tinsert(out, "Lifesaver: " .. h.name .. " - " .. getn(h.list) .. " game-saving play(s), e.g. " .. what)
+		tinsert(main, title("life") .. ": " .. h.name .. " - " .. getn(h.list) .. " game-saving play(s), e.g. " .. what)
 	end
 
 	local n, p, v = best(rec, function(p) return p.dmg end)
+	local king = n
 	if n then
-		tinsert(out, "Damage King: " .. n .. " - " .. floor(dps(rec, p)) .. " DPS, " .. pct(v / math.max(1, tDmg)) .. " of the raid's damage")
+		tinsert(main, title("dmg") .. ": " .. n .. " - " .. floor(dps(rec, p)) .. " DPS, " .. pct(v / math.max(1, tDmg)) .. " of the raid's damage")
 	end
 
 	n, p, v = best(rec, function(p) return p.heal end)
 	if n then
-		tinsert(out, "Top Healer: " .. n .. " - " .. FmtNum(v) .. " healed (" .. pct(v / math.max(1, tHeal)) .. " of all healing)")
+		tinsert(main, title("heal") .. ": " .. n .. " - " .. FmtNum(v) .. " healed (" .. pct(v / math.max(1, tHeal)) .. " of all healing)")
 	end
 
 	n, p, v = best(rec, function(p) if p.role == "tank" and (p.deaths or 0) == 0 then return p.taken end end)
-	if n then tinsert(out, "Iron Wall: " .. n .. " took " .. FmtNum(v) .. " damage and never went down") end
+	if n then tinsert(main, title("wall") .. ": " .. n .. " took " .. FmtNum(v) .. " damage and never went down") end
 
 	local util = {}
 	n, p, v = best(rec, function(p) return p.kicks end)
-	if n and v >= 2 then tinsert(util, "Kick Master " .. n .. " (" .. v .. " interrupts)") end
+	if n and v >= 2 then tinsert(util, title("kick") .. " " .. n .. " (" .. v .. " interrupts)") end
 	n, p, v = best(rec, function(p) return p.dispels end)
-	if n and v >= 3 then tinsert(util, "Cleanser " .. n .. " (" .. v .. " dispels)") end
+	if n and v >= 3 then tinsert(util, title("cleanse") .. " " .. n .. " (" .. v .. " dispels)") end
 	n, p, v = best(rec, function(p) return p.tranqs end)
-	if n then tinsert(util, "Tranq Sniper " .. n .. " (" .. v .. ")") end
-	if getn(util) > 0 then tinsert(out, table.concat(util, "  -  ")) end
+	if n then tinsert(util, title("tranq") .. " " .. n .. " (" .. v .. ")") end
+	if getn(util) > 0 then tinsert(main, table.concat(util, "  -  ")) end
 
 	n, p, v = best(rec, function(p) if p.role ~= "tank" and (p.alive or 0) >= 30 then return p.act end end)
-	if n and v >= 0.85 then tinsert(out, "Never Stops: " .. n .. " was active " .. pct(v) .. " of the fight") end
+	if n and v >= 0.85 then tinsert(main, title("busy") .. ": " .. n .. " was active " .. pct(v) .. " of the fight") end
 
 	local spotless = {}
 	for name, p in pairs(P) do
@@ -673,11 +785,45 @@ function S:PraiseLines(rec, who)
 	end
 	table.sort(spotless)
 	if getn(spotless) > 0 then
-		tinsert(out, "Flawless (" .. getn(spotless) .. "): " .. table.concat(spotless, ", "))
+		tinsert(main, title("clean") .. " (" .. getn(spotless) .. "): " .. table.concat(spotless, ", "))
 	end
 
+	-- extras: two of these, picked at random, when there's room
+	n, p, v = best(rec, function(p) return p.dMax end)
+	if n and v >= 1000 then tinsert(extra, title("bighit") .. ": " .. n .. " - " .. FmtNum(v) .. (p.dMaxSp and (" with " .. p.dMaxSp) or "") .. " in one hit") end
+
+	n, p, v = best(rec, function(p) return p.hMax end)
+	if n and v >= 1000 then tinsert(extra, title("bigheal") .. ": " .. n .. " - " .. FmtNum(v) .. (p.hMaxSp and (" with " .. p.hMaxSp) or "") .. " in one heal") end
+
+	n, p, v = best(rec, function(p) if (p.dHits or 0) >= 20 then return (p.dCrits or 0) / p.dHits end end)
+	if n and v >= 0.25 then tinsert(extra, title("crit") .. ": " .. n .. " - crit " .. pct(v) .. " of the time (" .. p.dCrits .. " of " .. p.dHits .. ")") end
+
+	local tBoss = 0
+	for _, q in pairs(P) do tBoss = tBoss + (q.boss or 0) end
+	n, p, v = best(rec, function(p) return p.boss end)
+	if n and n ~= king and tBoss > 0 then tinsert(extra, title("bossdmg") .. ": " .. n .. " - " .. pct(v / tBoss) .. " of all the damage on the boss") end
+
+	-- a wipe: whoever was still up at the end, or the last one to fall
+	if rec.result ~= "KILL" and rec.result ~= "LIVE" and getn(rec.deaths) > 0 then
+		local up = {}
+		for name, q in pairs(P) do if (q.deaths or 0) == 0 then tinsert(up, name) end end
+		if getn(up) == 1 then
+			tinsert(extra, title("last") .. ": " .. up[1] .. " - still standing when the raid went down")
+		elseif getn(up) == 0 then
+			local d = rec.deaths[getn(rec.deaths)]
+			tinsert(extra, title("last") .. ": " .. d.name .. " - the last to fall, at " .. FmtTime(d.t))
+		end
+	end
+
+	n, p, v = best(rec, function(p)
+		local c = 0
+		for i = 1, getn(p.used or {}) do c = c + (p.used[i][2] or 0) end
+		return c
+	end)
+	if n and v >= 3 then tinsert(extra, title("pharm") .. ": " .. n .. " - " .. v .. " consumables used in the fight") end
+
+	fill(out, main, extra, MAX_PRAISE)
 	if getn(out) == 1 then tinsert(out, "Everyone tried their best. Probably.") end
-	while getn(out) > MAX_PRAISE do tremove(out) end
 	return out
 end
 

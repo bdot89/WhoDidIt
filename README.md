@@ -617,6 +617,14 @@ all of it without touching real fights.
 - *Consume Slacker*: missing the most consumables for their role
 - *Participation Trophy*: DPS under half the raid median
 
+Bonus awards (two picked at random):
+- *Living on the Edge*: peaked at 90-99% threat without pulling
+- *Tank Cosplayer*: a non-tank who held the boss the longest
+- *Chew Toy*: the non-tank who took the most damage
+- *Potion Hoarder*: died with their potion or a healthstone off cooldown
+- *Splattered*: the biggest single killing blow
+- *Glass Cannon*: top 3 on damage, then died
+
 </td>
 <td width="50%" valign="top">
 
@@ -630,9 +638,20 @@ all of it without touching real fights.
 - *Never Stops*: the highest activity
 - *Flawless*: everyone who made zero mistakes
 
+Bonus awards (two picked at random):
+- *Biggest Hit* / *Biggest Heal*: the largest single hit or heal, and the spell
+- *Crit Machine*: the highest crit rate (20+ hits)
+- *Boss Specialist*: the most damage on the boss itself
+- *Last One Standing*: on a wipe, the one still up or the last to fall
+- *Walking Pharmacy*: the most consumables used in the fight
+
 </td>
 </tr>
 </table>
+
+**Every award has several names**, picked at random each post, so *Floor Inspector* may turn up as *Carpet Tester*,
+*Dirt Nap Champion* or *Spirit Healer's Regular*, and *Damage King* as *Big Pumper* or *Meter Melter*. Up to two bonus
+awards are added when they apply (Name & Shame posts up to 12 lines, Big Them Up up to 10).
 
 **Auto shout-outs** (left panel) can post them after every fight. `smart` shames on wipes and praises on kills. Lines are sent 0.3 s apart so chat flood protection doesn't kick in.
 
