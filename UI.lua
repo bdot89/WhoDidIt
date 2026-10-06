@@ -260,6 +260,8 @@ function UI.GridCell(row, size, wheel)
 	c.top:SetAllPoints(c)
 	c.txt = c.top:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	c.txt:SetPoint("CENTER", c, "CENTER", 0, 0)
+	c.num = c.top:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+	c.num:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -1, 1)
 	local hl = c:CreateTexture(nil, "HIGHLIGHT")
 	hl:SetAllPoints(c)
 	hl:SetTexture(1, 1, 1, 0.18)
@@ -303,6 +305,7 @@ function UI.SetGridCell(c, g, row)
 		c.icon:Hide()
 	end
 	c.txt:SetText(g[6] or "")
+	c.num:SetText(g[7] and tostring(g[7]) or "")
 	c:ClearAllPoints()
 	c:SetPoint("LEFT", row, "LEFT", g[1], 0)
 	c:Show()
@@ -778,6 +781,8 @@ UI.CG = {
 local consList = CreateList(content, floor(NROWS * ROWH / UI.CG.ROWH) - 1, UI.CG.ROWH, RW - 10)
 consList:SetPoint("TOPLEFT", content, "TOPLEFT", 5, -6 - UI.CG.ROWH)
 consList:Hide()
+-- the grid's column header: fixed above the rows; its labels follow the
+-- view (Buffs: a column per consumable slot, Used: a column per kind of item)
 do
 	local CG = UI.CG
 	local h = CreateFrame("Frame", nil, content)
@@ -787,30 +792,62 @@ do
 	local bg = h:CreateTexture(nil, "BACKGROUND")
 	bg:SetAllPoints(h)
 	bg:SetTexture(0.25, 0.25, 0.32, 0.55)
-	local function label(x, w, text, tipTitle, tip)
+	local function label(x, w)
 		local b = CreateFrame("Button", nil, h)
 		b:SetWidth(w)
 		b:SetHeight(CG.ROWH - 2)
 		b:SetPoint("LEFT", h, "LEFT", x, 0)
-		local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-		fs:SetAllPoints(b)
-		fs:SetJustifyH(w > 60 and "LEFT" or "CENTER")
-		fs:SetText(text)
-		if tipTitle then tooltip(b, tipTitle, tip, "ANCHOR_TOP") end
+		b.fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		b.fs:SetAllPoints(b)
+		b.fs:SetJustifyH("CENTER")
+		b:SetScript("OnEnter", function()
+			if not this.tipTitle then return end
+			GameTooltip:SetOwner(this, "ANCHOR_TOP")
+			GameTooltip:SetText(this.tipTitle, 1, 0.82, 0)
+			for i = 1, getn(this.tip or {}) do GameTooltip:AddLine(this.tip[i], 0.9, 0.9, 0.9, 1) end
+			GameTooltip:Show()
+		end)
+		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		return b
 	end
-	label(CG.NAME, 100, "PLAYER")
-	label(CG.ROLE, 52, "ROLE", "Role", { "Tank, healer, melee, ranged or caster - from what they did in the fight.", "Each role is expected to bring different consumables." })
-	for i = 1, getn(CG.COLS) do
-		local col = CG.COLS[i]
-		label(CG.X + (i - 1) * CG.STEP, CG.STEP, col[1], col[2], { col[4],
-			" ", "|cff40bf4dGreen|r  they had it (hover for which one)",
-			"|cffd92626Red X|r  their role needs it and they didn't have it",
-			"|cff888888-|r  not expected for their role", "|cff888888?|r  out of range at the pull - not counted" })
+	-- Buffs / Used: which grid the tab shows
+	local function toggle(x, text, view, tip)
+		local b = smallText(button(h, text, 50, 18))
+		b:SetPoint("LEFT", h, "LEFT", x, 0)
+		b:SetScript("OnClick", function() UI.consView = view; UI:Refresh() end)
+		tooltip(b, text, tip, "ANCHOR_TOP")
+		return b
 	end
-	label(CG.READY, 44, "READY", "Ready", { "Must-haves they had, out of what their role needs.", "Green = everything. Flasks only count in the big raids." })
-	label(CG.USED, 54, "USED", "Used", { "Potions, runes, healthstones and other items used during the fight.", "Hover a player for the list." })
+	h.buffs = toggle(4, "Buffs", "buffs", { "Consumable buffs at the pull, per slot, and what each role was missing." })
+	h.used = toggle(58, "Used", "used", { "Every potion, rune, tea, healthstone, bandage and bomb used during the fight." })
+	h.role = label(CG.ROLE, 52)
+	h.cols = {}
+	for i = 1, 12 do h.cols[i] = label(CG.X + (i - 1) * CG.STEP, CG.STEP) end
+	h.ready = label(CG.READY, 44)
+	h.usedCol = label(CG.USED, 54)
 	consList.head = h
 	h:Hide()
+end
+
+-- fill the header for a view: cols = { { label, name, what }, ... }, then the two end columns
+function UI.SetGridHead(cols, endA, endB)
+	local h = consList.head
+	local key = UI.consView or "buffs"
+	if key == "used" then h.used:LockHighlight(); h.buffs:UnlockHighlight() else h.buffs:LockHighlight(); h.used:UnlockHighlight() end
+	h.role.fs:SetText("ROLE")
+	h.role.tipTitle, h.role.tip = "Role", { "Tank, healer, melee, ranged or caster - from what they did in the fight." }
+	for i = 1, getn(h.cols) do
+		local b, c = h.cols[i], cols[i]
+		if c then
+			b.fs:SetText(c[1])
+			b.tipTitle, b.tip = c[2], c[3]
+			b:Show()
+		else
+			b:Hide()
+		end
+	end
+	h.ready.fs:SetText(endA[1]); h.ready.tipTitle, h.ready.tip = endA[2], endA[3]
+	h.usedCol.fs:SetText(endB[1]); h.usedCol.tipTitle, h.usedCol.tip = endB[2], endB[3]
 end
 
 -- the Consumes grid replaces the normal list while that tab is open
@@ -920,7 +957,7 @@ local HINTS = {
 	mistakes = "Click a mistake to post it (Ctrl-click: preview)  -  hover for advice",
 	threat   = "Click a name to open their timeline at that moment  -  keep the boss targeted for threat %",
 	timeline = "Everything that happened, in order  -  click a name for that player's timeline at that moment",
-	consumes = "Hover a square for the buff  -  red X = their role needs it  -  hover a name for items used  -  click a group to fold it",
+	consumes = "Buffs / Used (top left) switch the grid  -  hover a square for details  -  red X = their role needs it  -  click a group to fold it",
 	heroes   = "Click a name or a game-saving moment to post it (Ctrl-click: preview)  -  hover for details",
 }
 
@@ -937,6 +974,7 @@ local MODES = {
 	{ id = "logs",     text = "Logging"       },
 	{ id = "marks",    text = "Auto Marker"   },
 	{ id = "loot",     text = "SR MasterLoot" },
+	{ id = "fame",     text = "All-Time" },
 }
 UI.modeButtons = {}
 for i = 1, getn(MODES) do
@@ -965,6 +1003,8 @@ tooltip(UI.modeButtons[4], "Auto Marker", { "Auto marking: every saved pack of m
 	"and quick save - mark mobs in game, click Save marks as pack." })
 tooltip(UI.modeButtons[5], "SR MasterLoot", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
 	"see who won what, and a step-by-step guide." })
+tooltip(UI.modeButtons[6], "All-Time (Hall of Fame)", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,",
+	"with every clutch play and every mistake, their points, and the best plays and worst blunders ever." })
 
 -- a row of buttons in the tab strip, used by Rankings and Logs
 local function stripButtons(defs)
@@ -1105,6 +1145,19 @@ UI.lootButtons = stripButtons({
 	  function() return { "Tell the raid how to roll (/htr):", W.Loot:HowToRoll(), "|cff888888Change the numbers on the Settings page.|r" } end },
 })
 
+-- All-Time (Hall of Fame): the running tally of every fight
+UI.fame = { view = "hero" }   -- view: hero / blame / plays / blunders; who = a player's page
+UI.fameButtons = stripButtons({
+	{ "|cff33ff33Heroes|r", function() UI.fame.view = "hero"; UI.fame.who = nil; UI:Refresh() end,
+	  { "Everyone's hero points from every fight: clutch heals, shields, taunts,", "battle res, dispels, interrupts... and how often they were MVP." } },
+	{ "|cffff5555Hall of Shame|r", function() UI.fame.view = "blame"; UI.fame.who = nil; UI:Refresh() end,
+	  { "Everyone's blame points from every fight: standing in fire, pulling aggro,", "bombing the raid, idling... and how often they were most to blame." } },
+	{ "Best plays", function() UI.fame.view = "plays"; UI.fame.who = nil; UI:Refresh() end,
+	  { "The biggest single game-saving plays of all time." } },
+	{ "Worst blunders", function() UI.fame.view = "blunders"; UI.fame.who = nil; UI:Refresh() end,
+	  { "The most costly single mistakes of all time." } },
+})
+
 -- loot quick actions take the place of the fight buttons while in Loot
 local finishBtn = gridButton("Finish roll", 3, 1)
 local cancelBtn = gridButton("|cffff5555Cancel roll|r", 3, 2)
@@ -1198,6 +1251,34 @@ end)
 local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn }
 for i = 1, getn(rankOnly) do rankOnly[i]:Hide() end
 
+-- All-Time: post what's on screen, points per fight, start over
+local famePostBtn  = gridButton("Post this board", 4, 1)
+local famePerBtn   = gridButton("Per fight: off", 4, 2)
+local fameResetBtn = gridButton("|cffff5555Reset tally|r", 1, 2)
+famePostBtn:SetScript("OnClick", function()
+	local C, v = W.Career, UI.fame.view
+	local ch = IsControlKeyDown() and "SELF" or nil
+	if not C then return end
+	if UI.fame.who then C:Post(C:PlayerLines(UI.fame.who), ch)
+	elseif v == "plays" then C:Post(C:MomentLines(false, 3), ch)
+	elseif v == "blunders" then C:Post(C:MomentLines(true, 3), ch)
+	else C:Post(C:BoardLines(v, UI.fame.per, 5), ch) end
+end)
+famePerBtn:SetScript("OnClick", function() UI.fame.per = not UI.fame.per; UI:Refresh() end)
+fameResetBtn:SetScript("OnClick", function()
+	W:Prompt("Clear the whole Hall of Fame tally?\n|cff888888Every player's all-time points start again from zero. Type |cffffd100RESET|cff888888 to confirm.|r", "",
+		function(text) if string.upper(text or "") == "RESET" then W.Career:Reset(); UI:Refresh() end end)
+end)
+tooltip(famePostBtn, "Post this board", function()
+	return { "Post what you're looking at: the top 5 heroes or the Hall of Shame,", "the top 3 plays or blunders, or a player's record.",
+		"|cff888888Ctrl-click: only you see it.  Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+end)
+tooltip(famePerBtn, "Per fight", { "Off: total points (rewards turning up).", "On: points per fight, so a raider with fewer fights can top it",
+	"(only players with 3 or more fights are listed)." })
+tooltip(fameResetBtn, "Reset tally", { "Clear every player's all-time points and start again.", "Asks first." })
+local fameOnly = { famePostBtn, famePerBtn, fameResetBtn }
+for i = 1, getn(fameOnly) do fameOnly[i]:Hide() end
+
 -- show the controls that belong to the current mode
 function UI:ApplyMode()
 	local fights = (UI.mode == "fights")
@@ -1215,6 +1296,9 @@ function UI:ApplyMode()
 	local loot = (UI.mode == "loot" and W.Loot ~= nil)
 	for i = 1, getn(UI.lootButtons) do vis(UI.lootButtons[i], loot) end
 	for i = 1, getn(lootOnly) do vis(lootOnly[i], loot) end
+	local fame = (UI.mode == "fame" and W.Career ~= nil)
+	for i = 1, getn(UI.fameButtons) do vis(UI.fameButtons[i], fame) end
+	for i = 1, getn(fameOnly) do vis(fameOnly[i], fame) end
 	vis(srCopy, loot)
 	vis(srSite, loot)
 	local fightOnly = { shameBtn, praiseBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
@@ -1866,8 +1950,20 @@ function UI:ConsumeRows(rec)
 		tinsert(rows, row("|cffff7777To finish updating: " .. W.RESTART_HINT .. ".|r"))
 		return rows
 	end
+	if UI.consView == "used" then return UI:UsedRows(rec) end
 	local Cons, CG = W.Cons, UI.CG
 	local nCols = getn(CG.COLS)
+	do
+		local hdr = {}
+		for i = 1, getn(UI.CG.COLS) do
+			local c = UI.CG.COLS[i]
+			hdr[i] = { c[1], c[2], { c[4], " ", "|cff40bf4dGreen|r  they had it (hover for which one)",
+				"|cffd92626Red X|r  their role needs it and they didn't have it", "|cff888888-|r  not expected for their role",
+				"|cff888888?|r  out of range at the pull - not counted" } }
+		end
+		UI.SetGridHead(hdr, { "READY", "Ready", { "Must-haves they had, out of what their role needs.", "Green = everything. Flasks only count in the big raids." } },
+			{ "USED", "Used", { "Items used during the fight - click Used (top left) for every item." } })
+	end
 	local slotCol = {}
 	for i = 1, nCols do
 		if type(CG.COLS[i][3]) == "table" then
@@ -2027,6 +2123,142 @@ function UI:ConsumeRows(rec)
 	return rows
 end
 
+-- Consumes tab, "Used" view: every item used in the fight, a column per kind
+-- (first match wins, so the more specific kinds come first)
+local IC = "Interface\\Icons\\"
+UI.USED_COLS = {
+	{ "PROT", "Protection potions", { "Protection" }, IC .. "INV_Potion_24" },
+	{ "HS", "Healthstones", { "Healthstone" }, IC .. "INV_Stone_04" },
+	{ "HP", "Healing potions", { "Healing Potion", "Healing Draught", "Rejuvenation", "Whipper Root" }, IC .. "INV_Potion_54" },
+	{ "GEM", "Mana gems", { "Mana Gem", "Mana Jade", "Mana Citrine", "Mana Ruby", "Mana Agate" }, IC .. "INV_Misc_Gem_Ruby_01" },
+	{ "MANA", "Mana potions", { "Mana Potion", "Restore Mana" }, IC .. "INV_Potion_76" },
+	{ "RUNE", "Runes", { "Demonic Rune", "Dark Rune", "Rune of" }, IC .. "INV_Misc_Rune_04" },
+	{ "TEA", "Tea", { "Tea" }, IC .. "INV_Drink_Milk_05" },
+	{ "BAND", "Bandages", { "Bandage", "First Aid" }, IC .. "INV_Misc_Bandage_12" },
+	{ "BOOM", "Explosives", { "Sapper", "Dynamite", "Grenade", "Bomb", "Explosive" }, IC .. "Spell_Fire_SelfDestruct" },
+	{ "UTIL", "Other potions", { "Free Action", "Living Action", "Invulnerability", "Restorative", "Stoneshield", "Mighty Rage", "Swiftness", "Potion" }, IC .. "INV_Potion_04" },
+	{ "OTH", "Everything else", nil, IC .. "INV_Misc_Bag_10" },
+}
+
+local function usedCol(item)
+	local cols = UI.USED_COLS
+	for i = 1, getn(cols) - 1 do
+		for j = 1, getn(cols[i][3]) do
+			if string.find(item, cols[i][3][j], 1, true) then return i end
+		end
+	end
+	return getn(cols)
+end
+
+function UI:UsedRows(rec)
+	local rows = {}
+	local Cons, CG, cols = W.Cons, UI.CG, UI.USED_COLS
+	UI.consFold = UI.consFold or {}
+	local n = getn(cols)
+	local hdr = {}
+	for i = 1, n do
+		local pats = cols[i][3] and table.concat(cols[i][3], ", ") or "anything not in the other columns"
+		hdr[i] = { cols[i][1], cols[i][2], { "Items whose name has: " .. pats, " ", "The number is how many they used. Hover a square for the items." } }
+	end
+	UI.SetGridHead(hdr, { "TOTAL", "Total", { "Every item they used during the fight." } }, { "" })
+
+	local groups, totals, nPlayers, all = {}, {}, 0, 0
+	for name, p in pairs(rec.players) do
+		nPlayers = nPlayers + 1
+		local role = Cons.Role(p) or "other"
+		local used = p.used
+		if not used then
+			used = {}
+			for j = 1, getn(p.consList or {}) do used[j] = { p.consList[j][1], p.consList[j][2], "Other" } end
+		end
+		local per, sum = {}, 0
+		local tip = {}
+		for j = 1, getn(used) do
+			local u = used[j]
+			local c = usedCol(u[1])
+			per[c] = per[c] or { n = 0, items = {} }
+			per[c].n = per[c].n + u[2]
+			tinsert(per[c].items, u[1] .. "  |cffffffffx" .. u[2] .. "|r")
+			sum = sum + u[2]
+			tinsert(tip, { u[1], "x" .. u[2] })
+		end
+		all = all + sum
+		if getn(tip) == 0 then tip = { C_DIM .. "Used nothing this fight.|r" } end
+		tip = withLegend(tip, "consumes")
+		local grid = {}
+		for c = 1, n do
+			local x = CG.X + (c - 1) * CG.STEP + 4
+			local title = cols[c][2] .. " - " .. W.CName(name, p.class)
+			if per[c] then
+				totals[c] = (totals[c] or 0) + per[c].n
+				tinsert(grid, { x, "ok", cols[c][4], title, per[c].items, nil, per[c].n })
+			else
+				tinsert(grid, { x, "na", nil, title, { "None used." }, C_DIM .. "-|r" })
+			end
+		end
+		local g = CONS_GROUPS[getn(CONS_GROUPS)]
+		for j = 1, getn(CONS_GROUPS) do if CONS_GROUPS[j][1] == role then g = CONS_GROUPS[j] end end
+		local grp = groups[g[1]]
+		if not grp then
+			grp = { n = 0, sum = 0, list = {} }
+			groups[g[1]] = grp
+		end
+		grp.n = grp.n + 1
+		grp.sum = grp.sum + sum
+		tinsert(grp.list, { name = name, sum = sum, d = {
+			cols = {
+				{ CG.NAME, 110, W.CName(name, p.class), "LEFT" },
+				{ CG.ROLE, 52, "|cff" .. g[3] .. string.upper(Cons.ROLE_TEXT[role] or "?") .. "|r", "CENTER" },
+				{ CG.READY, 44, (sum > 0) and (C_YOU .. sum .. "|r") or (C_DIM .. "0|r"), "CENTER" },
+			},
+			grid = grid, tip = tip, tipTitle = name .. " - used in the fight", name = name, click = playerClick("consumes"),
+		} })
+	end
+	if nPlayers == 0 then
+		tinsert(rows, row("|cff888888No players recorded.|r"))
+		return rows
+	end
+
+	-- one line with the raid's totals (click to post the consumes summary)
+	local bits = {}
+	for c = 1, n do
+		if totals[c] then tinsert(bits, "|cffffffff" .. totals[c] .. "|r " .. string.lower(cols[c][2])) end
+	end
+	tinsert(rows, row("|cffffd100Used in the fight:|r  " .. ((all > 0) and table.concat(bits, C_DIM .. ",|r  ") or (C_DIM .. "nothing|r")),
+		C_DIM .. "click to post|r", { tipTitle = "Items used", tip = { "Every potion, rune, tea, healthstone, bandage and bomb the raid used.",
+			"|cffffd100Click: post the consumes summary (" .. W.Shout:ChannelLabel() .. ")|r" },
+			click = function() W.Shout:Consumes(rec, "summary") end }))
+
+	for gi = 1, getn(CONS_GROUPS) do
+		local g = CONS_GROUPS[gi]
+		local grp = groups[g[1]]
+		if grp then
+			local folded = UI.consFold[g[1]]
+			tinsert(rows, { head = true,
+				cols = { { CG.NAME, 600, (folded and "|cffaaaaaa+|r  " or "|cffaaaaaa-|r  ") .. "|cff" .. g[3] .. g[2] .. "|r   "
+					.. C_YOU .. grp.sum .. "|r" .. C_DIM .. " items used by " .. grp.n .. "|r", "LEFT" } },
+				tipTitle = g[2], tip = { "Click to " .. (folded and "show" or "hide") .. " this group." },
+				click = function() UI.consFold[g[1]] = not UI.consFold[g[1]]; UI:Refresh() end })
+			if not folded then
+				table.sort(grp.list, function(a, b)
+					if a.sum ~= b.sum then return a.sum > b.sum end
+					return a.name < b.name
+				end)
+				for i = 1, getn(grp.list) do tinsert(rows, grp.list[i].d) end
+			end
+		end
+	end
+
+	local foot = { { CG.NAME, 160, C_DIM .. "Raid total|r", "LEFT" } }
+	for c = 1, n do
+		local t = totals[c] or 0
+		tinsert(foot, { CG.X + (c - 1) * CG.STEP, CG.STEP, (t > 0) and ("|cffffffff" .. t .. "|r") or (C_DIM .. "0|r"), "CENTER" })
+	end
+	tinsert(foot, { CG.READY, 44, C_YOU .. all .. "|r", "CENTER" })
+	tinsert(rows, { head = true, cols = foot, tipTitle = "Raid total", tip = { "How many of each the whole raid used." } })
+	return rows
+end
+
 -- class-colour every raid member's name inside a sentence
 local function colorNames(text, rec)
 	return (string.gsub(text or "", "([^%s%p%d]+)", function(w)
@@ -2044,12 +2276,7 @@ local function tint(text, col)
 end
 
 -- a game-saving moment's kind, from how it's worded (the Type column)
-local SAVE_TYPES = {
-	{ "absorbed", "Shield" }, { "healed", "Heal" }, { "taunted", "Taunt" }, { "back off", "Taunt" },
-	{ "dispelled", "Dispel" }, { "innervated", "Innervate" }, { "tranquilized", "Tranq" },
-	{ "interrupted", "Interrupt" }, { "Blessing of Protection", "Protect" }, { "Lay on Hands", "Protect" },
-	{ "resurrect", "Battle res" }, { "Rebirth", "Battle res" }, { "survived", "Survival" },
-}
+local SAVE_TYPES = W.Data.saveTypes
 local function saveType(text)
 	for i = 1, getn(SAVE_TYPES) do
 		if string.find(text or "", SAVE_TYPES[i][1], 1, true) then return SAVE_TYPES[i][2] end
@@ -3394,7 +3621,7 @@ function UI:RefreshMissing()
 	srSite:Hide()
 	for i = 1, getn(UI.lootButtons) do UI.lootButtons[i]:Hide() end
 	for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
-	local titles = { logs = "Logging", marks = "Auto Marker", loot = "SR MasterLoot" }
+	local titles = { logs = "Logging", marks = "Auto Marker", loot = "SR MasterLoot", fame = "All-Time" }
 	leftHead:SetText(titles[UI.mode] or "Rankings")
 	leftCount:SetText("")
 	fightList:SetData({})
@@ -3412,6 +3639,181 @@ function UI:RefreshMissing()
 	mainList:SetData(rows)
 end
 
+------------------------------------------------------------------ All-Time (Hall of Fame)
+
+-- # / player / points / plays or mistakes / fights / mostly / MVP or worst / last seen
+local FAME_SPEC = { { 22, "RIGHT" }, { 112, "LEFT" }, { 58, "RIGHT" }, { 50, "RIGHT" }, { 44, "RIGHT" }, { 140, "LEFT" }, { 52, "RIGHT" }, { 70, "RIGHT" } }
+-- # / points / player / what / boss and date
+local MOMENT_SPEC = { { 22, "RIGHT" }, { 40, "RIGHT" }, { 96, "LEFT" }, { 300, "LEFT" }, { 120, "LEFT" } }
+
+-- "Heal x12 (31 pts)" lines for a tooltip, biggest first
+local function kindLines(t, colour)
+	local list = {}
+	for k, v in pairs(t or {}) do tinsert(list, { k, v[1], v[2] }) end
+	table.sort(list, function(a, b) return a[3] > b[3] end)
+	local out = {}
+	for i = 1, getn(list) do
+		tinsert(out, { colour .. list[i][1] .. "|r", list[i][2] .. "x   " .. list[i][3] .. " pts" })
+	end
+	return out
+end
+
+-- a moment without its player's name in front ("healed X..." not "Bob healed X...")
+local function momentText(m)
+	return (string.gsub(m.text or "", "^" .. (m.who or "") .. " ", ""))
+end
+
+local function momentRows(rows, list, blunder, who)
+	local C = W.Career
+	local shown = 0
+	colHead(rows, MOMENT_SPEC, { "#", "Pts", "Player", blunder and "Blunder" or "Play", "Boss / date" })
+	for i = 1, getn(list) do
+		local m = list[i]
+		if not who or m.who == who then
+			shown = shown + 1
+			local col = blunder and "|cffff7777" or "|cff33ff33"
+			tinsert(rows, cells(MOMENT_SPEC,
+				{ C_DIM .. shown .. ".|r", col .. (blunder and "-" or "+") .. m.pts .. "|r", W.CName(m.who or "?", m.class),
+				  momentText(m), "|cffffd100" .. (m.enc or "?") .. "|r " .. C_DIM .. (m.when or "") .. "|r" },
+				{ tipTitle = (blunder and "Blunder" or "Play") .. ": " .. (m.kind or ""), tip = { m.text or "", " ",
+					(m.enc or "?") .. ", " .. (m.when or "?"), "|cffffd100Click|r  post it   |cffffd100Ctrl-click|r  only you see it",
+					"|cffffd100Right-click|r  " .. (m.who or "their") .. "'s record" },
+				  click = function(d, button)
+					if button == "RightButton" then UI.fame.who = m.who; UI:Refresh() return end
+					C:Post({ C:MomentLine(m, nil, blunder) }, IsControlKeyDown() and "SELF" or nil)
+				  end }))
+			if who and shown >= 5 then break end
+		end
+	end
+	if shown == 0 then tinsert(rows, row(C_DIM .. "Nothing yet.|r")) end
+end
+
+function UI:FameBoardRows(kind)
+	local C = W.Career
+	local d = C.DB()
+	local rows = {}
+	local hero = (kind == "hero")
+	local list = C:Board(kind, UI.fame.per)
+	head(rows, (hero and "All-time heroes" or "All-time Hall of Shame") .. (UI.fame.per and "  (points per fight, 3+ fights)" or ""))
+	if getn(list) == 0 then
+		tinsert(rows, row(C_DIM .. (d.fights == 0 and "Nothing counted yet. Every fight you save from now on adds to it (demo fights don't)."
+			or "Nobody has " .. (hero and "hero" or "blame") .. " points yet" .. (UI.fame.per and " with 3 or more fights" or "") .. ".") .. "|r"))
+		return rows
+	end
+	colHead(rows, FAME_SPEC, { "#", "Player", "Points", hero and "Plays" or "Errors", "Fights", "Mostly", hero and "MVP" or "Worst", "Last seen" })
+	local max = list[1].v > 0 and list[1].v or 1
+	local pc = hero and C_GUILD or "|cffff7777"
+	for i = 1, getn(list) do
+		local it, p = list[i], list[i].p
+		local r, g, b = W.ClassRGB(p.class)
+		local top = C.TopKind(hero and p.hk or p.mk)
+		local tip = {
+			{ "Fights", p.fights .. "  (" .. p.kills .. " kills, " .. p.deaths .. " deaths)" },
+			{ "Hero", p.hero .. " pts from " .. p.saves .. " plays" .. ((p.mvp > 0) and (", MVP " .. p.mvp .. "x") or "") },
+			{ "Shame", p.blame .. " pts from " .. p.mistakes .. " mistakes" .. ((p.worst > 0) and (", most to blame " .. p.worst .. "x") or "") },
+			" ",
+			"|cffffd100" .. (hero and "Plays" or "Mistakes") .. " by kind|r",
+		}
+		local kl = kindLines(hero and p.hk or p.mk, hero and "|cff33ff33" or "|cffff7777")
+		for j = 1, getn(kl) do tinsert(tip, kl[j]) end
+		tinsert(tip, " ")
+		tinsert(tip, "|cffffd100Click|r  post their record   |cffffd100Ctrl-click|r  only you see it")
+		tinsert(tip, "|cffffd100Right-click|r  open their record")
+		local name = it.name
+		tinsert(rows, cells(FAME_SPEC,
+			{ C_DIM .. i .. ".|r", W.CName(name, p.class), pc .. it.v .. "|r",
+			  C_TIME .. (hero and p.saves or p.mistakes) .. "|r", C_DIM .. p.fights .. "|r",
+			  top and ("|cffcccccc" .. top .. "|r") or (C_DIM .. "-|r"),
+			  ((hero and p.mvp or p.worst) > 0) and (C_YOU .. (hero and p.mvp or p.worst) .. "x|r") or (C_DIM .. "-|r"),
+			  C_DIM .. (p.last or "") .. "|r" },
+			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = name .. " - all time", name = name,
+			  click = function(dd, button)
+				if button == "RightButton" then UI.fame.who = name; UI:Refresh() return end
+				C:Post(C:PlayerLines(name), IsControlKeyDown() and "SELF" or nil)
+			  end }))
+	end
+	return rows
+end
+
+function UI:FamePlayerRows(name)
+	local C = W.Career
+	local d = C.DB()
+	local p = d.players[name]
+	local rows = {}
+	tinsert(rows, row("|cffffd100< Back to the board|r", nil, { click = function() UI.fame.who = nil; UI:Refresh() end }))
+	if not p then
+		tinsert(rows, row(C_DIM .. name .. " has no all-time record yet.|r"))
+		return rows
+	end
+	local function per(v) return floor(v / math.max(1, p.fights) * 10 + 0.5) / 10 end
+	head(rows, W.CName(name, p.class) .. "|cffffd100's record  -  " .. p.fights .. " fights, " .. p.kills .. " kills, " .. p.deaths .. " deaths|r")
+	tinsert(rows, row(C_GUILD .. "Hero|r   " .. p.hero .. " pts from " .. p.saves .. " plays" .. ((p.mvp > 0) and ("   - MVP of " .. p.mvp .. " fights") or ""),
+		C_DIM .. per(p.hero) .. " a fight|r", { tipTitle = "Hero", tip = { "Points for game-saving plays: clutch heals, shields, taunts,", "battle res, dispels, interrupts, surviving..." } }))
+	tinsert(rows, row("|cffff7777Shame|r   " .. p.blame .. " pts from " .. p.mistakes .. " mistakes" .. ((p.worst > 0) and ("   - most to blame in " .. p.worst .. " fights") or ""),
+		C_DIM .. per(p.blame) .. " a fight|r", { tipTitle = "Shame", tip = { "Points for mistakes: standing in fire, pulling aggro,", "bombing the raid, idling, low DPS..." } }))
+	tinsert(rows, row("|cffffd100Click here to post this record|r " .. C_DIM .. "(Ctrl-click: only you see it)|r", nil,
+		{ click = function() C:Post(C:PlayerLines(name), IsControlKeyDown() and "SELF" or nil) end }))
+	head(rows, "Plays by kind")
+	local hk = kindLines(p.hk, "|cff33ff33")
+	if getn(hk) == 0 then tinsert(rows, row(C_DIM .. "None yet.|r")) end
+	for i = 1, getn(hk) do tinsert(rows, row(hk[i][1], hk[i][2])) end
+	head(rows, "Mistakes by kind")
+	local mk = kindLines(p.mk, "|cffff7777")
+	if getn(mk) == 0 then tinsert(rows, row(C_DIM .. "None yet.|r")) end
+	for i = 1, getn(mk) do tinsert(rows, row(mk[i][1], mk[i][2])) end
+	head(rows, "Their best plays")
+	momentRows(rows, d.moments, false, name)
+	head(rows, "Their worst blunders")
+	momentRows(rows, d.blunders, true, name)
+	return rows
+end
+
+function UI:RefreshFame()
+	local C = W.Career
+	local d = C.DB()
+	local v = UI.fame.view
+	-- left: everyone in the tally, click for their record
+	local names = {}
+	for name in pairs(d.players) do tinsert(names, name) end
+	table.sort(names)
+	leftHead:SetText("Raiders")
+	leftCount:SetText(getn(names) .. "")
+	local left = {}
+	for i = 1, getn(names) do
+		local name, p = names[i], d.players[names[i]]
+		tinsert(left, { l = W.CName(name, p.class), r = C_GUILD .. p.hero .. "|r " .. C_DIM .. "/|r |cffff7777" .. p.blame .. "|r",
+			sel = (UI.fame.who == name), tipTitle = name, tip = { "Hero " .. p.hero .. " pts  /  Shame " .. p.blame .. " pts", "Click: open their record" },
+			click = function() UI.fame.who = name; UI:Refresh() end })
+	end
+	if getn(left) == 0 then left = { { l = C_DIM .. "Nobody yet|r" } } end
+	fightList:SetData(left, true)
+
+	for i = 1, getn(UI.fameButtons) do
+		local b = UI.fameButtons[i]
+		local on = (not UI.fame.who) and ((i == 1 and v == "hero") or (i == 2 and v == "blame") or (i == 3 and v == "plays") or (i == 4 and v == "blunders"))
+		if on then b:LockHighlight() else b:UnlockHighlight() end
+	end
+	famePerBtn:SetText("Per fight: " .. (UI.fame.per and "|cff33ff33on|r" or "off"))
+
+	local titles = { hero = "|cff33ff33Heroes|r", blame = "|cffff5555Hall of Shame|r", plays = "Best plays", blunders = "Worst blunders" }
+	rTitle:SetText("All-Time  " .. (UI.fame.who and W.CName(UI.fame.who, d.players[UI.fame.who] and d.players[UI.fame.who].class) or titles[v]))
+	rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights counted   |   " .. getn(names) .. " raiders|r")
+	rVerdict:SetText("Every saved fight adds its hero and blame points here, for good - even after the fight itself is deleted.\n|cff888888Demo fights don't count. Post with the button bottom-left, or click any line.|r")
+	hintText:SetText("Click a line to post it  -  Ctrl-click: only you see it  -  right-click a player for their record")
+	hintText:Show()
+
+	local rows
+	if UI.fame.who then rows = UI:FamePlayerRows(UI.fame.who)
+	elseif v == "plays" or v == "blunders" then
+		rows = {}
+		head(rows, (v == "plays") and "The biggest game-saving plays of all time" or "The most costly mistakes of all time")
+		momentRows(rows, (v == "plays") and d.moments or d.blunders, v == "blunders")
+	else rows = UI:FameBoardRows(v) end
+	local key = "fame" .. v .. tostring(UI.fame.who) .. tostring(UI.fame.per)
+	mainList:SetData(rows, key == lastModeKey)
+	lastModeKey = key
+end
+
 local lastTab
 function UI:Refresh()
 	if not f:IsVisible() then return end
@@ -3425,6 +3827,10 @@ function UI:Refresh()
 	UI:UpdateAML()
 
 	UI:ApplyMode()
+	if UI.mode == "fame" then
+		if W.Career then return UI:RefreshFame() end
+		return UI:RefreshMissing()
+	end
 	if UI.mode ~= "fights" and not (W.Board and W.Logs and W.Marks and W.Loot) then return UI:RefreshMissing() end
 	if UI.mode == "rankings" then return UI:RefreshRankings() end
 	if UI.mode == "logs" then return UI:RefreshLogs() end

@@ -459,6 +459,14 @@ D.consumeNeedsClass = {
 		          { "Windfury weapon", "IMBUE", { "Windfury", "Rockbiter", "Flametongue", "Frostbrand" } } },
 	},
 }
+-- the kind of a game-saving play, from words in its text (Heroes tab, Hall of Fame)
+D.saveTypes = {
+	{ "absorbed", "Shield" }, { "healed", "Heal" }, { "taunted", "Taunt" }, { "back off", "Taunt" },
+	{ "dispelled", "Dispel" }, { "innervated", "Innervate" }, { "tranquilized", "Tranq" },
+	{ "interrupted", "Interrupt" }, { "Blessing of Protection", "Protect" }, { "Lay on Hands", "Protect" },
+	{ "resurrect", "Battle res" }, { "Rebirth", "Battle res" }, { "survived", "Survival" },
+}
+
 D.flaskZones = {
 	["Molten Core"] = true, ["Blackwing Lair"] = true, ["Ahn'Qiraj"] = true, ["Naxxramas"] = true,
 	["Emerald Sanctum"] = true, ["Tower of Karazhan"] = true,

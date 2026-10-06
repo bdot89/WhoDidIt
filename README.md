@@ -29,6 +29,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 - 📋 **Blame board & heroes.** Points for every mistake (standing in fire, pulling aggro, bombing the raid, idling, low DPS) and every game-saving play (clutch heals, shields, taunts, BoP, battle res, dispels).
 - 🎯 **Threat & timeline.** Who the boss attacked and why, with the server's threat %. Click any name to jump to that player's own timeline at that moment.
 - 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check. **Full check** opens DopingControl (built in) for the whole raid matrix: buffs, debuffs, resistances, hit and enchants.
+- 🏅 **All-Time.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), banter after kills, and a rival watch when someone beats your times. Click any time to open that guild's whole raid.
 - 📝 **Logging.** The Chronicle combat logger built in: start, save, archive and upload your logs.
@@ -57,6 +58,10 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
   <tr>
     <td width="50%"><img src="docs/timeline.jpg" alt="Timeline"><br><b>Timeline.</b> Everything that happened, second by second, colour-coded by kind. Click a name in any line for that player's own timeline, focused on that moment.</td>
     <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> A grid like DopingControl's: players grouped by role (gaps first), a column per consumable slot with the buff's icon, a <b>red X</b> where their role needs something they didn't have, ready counts and items used. <b>Check raid now</b> scans the raid before the pull; <b>Full check</b> opens DopingControl itself.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/consumes-casters.jpg" alt="Consumes, casters"><br><b>Consumes, hover and totals.</b> Hover any square for the buff (or why it's empty); click a role header to fold it. <b>Missing per slot</b> at the bottom counts the gaps in each column. <b>Used</b> (top left of the grid) switches to every item used during the fight: mana and healing potions, runes, tea, healthstones, bandages, protection potions and bombs, with counts.</td>
+    <td width="50%"><img src="docs/dopingcontrol.jpg" alt="DopingControl"><br><b>Full check (DopingControl).</b> DopingControl by ShempError, built in exactly as its author made it: consumables, class buffs, debuffs, resistances, hit and equipment enchants for the whole raid. Open it with <b>Full check</b> on the Consumes tab or <code>/dc</code>.</td>
   </tr>
 </table>
 
@@ -353,6 +358,9 @@ Flasks are only expected in the big raids (MC, BWL, AQ40, Naxx, ES, Karazhan).
   buff), **red X** = their role needs it, **-** = not expected, **?** = out of range. **Ready** shows must-haves had
   out of needed, **Used** the items used. The top line ("Missing something", click to post) and **Missing per slot**
   at the bottom sum it up.
+- **Used** (top left of the grid): every item each player used during the fight, a column per kind (protection,
+  healthstones, healing potions, mana gems, mana potions, runes, tea, bandages, explosives, other potions, everything
+  else) with the count on the icon. Hover a square for the exact items; the bottom row is the raid's total.
 - **Name & Shame:** a **Consume Slacker** award.
 - **Ready checks:** every ready check (and **Check raid now**, or `/wdi check`) scans the raid and shows you who's
   missing what. Only you see it; Shift-click or `/wdi check post` posts it. Turn it off with `/wdi readycheck off`.
@@ -458,6 +466,28 @@ The bottom of the left column is laid out the same way on every tab. Hover any b
 | **Fights** | **Name & Shame**, **Big Them Up**, **Auto summary** (on / me only / off), **Auto shout-outs** (off / smart / shame / praise / both), **Track trash**, **Demo fight**, **Delete fight**, **Clear all fights** |
 | **Rankings** | **Kill banter**, **Clear banter**, **Rival alerts**, **Test banter**, **Post rivals**, **Post standings** |
 | **Marks / Loot** | That tab's quick actions |
+
+## All-Time (Hall of Fame)
+
+**All-Time** in the title bar (or `/wdi fame`) keeps score over every fight you record, not just the last 25:
+
+- **Heroes**: everyone's hero points from every fight (clutch heals, shields, taunts, battle res, dispels, interrupts,
+  surviving...), their number of plays, fights, the kind of play they make most ("mostly Heal x12") and how often
+  they were the fight's **MVP**.
+- **Hall of Shame**: the same for blame points: mistakes, fights, their most common mistake and how often they were
+  **most to blame**.
+- **Best plays / Worst blunders**: the biggest single plays and the most costly single mistakes of all time, with the
+  boss and date.
+- **A player's record**: right-click anyone (or click a name on the left) for their totals, plays and mistakes by kind,
+  and their own best plays and worst blunders.
+- **Per fight** (bottom left) ranks by points per fight instead of totals, so raiders with fewer fights can top it
+  (3 fights or more).
+- **Posting**: click any line to post it, Ctrl-click to see it in your own chat first. **Post this board** posts the top
+  5 (or top 3 plays / blunders, or the open record) to the **Post to** channel, in colour.
+
+Every saved fight is added once; demo fights don't count. The tally stays even after the fights themselves are
+deleted. Fights saved before this existed are added the first time you log in. **Reset tally** starts again from zero
+(it asks first).
 
 ## Shout-outs
 
@@ -596,6 +626,7 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi threat on|off         ask the server for threat when TWThreat isn't loaded
 /wdi start | stop          manually track your target / end tracking
 /wdi check [post]          who's missing consumables right now
+/wdi fame                  All-Time: heroes, Hall of Shame, best plays and worst blunders
 /dc                        DopingControl's full raid check (built in)
 /wdi classicapi            what the optional ClassicAPI adds, and how to get it
 /wdi status | clear

@@ -338,6 +338,8 @@ function W:SaveFight(rec)
 	local db = WhoDidItDB
 	tinsert(db.fights, 1, rec)
 	while getn(db.fights) > (db.opts.maxFights or 25) do tremove(db.fights) end
+	-- the all-time Hall of Fame tally (missing until a restart after the update)
+	if W.Career then W.Career:Add(rec) end
 
 	local mode = db.opts.announce
 	if mode ~= "off" then
@@ -415,6 +417,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi announce self|channel|off|r - post a summary after each fight (channel = the shout channel)")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi trash on|off|r - also track elite trash pulls")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi fame|r - All-Time: the biggest heroes and the Hall of Shame over every fight, best plays and worst blunders")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi banter kills|clears [on|off]|r - fun kill / clear time announcements,  " .. c .. "/wdi banter test|r - preview one")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
@@ -536,6 +539,9 @@ local function slash(msg)
 	elseif cmd == "aml" or cmd == "automl" then
 		if not W.AutoML then W.Print(W.RESTART_MSG) return end
 		W.AutoML:Slash(rest)
+	elseif cmd == "fame" or cmd == "alltime" or cmd == "hof" then
+		if not W.Career then W.Print(W.RESTART_MSG) return end
+		W.UI:SetMode("fame")
 	elseif cmd == "loot" or cmd == "ml" then
 		if not W.Loot then W.Print(W.RESTART_MSG) return end
 		W.UI:SetMode("loot")
