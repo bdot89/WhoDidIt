@@ -338,24 +338,38 @@ local ECHO_EVENTS = {
 	CHAT_MSG_RAID_WARNING = "RAID_WARNING", CHAT_MSG_PARTY = "PARTY", CHAT_MSG_SAY = "SAY", CHAT_MSG_YELL = "YELL",
 	CHAT_MSG_CHANNEL = "CHANNEL",
 }
-local function trimmed(s) return (string.gsub(s or "", "%s+$", "")) end
+-- chat drops leading / trailing / doubled spaces, so compare without any spaces
+local function squash(s) return (string.gsub(s or "", "%s+", "")) end
+
+local function sameChat(w, k)
+	-- a raid warning can come back as raid, and the other way round
+	return w.kind == k or (k == "RAID" and w.kind == "RAID_WARNING") or (k == "RAID_WARNING" and w.kind == "RAID")
+end
 
 for ev, kind in pairs(ECHO_EVENTS) do
 	local k = kind
 	W:On(ev, function(msg, sender)
 		if sender ~= UnitName("player") or not msg then return end
-		local m = trimmed(msg)
+		local m = squash(msg)
+		-- 1) our own line, word for word (not something you typed, or the rankings channel)
 		for i = 1, getn(waiting) do
 			local w = waiting[i]
-			-- a raid warning can come back as raid, and the other way round
-			if w.kind == k or (k == "RAID" and w.kind == "RAID_WARNING") or (k == "RAID_WARNING" and w.kind == "RAID") then
-				-- only our own line counts (not something you typed, or the rankings channel)
-				if m == trimmed(w.sent) then
+			if sameChat(w, k) then
+				if m == squash(w.sent) then
 					tremove(waiting, i)
 					return
-				elseif w.colored and m == trimmed(w.plain) then
+				elseif w.colored and m == squash(w.plain) and not string.find(msg, "|c", 1, true) then
 					tremove(waiting, i)
 					goPlain(w.kind, "strips colours")
+					return
+				end
+			end
+		end
+		-- 2) anything coloured we posted came through: colours work in this chat
+		if string.find(msg, "|c", 1, true) then
+			for i = 1, getn(waiting) do
+				if sameChat(waiting[i], k) and waiting[i].colored then
+					tremove(waiting, i)
 					return
 				end
 			end
