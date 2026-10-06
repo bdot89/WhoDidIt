@@ -23,41 +23,61 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 
 ## Highlights
 
-- 🔍 **Why did it go wrong?** A ranked list of wipe causes: tank deaths, healers out of mana, enrage timers, mechanics, aggro pulls, missed interrupts. Click any cause for the full breakdown: who healed the tank in their last 5 seconds, or each healer's mana and potions.
+- 🔍 **Why did it go wrong?** A ranked list of wipe causes: tank deaths, healers out of mana, enrage timers, mechanics, aggro pulls, missed interrupts. Click any cause for the full breakdown.
 - ☠️ **Death recaps.** The last 15 seconds before every death (hits, heals, debuffs, items, health %), with the cause worked out for you.
-- 🎯 **Aggro & threat.** Every time the boss switched target, with the server's threat % at that moment. Non-tanks who rip aggro get blamed.
-- 📋 **Blame board.** Points for standing in fire, pulling aggro, bombing the raid, idling and low DPS, with a "Most to blame" verdict.
-- 🦸 **Heroes.** Game-saving plays: clutch heals, shields that ate a killing blow, taunt rescues, Blessing of Protection, battle res, Innervate, dispelled mind control.
-- 🧪 **Consumes.** Every player's flask, elixirs, food, juju and protection potions, plus every potion, rune, tea and healthstone they used. A **slacker check** says who's missing what their role needs, at every pull and every ready check.
-- 🎒 **Auto master looting.** Greys, whites and greens (and raid mats) handed out by themselves to you or anyone you pick, with a backup for when your bags are full.
-- 📣 **Shout-outs.** *Name & Shame* and *Big Them Up* awards, reports and per-player posts, sent to any channel in colour.
-- 📊 **Meters & timeline.** Damage, healing, taken, activity and utility, plus a full timeline of the fight.
-- 💀 **Auto marking.** Marks whole packs in one go, with ~365 raid packs built in, smart marks for tricky fights, and quick save for your own packs.
-- 💰 **Master looting.** RollFor is built in, with an **SR MasterLoot** tab: soft-res import and check, rolls, awards, loot given, and a step-by-step guide.
-- 🏆 **Rankings & Chronicle.** Kill and clear times against every guild on your realm, and the Chronicle combat logger built in.
+- 📋 **Blame board & heroes.** Points for every mistake (standing in fire, pulling aggro, bombing the raid, idling, low DPS) and every game-saving play (clutch heals, shields, taunts, BoP, battle res, dispels).
+- 🎯 **Threat & timeline.** Who the boss attacked and why, with the server's threat %. Click any name to jump to that player's own timeline at that moment.
+- 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check.
+- 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
+- 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), banter after kills, and a rival watch when someone beats your times. Click any time to open that guild's whole raid.
+- 📝 **Logging.** The Chronicle combat logger built in: start, save, archive and upload your logs.
+- 💀 **Auto Marker.** Marks whole packs in one go, with ~365 raid packs built in, smart marks for tricky fights, and quick save for your own packs.
+- 💰 **SR MasterLoot.** RollFor built in for soft-res master looting, with a step-by-step guide. **Auto-loot** hands out the trash loot for you.
 
 ## Screenshots
 
+Every window below is the built-in **Demo fight** (made-up raiders) or your own Rankings / Logging data.
+
+### Fights: what happened in the fight
+
 <table>
   <tr>
-    <td width="50%"><img src="docs/live.jpg" alt="Live fight"><br><b>Live view.</b> The report builds itself while you fight.</td>
-    <td width="50%"><img src="docs/breakdown.jpg" alt="Cause breakdown"><br><b>Cause breakdown.</b> Click any cause. Here: which healers died and when, and each survivor's healing and mana consumables.</td>
+    <td width="50%"><img src="docs/summary.jpg" alt="Summary"><br><b>Summary.</b> The verdict, every reason the fight went wrong (click one for the details) and the blame board. The panel bottom left posts to chat: <b>Post to</b> picks the channel, then Name &amp; Shame, Big Them Up, and the automatic posts after each fight.</td>
+    <td width="50%"><img src="docs/deaths.jpg" alt="Deaths"><br><b>Deaths.</b> Every death in order, with the cause, the killing blow and how big it was. Hover a death for its last seconds; click it for the full second-by-second recap with a health bar.</td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/deaths.jpg" alt="Deaths"><br><b>Deaths.</b> Every death with its cause and killing blow. Deaths after the wipe point are greyed out.</td>
-    <td width="50%"><img src="docs/death.jpg" alt="Death recap"><br><b>Death recap.</b> Click a death for its last seconds: every hit, heal and crushing blow, with a health bar.</td>
+    <td width="50%"><img src="docs/mistakes.jpg" alt="Mistakes"><br><b>Mistakes.</b> The blame board with bars, then every mistake with its time, type and blame points. Click a mistake to post it (Ctrl-click previews it). <b>Post mistakes</b> and <b>Name &amp; Shame</b> post the lot.</td>
+    <td width="50%"><img src="docs/heroes.jpg" alt="Heroes"><br><b>Heroes.</b> The same layout for the good stuff: the hero board, then every game-saving moment (heal, shield, taunt, dispel, innervate, tranq...). Click a moment to post it; <b>Post heroes</b> and <b>Big Them Up</b> post the lot.</td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/mistakes.jpg" alt="Mistakes"><br><b>Mistakes.</b> Every mistake with its time and blame points, worst first.</td>
-    <td width="50%"><img src="docs/threat.jpg" alt="Threat"><br><b>Threat.</b> Who the boss attacked and why (tank swap, pulled aggro, opened early), plus peak threat per player.</td>
+    <td width="50%"><img src="docs/threat.jpg" alt="Threat"><br><b>Threat.</b> Every time the boss changed target, who it went for, who lost it, their threat % and why (tank, pulled aggro, opened on the boss), plus everyone's peak threat. Click a name to see their timeline at that moment.</td>
+    <td width="50%"><img src="docs/meters.jpg" alt="Meters"><br><b>Meters.</b> Damage, healing, damage taken, activity (how much of their time alive each player did something) and utility (kicks, dispels, tranqs, items), with role, per second, share and deaths.</td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/meters.jpg" alt="Meters"><br><b>Meters.</b> Damage, healing, taken, activity and utility, with roles marked.</td>
-    <td width="50%"><img src="docs/timeline.jpg" alt="Timeline"><br><b>Timeline.</b> Everything that happened in the fight, in order.</td>
+    <td width="50%"><img src="docs/timeline.jpg" alt="Timeline"><br><b>Timeline.</b> Everything that happened, second by second, colour-coded by kind. Click a name in any line for that player's own timeline, focused on that moment.</td>
+    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> Raid overview (flasks, food, protection potions, items used), then each player's buffs and items, and what they were <b>missing for their role</b>. <b>Check raid now</b> scans the raid before the pull.</td>
+  </tr>
+</table>
+
+### Rankings: kill times and clears
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/rankings.jpg" alt="Kill times"><br><b>Kill times.</b> Every boss: your best, your guild's best, its rank, the gap to #1 and who holds it. A red <b>!</b> marks a boss someone recently beat you on; the <b>Rival watch</b> lists them (click to post a taunt). Bottom left: banter, rival alerts and posting the standings.</td>
+    <td width="50%"><img src="docs/clears.jpg" alt="Full clears"><br><b>Full clears.</b> The instance leaderboard with faction, date, raid size, time and how each guild compares with yours. Click any guild's time to open that raid: every boss kill in order, wipes, and a link to the log on Chronicle. <b>Realm</b> switches to the other realms or all of them together.</td>
+  </tr>
+</table>
+
+### Logging, Auto Marker, SR MasterLoot and Auto-loot
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/logging.jpg" alt="Logging"><br><b>Logging.</b> The Chronicle combat logger, built in: start and stop logging, save, archive between lockouts, the automatic options (start in raids, save after every boss), and how to upload the log to chronicleclassic.com.</td>
+    <td width="50%"><img src="docs/marker.jpg" alt="Auto Marker"><br><b>Auto Marker.</b> Every saved pack in the zone with its marks, mob count and how many are in range. Hold Shift + Ctrl over a mob to mark its whole pack, or mark the next pack along the route. Mark mobs yourself and click <b>Save marks as pack</b> to keep them.</td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> Flask / food overview, then each player's buffs and items used, colour-coded by type.</td>
-    <td width="50%"><img src="docs/chat.jpg" alt="Coloured chat posts"><br><b>Coloured chat posts.</b> A Report and a Consumes post: names in class colour, times in blue, numbers in white. Long lines split instead of losing their colours.</td>
+    <td width="50%"><img src="docs/masterloot.jpg" alt="SR MasterLoot"><br><b>SR MasterLoot.</b> RollFor for soft-res master looting, with a step-by-step guide (gold lines do that step), the imported soft-res sheet, loot given and every setting explained. <b>raidres.fly.dev</b> with a <b>Copy link</b> button at the top.</td>
+    <td width="50%"><img src="docs/autoloot.jpg" alt="Auto-loot"><br><b>Auto-loot.</b> The title-bar button shows whether it's on. Click it to pick who gets the trash loot (greys, whites, greens and raid mats) and who gets it when your bags are full. Epics are never handed out.</td>
   </tr>
 </table>
 
@@ -66,7 +86,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#chronicle-logs), [RollFor](#master-looting-rollfor) and the [auto marker's packs](#auto-marking), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
 
 ### Requirements
 
@@ -86,6 +106,12 @@ WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `
 4. Raid. Fights are recorded automatically when your group engages a boss. **Keep the boss targeted** so threat % gets recorded.
 
 ## The window
+
+Across the top: **Fights** · **Rankings** · **Logging** · **Auto Marker** · **SR MasterLoot**, then the **Auto-loot**
+button (on / off, click to choose who gets the loot) and green / red lights for Nampower, SuperWoW and threat data.
+Bottom left, on every tab: **Post to** (where WhoDidIt posts) and that tab's buttons. Hover anything to see what it does.
+
+**Fights** has one tab per view of the selected fight:
 
 | Tab | What it shows |
 | --- | --- |
@@ -192,7 +218,7 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
 
 The API is marked experimental by Chronicle, so it may change.
 
-## Chronicle logs
+## Logging (Chronicle logs)
 
 WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official addon for
 [chronicleclassic.com](https://chronicleclassic.com), made by Emyrk. You don't need to install it separately.
@@ -220,7 +246,7 @@ The **Logging** button (or `/wdi logs`) drives it from the WhoDidIt window. It s
 - Live status: logging on/off, the log file, unsaved lines, and what was saved this session
 - Step-by-step upload instructions. The upload itself is done on the website.
 
-## Auto marking
+## Auto Marker
 
 The **Auto Marker** button (or `/wdi marks`) is WhoDidIt's auto marker. It puts raid marks on a whole pack of mobs at once.
 Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one gets.
@@ -298,7 +324,7 @@ The spell IDs, the aura names this server really uses and the per-role idea come
 (MIT licence, [octowow.st/git/ShempError/DopingControl](https://octowow.st/git/ShempError/DopingControl)). For a full
 pre-raid matrix (gear enchants, hit, resistances), use DopingControl itself.
 
-## Auto master looting
+## Auto-loot (auto master looting)
 
 The **Auto-loot** button in the title bar (next to Nampower) shows whether it's on.
 - When it's on and you're the master looter, every grey, white and green item is handed out as soon as you open a
@@ -313,7 +339,7 @@ The **Auto-loot** button in the title bar (next to Nampower) shows whether it's 
 
 It replaces the AutoMasterLooter addon (by balake).
 
-## Master looting (RollFor)
+## SR MasterLoot (RollFor)
 
 The **SR MasterLoot** button (or `/wdi loot`) is for master looting. WhoDidIt has [RollFor](https://github.com/sica42/roll-for-vanilla)
 built in, the master-loot roller by Obszczymucha. It's sica42's 1.12 fork (v4.8.1), the newest version that still runs on

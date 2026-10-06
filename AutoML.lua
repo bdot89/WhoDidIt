@@ -221,6 +221,11 @@ function A:BuildPanel()
 	p:SetBackdropColor(0.04, 0.04, 0.06, 0.97)
 	p:SetBackdropBorderColor(0.55, 0.55, 0.6, 1)
 	p:Hide()
+	-- a solid fill, so nothing behind shows through
+	local fill = p:CreateTexture(nil, "BACKGROUND")
+	fill:SetTexture(0.04, 0.04, 0.06, 1)
+	fill:SetPoint("TOPLEFT", p, "TOPLEFT", 4, -4)
+	fill:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -4, 4)
 	tinsert(UISpecialFrames, "WhoDidItAutoLootPanel")
 
 	local title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
