@@ -1333,6 +1333,10 @@ tooltip(masterBtn, "Master feed", function()
 		"only what changed. They need nothing but the addon, and keep what they got.",
 		"A raid's boss list is sent when someone opens that raid.",
 		" ",
+		"All realms' times go out. To reach players on another realm, log into a character",
+		"there (this setting and the sync file are shared by your characters), or let it",
+		"spread: anyone who has the times passes them on when you're not there (a relay).",
+		" ",
 		"|cff888888Needs \"sharing\" on. Everyone else just leaves this off - they receive automatically.|r",
 		"|cff888888Only reaches players on the same realm (custom channels are per realm).|r" }
 end, "ANCHOR_TOP")
@@ -1369,7 +1373,7 @@ function UI:UpdateSync()
 		return
 	elseif fs and fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.85, 0.65, 0.1)
-		syncBar.top:SetText("|cffffd100Master:|r sending raid times")
+		syncBar.top:SetText(fs.relay and "|cffffd100Passing on raid times|r (relay)" or "|cffffd100Master:|r sending raid times")
 		syncBar.bot:SetText(fs.got .. " / " .. fs.total .. " messages to everyone on the realm")
 		return
 	elseif c and B.chronFeed then

@@ -119,8 +119,8 @@ function B:LoadChronicle()
 	if head == chronHead then return false end
 	chronHead = head
 	-- the master sends what's in its own file
-	B.chronRaw = fromFile and s or nil
-	B.chronRawL = fromFile and {} or nil
+	B.chronRaw = s
+	B.chronRawL = {}
 	B.chronFeed = not fromFile
 	B.chronFrom = (not fromFile) and f and f.from or nil
 	B.chronLines = 0
@@ -1212,7 +1212,11 @@ end)
 -- (all of them once, then only what changed) packed into chat messages. One
 -- stream serves everyone listening. A raid's boss list is only sent when
 -- someone opens that raid. What arrives is saved, so it's there next login.
---   H~synced~lines~server              master: what I have (every minute)
+--   H~synced~lines~server~m            what I have (every minute; m 1 = the master)
+-- Relays: anyone who has the times passes them on when the master isn't
+-- there, so they reach realms the master never logs into (a player with
+-- characters on two realms carries them over). Per realm only one copy
+-- talks: the master, else whoever has the newest times (then by name).
 --   A~since                             player: please send what's new since
 --   B~sid~synced~since~total~server     stream start (total D + R messages)
 --   D~sid~idx=text;idx=text;...         names (realm, raid, boss, guild)
@@ -1246,7 +1250,27 @@ local function unb36(s) return tonumber(s or "", 36) end
 local function clean(s) return (string.gsub(s or "", "[~;,|=\n]", " ")) end
 
 local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
-function B.IsMaster() return opts().master and B.chronRaw ~= nil end
+-- the master: /wdi master on, with the sync helper's own file on this PC
+function B.IsMaster() return opts().master and B.chronRaw ~= nil and not B.chronFeed end
+-- a server: the master, or (unless /wdi relay off) anyone who has the times
+local function canServe() return B.chronRaw ~= nil and (B.IsMaster() or opts().relay ~= false) end
+local servers = {}   -- other servers heard lately: name -> { name, synced, master, at }
+local function better(a, b)
+	if (a.master and 1 or 0) ~= (b.master and 1 or 0) then return a.master end
+	if a.synced ~= b.synced then return a.synced > b.synced end
+	return a.name < b.name
+end
+-- am I the one who talks on this realm right now?
+local function isLead()
+	if not canServe() then return false end
+	local me = { name = UnitName("player"), synced = B.chron and B.chron.synced or 0, master = B.IsMaster() }
+	local now = GetTime()
+	for _, s in pairs(servers) do
+		if now - s.at < 75 and better(s, me) then return false end
+	end
+	return true
+end
+B.IsLead = isLead
 local function feedOn() return opts().shareBoard and not opts().noFeed end
 
 local function feedSend(msg)
@@ -1405,7 +1429,7 @@ function B:FeedStatus()
 	for _, s in pairs(recv) do
 		if GetTime() - s.at < 60 then return { from = s.from, got = s.got, total = s.total } end
 	end
-	if B.IsMaster() and feedTotal > 0 and feedSent < feedTotal then return { master = true, got = feedSent, total = feedTotal } end
+	if feedTotal > 0 and feedSent < feedTotal then return { master = true, relay = not B.IsMaster(), got = feedSent, total = feedTotal } end
 end
 
 function B:FeedReceive(msg, sender)
@@ -1415,19 +1439,22 @@ function B:FeedReceive(msg, sender)
 	local me = UnitName("player")
 	if sender == me then return end
 	if kind == "H" then
-		B.master = { name = sender, synced = tonumber(p[3]) or 0, n = tonumber(p[4]) or 0, at = GetTime() }
+		local s = { name = sender, synced = tonumber(p[3]) or 0, n = tonumber(p[4]) or 0, master = (p[6] == "1"), at = GetTime() }
+		servers[sender] = s
+		-- B.master: the best server heard lately (shown in Rankings, asked for raid details)
+		if not B.master or GetTime() - B.master.at > 75 or B.master.name == sender or better(s, B.master) then B.master = s end
 		if not feedOn() or B.IsMaster() then return end
 		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
 		-- the helper's own file counts too: no need to ask if it's as fresh
 		local c = B.chron
-		if c and not B.chronFeed and (c.synced or 0) >= B.master.synced then return end
-		if B.master.synced > mine and not want then want = { at = GetTime() + 3 + math.random(12), since = mine } end
+		if c and not B.chronFeed and (c.synced or 0) >= s.synced then return end
+		if s.synced > mine and not want then want = { at = GetTime() + 3 + math.random(12), since = mine } end
 	elseif kind == "A" then
 		local since = tonumber(p[3]) or 0
 		if want and since <= want.since then want = nil end   -- their stream will cover us
-		if B.IsMaster() then pendingSince = math.min(pendingSince or since, since) end
+		if isLead() then pendingSince = math.min(pendingSince or since, since) end
 	elseif kind == "Q" then
-		if B.IsMaster() and p[3] then sendLog(p[3]) end
+		if isLead() and p[3] then sendLog(p[3]) end
 	elseif kind == "B" then
 		if not feedOn() or B.IsMaster() then return end
 		local since, synced = tonumber(p[5]) or 0, tonumber(p[4]) or 0
@@ -1486,16 +1513,18 @@ W:On("CHAT_MSG_CHANNEL", function(msg, sender, lang, chanFull, target, flags, zo
 	B:FeedReceive(msg, sender)
 end)
 
--- one feed message a second; the master's "what I have" every minute
-local lastHello = 0
+-- one feed message a second; the lead's "what I have" every minute
+-- (first one 20-40s after login, so a better server can be heard first)
+local lastHello
 W:Every(1, function()
 	if not WhoDidItDB or not opts().shareBoard then return end
 	local now = GetTime()
-	if B.IsMaster() then
+	if not lastHello then lastHello = now - 40 + math.random(20) end
+	if isLead() then
 		if now - lastHello > 60 and chanId() then
 			lastHello = now
 			local c = B.chron
-			feedSend("H~" .. (c and c.synced or 0) .. "~" .. (B.chronLines or 0) .. "~" .. clean(c and c.server or "?"))
+			feedSend("H~" .. (c and c.synced or 0) .. "~" .. (B.chronLines or 0) .. "~" .. clean(c and c.server or "?") .. "~" .. (B.IsMaster() and "1" or "0"))
 		end
 		-- start a stream someone asked for (one at a time, not more than every 20s)
 		if pendingSince and getn(feedq) == 0 and now - lastStream > 20 then
@@ -1512,5 +1541,5 @@ W:Every(1, function()
 	local id = chanId()
 	if not id then B:Join() return end
 	SendChatMessage(tremove(feedq, 1), "CHANNEL", nil, id)
-	if B.IsMaster() and feedSent < feedTotal then feedSent = feedSent + 1 end
+	if feedSent < feedTotal then feedSent = feedSent + 1 end
 end)

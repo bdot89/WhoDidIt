@@ -278,9 +278,17 @@ WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no hel
 - **Raid details:** when someone opens a raid (clicks a time), its boss list is asked for and sent there and then.
 - **In game:** the bar on Rankings shows "Receiving raid times from Upsilon 120 / 340", then "Raid times from Upsilon -
   they're online, updates are live". The header says "Chronicle via Upsilon".
-- **Who's affected:** only WhoDidIt users with **sharing** on (the default), on the **same realm** as the master
-  (custom chat channels are per realm). Players who run the helper themselves use whichever times are newer.
-- **Opting out:** `/wdi feed off` ignores feeds; `/wdi master off` stops sending.
+- **All realms:** the master sends every realm's times (C'Thun, N'Zoth and Y'Shaarj all in one). But a chat channel
+  only reaches players on the realm you're logged into, so to get them to the other realms:
+  - **Your characters there:** the Master setting and the sync file are shared by all your characters, so logging
+    into a character on another realm makes you the master there too.
+  - **Relays:** anyone who has received the times passes them on to their realm when the master isn't there. Someone
+    with characters on two realms carries them across just by logging in. Only one copy talks per realm at a time:
+    the master, else whoever has the newest times, so it never turns into spam.
+- **Who's affected:** WhoDidIt users with **sharing** on (the default). Players who run the helper themselves use
+  whichever times are newer.
+- **Opting out:** `/wdi feed off` ignores feeds; `/wdi relay off` stops passing them on; `/wdi master off` stops
+  being the master.
 - **What's sent:** guild names, raid / boss names, times, dates, raid sizes and Chronicle log links. Nothing about
   the master's or anyone else's characters.
 ## Logging (Chronicle logs)

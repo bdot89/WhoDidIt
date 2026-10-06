@@ -442,7 +442,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi fame|r - Hall of Fame: the biggest heroes and the Hall of Shame over every fight, best plays and worst blunders")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
-	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - feed your Chronicle raid times to every WhoDidIt user on the realm (needs the sync helper),  " .. c .. "/wdi feed on|off|r - use a master's feed")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - feed your Chronicle raid times to every WhoDidIt user on the realm (needs the sync helper),  " .. c .. "/wdi feed on|off|r - use a master's feed,  " .. c .. "/wdi relay on|off|r - pass them on when the master isn't online")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi banter kills|clears [on|off]|r - fun kill / clear time announcements,  " .. c .. "/wdi banter test|r - preview one")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi loot|r - master looting with RollFor (built in): soft-res, rolls, winners and a step-by-step guide")
@@ -548,6 +548,9 @@ local function slash(msg)
 		if rest == "off" then db.opts.master = false end
 		W.Print("Master feed: " .. (db.opts.master and "|cff33ff33on|r - while you're online, every WhoDidIt user on your realm gets your Chronicle raid times (needs the sync helper running on this PC)" or "off"))
 		if W.UI then W.UI:Refresh() end
+	elseif cmd == "relay" then
+		db.opts.relay = (rest ~= "off")
+		W.Print("Passing on raid times you've received (relay): " .. (db.opts.relay and "|cff33ff33on|r" or "off"))
 	elseif cmd == "feed" then
 		db.opts.noFeed = (rest == "off")
 		W.Print("Raid times from a master's feed: " .. (db.opts.noFeed and "off (ignored)" or "|cff33ff33on|r"))
