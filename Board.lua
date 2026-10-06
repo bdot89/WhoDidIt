@@ -95,29 +95,17 @@ end
 
 -- (re)read the sync file; true if it changed
 function B:LoadChronicle()
-	-- the times shipped in the addon (ChronicleData.lua, updated in the repository
-	-- Action), or the optional helper's file when it's newer
-	local s
-	if ReadCustomFile then
-		local ok, v = pcall(ReadCustomFile, CHRON_FILE)
-		if ok and type(v) == "string" and v ~= "" then s = v end
-	end
-	local bundled = WDI_CHRON_DATA
-	if bundled and bundled ~= "" then
-		local _, _, a = string.find(s or "", "WDICHRON|%d+|(%d+)")
-		local _, _, b = string.find(bundled, "WDICHRON|%d+|(%d+)")
-		if not s or (tonumber(b) or 0) > (tonumber(a) or 0) then s = bundled end
-	end
-	if not s then
+	if not ReadCustomFile then return false end
+	local ok, s = pcall(ReadCustomFile, CHRON_FILE)
+	if not ok or type(s) ~= "string" or s == "" then
 		local had = B.chron ~= nil
 		B.chron = nil
 		chronHead = nil
 		return had
 	end
-	local _, _, head = string.find(s, "(WDICHRON[^\n]*)")
+	local _, _, head = string.find(s, "^([^\n]*)")
 	if head == chronHead then return false end
 	chronHead = head
-	B.chronBundled = (s == bundled)
 
 	local data = { realms = {}, bosses = {}, zones = {}, me = {}, logs = {} }
 	for line in string.gfind(s, "[^\n]+") do

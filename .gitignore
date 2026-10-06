@@ -1,5 +1,6 @@
 # downloaded by tools\WhoDidIt-Sync: the Chronicle logger (github.com/Emyrk/ChronicleCompanion)
 # and RollFor (github.com/sica42/roll-for-vanilla), and the auto marker's mob packs (github.com/MarcelineVQ/AutoMarker)
+# and DopingControl (github.com/ShempError/DopingControl)
 /Chronicle/
 /Chronicle.new/
 /Chronicle.old/
@@ -7,6 +8,6 @@
 /RollFor/
 /RollFor.new/
 /RollFor.old/
-/.ci/
+/DopingControl/
 /DopingControl.new/
 /DopingControl.old/

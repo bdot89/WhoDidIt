@@ -3,10 +3,9 @@
 
 	WhoDidIt carries its own copy of DopingControl, the raid consumables,
 	class buffs, debuffs, resistances, hit and enchant checker by ShempError
-	(MIT licence, see DopingControl\LICENSE). It lives in the DopingControl\
-	folder, ships with WhoDidIt, and is kept up to date from
-	github.com/ShempError/DopingControl by the GitHub Action (and by
-	tools\WhoDidIt-Sync for anyone who runs it). Its
+	(MIT licence). It lives in the DopingControl\ folder and is downloaded
+	and kept up to date from github.com/ShempError/DopingControl by
+	tools\WhoDidIt-Sync; it isn't part of the WhoDidIt repository. Its
 	window opens from the Consumes tab ("Full check") or with /dc.
 
 	The sync tool makes small changes so it runs from inside WhoDidIt: its

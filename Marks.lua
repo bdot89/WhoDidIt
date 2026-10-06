@@ -1015,8 +1015,6 @@ local handedOver
 W:On("PLAYER_ENTERING_WORLD", function()
 	onZone()
 	if handedOver or not M.standDown then return end
-	-- without its own raid packs WhoDidIt would be a step down: leave AutoMarker on
-	if not M.dataInfo then return end
 	handedOver = true
 	-- bring over packs saved in AutoMarker (/am add), then switch it off
 	local n = 0
