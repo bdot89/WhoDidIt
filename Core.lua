@@ -326,29 +326,28 @@ W:On("PLAYER_ENTERING_WORLD", function()
 	end
 end)
 
--- the built-in extras tools\WhoDidIt-Sync.cmd downloads (they aren't on GitHub)
+-- optional extras that aren't part of the download (their authors' licences
+-- don't allow shipping them): each works as its own addon too, or
+-- tools\WhoDidIt-Sync.cmd can download it into WhoDidIt
 function W.MissingExtras()
 	local miss = {}
-	if W.Board and not W.Board.chron then tinsert(miss, "every guild's raid times (Rankings)") end
-	if W.Marks and not W.Marks.dataInfo then tinsert(miss, "the Auto Marker's raid packs") end
-	if not WDI_CHRON_VERSION then tinsert(miss, "the Chronicle logger") end
-	if not WDI_ROLLFOR_VERSION then tinsert(miss, "RollFor") end
-	if not WDI_DOPING_VERSION then tinsert(miss, "DopingControl") end
+	if W.Marks and not W.Marks.dataInfo and not IsAddOnLoaded("AutoMarker") then tinsert(miss, "the Auto Marker's raid packs (AutoMarker)") end
+	if not WDI_CHRON_VERSION and not IsAddOnLoaded("ChronicleCompanion") then tinsert(miss, "the Chronicle logger (ChronicleCompanion)") end
+	if not WDI_ROLLFOR_VERSION and not IsAddOnLoaded("RollFor") then tinsert(miss, "SR MasterLoot (RollFor)") end
 	return miss
 end
-W.SYNC_HOWTO = "double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r once (WoW can stay open)"
+W.SYNC_HOWTO = "install them like any addon, or let |cffffd100tools\\WhoDidIt-Sync.cmd|r (in the WhoDidIt folder) download them into WhoDidIt"
 
--- first run: say what's missing and how to get it, once a session
-local extrasTold
+-- say once (per account) which optional extras aren't installed
 W:Every(12, function()
-	if extrasTold or not WhoDidItDB then return end
-	extrasTold = true
+	local o = WhoDidItDB and WhoDidItDB.opts
+	if not o or o.extrasTipped then return end
+	o.extrasTipped = true
 	local miss = W.MissingExtras()
 	if getn(miss) == 0 then return end
-	W.Print("|cffff9933Not downloaded yet:|r " .. table.concat(miss, ", ") .. ". To get them, " .. W.SYNC_HOWTO
-		.. ", then " .. W.RESTART_HINT .. ". Leave its window open while you play to keep the raid times up to date.")
+	W.Print("Optional extras not installed: " .. table.concat(miss, ", ") .. ". To use them, " .. W.SYNC_HOWTO
+		.. ". Everything else works without them.")
 end)
-
 W:On("RAID_ROSTER_UPDATE", function() W:UpdateRoster() end)
 W:On("PARTY_MEMBERS_CHANGED", function() W:UpdateRoster() end)
 W:On("UNIT_PET", function() W:UpdateRoster() end)

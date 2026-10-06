@@ -8,8 +8,14 @@
     them. Leave it running while you play; WhoDidIt picks up new data on its
     own - no /reload needed.
 
-    It also finds your own characters (from the WTF folder) in Chronicle's
-    raid rosters, so your personal best kills and clears show up too.
+    With -IncludeMyCharacters it also looks up your own characters (the
+    names of the folders in WTF\Account) in Chronicle's public raid rosters,
+    so your personal bests show up too. It's off unless you ask for it.
+    Nothing is ever uploaded: the helper only downloads public Chronicle data.
+
+    The same data is also fetched for everyone by a scheduled GitHub Action
+    (-CI) and shipped in the addon as ChronicleData.lua, so running this is
+    optional: it just keeps the times fresher and adds Sync now in game.
 
     It also installs and updates what's built into WhoDidIt, each from its
     official source, checking every hour:
@@ -33,6 +39,9 @@
       WhoDidIt-Sync.ps1 -NoDopingUpdate    leave DopingControl alone
       WhoDidIt-Sync.ps1 -NoPackUpdate      leave the mob packs alone
       WhoDidIt-Sync.ps1 -DetailsPerSync 600  read more raids in full per sync (default 150)
+      WhoDidIt-Sync.ps1 -IncludeMyCharacters  also find your own characters' personal bests
+      WhoDidIt-Sync.ps1 -CI -DataDir <dir> -LuaOut <file>   one sync for the GitHub Action:
+                                           no updates, no characters, writes ChronicleData.lua
 
     The API allows 60 requests a minute; this stays at about one a second
     and caches everything it has read, so only new uploads are fetched
@@ -49,8 +58,13 @@ param(
     [switch]$NoRollForUpdate,
     [switch]$NoDopingUpdate,
     [switch]$NoPackUpdate,
-    [int]$DetailsPerSync = 150
+    [int]$DetailsPerSync = 150,
+    [switch]$IncludeMyCharacters,
+    [switch]$CI,
+    [string]$DataDir = "",
+    [string]$LuaOut = ""
 )
+if ($CI) { $Once = $true; $IncludeMyCharacters = $false }
 
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -70,7 +84,7 @@ $Horde    = @("Orc", "Troll", "Tauren", "Undead", "Scourge", "Goblin", "BloodElf
 
 # tools -> WhoDidIt -> AddOns -> Interface -> WoW folder
 $WowDir    = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
-$DataDir   = Join-Path $WowDir "CustomData"
+if (-not $DataDir) { $DataDir = Join-Path $WowDir "CustomData" }
 $OutFile   = Join-Path $DataDir "WhoDidIt_Chronicle.txt"
 $CacheFile = Join-Path $DataDir "WhoDidIt_ChronicleCache.json"
 # progress for the game's Rankings tab, and the game's "Sync now" request
@@ -109,10 +123,11 @@ function Set-Progress($step, $what, $done, $total) {
     Write-Status
 }
 
-# your characters: WTF\Account\<account>\<realm>\<character>
+# your characters: WTF\Account\<account>\<realm>\<character> - only with
+# -IncludeMyCharacters, and only used here to find your personal bests
 $MyChars = @{}   # "realm|name(lowercase)" -> "Name"
 $wtf = Join-Path $WowDir "WTF\Account"
-if (Test-Path $wtf) {
+if ($IncludeMyCharacters -and (Test-Path $wtf)) {
     foreach ($acct in Get-ChildItem $wtf -Directory) {
         foreach ($realmDir in Get-ChildItem $acct.FullName -Directory) {
             if ($realmDir.Name -eq "SavedVariables") { continue }
@@ -294,6 +309,8 @@ function Write-Output-File($clears, $myClears, $cache, $status) {
         $lines.Add(("K|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}" -f (Clean $b.realm), (Clean $b.instance), (Clean $b.boss), (Clean $b.guild),
             $b.faction, [math]::Round($b.secs, 1), $b.ended, $b.players, $b.slug))
     }
+    # personal bests only when asked for (-IncludeMyCharacters)
+    if ($MyChars.Count -eq 0) { $myClears = @{}; $myKills = @{} }
     foreach ($m in $myClears.Values) {
         $lines.Add(("PC|{0}|{1}|{2}|{3}|{4}|{5}|{6}" -f (Clean $m.realm), (Clean $m.char), (Clean $m.instance),
             [math]::Round($m.secs, 1), $m.ended, (Clean $m.guild), $m.slug))
@@ -312,6 +329,15 @@ function Write-Output-File($clears, $myClears, $cache, $status) {
         }
         $lines.Add(("L|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}" -f $slug, (Clean $l.realm), (Clean $l.instance), (Clean $l.guild), $l.faction,
             $l.ended, $l.players, ($ks -join ";")))
+    }
+    # the GitHub Action ships it inside the addon too, as a Lua string
+    # (Lua 5.0 long strings can't hold [[ or ]], so those are broken up)
+    if ($LuaOut) {
+        $body = ($lines -join "`n") -replace '\[\[', '[ [' -replace '\]\]', '] ]'
+        $lua = "-- Every guild's raid times from Chronicle (chronicleclassic.com), fetched by`n" +
+               "-- WhoDidIt's GitHub Action (tools\WhoDidIt-Sync.ps1 -CI). Generated - do not edit.`n" +
+               "WDI_CHRON_DATA = [[`n" + $body + "`n]]`n"
+        [IO.File]::WriteAllText($LuaOut, $lua, (New-Object Text.UTF8Encoding($false)))
     }
     $tmp = "$OutFile.tmp"
     [IO.File]::WriteAllText($tmp, ($lines -join "`n") + "`n", (New-Object Text.UTF8Encoding($false)))
@@ -332,8 +358,7 @@ function Sync {
     if (-not $srv) { throw "Server '$Server' isn't on Chronicle. Servers: $(($servers.servers | ForEach-Object name) -join ', ')" }
     $realms = @($srv.realms)
     Log ("{0}: {1}" -f $Server, (($realms | ForEach-Object name) -join ", "))
-    $mine = @($MyChars.Values | Sort-Object -Unique)
-    Log ("Your characters: {0}" -f $(if ($mine.Count) { $mine -join ", " } else { "none found in WTF" }))
+    if ($IncludeMyCharacters) { Log ("Personal bests for {0} of your characters" -f $MyChars.Count) }
 
     # 1) full clears: Chronicle's speedrun boards, best per realm / instance / guild
     $clears = @{}; $myClears = @{}
@@ -450,7 +475,9 @@ function Sync {
     # 3) your full clears in runs that weren't your guild's best:
     #    every run of every guild you've raided with
     $myGuilds = @{}
-    foreach ($log in $cache.logs.Values) { if ($log.mine.Count -gt 0 -and $log.guildId) { $myGuilds[$log.guildId] = $log.guild } }
+    if ($MyChars.Count -gt 0) {   # only with -IncludeMyCharacters
+        foreach ($log in $cache.logs.Values) { if ($log.mine.Count -gt 0 -and $log.guildId) { $myGuilds[$log.guildId] = $log.guild } }
+    }
     $gi = 0
     foreach ($gid in $myGuilds.Keys) {
         foreach ($inst in $Instances) {
@@ -491,6 +518,13 @@ if ($UpdatesOnly) {
     Update-Doping
     Update-MarkData
     Update-ClassicAPI
+    return
+}
+
+# the GitHub Action: one sync, nothing else
+if ($CI) {
+    Log "WhoDidIt-Sync (CI) for $Server -> $LuaOut"
+    Sync
     return
 }
 

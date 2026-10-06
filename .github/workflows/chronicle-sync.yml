@@ -1,0 +1,62 @@
+# Fetches every guild's raid times from Chronicle's public API and ships them
+# in the addon (ChronicleData.lua), so players don't have to run anything on
+# their PC. Also keeps the built-in DopingControl (MIT) up to date.
+# No player characters are read or written: guild times only.
+name: Chronicle raid times
+
+on:
+  schedule:
+    - cron: "17 */4 * * *"   # every 4 hours
+  workflow_dispatch:          # "Run workflow" button on GitHub
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chronicle-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: windows-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      # what earlier runs already read from Chronicle, so only new uploads are fetched
+      - name: Restore the Chronicle cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .ci/WhoDidIt_ChronicleCache.json
+          key: chronicle-cache-${{ github.run_id }}
+          restore-keys: chronicle-cache-
+
+      - name: Sync from Chronicle
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force .ci | Out-Null
+          & .\tools\WhoDidIt-Sync.ps1 -CI -DataDir "$PWD\.ci" -LuaOut "$PWD\ChronicleData.lua" -DetailsPerSync 600
+
+      - name: Save the Chronicle cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .ci/WhoDidIt_ChronicleCache.json
+          key: chronicle-cache-${{ github.run_id }}
+
+      - name: Update DopingControl
+        shell: powershell
+        run: |
+          & .\tools\EmbedUpdate.ps1 -Only Doping
+
+      # commit only when something besides the "synced at" stamp changed
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A ChronicleData.lua DopingControl WhoDidIt.toc
+          real=$(git diff --cached -U0 | grep -E '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -v 'WDICHRON|' | wc -l)
+          if [ "$real" -eq 0 ]; then echo "Nothing new"; exit 0; fi
+          git commit -m "Chronicle raid times $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git push

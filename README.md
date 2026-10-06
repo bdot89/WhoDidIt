@@ -95,7 +95,13 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. **Double-click `tools\WhoDidIt-Sync.cmd` once** (WoW can stay open). Rankings, the Auto Marker's raid packs, the logger, SR MasterLoot and Full check all need it, because none of them are stored on GitHub. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+That's it: every guild's raid times (Rankings) and DopingControl (Full check) come with the download, and nothing runs
+on your PC.
+
+4. *Optional extras:* the [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor) and the
+   [Auto Marker's raid packs](#auto-marker) belong to other authors and can't be shipped inside WhoDidIt (their code has
+   no licence that allows it). Install **ChronicleCompanion**, **RollFor** or **AutoMarker** like any addon and WhoDidIt
+   uses them, or let `tools\WhoDidIt-Sync.cmd` download them into WhoDidIt for you.
 5. *Optional:* [ClassicAPI](#classicapi-optional) for a few extras - close WoW and double-click `tools\Install-ClassicAPI.cmd`.
 
 ### Requirements
@@ -227,17 +233,25 @@ realm's fastest guild gets under our time.
   top 3, the instance's top 3 clears, or on how many bosses we're #1 and who has the rest. Use **Realm: All realms**
   to compare across the server.
 
-### Every guild's times from Chronicle (optional helper)
+### Every guild's times from Chronicle
 
-WoW addons can't go online, so a small helper does it for them. `tools\WhoDidIt-Sync.cmd` (PowerShell, built into
-Windows) uses Chronicle's public [External API](https://legacy.chronicleclassic.com/developers/api) to pull:
+WoW addons can't go online, so WhoDidIt's GitHub repository does it for everyone: every 4 hours a scheduled GitHub
+Action ([`.github/workflows/chronicle-sync.yml`](.github/workflows/chronicle-sync.yml)) uses Chronicle's public
+[External API](https://legacy.chronicleclassic.com/developers/api) and saves the times in the addon as
+`ChronicleData.lua`. **Updating WhoDidIt gets you the newest times; nothing runs on your PC.** It holds guild times
+only: no player characters, and nothing about you is ever sent anywhere. It pulls:
 
 - **full clears** from Chronicle's speedrun leaderboards
 - **boss kill times** from every uploaded raid log on your server (OctoWoW: C'Thun, N'Zoth, Y'Shaarj)
 
-It writes them to `CustomData\WhoDidIt_Chronicle.txt`, and WhoDidIt reads that file live through Nampower, with no
-`/reload`. Rankings then shows every guild's Chronicle times next to the WhoDidIt-shared ones (hover a row to see its
-source), plus Turtle's custom bosses and the Karazhan towers.
+Rankings shows every guild's Chronicle times next to the WhoDidIt-shared ones (hover a row to see its source), plus
+Turtle's custom bosses and the Karazhan towers. The bar bottom left on Rankings says how old the times are.
+
+**Optional: fresher times with the helper.** `tools\WhoDidIt-Sync.cmd` (PowerShell, built into Windows) does the same
+on your own PC every 10 minutes while its window is open, and writes `CustomData\WhoDidIt_Chronicle.txt`, which
+WhoDidIt reads live through Nampower (whichever is newer wins). It only downloads public Chronicle data and uploads
+nothing. It doesn't look at your characters unless you start it with `-IncludeMyCharacters` (then it reads the
+character folder names in `WTF\Account` to find your own personal bests in the public raid rosters).
 
 ```
 tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (close the window to stop)
@@ -250,6 +264,7 @@ tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
 tools\WhoDidIt-Sync.cmd -NoRollForUpdate   leave RollFor alone
 tools\WhoDidIt-Sync.cmd -NoPackUpdate      leave the mob packs alone
 tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (default 150)
+tools\WhoDidIt-Sync.cmd -IncludeMyCharacters also find your own characters' personal bests (off by default)
 ```
 
 - **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.
@@ -257,8 +272,8 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
 - **Progress in game:** the Rankings tab has a bar (bottom left) showing what the helper is doing: the step, how far
   it is and about how long is left, or "Up to date - next sync in 7 min". It also says if the helper isn't running,
   or has never run on this PC.
-- **Sync now:** the button under the bar asks the helper to sync straight away (it checks every few seconds), so you
-  get the newest times right after a raid is uploaded. The helper has to be running.
+- **Sync now:** with the helper running, the button under the bar asks it to sync straight away (it checks every few
+  seconds), so you get the newest times right after a raid is uploaded.
 - **Rate limit:** the helper stays within Chronicle's limit (about one request a second) and caches what it has read in `CustomData\WhoDidIt_ChronicleCache.json`.
 - **Faction:** comes from the raiders' races. OctoWoW raids cross-faction, so many guilds show as **M** (mixed).
 
@@ -266,8 +281,10 @@ The API is marked experimental by Chronicle, so it may change.
 
 ## Logging (Chronicle logs)
 
-WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official addon for
-[chronicleclassic.com](https://chronicleclassic.com), made by Emyrk. You don't need to install it separately.
+The Logging tab drives Chronicle's logger, **ChronicleCompanion**, the official addon for
+[chronicleclassic.com](https://chronicleclassic.com), made by Emyrk. Its code can't be shipped inside WhoDidIt, so
+either install ChronicleCompanion like any addon (WhoDidIt uses it), or let `tools\WhoDidIt-Sync.cmd` build it into
+WhoDidIt.
 
 - **Install:** `tools\WhoDidIt-Sync.cmd` downloads it from the official source,
   [github.com/Emyrk/ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion), into `WhoDidIt\Chronicle\`.
@@ -402,8 +419,8 @@ DopingControl itself is built into WhoDidIt, exactly as its author made it. Clic
 - **Equipment**: every slot, with missing enchants marked.
 - **Options**: what each role and class is expected to have, a whisper / report button and a minimap button.
 
-A player it can't read is shown as unknown, never as missing. `tools\WhoDidIt-Sync` downloads it from the author's
-GitHub and keeps it up to date (it isn't stored in this repository). If you already have DopingControl installed,
+A player it can't read is shown as unknown, never as missing. It's MIT licensed, so it ships inside WhoDidIt (the
+`DopingControl` folder, with its licence); the GitHub Action keeps it up to date from the author's GitHub. If you already have DopingControl installed,
 WhoDidIt switches the separate copy off for your next login; your settings carry over.
 
 ## Auto-loot (auto master looting)

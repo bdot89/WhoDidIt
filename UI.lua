@@ -1303,7 +1303,8 @@ local function syncNow()
 	local B = W.Board
 	local st = B:SyncStatus()
 	if not (st and st.alive) then
-		W.Print("The sync helper isn't running. Double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r - it syncs straight away, then every 10 minutes while its window is open.")
+		W.Print("Raid times come with the addon and are refreshed on GitHub every few hours - update WhoDidIt to get the newest. "
+			.. "|cff888888(Optional: the helper tools\\WhoDidIt-Sync.cmd keeps them fresher on your PC, and makes Sync now work.)|r")
 		return
 	end
 	if st.state == "running" then W.Print("A sync is already running - see the bar on the Rankings tab.") return end
@@ -1318,13 +1319,11 @@ syncBtn:SetScript("OnClick", syncNow)
 syncBar:SetScript("OnClick", syncNow)
 local function syncTip()
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
-		"WoW addons can't go online, so a small helper does it: |cffffd100tools\\WhoDidIt-Sync.cmd|r",
-		"in the WhoDidIt folder. Leave its window open while you play: it syncs every 10 minutes.",
+		"They come with the addon: GitHub fetches them every few hours, so updating WhoDidIt",
+		"gets you the newest. Nothing runs on your PC and nothing about you is sent anywhere.",
 		" ",
-		"The first sync reads every raid on the server from the last 90 days (about 45 minutes);",
-		"times appear here as it goes. Later syncs only fetch new uploads (a minute or two).",
-		" ",
-		"|cffffd100Sync now|r asks the helper to sync straight away (it has to be running)." }
+		"|cff888888Optional: the helper tools\\WhoDidIt-Sync.cmd fetches them on your PC every 10 minutes|r",
+		"|cff888888instead, and makes |cffffd100Sync now|cff888888 work (it asks the helper to sync straight away).|r" }
 	return l
 end
 tooltip(syncBtn, "Sync now", syncTip, "ANCHOR_TOP")
@@ -1343,10 +1342,15 @@ function UI:UpdateSync()
 		bar(1, 0.6, 0.15, 0.15)
 		syncBar.top:SetText("|cffff7777Needs Nampower|r")
 		syncBar.bot:SetText("to read the Chronicle times")
+	elseif (not st or not st.alive) and c and B.chronBundled then
+		-- the times that came with the addon (GitHub refreshes them every few hours)
+		bar(1, 0.15, 0.55, 0.25)
+		syncBar.top:SetText("|cff33ff33Raid times from " .. ago(c.synced or 0) .. "|r")
+		syncBar.bot:SetText("came with the addon - update it for newer")
 	elseif not st then
 		bar(0, 0.6, 0.15, 0.15)
-		syncBar.top:SetText(c and ("|cffffd100Synced " .. ago(c.synced or 0) .. "|r") or "|cffff7777Never synced on this PC|r")
-		syncBar.bot:SetText("Run tools\\WhoDidIt-Sync.cmd")
+		syncBar.top:SetText(c and ("|cffffd100Synced " .. ago(c.synced or 0) .. "|r") or "|cffff7777No raid times yet|r")
+		syncBar.bot:SetText("update the addon (or run the helper)")
 	elseif not st.alive then
 		bar(1, 0.35, 0.35, 0.35)
 		syncBar.top:SetText("|cffff9933Sync helper isn't running|r")
@@ -3084,7 +3088,7 @@ function UI:RefreshRankings()
 		local mins = floor((time() - c.synced) / 60)
 		chron = "Chronicle " .. ((c.status ~= "ok") and ("|cffffd100" .. (c.status or "") .. "|r") or (mins < 2 and "just synced" or (mins .. " min ago")))
 	else
-		chron = "|cffff9933Chronicle not synced - run tools\\WhoDidIt-Sync.cmd|r"
+		chron = "|cffff9933No raid times yet - update WhoDidIt|r"
 	end
 	UI:UpdateSync()
 	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. (UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
@@ -3484,7 +3488,8 @@ function UI:RefreshMarks()
 	rTitle:SetText("Auto Marker  |cffffffff" .. zone .. "|r")
 	rInfo:SetText((MODE_TEXT[M:MarkMode()] or "") .. "   |cff888888|   " .. getn(names) .. " packs" .. (yours > 0 and (", " .. yours .. " yours") or "") .. "|r")
 	if M.standDown then
-		rVerdict:SetText("|cffff9933The separate AutoMarker addon is still loaded, so WhoDidIt is standing by.|r\n|cff888888It has been switched off - /reload and WhoDidIt takes over.|r")
+		rVerdict:SetText(M.dataInfo and "|cffff9933The separate AutoMarker addon is still loaded, so WhoDidIt is standing by.|r\n|cff888888It has been switched off - /reload and WhoDidIt takes over.|r"
+			or "|cffff9933The separate AutoMarker addon is doing the marking|r (it has the raid packs).\n|cff888888WhoDidIt leaves it on, since its own raid packs aren't installed.|r")
 	else
 		rVerdict:SetText("|cffffd100Quick save:|r mark the mobs in game, click |cff33ff33Save marks as pack|r, type a name, Enter.\n"
 			.. "|cffffd100Mark a pack:|r hold Shift + Ctrl over a mob, or click |cffffd100Mark target's pack|r.")
@@ -4167,10 +4172,10 @@ function UI:EmptyRows()
 	tinsert(rows, row("Nampower: " .. yn(e.nampower) .. "     SuperWoW: " .. yn(e.superwow) .. "     TWThreat: " .. (e.twthreat and "|cff33ff33found|r" or "|cff888888not loaded (server queries used)|r")))
 	local miss = W.MissingExtras()
 	if getn(miss) > 0 then
-		tinsert(rows, row("|cffff9933Not downloaded yet:|r " .. table.concat(miss, ", ")))
-		tinsert(rows, row("   To get them, " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
+		tinsert(rows, row("|cffffd100Optional extras not installed:|r " .. table.concat(miss, ", ")))
+		tinsert(rows, row("   To use them, " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
 	else
-		tinsert(rows, row("Built-in extras (raid times, mob packs, logger, RollFor, DopingControl): |cff33ff33all installed|r"))
+		tinsert(rows, row("Optional extras (raid packs, logger, RollFor): |cff33ff33all installed|r"))
 	end
 	tinsert(rows, row("ClassicAPI: " .. (e.classicapi and "|cff33ff33found|r" or "|cff999999not installed - optional extra, /wdi classicapi shows what it adds and how to get it|r"),
 		nil, { click = function() W:ClassicApiInfo() end }))
