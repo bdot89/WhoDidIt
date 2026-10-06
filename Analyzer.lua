@@ -136,6 +136,12 @@ function A:Build(F, final)
 
 	------------------------------------------------ roles & participation
 	local players = F.players
+	-- took the boss below 100% threat: that's a taunt, not out-threating anyone
+	local taunted = {}
+	for i = 1, getn(F.aggro) do
+		local a = F.aggro[i]
+		if a.from and a.perc and a.perc < 100 and CAN_TANK[a.class or ""] then taunted[a.to] = true end
+	end
 	local nPart = 0
 	for name, p in pairs(players) do
 		local dead = (p.deadTotal or 0) + (p.deadAt and math.max(0, now - p.deadAt) or 0)
@@ -151,6 +157,8 @@ function A:Build(F, final)
 			role = "heal"
 		elseif CAN_TANK[p.class] and F.firstHolder == name and p.aggroTime >= 4 then
 			role = "tank"
+		elseif CAN_TANK[p.class] and taunted[name] and p.aggroTime >= 4 then
+			role = "tank"   -- an off-tank who taunted it over and held it
 		end
 		p._role = role
 	end
@@ -431,9 +439,14 @@ function A:Build(F, final)
 		local a = F.aggro[i]
 		local p = players[a.to]
 		local role = p and p._role
+		local fp = a.from and players[a.from]
 		local verdict
 		if role == "tank" then
 			verdict = "tank"
+		elseif CAN_TANK[a.class or ""] and a.from and ((a.perc and a.perc < 100) or not (fp and fp._role == "tank")) then
+			-- taunted it (under 100% threat), or took it off a healer / dps who
+			-- had pulled it: rescuing them is the tank's job, not a mistake
+			verdict = "taunt"
 		elseif a.oldDead then
 			verdict = "inherit"
 		elseif not a.from and a.t < 6 then
@@ -449,7 +462,7 @@ function A:Build(F, final)
 			local died = diedSoon(a.to, a.t)
 			find(a.t, a.to, "Aggro", died and 6 or 4,
 				a.to .. " pulled aggro on " .. a.boss .. (a.from and (" from " .. a.from) or "")
-				.. (a.perc and (" at " .. a.perc .. "% threat") or "") .. (died and " and died" or ""))
+				.. (a.perc and (" at " .. math.floor(a.perc + 0.5) .. "% threat") or "") .. (died and " and died" or ""))
 		end
 		tinsert(rec.aggro, { t = a.t, boss = a.boss, to = a.to, class = a.class, from = a.from, perc = a.perc, how = a.how, verdict = verdict })
 	end
@@ -863,7 +876,7 @@ function A:Build(F, final)
 						local a = F.aggro[j]
 						if a.to == who then
 							tinsert(rows, R(FmtTime(a.t) .. "  took aggro" .. (a.from and (" from " .. nameC(a.from)) or ""),
-								a.perc and (a.perc .. "% threat") or "|cff888888no threat reading|r"))
+								a.perc and (math.floor(a.perc + 0.5) .. "% threat") or "|cff888888no threat reading|r"))
 						end
 					end
 					local pk = F.threatPeak[who]
@@ -1033,13 +1046,13 @@ function A:ReportLines(rec, n)
 		if b.pts >= 1 then
 			local why = b.reasons[1] or ""
 			why = string.gsub(why, "^" .. b.name .. " ", "")
-			tinsert(parts, i .. ". " .. b.name .. " " .. b.pts .. "pt (" .. why .. ")")
+			tinsert(parts, i .. ". " .. b.name .. " " .. b.pts .. " pts (" .. why .. ")")
 		end
 	end
-	if getn(parts) > 0 then add("Blame: " .. table.concat(parts, "; ")) end
+	if getn(parts) > 0 then add("Blame points: " .. table.concat(parts, "; ")) end
 	local h = rec.heroes and rec.heroes[1]
 	if h and h.pts >= 2 then
-		add("Hero: " .. h.name .. " " .. h.pts .. "pt (" .. (string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")) .. ")")
+		add("Hero: " .. h.name .. " " .. h.pts .. " pts (" .. (string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")) .. ")")
 	end
 	return out
 end

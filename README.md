@@ -469,7 +469,7 @@ stays coloured. `/wdi colors on` tries every chat again; `/wdi colors off` posts
 
 | Mistake | Points |
 | --- | --- |
-| Pulled boss aggro (non-tank) | 4 (+2 if they died) |
+| Pulled boss aggro (non-tank) | 4 (+2 if they died). Not counted: tanks, a druid / warrior / paladin / shaman taunting it (under 100% threat), or taking it back off a healer / dps who pulled it - only the one who pulled it gets the points. |
 | Opened on the boss before the tank | 3 on a wipe (1 on a kill, 0 for hunters) |
 | Died to avoidable damage / the environment | 1 + 3 |
 | Your bomb/injection hit others | 2 + 1 per victim (+3 per kill) |

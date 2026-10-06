@@ -905,6 +905,7 @@ function T:ThreatPacket(msg)
 	for entry in string.gfind(data, "[^;]+") do
 		local _, _, name, tank, threat, perc = string.find(entry, "^([^:]+):([^:]*):([^:]*):([^:]*)")
 		perc = tonumber(perc)
+		if perc then perc = math.floor(perc + 0.5) end   -- 86.599998 -> 87
 		if name and perc then
 			F.threat[name] = { perc = perc, threat = tonumber(threat), t = now, tank = (tank == "1") }
 			local pk = F.threatPeak[name]

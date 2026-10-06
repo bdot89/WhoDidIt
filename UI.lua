@@ -1479,6 +1479,7 @@ local VERDICT = {
 	pulled   = "|cffff5555pulled aggro|r",
 	pull     = "|cffff9933opened on boss|r",
 	tank     = "|cff888888tank|r",
+	taunt    = "|cff888888taunt / rescue|r",
 	inherit  = "|cff888888after holder died|r",
 	mechanic = "|cff888888boss mechanic|r",
 }
@@ -1498,10 +1499,10 @@ function UI:ThreatRows(rec)
 			  "|cffdddddd" .. a.boss .. "|r",
 			  W.CName(a.to, a.class),
 			  a.from and W.CName(a.from, from and from.class) or (C_DIM .. "-|r"),
-			  a.perc and (((a.perc >= 100) and "|cffff5555" or C_TIME) .. a.perc .. "%|r") or "",
+			  a.perc and (((a.perc >= 100) and "|cffff5555" or C_TIME) .. math.floor(a.perc + 0.5) .. "%|r") or "",
 			  VERDICT[a.verdict] or "" },
 				{ tipTitle = a.boss .. " at " .. FmtTime(a.t),
-			  tip = { "Detected by: " .. (a.how == "melee" and "boss melee swing" or "boss target"), a.perc and ("Threat at the time: " .. a.perc .. "%") or "No threat reading at the time",
+			  tip = { "Detected by: " .. (a.how == "melee" and "boss melee swing" or "boss target"), a.perc and ("Threat at the time: " .. math.floor(a.perc + 0.5) .. "%") or "No threat reading at the time",
 			          " ", "|cff33ff33Click a name: their timeline, at " .. FmtTime(a.t) .. "|r",
 			          "|cff888888(Attacked = " .. a.to .. (a.from and (", Took it from = " .. a.from) or "") .. ")|r" },
 			  click = function(d, btn, x)
