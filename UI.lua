@@ -1662,7 +1662,7 @@ function UI:ConsumeRows(rec)
 	tinsert(rows, row("Protection potion active", getn(prot) .. " player(s)", { tip = getn(prot) > 0 and { table.concat(prot, ", ") } or nil, tipTitle = "Protection potions" }))
 	-- the slacker check: what each role should bring (DopingControl-style)
 	local slack, unknown = W.Cons.Slackers(rec)
-	local stip = { "Each role's must-haves: flask (big raids), food, the role's elixir,", "and a weapon oil / stone (seen with SuperWoW)." }
+	local stip = { "Each role's must-haves: flask (big raids), food, the role's elixir,", "and a weapon oil / stone (shamans: Rockbiter on tanks, Windfury on melee)." }
 	if getn(slack) > 0 then
 		tinsert(stip, " ")
 		local order, groups = W.Cons.ByNeed(slack)

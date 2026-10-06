@@ -301,7 +301,7 @@ marks.
 
 ## Consume check (slackers)
 
-Every pull, WhoDidIt reads each raider's consumable buffs, and their weapon oil or stone with SuperWoW. It then
+Every pull, WhoDidIt reads each raider's consumable buffs, and their weapon oil or stone (or shaman imbue) with SuperWoW. It then
 checks them against what their role should bring:
 
 | Role | Must-haves |
@@ -311,6 +311,8 @@ checks them against what their role should bring:
 | Ranged | food, Mongoose / agility |
 | Caster | flask, food, an arcane elixir, a wizard oil |
 | Healer | flask, food, Mageblood, a mana oil |
+| Shaman tank | as Tank, plus Rockbiter Weapon (Windfury or Frostbrand also count; an oil or stone does not) |
+| Shaman melee | as Melee, but a weapon imbue (Windfury etc.) instead of a stone |
 
 Flasks are only expected in the big raids (MC, BWL, AQ40, Naxx, ES, Karazhan).
 - **Consumes tab:** a "Missing something for their role" line (click it to post it), plus a **Missing** column for

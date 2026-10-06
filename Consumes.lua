@@ -39,6 +39,12 @@ end
 function C.Weapon(unit)
 	if not GetWeaponEnchantInfo then return nil end
 	if UnitIsUnit(unit, "player") then
+		-- SuperWoW gives our own enchant's name too (needed to tell Rockbiter
+		-- from a stone); the plain call only says whether there is one
+		if W.env.superwow then
+			local ok, name = pcall(GetWeaponEnchantInfo, "player")
+			if ok and type(name) == "string" and name ~= "" then return name end
+		end
 		local ok, has = pcall(GetWeaponEnchantInfo)
 		if ok then return has and true or false end
 		return nil
@@ -53,6 +59,14 @@ function C.Weapon(unit)
 		if lok and link then return false end
 	end
 	return nil
+end
+
+-- is a main-hand enchant name one of these shaman imbues? ("Rockbiter 9" ...)
+function C.IsImbue(name, kinds)
+	for i = 1, getn(kinds) do
+		if string.find(name, kinds[i], 1, true) then return true end
+	end
+	return false
 end
 
 -- every buff (spell ID) on a unit, or nil when it can't be read
@@ -105,7 +119,8 @@ C.ROLE_TEXT = { tank = "Tank", healer = "Healer", melee = "Melee", ranged = "Ran
 function C.Missing(p, zone)
 	if not p or p.read == false then return nil end
 	local role = C.Role(p)
-	local needs = role and W.Data.consumeNeeds[role]
+	local byClass = W.Data.consumeNeedsClass[p.class or ""]
+	local needs = role and (byClass and byClass[role] or W.Data.consumeNeeds[role])
 	if not needs then
 		needs = { { "flask", { "FLASK" } }, { "food", { "FOOD" } } }
 	end
@@ -119,6 +134,11 @@ function C.Missing(p, zone)
 		local label, slots = needs[i][1], needs[i][2]
 		if slots == "WPN" then
 			if p.wpn == false then tinsert(out, label) end
+		elseif slots == "IMBUE" then
+			-- none, or an oil / stone instead of the imbue (true = has one, name unknown)
+			if p.wpn == false or (type(p.wpn) == "string" and not C.IsImbue(p.wpn, needs[i][3])) then
+				tinsert(out, label)
+			end
 		elseif not (label == "flask" and zone and not W.Data.flaskZones[zone]) then
 			local ok = false
 			for j = 1, getn(slots) do if have[slots[j]] then ok = true end end

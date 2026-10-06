@@ -446,6 +446,19 @@ D.consumeNeeds = {
 	caster = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "arcane elixir", { "GAE" } }, { "wizard oil", "WPN" } },
 	healer = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "Mageblood", { "MP5" } }, { "mana oil", "WPN" } },
 }
+-- shamans use their own weapon imbue, not an oil / stone ("IMBUE" = the
+-- main-hand enchant's name must contain one of these). Tanks: Rockbiter,
+-- with Windfury / Frostbrand as the accepted exceptions.
+D.consumeNeedsClass = {
+	SHAMAN = {
+		tank  = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "defense elixir", { "ARM", "HPELX" } },
+		          { "agility / strength", { "AGI", "STR", "AP", "BL" } },
+		          { "Rockbiter weapon", "IMBUE", { "Rockbiter", "Windfury", "Frostbrand" } } },
+		melee = { { "flask", { "FLASK" } }, { "food", { "FOOD" } }, { "Mongoose / agility", { "AGI" } },
+		          { "strength / AP", { "STR", "AP", "BL" } },
+		          { "Windfury weapon", "IMBUE", { "Windfury", "Rockbiter", "Flametongue", "Frostbrand" } } },
+	},
+}
 D.flaskZones = {
 	["Molten Core"] = true, ["Blackwing Lair"] = true, ["Ahn'Qiraj"] = true, ["Naxxramas"] = true,
 	["Emerald Sanctum"] = true, ["Tower of Karazhan"] = true,
