@@ -608,16 +608,25 @@ StaticPopupDialogs["WHODIDIT_CLEAR"] = {
 	timeout = 0, whileDead = 1, hideOnEscape = 1,
 }
 
+StaticPopupDialogs["WHODIDIT_DELETE"] = {
+	text = "Delete this fight?\n\n%s",
+	button1 = YES, button2 = NO,
+	OnAccept = function()
+		if UI.selIdx and UI.selIdx > 0 and WhoDidItDB.fights[UI.selIdx] then
+			tremove(WhoDidItDB.fights, UI.selIdx)
+			if UI.selIdx > getn(WhoDidItDB.fights) then UI.selIdx = getn(WhoDidItDB.fights) end
+			if UI.selIdx < 1 then UI.selIdx = 1 end
+			UI.detail = nil; UI.cause = nil
+			UI:Refresh()
+		end
+	end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
 delBtn:SetScript("OnClick", function()
-	if UI.selIdx and UI.selIdx > 0 and WhoDidItDB.fights[UI.selIdx] then
-		tremove(WhoDidItDB.fights, UI.selIdx)
-		if UI.selIdx > getn(WhoDidItDB.fights) then UI.selIdx = getn(WhoDidItDB.fights) end
-		if UI.selIdx < 1 then UI.selIdx = 1 end
-		UI.detail = nil; UI.cause = nil
-		UI:Refresh()
-	end
+	local rec = UI.selIdx and UI.selIdx > 0 and WhoDidItDB.fights[UI.selIdx]
+	if rec then StaticPopup_Show("WHODIDIT_DELETE", (rec.enc or "?") .. " " .. (rec.result or "") .. "  " .. (rec.date or "")) end
 end)
-tooltip(delBtn, "Delete fight", { "Delete the fight selected in the list above." })
+tooltip(delBtn, "Delete fight", { "Delete the fight selected in the list above. Asks first." })
 
 clearBtn:SetScript("OnClick", function() StaticPopup_Show("WHODIDIT_CLEAR") end)
 tooltip(clearBtn, "Clear all fights", { "Delete every saved fight. Asks first." })
@@ -963,13 +972,13 @@ tooltip(reportBtn, "Report", function()
 end, "ANCHOR_LEFT")
 
 local HINTS = {
-	summary  = "Click a cause for details  -  click a name to post it (Ctrl preview, Shift shame, Alt praise)",
+	summary  = "Click a cause for details  -  click a name to see it in your chat (Ctrl post, Shift shame, Alt praise)",
 	deaths   = "Hover a death for its recap  -  click it for the full timeline",
-	mistakes = "Click a mistake to post it (Ctrl-click: preview)  -  hover for advice",
+	mistakes = "Click a mistake to see it in your chat (Ctrl-click: post it)  -  hover for advice",
 	threat   = "Click a name to open their timeline at that moment  -  keep the boss targeted for threat %",
 	timeline = "Everything that happened, in order  -  click a name for that player's timeline at that moment",
 	consumes = "Buffs / Used (top left) switch the grid  -  hover a square for details  -  red X = their role needs it  -  click a group to fold it",
-	heroes   = "Click a name or a game-saving moment to post it (Ctrl-click: preview)  -  hover for details",
+	heroes   = "Click a name or a game-saving moment to see it in your chat (Ctrl-click: post it)  -  hover for details",
 }
 
 ------------------------------------------------------------------ data helpers
@@ -1234,7 +1243,7 @@ postBoardBtn:SetScript("OnClick", function()
 	if UI.rk.boss then line = B:TopLine("kills", UI.rk.boss, realm, UI.rk.faction)
 	elseif UI.rk.view == "clears" then line = B:TopLine("clears", zone, realm, UI.rk.faction)
 	else line = B:StandingsLine(zone, realm) end
-	if line then W:Send({ line }, nil, B:ChatColours()) else W.Print("Nothing to post for this board yet.") end
+	if line then W:ConfirmSend({ line }, nil, B:ChatColours()) else W.Print("Nothing to post for this board yet.") end
 end)
 local function banterTip(what)
 	return function()
@@ -1602,22 +1611,22 @@ local function stripColors(s)
 	return s
 end
 
--- post one mistake / game-saving moment: click = the Post to channel,
--- Ctrl-click = a preview in your own chat
+-- post one mistake / game-saving moment: click = a preview in your own chat,
+-- Ctrl-click = the Post to channel
 local function postMoment(rec, kind, t, text, pts)
 	local lines = {
 		W.Analyzer.ChatHeader(kind, rec),
 		(t and (FmtTime(t) .. " - ") or "") .. stripColors(text) .. (pts and pts ~= 0 and ("  (" .. pts .. ")") or ""),
 	}
-	W:Send(lines, IsControlKeyDown() and "SELF" or nil, W.Shout.ClassMap(rec))
+	W:Send(lines, (not IsControlKeyDown()) and "SELF" or nil, W.Shout.ClassMap(rec))
 end
 
 local function momentTip(tip, what)
 	local out = {}
 	for i = 1, getn(tip or {}) do out[i] = tip[i] end
 	tinsert(out, " ")
-	tinsert(out, "|cff33ff33Click: post this " .. what .. " to " .. W.Shout:ChannelLabel() .. "|r")
-	tinsert(out, "|cff888888Ctrl-click: preview it in your own chat|r")
+	tinsert(out, "|cff888888Click: see it in your own chat first|r")
+	tinsert(out, "|cff33ff33Ctrl-click: post this " .. what .. " to " .. W.Shout:ChannelLabel() .. "|r")
 	return out
 end
 
@@ -1686,9 +1695,9 @@ local function playerClick(kind)
 		elseif IsAltKeyDown() then
 			W.Shout:Praise(rec, d.name)
 		elseif IsControlKeyDown() then
-			W.Shout:PlayerPost(rec, d.name, kind, "SELF")
+			W.Shout:PlayerPost(rec, d.name, kind)             -- post on purpose
 		else
-			W.Shout:PlayerPost(rec, d.name, kind)
+			W.Shout:PlayerPost(rec, d.name, kind, "SELF")     -- plain click: your own chat
 		end
 	end
 end
@@ -1698,8 +1707,8 @@ local function withLegend(lines, kind)
 	local tip = {}
 	for i = 1, getn(lines or {}) do tip[i] = lines[i] end
 	tinsert(tip, " ")
-	tinsert(tip, "|cffffd100Click|r  post " .. POST_LABEL[kind] .. " to " .. W.Shout:ChannelLabel())
-	tinsert(tip, "|cffffd100Ctrl-click|r  preview it in your own chat first")
+	tinsert(tip, "|cffffd100Click|r  see " .. POST_LABEL[kind] .. " in your own chat")
+	tinsert(tip, "|cffffd100Ctrl-click|r  post it to " .. W.Shout:ChannelLabel())
 	tinsert(tip, "|cffffd100Shift-click|r  Name & Shame them")
 	tinsert(tip, "|cffffd100Alt-click|r  Big them up")
 	tinsert(tip, "|cffffd100Right-click|r  mark / unmark as a tank")
@@ -2303,13 +2312,13 @@ function UI:ConsumeRows(rec)
 		for i = 1, getn(order) do tinsert(stip, "|cffff7777No " .. order[i] .. ":|r " .. table.concat(gr[order[i]], ", ")) end
 	end
 	if unknown > 0 then tinsert(stip, C_DIM .. unknown .. " out of range at the pull - not counted|r") end
-	tinsert(stip, "|cffffd100Click: post it (" .. W.Shout:ChannelLabel() .. ")|r")
+	tinsert(stip, "|cffffd100Click: see it in your chat   Ctrl-click: post it (" .. W.Shout:ChannelLabel() .. ")|r")
 	tinsert(rows, row("|cffffd100Missing something:|r  "
 		.. ((getn(slack) == 0) and (C_GUILD .. "nobody|r") or ("|cffff7777" .. getn(slack) .. " of " .. nPlayers .. "|r"))
-		.. ((unknown > 0) and (C_DIM .. "  (" .. unknown .. " out of range)|r") or "") .. C_DIM .. "  - click to post|r",
+		.. ((unknown > 0) and (C_DIM .. "  (" .. unknown .. " out of range)|r") or "") .. C_DIM .. "  - click to see, Ctrl-click to post|r",
 		"Used:  |cff" .. USED_COL.Mana .. usedTotals.Mana .. " mana|r   |cff" .. USED_COL.Health .. usedTotals.Health .. " health|r   |cff"
 		.. USED_COL.Protection .. usedTotals.Protection .. " prot|r   |cff" .. USED_COL.Other .. usedTotals.Other .. " other|r",
-		{ tipTitle = "Slacker check", tip = stip, click = function() W.Shout:Consumes(rec, "missing") end }))
+		{ tipTitle = "Slacker check", tip = stip, click = function() W.Shout:Consumes(rec, "missing", (not IsControlKeyDown()) and "SELF" or nil) end }))
 	if not anyBuffs then
 		tinsert(rows, row("|cff888888This fight was recorded by an older version - only items used are available.|r"))
 	end
@@ -2483,9 +2492,9 @@ function UI:UsedRows(rec)
 		if totals[c] then tinsert(bits, "|cffffffff" .. totals[c] .. "|r " .. string.lower(cols[c][2])) end
 	end
 	tinsert(rows, row("|cffffd100Used in the fight:|r  " .. ((all > 0) and table.concat(bits, C_DIM .. ",|r  ") or (C_DIM .. "nothing|r")),
-		C_DIM .. "click to post|r", { tipTitle = "Items used", tip = { "Every potion, rune, tea, healthstone, bandage and bomb the raid used.",
-			"|cffffd100Click: post the consumes summary (" .. W.Shout:ChannelLabel() .. ")|r" },
-			click = function() W.Shout:Consumes(rec, "summary") end }))
+		C_DIM .. "click to see, Ctrl-click to post|r", { tipTitle = "Items used", tip = { "Every potion, rune, tea, healthstone, bandage and bomb the raid used.",
+			"|cffffd100Click: the consumes summary in your chat   Ctrl-click: post it (" .. W.Shout:ChannelLabel() .. ")|r" },
+			click = function() W.Shout:Consumes(rec, "summary", (not IsControlKeyDown()) and "SELF" or nil) end }))
 
 	for gi = 1, getn(CONS_GROUPS) do
 		local g = CONS_GROUPS[gi]
@@ -2866,8 +2875,8 @@ local function rivalRows(rows, zone, kind, key)
 		local what = (e.kind == "clears") and "the clear" or e.key
 		tinsert(rows, row(who .. "  |cffdddddd" .. what .. "|r  " .. C_TIME .. B.Fmt(e.t) .. "|r  " .. C_DIM .. "vs our|r " .. C_GUILD .. B.Fmt(e.cur or e.ours) .. "|r",
 			C_DIM .. B.Ago(e.d) .. "|r  |cffffd100taunt >|r",
-			{ tipTitle = "Rival watch", tip = { B:RivalText(e), " ", "Click: post this with a taunt to " .. W.Shout:ChannelLabel() .. "." },
-			  click = function() B:PostRivals(zone, { e }) end }))
+			{ tipTitle = "Rival watch", tip = { B:RivalText(e), " ", "Click: see it in your chat.  Ctrl-click: post it with a taunt to " .. W.Shout:ChannelLabel() .. "." },
+			  click = function() B:PostRivals(zone, { e }, (not IsControlKeyDown()) and "SELF" or nil) end }))
 	end
 end
 
@@ -3947,11 +3956,11 @@ local function momentRows(rows, list, blunder, who)
 				{ C_DIM .. shown .. ".|r", col .. (blunder and "-" or "+") .. m.pts .. "|r", W.CName(m.who or "?", m.class) .. (m.test and " |cff33ccff(test)|r" or ""),
 				  momentText(m), "|cffffd100" .. (m.enc or "?") .. "|r " .. C_DIM .. (m.when or "") .. "|r" },
 				{ tipTitle = (blunder and "Blunder" or "Play") .. ": " .. (m.kind or ""), tip = { m.text or "", " ",
-					(m.enc or "?") .. ", " .. (m.when or "?"), "|cffffd100Click|r  post it   |cffffd100Ctrl-click|r  only you see it",
+					(m.enc or "?") .. ", " .. (m.when or "?"), "|cffffd100Click|r  see it in your chat   |cffffd100Ctrl-click|r  post it",
 					"|cffffd100Right-click|r  " .. (m.who or "their") .. "'s record" },
 				  click = function(d, button)
 					if button == "RightButton" then UI.fame.who = m.who; UI:Refresh() return end
-					C:Post({ C:MomentLine(m, nil, blunder) }, IsControlKeyDown() and "SELF" or nil)
+					C:Post({ C:MomentLine(m, nil, blunder) }, (not IsControlKeyDown()) and "SELF" or nil)
 				  end }))
 			if who and shown >= 5 then break end
 		end
@@ -3988,7 +3997,7 @@ function UI:FameBoardRows(kind)
 		local kl = kindLines(hero and p.hk or p.mk, hero and "|cff33ff33" or "|cffff7777")
 		for j = 1, getn(kl) do tinsert(tip, kl[j]) end
 		tinsert(tip, " ")
-		tinsert(tip, "|cffffd100Click|r  post their record   |cffffd100Ctrl-click|r  only you see it")
+		tinsert(tip, "|cffffd100Click|r  their record in your chat   |cffffd100Ctrl-click|r  post it")
 		tinsert(tip, "|cffffd100Right-click|r  open their record")
 		local name = it.name
 		tinsert(rows, cells(FAME_SPEC,
@@ -4000,7 +4009,7 @@ function UI:FameBoardRows(kind)
 			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = name .. (p.test and " (test - from a demo fight)" or "") .. " - Hall of Fame", name = name,
 			  click = function(dd, button)
 				if button == "RightButton" then UI.fame.who = name; UI:Refresh() return end
-				C:Post(C:PlayerLines(name), IsControlKeyDown() and "SELF" or nil)
+				C:Post(C:PlayerLines(name), (not IsControlKeyDown()) and "SELF" or nil)
 			  end }))
 	end
 	return rows
@@ -4022,8 +4031,8 @@ function UI:FamePlayerRows(name)
 		C_DIM .. per(p.hero) .. " a fight|r", { tipTitle = "Hero", tip = { "Points for game-saving plays: clutch heals, shields, taunts,", "battle res, dispels, interrupts, surviving..." } }))
 	tinsert(rows, row("|cffff7777Shame|r   " .. p.blame .. " pts from " .. p.mistakes .. " mistakes" .. ((p.worst > 0) and ("   - most to blame in " .. p.worst .. " fights") or ""),
 		C_DIM .. per(p.blame) .. " a fight|r", { tipTitle = "Shame", tip = { "Points for mistakes: standing in fire, pulling aggro,", "bombing the raid, idling, low DPS..." } }))
-	tinsert(rows, row("|cffffd100Click here to post this record|r " .. C_DIM .. "(Ctrl-click: only you see it)|r", nil,
-		{ click = function() C:Post(C:PlayerLines(name), IsControlKeyDown() and "SELF" or nil) end }))
+	tinsert(rows, row("|cffffd100Click here to see this record in your chat|r " .. C_DIM .. "(Ctrl-click: post it)|r", nil,
+		{ click = function() C:Post(C:PlayerLines(name), (not IsControlKeyDown()) and "SELF" or nil) end }))
 	head(rows, "Plays by kind")
 	local hk = kindLines(p.hk, "|cff33ff33")
 	if getn(hk) == 0 then tinsert(rows, row(C_DIM .. "None yet.|r")) end
@@ -4072,7 +4081,7 @@ function UI:RefreshFame()
 	rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights counted"
 		.. ((d.testFights > 0) and ("  |cff33ccff+ " .. d.testFights .. " test|cffaaaaaa") or "") .. "   |   " .. getn(names) .. " raiders|r")
 	rVerdict:SetText("Every saved fight adds its hero and blame points here, for good - even after the fight itself is deleted.\n|cff888888Demo fights count as |cff33ccfftest|cff888888 data - |cffffd100Clear test data|cff888888 (bottom left) removes them. Click any line to post it.|r")
-	hintText:SetText("Click a line to post it  -  Ctrl-click: only you see it  -  right-click a player for their record")
+	hintText:SetText("Click a line to see it in your chat  -  Ctrl-click: post it  -  right-click a player for their record")
 	hintText:Show()
 
 	local rows

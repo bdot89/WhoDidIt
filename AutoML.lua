@@ -105,7 +105,7 @@ A.FreeBagSlots = freeBagSlots
 local warned = {}
 
 local function onLoot()
-	if not A:On() then return end
+	if not A:On() or IsAddOnLoaded("AutoMasterLooter") then return end
 	local method, partyML = GetLootMethod()
 	if method ~= "master" or partyML ~= 0 then return end   -- only when you're the master looter
 	local d = db()
@@ -372,6 +372,5 @@ local handedOver
 W:On("PLAYER_ENTERING_WORLD", function()
 	if handedOver or not IsAddOnLoaded("AutoMasterLooter") then return end
 	handedOver = true
-	DisableAddOn("AutoMasterLooter")
-	W.Print("WhoDidIt now does auto master looting (the |cffffd100Auto-loot|r button in its title bar), so the separate AutoMasterLooter addon has been switched off from your next /reload.")
+	W:AskHandover("AutoMasterLooter", "auto master looting (the Auto-loot button in its title bar)")
 end)

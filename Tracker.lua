@@ -75,7 +75,9 @@ function T.NewPlayer(name, class)
 		deadTotal = 0, aggroTime = 0, bossSwings = 0, crush = 0,
 		consumes = {}, nCons = 0, kicks = 0, dispels = 0, tranqs = 0,
 		cbuffs = {},  -- consumable buff name -> fight time first seen (0 = before the pull)
-		recap = {}, rhead = 0,
+		-- two rings: damage taken, and everything else (heals, buffs, items), so a
+		-- flood of heal ticks can't push the killing blows out of a death recap
+		recap = {}, rhead = 0, drecap = {}, dhead = 0,
 	}
 end
 
@@ -122,12 +124,22 @@ local function mark(p, t1, t2)
 end
 
 -- death recap ring buffer
+local DMG_KIND = { dmg = true, melee = true, env = true }
 local function push(p, kind, src, spell, amt, crit, extra)
-	local h = p.rhead + 1
-	if h > RECAP_SIZE then h = 1 end
-	p.rhead = h
-	local r = p.recap[h]
-	if not r then r = {}; p.recap[h] = r end
+	local ring, h
+	if DMG_KIND[kind] and p.drecap then
+		ring = p.drecap
+		h = p.dhead + 1
+		if h > RECAP_SIZE then h = 1 end
+		p.dhead = h
+	else
+		ring = p.recap
+		h = p.rhead + 1
+		if h > RECAP_SIZE then h = 1 end
+		p.rhead = h
+	end
+	local r = ring[h]
+	if not r then r = {}; ring[h] = r end
 	r.t = GetTime(); r.k = kind; r.src = src; r.sp = spell; r.a = amt; r.c = crit; r.x = extra
 	local e = W.roster.byName[p.name]
 	if e then
@@ -452,6 +464,8 @@ end
 
 function T:CheckAvoid(p, spell, amt, now)
 	local rule = W.Data.avoid[spell]
+	-- a listed name only counts in its own raid (trash elsewhere casts the same names)
+	if rule and rule.zones and not F.demo and not rule.zones[GetRealZoneText() or ""] then rule = nil end
 	if not rule and WhoDidItDB.avoid[spell] then rule = W.Data.customRule end
 	if not rule then return end
 	local a = F.avoid[p.name]
@@ -675,17 +689,23 @@ function T:Death(e, guid)
 		name = e.name, class = e.class, t = now - F.t0, at = now,
 		lines = {}, debuffs = {}, verify = now + 1.5,
 	}
-	local h = p.rhead
-	for i = 0, RECAP_SIZE - 1 do
-		local idx = h - i
-		if idx < 1 then idx = idx + RECAP_SIZE end
-		local r = p.recap[idx]
-		if not r or not r.t or now - r.t > RECAP_WINDOW or r.t < F.t0 or r.t <= (p.lastDeathAt or 0) then break end
-		tinsert(d.lines, 1, {
-			t = r.t - F.t0, k = r.k, s = r.src, sp = r.sp, a = r.a, c = r.c,
-			hp = r.hp, hm = r.hpm, x = r.x,
-		})
+	-- both rings (damage taken, everything else), newest back to the window, in time order
+	local function read(ring, h)
+		if not ring then return end
+		for i = 0, RECAP_SIZE - 1 do
+			local idx = h - i
+			if idx < 1 then idx = idx + RECAP_SIZE end
+			local r = ring[idx]
+			if not r or not r.t or now - r.t > RECAP_WINDOW or r.t < F.t0 or r.t <= (p.lastDeathAt or 0) then break end
+			tinsert(d.lines, {
+				t = r.t - F.t0, k = r.k, s = r.src, sp = r.sp, a = r.a, c = r.c,
+				hp = r.hp, hm = r.hpm, x = r.x,
+			})
+		end
 	end
+	read(p.recap, p.rhead)
+	read(p.drecap, p.dhead or 0)
+	table.sort(d.lines, function(a, b) return a.t < b.t end)
 	p.lastDeathAt = now
 	local ad = guid and F.activeDebuffs[guid]
 	if ad then

@@ -33,12 +33,18 @@
     Updates are only swapped in while WoW is closed; one that arrives while
     you're playing is downloaded and installed when you exit.
 
+    Pinned versions: each addon is installed at the exact commit in its Pin
+    (below), a version the WhoDidIt maintainer has tested - never whatever
+    happens to be newest upstream. To try a newer one: run with -Latest, test
+    it in game, then put the commit it prints into Pin and release.
+
     WhoDidIt-Sync.ps1 runs this every hour. To run it on its own:
       EmbedUpdate.ps1                    check all of them and install updates
       EmbedUpdate.ps1 -Only RollFor      just one (Chronicle, RollFor or Doping)
       EmbedUpdate.ps1 -Force             download and reinstall even if up to date
 #>
-param([switch]$Force, [string]$Only = "")
+param([switch]$Force, [string]$Only = "", [switch]$Latest)
+$script:EmbedLatest = $Latest
 
 $EmbedUA    = "WhoDidIt-EmbedUpdate/1.0 (+https://github.com/bdot89/WhoDidIt)"
 $AddonDir   = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -54,6 +60,7 @@ $EmbedSpecs = @{
     Chronicle = @{
         Name = "Chronicle logger"; Key = "CHRON"; Addon = "ChronicleCompanion"; Dest = "Chronicle"
         Repo = "Emyrk/ChronicleCompanion"; Ref = "branch"; Branch = "main"; SubDir = ""
+        Pin = "b367dfe17d1183a43552d3985cad6362c7051457"; PinLabel = "0.38"
         VersionFn = "WDI_ChronVersion"; EqualsName = $true; Bindings = $false
         Begin = "# >>> Chronicle files (generated)"; End = "# <<< Chronicle files"
         # any use of its own name left over would break once it runs inside WhoDidIt
@@ -62,6 +69,7 @@ $EmbedSpecs = @{
     RollFor = @{
         Name = "RollFor"; Key = "ROLLFOR"; Addon = "RollFor"; Dest = "RollFor"
         Repo = "sica42/roll-for-vanilla"; Ref = "release"; Branch = "master"; SubDir = "RollFor"
+        Pin = "7f64d60872e66c4244c821986db56aacc11ed641"; PinLabel = "v4.8.1"
         VersionFn = "WDI_RollForVersion"; EqualsName = $false; Bindings = $true
         Begin = "# >>> RollFor files (generated)"; End = "# <<< RollFor files"
         # "RollFor" is also its chat/addon-message prefix, so only API uses are checked
@@ -71,6 +79,7 @@ $EmbedSpecs = @{
     Doping = @{
         Name = "DopingControl"; Key = "DOPING"; Addon = "DopingControl"; Dest = "DopingControl"
         Repo = "ShempError/DopingControl"; Ref = "branch"; Branch = "main"; SubDir = ""
+        Pin = "32403474ebb711c403a3a484bb383d567b7d4a03"; PinLabel = "0.6.4"
         VersionFn = "WDI_DopingVersion"; EqualsName = $true; Bindings = $false
         Begin = "# >>> DopingControl files (generated)"; End = "# <<< DopingControl files"
         # its .toc lists a developer-only file (dev\raiddump.lua) that isn't published
@@ -124,6 +133,11 @@ function Get-GitHub($url) {
 
 # the commit to install: the latest release's, or the branch head
 function Get-EmbedTarget($s) {
+    # the tested version, unless -Latest asks for the newest
+    if ($s.Pin -and -not $script:EmbedLatest) {
+        $c = Get-GitHub "https://api.github.com/repos/$($s.Repo)/commits/$($s.Pin)"
+        return @{ sha = [string]$c.sha; date = ([datetime]$c.commit.committer.date).ToString("yyyy-MM-dd"); label = "pinned " + $s.PinLabel }
+    }
     $label = $s.Branch
     $ref = $s.Branch
     if ($s.Ref -eq "release") {
@@ -269,7 +283,12 @@ function Build-EmbedStaging($s, $t) {
             $bf = Join-Path $src "Bindings.xml"
             if (Test-Path -LiteralPath $bf) {
                 $bx = [regex]::Replace([IO.File]::ReadAllText($bf), '(?s)<!--.*?-->', '')
-                foreach ($m in [regex]::Matches($bx, '(?s)<Binding\b[^>]*>.*?</Binding>')) { $binds += (($m.Value -replace '\s*\r?\n\s*', ' ').Trim()) }
+                foreach ($m in [regex]::Matches($bx, '(?s)<Binding\b[^>]*>.*?</Binding>')) {
+                    $b = ($m.Value -replace '\s*\r?\n\s*', ' ').Trim()
+                    # a key pressed while the addon isn't loaded must not raise an error
+                    $b = $b -replace '>\s*(RollFor\.key_bindings\.\w+)\(\)\s*<', '>if RollFor and RollFor.key_bindings then $1() end<'
+                    $binds += $b
+                }
             }
         }
 

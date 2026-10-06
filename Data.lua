@@ -202,6 +202,28 @@ D.avoid = {
 	["Fell off the edge"]= { tip = "Fell off the platform" },
 }
 
+-- Where each one counts: the same spell name is cast by trash and other
+-- bosses elsewhere (Rain of Fire, Blizzard, Poison Cloud...), so a name only
+-- counts as avoidable in its own raid. Environment damage and your own
+-- /wdi avoid spells count anywhere.
+local AVOID_ZONES = {
+	["Molten Core"]        = { "Lava Bomb", "Rain of Fire", "Inferno" },
+	["Onyxia's Lair"]      = { "Flame Breath", "Tail Sweep", "Deep Breath", "Eruption" },
+	["Blackwing Lair"]     = { "Shadow Flame", "Time Lapse", "Corrosive Acid", "Ignite Flesh", "Incinerate", "Frost Burn" },
+	["Ahn'Qiraj"]          = { "Blizzard", "Dark Glare", "Eye Beam", "Sand Blast", "Toxin", "Toxic Vapors" },
+	["Ruins of Ahn'Qiraj"] = { "Sand Trap", "Toxic Vapors" },
+	["Naxxramas"]          = { "Void Zone", "Shadow Fissure", "Poison Cloud", "Slime Spray", "Frost Breath", "Locust Swarm", "Holy Wrath", "Eruption" },
+}
+for zone, spells in pairs(AVOID_ZONES) do
+	for i = 1, table.getn(spells) do
+		local rule = D.avoid[spells[i]]
+		if rule then
+			rule.zones = rule.zones or {}
+			rule.zones[zone] = true
+		end
+	end
+end
+
 D.customRule = { tip = "Custom avoidable spell (/wdi avoid)" }
 
 ------------------------------------------------------------------ carrier mechanics

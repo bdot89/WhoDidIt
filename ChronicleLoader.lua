@@ -24,6 +24,18 @@
 
 WDI_CHRON_SKIP = IsAddOnLoaded("ChronicleCompanion") and true or nil
 
+-- Both declare Chronicle's saved variables; while the separate addon runs,
+-- give it its own tables back once WhoDidIt's saved copies have loaded.
+local standaloneDB, standaloneCharDB = WDI_CHRON_SKIP and ChronicleCompanionDB, WDI_CHRON_SKIP and ChronicleCompanionCharDB
+local keepChron = CreateFrame("Frame")
+keepChron:RegisterEvent("ADDON_LOADED")
+keepChron:SetScript("OnEvent", function()
+	if arg1 ~= "WhoDidIt" then return end
+	this:UnregisterAllEvents()
+	if standaloneDB then ChronicleCompanionDB = standaloneDB end
+	if standaloneCharDB then ChronicleCompanionCharDB = standaloneCharDB end
+end)
+
 -- the version Chronicle writes into its log header and shows in /chronicle
 function WDI_ChronVersion()
 	return WDI_CHRON_VERSION or ""

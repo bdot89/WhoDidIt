@@ -13,9 +13,9 @@
 	in this folder, it starts on WhoDidIt's ADDON_LOADED, and each file
 	starts with "if WDI_DOPING_SKIP then return end".
 
-	If the separate DopingControl addon is still switched on, it has already
-	loaded by now (it's an optional dependency), so the built-in copy stands
-	down for this session and the separate one is switched off for the next.
+	If the separate DopingControl addon is switched on, it has already loaded
+	by now (it's an optional dependency), so the built-in copy stands down
+	and WhoDidIt asks once whether to switch the separate one off.
 ----------------------------------------------------------------------]]
 
 WDI_DOPING_SKIP = IsAddOnLoaded("DopingControl") and true or nil
@@ -25,12 +25,22 @@ function WDI_DopingVersion()
 	return WDI_DOPING_VERSION or ""
 end
 
-if WDI_DOPING_SKIP then
-	DisableAddOn("DopingControl")
-	local f = CreateFrame("Frame")
-	f:RegisterEvent("PLAYER_ENTERING_WORLD")
-	f:SetScript("OnEvent", function()
-		this:UnregisterAllEvents()
-		DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Who|cffffd100DidIt|r: DopingControl is now built into WhoDidIt, so the separate addon has been switched off for your next login (your settings carry over). Once you've logged in on each character, you can delete Interface\\AddOns\\DopingControl.")
-	end)
-end
+-- Both declare DopingControlDB (that's how settings move to the built-in
+-- copy), so WhoDidIt's saved copy would replace the separate addon's table
+-- while it's running. Give it its own table back once WhoDidIt has loaded.
+local standaloneDB = WDI_DOPING_SKIP and DopingControlDB
+local f = CreateFrame("Frame")
+f:RegisterEvent("ADDON_LOADED")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:SetScript("OnEvent", function()
+	if event == "ADDON_LOADED" then
+		if arg1 ~= "WhoDidIt" then return end
+		if standaloneDB then DopingControlDB = standaloneDB end
+		return
+	end
+	this:UnregisterAllEvents()
+	-- only offer to switch it off when the built-in copy is really there
+	if WDI_DOPING_SKIP and WDI_DOPING_VERSION and WhoDidIt.AskHandover then
+		WhoDidIt:AskHandover("DopingControl", "DopingControl (Full check on the Consumes tab)")
+	end
+end)

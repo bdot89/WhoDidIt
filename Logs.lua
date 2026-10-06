@@ -118,9 +118,7 @@ local handedOver
 W:On("PLAYER_ENTERING_WORLD", function()
 	if handedOver or not (WDI_CHRON_SKIP and WDI_CHRON_VERSION) then return end
 	handedOver = true
-	DisableAddOn("ChronicleCompanion")
-	W.Print("WhoDidIt now has the Chronicle logger built in (v" .. WDI_CHRON_VERSION .. "), so the separate |cffffd100ChronicleCompanion|r addon has been switched off.")
-	W.Print("It keeps logging until your next /reload, then WhoDidIt's copy takes over and your Chronicle settings carry across. You can delete the Interface\\AddOns\\ChronicleCompanion folder.")
+	W:AskHandover("ChronicleCompanion", "the Chronicle logger (v" .. WDI_CHRON_VERSION .. ", the Logging tab)")
 end)
 
 ------------------------------------------------------------------ hooks from the tracker

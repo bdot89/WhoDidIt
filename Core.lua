@@ -245,11 +245,26 @@ function W:On(ev, fn)
 	tinsert(handlers[ev], fn)
 end
 
+-- an error in one handler is reported once and the others still run
+-- (in a raid, combat events arrive hundreds of times a second)
+local seenErr = {}
+function W:Oops(where, err)
+	err = tostring(err)
+	if seenErr[err] then return end
+	seenErr[err] = true
+	W.Print("|cffff5555error|r in " .. tostring(where) .. ": " .. err .. "  |cff888888(saved for bug reports: /wdi errors)|r")
+	if not WhoDidItDB then return end
+	WhoDidItDB.errors = WhoDidItDB.errors or {}
+	tinsert(WhoDidItDB.errors, 1, date("%m-%d %H:%M ") .. tostring(where) .. ": " .. err)
+	while getn(WhoDidItDB.errors) > 20 do tremove(WhoDidItDB.errors) end
+end
+
 frame:SetScript("OnEvent", function()
 	local list = handlers[event]
 	if not list then return end
 	for i = 1, getn(list) do
-		list[i](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+		local ok, err = pcall(list[i], arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+		if not ok then W:Oops(event, err) end
 	end
 end)
 
@@ -265,7 +280,8 @@ frame:SetScript("OnUpdate", function()
 		t.a = t.a + e
 		if t.a >= t.i then
 			t.a = 0
-			t.f()
+			local ok, err = pcall(t.f)
+			if not ok then W:Oops("timer", err) end
 		end
 	end
 end)
@@ -284,9 +300,9 @@ local DEFAULTS = {
 	shareBoard  = true,     -- share guild kill/clear records with WhoDidIt users on the realm
 	chronStartOnPull = true,  -- start Chronicle logging when a boss is pulled
 	chronSaveOnFight = true,  -- save the Chronicle log after every boss fight
-	banterKills  = true,    -- fun line in the shout channel after every boss kill
-	banterClears = true,    -- ...and after every full clear
-	rivalAlerts  = true,    -- post the rival watch when the raid enters an instance
+	banterKills  = false,   -- fun line in the shout channel after every boss kill (the raid leader switches it on)
+	banterClears = false,   -- ...and after every full clear
+	rivalAlerts  = false,   -- show the rival watch in your own chat when the raid enters an instance
 	readyCheckScan = true,  -- consume check (your chat only) on every ready check
 }
 
@@ -311,6 +327,29 @@ W:On("ADDON_LOADED", function(name)
 		db.opts.colorsPerChat = 3
 		db.opts.chatColors = true
 		db.opts.plainKinds = {}
+	end
+	-- banter used to be on out of the box: ask once whether to keep it
+	if not db.opts.chatAsked then
+		db.opts.chatAsked = true
+		if db.opts.banterKills or db.opts.banterClears then W.askBanter = true end
+		db.opts.rivalAlerts = false   -- now only ever shown in your own chat; on again from Rankings
+	end
+end)
+
+StaticPopupDialogs["WHODIDIT_BANTER"] = {
+	text = "WhoDidIt can post a fun line about your kill and clear times in raid chat (Kill / Clear banter).\n\nKeep that on? Most raids leave it to the raid leader.",
+	button1 = "Keep on", button2 = "Turn off",
+	OnCancel = function()
+		WhoDidItDB.opts.banterKills = false
+		WhoDidItDB.opts.banterClears = false
+		W.Print("Banter is off. The raid leader can switch it on in Rankings (bottom left).")
+	end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+W:Every(10, function()
+	if W.askBanter then
+		W.askBanter = nil
+		StaticPopup_Show("WHODIDIT_BANTER")
 	end
 end)
 
@@ -355,12 +394,100 @@ W:On("UNIT_PET", function() W:UpdateRoster() end)
 
 W:DetectEnv()
 
+------------------------------------------------------------------ other addons: ask first
+
+-- Switching off an addon someone installed is their decision. When WhoDidIt
+-- has its own copy of something that's also installed separately, it asks
+-- once per addon (one question at a time). Yes: the separate one is switched
+-- off from the next login. No: both stay, and WhoDidIt's copy stands by.
+W.handoverQueue = {}
+StaticPopupDialogs["WHODIDIT_HANDOVER"] = {
+	text = "%s",
+	button1 = YES, button2 = NO,
+	OnAccept = function()
+		local h = W.handoverNow
+		W.handoverNow = nil
+		if not h then return end
+		DisableAddOn(h.addon)
+		if h.yes then h.yes() end
+		W.Print("The separate |cffffd100" .. h.addon .. "|r addon is switched off from your next login (/reload). WhoDidIt's copy takes over then.")
+	end,
+	OnCancel = function()
+		local h = W.handoverNow
+		W.handoverNow = nil
+		if not h then return end
+		WhoDidItDB.opts.keepSeparate = WhoDidItDB.opts.keepSeparate or {}
+		WhoDidItDB.opts.keepSeparate[h.addon] = true
+		W.Print("Keeping the separate |cffffd100" .. h.addon .. "|r addon; WhoDidIt's copy stands by. (/wdi handover " .. h.addon .. " asks again.)")
+	end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+-- addon: its folder name; what: what WhoDidIt does instead; yes: run after "Yes"
+function W:AskHandover(addon, what, yes)
+	local keep = WhoDidItDB and WhoDidItDB.opts.keepSeparate
+	if keep and keep[addon] then return end
+	for i = 1, getn(W.handoverQueue) do if W.handoverQueue[i].addon == addon then return end end
+	tinsert(W.handoverQueue, { addon = addon, what = what, yes = yes })
+end
+-- did the player choose to keep the separate addon?
+function W:KeepsSeparate(addon)
+	local keep = WhoDidItDB and WhoDidItDB.opts.keepSeparate
+	return keep and keep[addon] and IsAddOnLoaded(addon) and true or false
+end
+W:Every(3, function()
+	if W.handoverNow or getn(W.handoverQueue) == 0 or UnitAffectingCombat("player") then return end
+	local h = tremove(W.handoverQueue, 1)
+	W.handoverNow = h
+	StaticPopup_Show("WHODIDIT_HANDOVER", "WhoDidIt has " .. h.what .. " built in.\n\nSwitch the separate |cffffd100" .. h.addon
+		.. "|r addon off from your next login?\n\n|cff888888No keeps it: it carries on as now and WhoDidIt's copy stands by.|r")
+end)
+
+------------------------------------------------------------------ posting other people's text
+
+-- Lines with names other people chose (other guilds' names from Chronicle
+-- or the WDIBoard channel) are never posted by themselves: the exact text is
+-- shown first and only goes out when you click Post. Anyone can upload a log
+-- under any guild name, and whatever WhoDidIt posts is said in your name.
+StaticPopupDialogs["WHODIDIT_CONFIRMPOST"] = {
+	text = "Post this to %s?\n\n%s",
+	button1 = "Post", button2 = CANCEL,
+	OnAccept = function()
+		local p = W.pendingPost
+		W.pendingPost = nil
+		if p then W:Send(p.lines, p.channel, p.colours) end
+	end,
+	OnCancel = function() W.pendingPost = nil end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+function W:ConfirmSend(lines, channel, colours)
+	if channel == "SELF" then W:Send(lines, channel, colours) return end
+	local plain = {}
+	for i = 1, getn(lines) do
+		local s = string.gsub(string.gsub(lines[i], "|c%x%x%x%x%x%x%x%x", ""), "|r", "")
+		tinsert(plain, s)
+	end
+	local text = table.concat(plain, "\n")
+	if string.len(text) > 600 then text = string.sub(text, 1, 600) .. " ..." end
+	W.pendingPost = { lines = lines, channel = channel, colours = colours }
+	StaticPopup_Show("WHODIDIT_CONFIRMPOST", (W.Shout and W.Shout.ChannelLabel and W.Shout:ChannelLabel()) or "chat", text)
+end
+
 ------------------------------------------------------------------ saving / announcing fights
 
 function W:SaveFight(rec)
 	local db = WhoDidItDB
 	tinsert(db.fights, 1, rec)
-	while getn(db.fights) > (db.opts.maxFights or 25) do tremove(db.fights) end
+	-- an older fight selected in the window: it moved down one place
+	if W.UI and W.UI.selIdx and W.UI.selIdx > 0 then W.UI.selIdx = W.UI.selIdx + 1 end
+	-- over the limit: drop the oldest demo fight first, so the demo never costs real fights
+	while getn(db.fights) > (db.opts.maxFights or 25) do
+		local drop = getn(db.fights)
+		for i = getn(db.fights), 1, -1 do
+			if db.fights[i].demo then drop = i; break end
+		end
+		tremove(db.fights, drop)
+	end
+	if W.UI and W.UI.selIdx and W.UI.selIdx > getn(db.fights) then W.UI.selIdx = getn(db.fights) end
 	-- the all-time Hall of Fame tally (missing until a restart after the update)
 	if W.Career then W.Career:Add(rec) end
 
@@ -451,7 +578,8 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi marks|r - auto marking: saved packs and quick save,  " .. c .. "/wdi mark|r - mark the pack under your mouse,  " .. c .. "/wdi marks help|r - all marking commands")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi demo|r - add two sample fights to try every feature, " .. c .. "/wdi demo live|r - watch one play out live, " .. c .. "/wdi demo clear|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi start|r / " .. c .. "/wdi stop|r - manually track your target / end tracking")
-	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi status|r, " .. c .. "/wdi clear|r")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi idleblame on|off|r - give blame points for low activity / low DPS (off: shown, worth 0)")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi status|r, " .. c .. "/wdi clear|r, " .. c .. "/wdi errors|r - errors WhoDidIt caught (for bug reports)")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi classicapi|r - what the optional ClassicAPI add-on improves, and how to get it")
 end
 
@@ -608,9 +736,20 @@ local function slash(msg)
 	elseif cmd == "stop" then
 		W.Tracker:ManualStop()
 	elseif cmd == "clear" then
-		db.fights = {}
-		W.Print("All saved fights deleted.")
-		W.UI:OnFightEnd()
+		StaticPopup_Show("WHODIDIT_CLEAR")
+	elseif cmd == "handover" then
+		local keep = db.opts.keepSeparate or {}
+		keep[rest] = nil
+		db.opts.keepSeparate = keep
+		W.Print("WhoDidIt will ask about " .. (rest ~= "" and rest or "?") .. " again at your next login.")
+	elseif cmd == "idleblame" then
+		db.opts.idleBlame = (rest == "on")
+		W.Print("Blame points for low activity / low DPS: " .. (db.opts.idleBlame and "|cffff7777on|r" or "|cff33ff33off|r (still shown, worth 0)")
+			.. " - applies to fights recorded from now on")
+	elseif cmd == "errors" then
+		local list = db.errors or {}
+		if getn(list) == 0 then W.Print("No errors recorded.") end
+		for i = 1, getn(list) do DEFAULT_CHAT_FRAME:AddMessage("  " .. list[i]) end
 	else
 		help()
 	end

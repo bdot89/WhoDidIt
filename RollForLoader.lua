@@ -21,6 +21,19 @@
 
 WDI_ROLLFOR_SKIP = IsAddOnLoaded("RollFor") and true or nil
 
+-- Both declare RollFor's saved variables (so its settings, soft-res and
+-- winners move to the built-in copy). While the separate RollFor runs, give
+-- it its own tables back once WhoDidIt's saved copies have loaded over them.
+local standaloneDb, standaloneCharDb = WDI_ROLLFOR_SKIP and RollForDb, WDI_ROLLFOR_SKIP and RollForCharDb
+local keep = CreateFrame("Frame")
+keep:RegisterEvent("ADDON_LOADED")
+keep:SetScript("OnEvent", function()
+	if arg1 ~= "WhoDidIt" then return end
+	this:UnregisterAllEvents()
+	if standaloneDb then RollForDb = standaloneDb end
+	if standaloneCharDb then RollForCharDb = standaloneCharDb end
+end)
+
 -- the version RollFor reports (and compares with other raiders' copies)
 function WDI_RollForVersion()
 	return WDI_ROLLFOR_VERSION or ""

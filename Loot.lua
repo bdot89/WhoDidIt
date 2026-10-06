@@ -291,7 +291,5 @@ local handedOver
 W:On("PLAYER_ENTERING_WORLD", function()
 	if handedOver or not (WDI_ROLLFOR_SKIP and WDI_ROLLFOR_VERSION) then return end
 	handedOver = true
-	DisableAddOn("RollFor")
-	W.Print("WhoDidIt now has RollFor built in (v" .. WDI_ROLLFOR_VERSION .. ", the |cffffd100Loot|r tab), so the separate |cffffd100RollFor|r addon has been switched off on this character.")
-	W.Print("It keeps working until your next /reload, then WhoDidIt's copy takes over with your RollFor settings, soft-res and winners. Once you've done this on every character you loot with, you can delete Interface\\AddOns\\RollFor.")
+	W:AskHandover("RollFor", "RollFor (v" .. WDI_ROLLFOR_VERSION .. ", the SR MasterLoot tab)")
 end)

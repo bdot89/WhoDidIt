@@ -48,6 +48,8 @@ local function round1(v) return floor(v * 10 + 0.5) / 10 end
 
 function A.AvoidRule(spell, role)
 	local rule = W.Data.avoid[spell]
+	-- only in its own raid (fights are analysed where they happened)
+	if rule and rule.zones and not A.demoBuild and not rule.zones[GetRealZoneText() or ""] then rule = nil end
 	if not rule and WhoDidItDB.avoid[spell] then rule = W.Data.customRule end
 	if not rule or (rule.notTank and role == "tank") then return nil end
 	return rule
@@ -113,6 +115,7 @@ end
 ------------------------------------------------------------------ build
 
 function A:Build(F, final)
+	A.demoBuild = F.demo and true or nil   -- demo fights: avoidable spells count wherever you are
 	local D = W.Data
 	local db = WhoDidItDB
 	local now = final and F.tEnd or GetTime()
@@ -164,6 +167,13 @@ function A:Build(F, final)
 		local a = F.aggro[i]
 		if a.from and a.perc and a.perc < 100 and CAN_TANK[a.class or ""] then taunted[a.to] = true end
 	end
+	-- taunting at least twice means they're tanking something (adds included,
+	-- which never show up as boss aggro time)
+	local taunts = {}
+	for i = 1, getn(F.tauntCasts or {}) do
+		local who = F.tauntCasts[i].who
+		if who then taunts[who] = (taunts[who] or 0) + 1 end
+	end
 	local nPart = 0
 	for name, p in pairs(players) do
 		local dead = (p.deadTotal or 0) + (p.deadAt and math.max(0, now - p.deadAt) or 0)
@@ -181,6 +191,8 @@ function A:Build(F, final)
 			role = "tank"
 		elseif CAN_TANK[p.class] and taunted[name] and p.aggroTime >= 4 then
 			role = "tank"   -- an off-tank who taunted it over and held it
+		elseif CAN_TANK[p.class] and (taunts[name] or 0) >= 2 then
+			role = "tank"   -- an add tank (never on the boss, so no aggro time)
 		end
 		p._role = role
 	end
@@ -476,7 +488,9 @@ function A:Build(F, final)
 			-- hunters pull and Feign Death on purpose
 			local pts = (a.class == "HUNTER" and 0) or ((rec.result == "KILL") and 1 or 3)
 			find(a.t, a.to, "Pull", pts, a.to .. " had first aggro on " .. a.boss .. " (pulled before the tank)")
-		elseif noAggro and not (a.perc and a.perc >= 100) then
+		-- (a feared / knocked-back tank hands a swing to whoever is next: without
+		-- a threat reading of 100%+ that's the boss's doing, not a pull)
+		elseif (noAggro or a.how == "melee") and not (a.perc and a.perc >= 100) then
 			verdict = "mechanic"
 		else
 			verdict = "pulled"
@@ -561,7 +575,7 @@ function A:Build(F, final)
 			if getn(tip) == 0 then tip = { "Nobody interrupted it." } end
 			find(nil, nil, "Interrupt", 0, sp .. " went through " .. st.done .. " of " .. st.casts .. " times", tip)
 			local isp, ist = sp, st
-			cause(12 * st.done, sp .. " was not interrupted (" .. st.done .. "x)", tip, function()
+			cause(math.min(36, 12 * st.done), sp .. " was not interrupted (" .. st.done .. "x)", tip, function()
 				local rows = {
 					H(isp),
 					R("Cast " .. ist.casts .. " times", "interrupted " .. ist.kicked .. "   |cffff5555went through " .. ist.done .. "|r"),
@@ -681,7 +695,9 @@ function A:Build(F, final)
 				p._act = pct
 				local lim = (p._role == "heal") and 0.35 or 0.6
 				if pct < lim then
-					find(nil, name, "Activity", (pct < lim * 0.6) and 3 or 1.5,
+					-- 0 points unless /wdi idleblame on: decursing, kiting or standing out
+					-- for a phase look the same as idling
+					find(nil, name, "Activity", WhoDidItDB.opts.idleBlame and ((pct < lim * 0.6) and 3 or 1.5) or 0,
 						name .. " was only doing something " .. floor(pct * 100) .. "% of their time alive",
 						{ "Measured from casts, swings, damage and heals in 1s buckets.", "Alive for " .. FmtTime(p._alive) })
 				end
@@ -701,7 +717,7 @@ function A:Build(F, final)
 		local med = dpsList[math.ceil(getn(dpsList) / 2)]
 		for name, p in pairs(players) do
 			if p._dps and med > 0 and p._dps < med * 0.4 then
-				find(nil, name, "DPS", 1.5, name .. " did " .. floor(p._dps) .. " DPS (raid median " .. floor(med) .. ")")
+				find(nil, name, "DPS", WhoDidItDB.opts.idleBlame and 1.5 or 0, name .. " did " .. floor(p._dps) .. " DPS (raid median " .. floor(med) .. ")")
 			end
 		end
 	end

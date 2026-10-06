@@ -35,9 +35,9 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), banter after kills, and a rival watch when someone beats your times. Click any time to open that guild's whole raid.
-- 📝 **Logging.** The Chronicle combat logger built in: start, save, archive and upload your logs.
-- 💀 **Auto Marker.** Marks whole packs in one go, with ~365 raid packs built in, smart marks for tricky fights, and quick save for your own packs.
-- 💰 **SR MasterLoot.** RollFor built in for soft-res master looting, with a step-by-step guide. **Auto-loot** hands out the trash loot for you.
+- 📝 **Logging.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Optional: needs ChronicleCompanion, installed normally or by the sync helper.*
+- 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, and quick save for your own packs. *The ~365 raid packs are optional: the sync helper downloads them.*
+- 💰 **SR MasterLoot.** Soft-res master looting with RollFor, with a step-by-step guide. *Optional: needs RollFor, installed normally or by the sync helper.* **Auto-loot** hands out the trash loot for you.
 
 ## Screenshots
 
@@ -95,8 +95,19 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. **Double-click `tools\WhoDidIt-Sync.cmd` once** (WoW can stay open). Rankings, the Auto Marker's raid packs, the logger, SR MasterLoot and Full check all need it, because none of them are stored on GitHub. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+4. *Optional:* **double-click `tools\WhoDidIt-Sync.cmd` once** (WoW can stay open). Without it everything works
+   except: the Auto Marker's raid packs, the Logging tab (or install ChronicleCompanion), SR MasterLoot (or install
+   RollFor) and Full check (or install DopingControl). Rankings gets its times from the master feed in game, or from
+   the helper. The helper only installs versions the WhoDidIt maintainer has tested (pinned), never whatever is newest. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
 5. *Optional:* [ClassicAPI](#classicapi-optional) for a few extras - close WoW and double-click `tools\Install-ClassicAPI.cmd`.
+
+**Updating:** download the new zip and replace the `WhoDidIt` folder (keep the folder name), or `git pull` if you
+cloned it. Your fights, settings and Hall of Fame are in `WTF\...\SavedVariables` and are kept. A full restart of WoW
+loads new files (`/reload` is enough with ClassicAPI).
+
+**Nothing is posted to chat by itself** on a fresh install: banter, the rival watch and fight shout-outs are off
+until you (or your raid leader) switch them on. Clicking a name or a mistake shows it in **your own chat**;
+**Ctrl-click** posts it.
 
 ### Requirements
 
@@ -158,8 +169,8 @@ Bottom left, on every tab: **Post to** (where WhoDidIt posts) and that tab's but
 | --- | --- |
 | **Summary** | The verdict, the ranked wipe causes (click for details), the blame board, the top heroes and raid notes (missing buffs, boss debuff uptime) |
 | **Deaths** | Every death with its cause. Hover for the recap, click for the second-by-second timeline with health bars |
-| **Mistakes** | The blame board (with bars), then every mistake with its time, type and points, laid out like Heroes. Click a mistake to post it (Ctrl-click previews). **Post mistakes** / **Name & Shame** buttons |
-| **Heroes** | The hero board (with bars), then every game-saving moment with its time, type and points. Click a moment to post it (Ctrl-click previews). **Post heroes** / **Big Them Up** buttons |
+| **Mistakes** | The blame board (with bars), then every mistake with its time, type and points, laid out like Heroes. Click a mistake to see it in your chat (Ctrl-click posts it). **Post mistakes** / **Name & Shame** buttons |
+| **Heroes** | The hero board (with bars), then every game-saving moment with its time, type and points. Click a moment to see it in your chat (Ctrl-click posts it). **Post heroes** / **Big Them Up** buttons |
 | **Threat** | Boss target changes with threat % and a verdict, plus peak threat per player. Click a name (Attacked or Took it from) to open that player's timeline, filtered to them and scrolled to that moment |
 | **Meters** | Damage, Healing, Taken, Activity, Utility (interrupts, dispels, tranqs, items) |
 | **Timeline** | Everything that happened, in order. Click a name in any line (or on the Threat tab) to see that player's timeline, with the moment highlighted; "show everyone" widens it again |
@@ -171,8 +182,8 @@ Every player name in the window (blame board, Heroes, Meters, Consumes) works th
 
 | Click | Does |
 | --- | --- |
-| **Click** | Post that player's overview for the current tab (blame, hero plays, stats or consumes) to your channel |
-| **Ctrl-click** | Preview that post in your own chat only |
+| **Click** | Show that player's overview for the current tab (blame, hero plays, stats or consumes) in your own chat |
+| **Ctrl-click** | Post it to your channel (the **Post to** button) |
 | **Shift-click** | Name & Shame just them |
 | **Alt-click** | Big them up |
 | **Right-click** | Mark / unmark as a tank |
@@ -219,13 +230,17 @@ and preview a line with **Test banter** or `/wdi banter test`.
 Every minute WhoDidIt checks the new times from the Chronicle sync and from WhoDidIt users on the realm. Any time that
 beats our guild's best, and was set after it, goes on the **Rival watch**. On another realm, it counts when that
 realm's fastest guild gets under our time.
-- Rankings marks those instances and bosses with a red **!** and lists them under **Rival watch**. Click one to post
-  it with a taunt.
-- **Rival alerts** on: when the raid enters that instance, WhoDidIt posts who beat us and taunts us to win it back
-  (once per instance visit).
+- Rankings marks those instances and bosses with a red **!** and lists them under **Rival watch**. Click one to see
+  it in your chat; Ctrl-click to post it with a taunt.
+- **Rival alerts** on (off by default): when the raid enters that instance, WhoDidIt shows who beat us in **your own
+  chat** (once per instance visit).
 - **Post rivals** posts them for the instance you're looking at. **Post standings** posts what's on screen: a boss's
   top 3, the instance's top 3 clears, or on how many bosses we're #1 and who has the rest. Use **Realm: All realms**
   to compare across the server.
+- **Other guilds' names are never posted by themselves.** They come from logs anyone can upload, and what WhoDidIt
+  posts is said in your name. So anything naming another guild shows you the exact text first and only goes out when
+  you click **Post**, and the automatic kill / clear banter says "another guild" instead of a name. Guild names that
+  aren't plain letters and spaces (24 at most) are dropped when they arrive.
 
 ### Every guild's times from Chronicle (optional helper)
 
@@ -320,9 +335,9 @@ WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official a
 - **What's changed:** nothing in Chronicle's logging. The helper only lets its files run from inside WhoDidIt: they
   start with WhoDidIt, take their version from `Chronicle\wdi_version.lua`, and find their minimap icons in the new
   folder. `/chronicle`, `/chron`, `/clog`, the minimap button, the options panel and the log files are all exactly as before.
-- **Already have ChronicleCompanion installed?** WhoDidIt's copy stands down for that session, so nothing is logged
-  twice. It also switches the separate addon off; from your next `/reload` the built-in copy takes over and your
-  Chronicle settings carry across. You can then delete `Interface\AddOns\ChronicleCompanion`.
+- **Already have ChronicleCompanion installed?** WhoDidIt's copy stands down, so nothing is logged twice, and it asks
+  once whether to switch the separate addon off. **No** keeps it running with its own settings untouched; **Yes**
+  switches it off from your next login and the built-in copy takes over with your settings.
 - Chronicle's code isn't stored in this repository. It's always downloaded fresh from its source.
 
 The **Logging** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
@@ -383,8 +398,12 @@ marks.
 
 **Commands:** `/wdi mark`, `/wdi marks next|clear|save [name]|add <pack>|info|type|name <mob>|on|off`. `/am` works too.
 
-**Coming from AutoMarker?** WhoDidIt replaces it. If it's still installed, WhoDidIt brings over any packs you saved with
-`/am add` and switches AutoMarker off; from your next `/reload` WhoDidIt does the marking.
+**Coming from AutoMarker?** If it's still installed, WhoDidIt stands by (AutoMarker keeps marking). Once WhoDidIt has
+its raid packs, it brings over any packs you saved with `/am add` and asks once whether to switch AutoMarker off.
+
+**Marks someone set by hand are left alone.** WhoDidIt remembers the marks it put up itself; a mob with a mark it
+didn't set keeps it, and it won't take an icon that's on another mob. Mouse-over marking (**Shift + Ctrl** over a mob)
+is off by default: switch on **Mouseover** at the bottom left of the Auto Marker tab.
 
 ## Consume check (slackers)
 
@@ -445,7 +464,7 @@ DopingControl itself is built into WhoDidIt, exactly as its author made it. Clic
 
 A player it can't read is shown as unknown, never as missing. `tools\WhoDidIt-Sync` downloads it from the author's
 GitHub and keeps it up to date (it isn't stored in this repository). If you already have DopingControl installed,
-WhoDidIt switches the separate copy off for your next login; your settings carry over.
+WhoDidIt asks once whether to switch the separate copy off (No keeps it, with its own settings).
 
 ## Auto-loot (auto master looting)
 
@@ -541,7 +560,7 @@ The bottom of the left column is laid out the same way on every tab. Hover any b
   and their own best plays and worst blunders.
 - **Per fight** (bottom left) ranks by points per fight instead of totals, so raiders with fewer fights can top it
   (3 fights or more).
-- **Posting**: click any line to post it, Ctrl-click to see it in your own chat first. **Post this board** posts the top
+- **Posting**: click any line to see it in your own chat, Ctrl-click to post it. **Post this board** posts the top
   5 (or top 3 plays / blunders, or the open record) to the **Post to** channel, in colour.
 
 Every saved fight is added once. The tally stays even after the fights themselves are deleted, and fights saved

@@ -23,6 +23,8 @@ param([switch]$Force)
 
 $MarkRepo   = "MarcelineVQ/AutoMarker"
 $MarkBranch = "master"
+# the tested pack data (see EmbedUpdate.ps1 for how pins move); $null = newest
+$MarkPin = "cd66b7ae08da2a6258f53778a73689aca4ec027b"
 $MarkUA     = "WhoDidIt-MarkDataUpdate/1.0 (+https://github.com/bdot89/WhoDidIt)"
 $MarkDir    = Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..")).Path "Marks"
 $MarkFile   = Join-Path $MarkDir "packs.lua"
@@ -150,7 +152,8 @@ function Convert-NpcList([string]$text, $zoneNames) {
 
 function Update-MarkData([switch]$Force) {
     try {
-        $c = Invoke-RestMethod -Uri "https://api.github.com/repos/$MarkRepo/commits/$MarkBranch" -TimeoutSec 30 -Headers @{ "User-Agent" = $MarkUA; "Accept" = "application/vnd.github+json" }
+        $ref = if ($MarkPin) { $MarkPin } else { $MarkBranch }
+        $c = Invoke-RestMethod -Uri "https://api.github.com/repos/$MarkRepo/commits/$ref" -TimeoutSec 30 -Headers @{ "User-Agent" = $MarkUA; "Accept" = "application/vnd.github+json" }
     } catch {
         Log ("Mob packs: couldn't check for updates (" + $_.Exception.Message + ")")
         return

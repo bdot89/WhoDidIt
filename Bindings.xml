@@ -6,8 +6,8 @@
 	<Binding name="WHODIDIT_CLEARMARKS">WhoDidIt_ClearMarks()</Binding>
 	<Binding name="WHODIDIT_LOOT">WhoDidIt.UI:SetMode("loot")</Binding>
 	<!-- >>> RollFor bindings (generated) -->
-	<Binding name="Toggle options window" header="ROLLFOR">RollFor.key_bindings.options_toggle()</Binding>
-	<Binding name="Toggle SR import window">RollFor.key_bindings.softres_toggle()</Binding>
-	<Binding name="Toggle winners window">RollFor.key_bindings.winners_toggle()</Binding>
+	<Binding name="Toggle options window" header="ROLLFOR">if RollFor and RollFor.key_bindings then RollFor.key_bindings.options_toggle() end</Binding>
+	<Binding name="Toggle SR import window">if RollFor and RollFor.key_bindings then RollFor.key_bindings.softres_toggle() end</Binding>
+	<Binding name="Toggle winners window">if RollFor and RollFor.key_bindings then RollFor.key_bindings.winners_toggle() end</Binding>
 	<!-- <<< RollFor bindings -->
 </Bindings>

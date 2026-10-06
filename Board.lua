@@ -87,6 +87,13 @@ local CHRON_ZONE = { ["Temple of Ahn'Qiraj"] = "Ahn'Qiraj" }   -- Chronicle name
 B.chron = nil
 local chronHead
 
+-- a guild name as WoW allows it: letters and spaces, 24 characters at most.
+-- Anything else (links, colour codes, digits, symbols) is dropped on arrival.
+local function okGuild(g)
+	return g and g ~= "" and string.len(g) <= 24 and not string.find(g, "[%c%d%p]") and true or false
+end
+B.OkGuild = okGuild
+
 local function splitBar(line)
 	local out = {}
 	for part in string.gfind(line .. "|", "(.-)|") do tinsert(out, part) end
@@ -173,7 +180,7 @@ function B:LoadChronicle()
 			-- broken logs (a "clear" spanning days, a 4-second boss) would wreck the boards
 			local maxSecs = (kind == "clears") and CLEAR_MAX or KILL_MAX
 			local minSecs = (kind == "clears") and CLEAR_MIN or CHRON_KILL_MIN
-			if realm ~= "" and guild and guild ~= "" and secs and secs >= minSecs and secs <= maxSecs then
+			if realm ~= "" and okGuild(guild) and secs and secs >= minSecs and secs <= maxSecs then
 				local r = data.realms[realm]
 				if not r then
 					r = { kills = {}, clears = {} }
@@ -308,6 +315,16 @@ function B:Merge(kind, realm, key, guild, rec)
 	local old = list[guild]
 	if old and old.t <= rec.t then return false end
 	list[guild] = rec
+	-- keep the 60 fastest guilds per board, so the saved boards can't grow forever
+	local n, slowest, slowT, mine = 0, nil, -1, B.MyGuild()
+	for g, r2 in pairs(list) do
+		n = n + 1
+		if g ~= mine and r2.t > slowT then slowest, slowT = g, r2.t end
+	end
+	if n > 60 and slowest then
+		list[slowest] = nil
+		if slowest == guild then return false end
+	end
 	return true
 end
 
@@ -584,7 +601,7 @@ function B:CheckRivals()
 					if rec.t < ours.t and rec.d and rec.d > ours.d and now - rec.d < RIVAL_DAYS * 86400 then
 						local id = kind .. "|" .. key .. "|" .. realm .. "|" .. g .. "|" .. rec.t
 						if not db.seen[id] then
-							db.seen[id] = true
+							db.seen[id] = rec.d
 							tinsert(db.list, { kind = kind, key = key, zone = B:KeyZone(kind, key), g = g, realm = realm, t = rec.t, d = rec.d, ours = ours.t })
 							found = found + 1
 						end
@@ -601,6 +618,9 @@ function B:CheckRivals()
 	table.sort(keep, function(a, b) return (a.d or 0) > (b.d or 0) end)
 	while getn(keep) > 40 do table.remove(keep) end
 	db.list = keep
+	for id, d in pairs(db.seen) do
+		if d == true or now - (tonumber(d) or 0) > RIVAL_DAYS * 86400 then db.seen[id] = nil end
+	end
 	db.ready = true
 	if found > 0 then
 		W.Print("|cffff7777Rival watch:|r " .. found .. " time" .. (found == 1 and "" or "s") .. " that beat " .. guild .. "'s best "
@@ -724,17 +744,20 @@ function B:RivalLines(zone, list)
 	return lines
 end
 
-function B:PostRivals(zone, list)
+-- channel: nil = the Post to channel, "SELF" = only you
+function B:PostRivals(zone, list, channel)
 	local lines = B:RivalLines(zone, list)
 	if not lines then
 		W.Print("Nobody has beaten our " .. (W.Data.instanceTitle[zone or ""] or zone or "") .. " times in the last " .. RIVAL_DAYS .. " days.")
 		return
 	end
 	for _, e in ipairs(list or B:Rivals(zone)) do e.posted = true end
-	W:Send(lines, nil, B:ChatColours())
+	W:ConfirmSend(lines, channel, B:ChatColours())   -- other guilds' names: you see it before it's posted
 end
 
--- entering a raid instance: post its rivals once (rival alerts on)
+-- entering a raid instance: show its rivals once, in your own chat only
+-- (rival alerts on). Names in it come from other people, so they're never
+-- posted by themselves: Post rivals (Rankings) does that on purpose.
 local lastWatch = {}
 function B:OnZone()
 	if not WhoDidItDB or not WhoDidItDB.opts.rivalAlerts then return end
@@ -747,7 +770,8 @@ function B:OnZone()
 	for i = 1, getn(all) do if not all[i].posted then tinsert(fresh, all[i]) end end
 	if getn(fresh) == 0 then return end
 	lastWatch[zone] = GetTime()
-	B:Claim("R:" .. zone, function() B:PostRivals(zone, fresh) end)
+	B:PostRivals(zone, fresh, "SELF")
+	W.Print("|cff888888(Only you see this. Post rivals on the Rankings tab posts it to " .. W.Shout:ChannelLabel() .. ".)|r")
 end
 
 W:On("ZONE_CHANGED_NEW_AREA", function() B:OnZone() end)
@@ -853,7 +877,9 @@ end
 
 -- kind "kill" or "clear"; key = board key; old = our guild's best before this one;
 -- rival = a rival-watch entry for this board (from before this kill was saved)
-function B:BanterLine(kind, key, what, secs, old, realm, guild, rival)
+-- anon: for the automatic post - other guilds become "another guild" (their
+-- names come from anyone's uploads; the line is said in your name)
+function B:BanterLine(kind, key, what, secs, old, realm, guild, rival, anon)
 	local bkind = (kind == "kill") and "kills" or "clears"
 	local board = B:Board(realm, bkind, key, "All")
 	local ahead, behind, passed
@@ -925,12 +951,16 @@ function B:BanterLine(kind, key, what, secs, old, realm, guild, rival)
 		v.d = B.Fmt(math.abs(secs - rival.t))
 	else v.d = "" end
 
+	if anon then
+		v.g = "another guild"
+		v.og = "the fastest guild"
+	end
 	local line = string.gsub(pick(cat), "{(%w+)}", function(k) return v[k] or "" end)
 	return ((kind == "clear") and "[WhoDidIt] CLEAR: " or "[WhoDidIt] ") .. line
 end
 
 function B:Banter(kind, key, what, secs, old, realm, guild, rival)
-	local line = B:BanterLine(kind, key, what, secs, old, realm, guild, rival)
+	local line = B:BanterLine(kind, key, what, secs, old, realm, guild, rival, true)
 	B:Claim(((kind == "clear") and "C:" or "K:") .. key, function()
 		W:Send({ line }, nil, B:ChatColours())   -- guilds, realms, bosses, times in colour
 	end)
@@ -1139,6 +1169,7 @@ local function split(msg)
 	return out
 end
 
+local recvCount = {}   -- records taken from each sender this session
 function B:Receive(msg, sender)
 	local p = split(msg)
 	local kind = p[2]
@@ -1151,7 +1182,10 @@ function B:Receive(msg, sender)
 	if kind ~= "K" and kind ~= "C" then return end
 	local guild, fac, key = p[3], p[4], p[5]
 	local secs, d, n = tonumber(p[6]), tonumber(p[7]), tonumber(p[8])
-	if not guild or guild == "" or string.len(guild) > 40 or not secs or not d then return end
+	if not okGuild(guild) or not secs or not d then return end
+	-- one sender can't flood the boards
+	recvCount[sender or "?"] = (recvCount[sender or "?"] or 0) + 1
+	if recvCount[sender or "?"] > 60 then return end
 	if fac ~= "Alliance" and fac ~= "Horde" then return end
 	if d > time() + 86400 then return end
 	if kind == "K" then

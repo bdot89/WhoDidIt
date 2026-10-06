@@ -216,8 +216,19 @@ function M:MarkMode()
 	return "solo"
 end
 
+-- the marks WhoDidIt put up itself (guid -> mark): any other mark was set by
+-- someone (by hand, or another addon) and is left alone
+M.mine = {}
+local function guidOf(unit)
+	if type(unit) == "string" and string.sub(unit, 1, 2) == "0x" then return unit end
+	local ok, g = UnitExists(unit)
+	if ok and type(g) == "string" and g ~= "" then return g end
+end
+
 local warnedLocal
 function M:Set(unit, mark)
+	local g = guidOf(unit)
+	if g then M.mine[g] = (mark and mark > 0) and mark or nil end
 	if M:CanRaidMark() then
 		SetRaidTarget(unit, mark)
 		return
@@ -234,7 +245,15 @@ function M:MarkPack(pack)
 	local n = 0
 	for guid, mark in pairs(pack.mobs) do
 		if UnitExists(guid) and (mark == 0 or not UnitIsDead(guid)) then
-			if (GetRaidTargetIndex(guid) or 0) ~= mark then M:Set(guid, mark) end
+			local cur = GetRaidTargetIndex(guid) or 0
+			if cur ~= mark then
+				-- this mob carries a mark we didn't set: someone chose it, keep it
+				local theirs = cur > 0 and M.mine[guid] ~= cur
+				-- that icon is on another living mob, put there by someone else: don't steal it
+				local ok, holder = UnitExists("mark" .. mark)
+				local taken = mark > 0 and ok and holder and holder ~= guid and not UnitIsDead(holder) and M.mine[holder] ~= mark
+				if not theirs and not taken then M:Set(guid, mark) end
+			end
 			if mark > 0 then n = n + 1 end
 		end
 	end
@@ -899,6 +918,7 @@ end)
 
 -- after combat: forget this fight's half-finished queues
 local function clearTemps()
+	M.mine = {}
 	for i = 1, getn(M.RULES) do
 		local r = M.RULES[i]
 		if r.kind == "spawn" then
@@ -1005,7 +1025,7 @@ W:On("ADDON_LOADED", function(name)
 	d.smart  = d.smart or {}
 	d.opts   = d.opts or {}
 	if d.opts.enabled == nil then d.opts.enabled = true end
-	if d.opts.mouseover == nil then d.opts.mouseover = true end
+	if d.opts.mouseover == nil then d.opts.mouseover = false end
 	if d.opts.smart == nil then d.opts.smart = true end
 	M.standDown = IsAddOnLoaded("AutoMarker") and true or nil
 	M:LoadBuiltin()
@@ -1035,11 +1055,9 @@ W:On("PLAYER_ENTERING_WORLD", function()
 			end
 		end
 	end
-	DisableAddOn("AutoMarker")
 	M:Changed()
-	W.Print("WhoDidIt now does the auto marking (|cffffd100/wdi marks|r), so the separate |cffffd100AutoMarker|r addon has been switched off"
-		.. (n > 0 and (" - your " .. n .. " saved pack" .. (n == 1 and "" or "s") .. " came across") or "") .. ".")
-	W.Print("It keeps running until your next /reload, then WhoDidIt takes over. You can delete the Interface\\AddOns\\AutoMarker folder.")
+	if n > 0 then W.Print("Your " .. n .. " saved AutoMarker pack" .. (n == 1 and "" or "s") .. " came across to WhoDidIt (|cffffd100/wdi marks|r).") end
+	W:AskHandover("AutoMarker", "auto marking (the Auto Marker tab)")
 end)
 
 ------------------------------------------------------------------ keys + commands
