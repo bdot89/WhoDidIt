@@ -673,9 +673,17 @@ local ACTIONS = {
 		  "Scan everyone's buffs right now (before the pull) and list who's missing what their role needs. Only you see it - Shift-click to post it. Also runs by itself on every ready check.",
 		  true },
 	},
+	mistakes = {
+		{ "Post mistakes", function(rec) W.Shout:Mistakes(rec) end,
+		  "The blame board and the biggest mistakes, with their times and points." },
+		{ "Name & Shame", function(rec) W.Shout:Shame(rec) end,
+		  "The hall of shame: the top 3 to blame and the awards (Threat Junkie, Floor Inspector...)." },
+	},
 	heroes = {
 		{ "Post heroes", function(rec) W.Shout:Heroes(rec) end,
-		  "The hero board and the biggest game-saving plays." },
+		  "The hero board and the biggest game-saving plays, with their times and points." },
+		{ "Big Them Up", function(rec) W.Shout:Praise(rec) end,
+		  "The stars of the fight: Damage King, Top Healer, Iron Wall, Kick Master..." },
 	},
 }
 UI.actionButtons = {}
@@ -1395,13 +1403,36 @@ function UI:DeathRows(rec)
 	return rows
 end
 
+-- the same layout as the Heroes tab: a board with bars, then every moment, then what counts
 function UI:MistakeRows(rec)
 	local rows = {}
+
+	head(rows, "Blame board")
+	local bl = rec.blame or {}
+	local max = bl[1] and bl[1].pts or 1
+	if max <= 0 then max = 1 end
+	if getn(bl) == 0 then
+		tinsert(rows, row("|cff33ff33Nobody to blame - well played.|r"))
+	else
+		colHead(rows, BLAME_SPEC, { "#", "Player", "Worst mistake", "Points" })
+	end
+	for i = 1, getn(bl) do
+		local b = bl[i]
+		local why = string.gsub(b.reasons[1] or "", "^" .. b.name .. " ", "")
+		if getn(b.reasons) > 1 then why = why .. C_DIM .. "  (+" .. (getn(b.reasons) - 1) .. " more)|r" end
+		tinsert(rows, cells(BLAME_SPEC,
+			{ C_DIM .. i .. ".|r", W.CName(b.name, b.class), "|cffdddddd" .. why .. "|r",
+			  "|cffff7777" .. string.format("%.1f", b.pts) .. "|r" },
+			{ bar = b.pts / max, cr = 0.9, cg = 0.15, cb = 0.15, ba = 0.25, tip = withLegend(b.reasons, "blame"),
+			  tipTitle = b.name .. " - " .. b.pts .. " blame points", name = b.name, click = playerClick("blame") }))
+	end
+
+	head(rows, "Mistakes")
 	if getn(rec.findings) == 0 then
 		tinsert(rows, row("|cff33ff33No mistakes found.|r"))
-		return rows
+	else
+		colHead(rows, MISTAKE_SPEC, { "Time", "Type", "What happened", "Points" })
 	end
-	colHead(rows, MISTAKE_SPEC, { "Time", "Type", "What happened", "Points" })
 	for i = 1, getn(rec.findings) do
 		local fd = rec.findings[i]
 		local who = fd.who and rec.players[fd.who]
@@ -1414,12 +1445,17 @@ function UI:MistakeRows(rec)
 			{ fd.t and (C_DIM .. FmtTime(fd.t) .. "|r") or (C_DIM .. "-|r"),
 			  "|cffffd100" .. fd.cat .. "|r",
 			  text,
-			  fd.pts > 0 and ("|cffff5555+" .. fd.pts .. "|r") or (C_DIM .. "info|r") },
+			  fd.pts > 0 and ("|cffff7777+" .. fd.pts .. "|r") or (C_DIM .. "info|r") },
 			{ tip = momentTip(fd.tip, "mistake"), tipTitle = stripColors(fd.text),
 			  click = function()
 				postMoment(rec, "MISTAKE", fd.t, "[" .. fd.cat .. "] " .. fd.text, (fd.pts > 0) and ("+" .. fd.pts .. " blame points") or nil)
 			  end }))
 	end
+
+	head(rows, "What counts")
+	tinsert(rows, row("|cff888888Pulling aggro off the tank, standing in avoidable damage, bombing other raiders with a debuff,|r"))
+	tinsert(rows, row("|cff888888dying to a mechanic, missing interrupts and dispels, low activity or DPS, and opening on the boss|r"))
+	tinsert(rows, row("|cff888888before the tank. Hover a mistake for what to do instead.|r"))
 	return rows
 end
 
@@ -1699,6 +1735,20 @@ local function tint(text, col)
 	return col .. (string.gsub(text, "|r", "|r" .. col)) .. "|r"
 end
 
+-- a game-saving moment's kind, from how it's worded (the Type column)
+local SAVE_TYPES = {
+	{ "absorbed", "Shield" }, { "healed", "Heal" }, { "taunted", "Taunt" }, { "back off", "Taunt" },
+	{ "dispelled", "Dispel" }, { "innervated", "Innervate" }, { "tranquilized", "Tranq" },
+	{ "interrupted", "Interrupt" }, { "Blessing of Protection", "Protect" }, { "Lay on Hands", "Protect" },
+	{ "resurrect", "Battle res" }, { "Rebirth", "Battle res" }, { "survived", "Survival" },
+}
+local function saveType(text)
+	for i = 1, getn(SAVE_TYPES) do
+		if string.find(text or "", SAVE_TYPES[i][1], 1, true) then return SAVE_TYPES[i][2] end
+	end
+	return "Save"
+end
+
 function UI:HeroRows(rec)
 	local rows = {}
 	if not rec.saves then
@@ -1729,12 +1779,13 @@ function UI:HeroRows(rec)
 	if getn(rec.saves) == 0 then
 		tinsert(rows, row("|cff888888Nothing this time.|r"))
 	else
-		colHead(rows, TIMED_SPEC, { "Time", "What happened", "Points" })
+		colHead(rows, MISTAKE_SPEC, { "Time", "Type", "What happened", "Points" })
 	end
 	for i = 1, getn(rec.saves) do
 		local s = rec.saves[i]
-		tinsert(rows, cells(TIMED_SPEC,
+		tinsert(rows, cells(MISTAKE_SPEC,
 			{ s.t and (C_DIM .. FmtTime(s.t) .. "|r") or (C_DIM .. "-|r"),
+			  C_GUILD .. saveType(s.text) .. "|r",
 			  tint(colorNames(s.text, rec), "|cffdddddd"),
 			  C_GUILD .. "+" .. s.pts .. "|r" },
 			{ tip = momentTip(s.tip, "game-saving moment"), tipTitle = "Game-saving moment",

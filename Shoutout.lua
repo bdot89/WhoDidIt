@@ -784,15 +784,38 @@ function S:HeroLines(rec)
 		return out
 	end
 	local board = {}
-	for i = 1, math.min(4, getn(hs)) do tinsert(board, i .. ". " .. hs[i].name .. " " .. hs[i].pts .. "pt") end
-	tinsert(out, "Hero board: " .. table.concat(board, "  "))
+	for i = 1, math.min(4, getn(hs)) do tinsert(board, i .. ". " .. hs[i].name .. " " .. hs[i].pts .. " pts") end
+	tinsert(out, "Hero board: " .. table.concat(board, ", "))
 	local shown = 0
 	for i = 1, getn(rec.saves or {}) do
 		local s = rec.saves[i]
 		if s.t and s.pts >= 1.5 and shown < 4 then
-			tinsert(out, FmtTime(s.t) .. " " .. s.text)
+			tinsert(out, FmtTime(s.t) .. " - " .. s.text .. " (+" .. s.pts .. ")")
 			shown = shown + 1
 		end
+	end
+	return out
+end
+
+-- the same shape as the hero post: the board, then the biggest moments
+function S:MistakeLines(rec)
+	local out = { header("MISTAKES", rec) }
+	local bl = rec.blame or {}
+	if getn(bl) == 0 then
+		tinsert(out, "No mistakes this time. Suspicious.")
+		return out
+	end
+	local board = {}
+	for i = 1, math.min(4, getn(bl)) do tinsert(board, i .. ". " .. bl[i].name .. " " .. bl[i].pts .. " pts") end
+	tinsert(out, "Blame board: " .. table.concat(board, ", "))
+	local list = {}
+	for i = 1, getn(rec.findings or {}) do
+		if (rec.findings[i].pts or 0) >= 2 then tinsert(list, rec.findings[i]) end
+	end
+	table.sort(list, function(a, b) return a.pts > b.pts end)
+	for i = 1, math.min(4, getn(list)) do
+		local fd = list[i]
+		tinsert(out, (fd.t and (FmtTime(fd.t) .. " - ") or "") .. fd.text .. " (+" .. fd.pts .. ")")
 	end
 	return out
 end
@@ -932,6 +955,12 @@ function S:Heroes(rec, channel)
 	local r = resolve(rec)
 	if not r then return end
 	W:Send(S:HeroLines(r), channel, S.ClassMap(r))
+end
+
+function S:Mistakes(rec, channel)
+	local r = resolve(rec)
+	if not r then return end
+	W:Send(S:MistakeLines(r), channel, S.ClassMap(r))
 end
 
 -- automatic shout-outs after a fight (opts.autoShout)
