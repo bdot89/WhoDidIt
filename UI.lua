@@ -250,11 +250,15 @@ function UI.GridCell(row, size, wheel)
 	c.fill = c:CreateTexture(nil, "BORDER")
 	c.fill:SetPoint("TOPLEFT", c, "TOPLEFT", 1, -1)
 	c.fill:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -1, 1)
-	c.icon = c:CreateTexture(nil, "ARTWORK")
-	c.icon:SetPoint("TOPLEFT", c, "TOPLEFT", 2, -2)
-	c.icon:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -2, 2)
-	c.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-	c.txt = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	-- same set-up as the raid-mark icons (fixed size, OVERLAY), which draw fine
+	c.icon = c:CreateTexture(nil, "OVERLAY")
+	c.icon:SetWidth(size - 4)
+	c.icon:SetHeight(size - 4)
+	c.icon:SetPoint("CENTER", c, "CENTER", 0, 0)
+	-- the X / ? / - mark sits on its own layer above the icon
+	c.top = CreateFrame("Frame", nil, c)
+	c.top:SetAllPoints(c)
+	c.txt = c.top:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	c.txt:SetPoint("CENTER", c, "CENTER", 0, 0)
 	local hl = c:CreateTexture(nil, "HIGHLIGHT")
 	hl:SetAllPoints(c)
@@ -285,6 +289,15 @@ function UI.SetGridCell(c, g, row)
 	c.fill:SetTexture(k[5], k[6], k[7], 1)
 	if g[3] then
 		c.icon:SetTexture(g[3])
+		c.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		-- a missing one: the icon of what's needed, faded red under the X
+		if g[2] == "miss" then
+			c.icon:SetVertexColor(1, 0.35, 0.35)
+			c.icon:SetAlpha(0.5)
+		else
+			c.icon:SetVertexColor(1, 1, 1)
+			c.icon:SetAlpha(1)
+		end
 		c.icon:Show()
 	else
 		c.icon:Hide()
@@ -1820,12 +1833,12 @@ local function consCell(rec, p, name, c, ctx)
 	if col[3] == "WPN" then
 		-- the main hand: oil / stone / imbue (read separately from buffs)
 		if p.wpn and ctx.missAt[c] then
-			return { x, "miss", nil, title, { "|cffff7777Wrong one|r - a " .. ctx.roleText .. " should have: " .. ctx.missAt[c],
+			return { x, "miss", ctx.missIcon[c], title, { "|cffff7777Wrong one|r - a " .. ctx.roleText .. " should have: " .. ctx.missAt[c],
 				"Has: " .. ((type(p.wpn) == "string") and p.wpn or "?") }, X }
 		elseif p.wpn then
 			return { x, "ok", Cons.WeaponIcon(p.wpn), title, { (type(p.wpn) == "string") and p.wpn or "Something on their main hand" } }
 		elseif missing then
-			return { x, "miss", nil, title, missing, X }
+			return { x, "miss", ctx.missIcon[c], title, missing, X }
 		elseif p.wpn == nil and ctx.expected[c] then
 			return { x, "unk", nil, title, { "Couldn't see their weapon (out of range, or no SuperWoW)." }, "|cffcccccc?|r" }
 		end
@@ -1842,7 +1855,7 @@ local function consCell(rec, p, name, c, ctx)
 	elseif ctx.unread then
 		return { x, "unk", nil, title, { "Out of range at the pull - can't tell, so not counted." }, "|cffcccccc?|r" }
 	elseif missing then
-		return { x, "miss", nil, title, missing, X }
+		return { x, "miss", ctx.missIcon[c], title, missing, X }
 	end
 	return { x, "na", nil, title, { ctx.expected[c] and "Not needed: they covered it with another buff." or ("Not expected for a " .. ctx.roleText .. ".") }, C_DIM .. "-|r" }
 end
@@ -1872,7 +1885,7 @@ function UI:ConsumeRows(rec)
 		local role = Cons.Role(p) or "other"
 		local needs = Cons.Needs(p, rec.zone)
 		local ctx = { roleText = string.lower(Cons.ROLE_TEXT[role] or "raider"), unread = (needs == nil),
-			inCol = {}, missAt = {}, expected = {} }
+			inCol = {}, missAt = {}, missIcon = {}, expected = {} }
 		local cb = p.cbuffs or {}
 		for j = 1, getn(cb) do
 			local c = slotCol[W.Data.consumeSlot[cb[j][1]] or ""]
@@ -1893,7 +1906,12 @@ function UI:ConsumeRows(rec)
 				ctx.expected[nCols] = true
 			end
 			total = total + 1
-			if nd[3] then met = met + 1 elseif c then ctx.missAt[c] = nd[1] end
+			if nd[3] then
+				met = met + 1
+			elseif c then
+				ctx.missAt[c] = nd[1]
+				ctx.missIcon[c] = Cons.NeedIcon(nd)
+			end
 		end
 		local grid = {}
 		for c = 1, nCols do

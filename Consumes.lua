@@ -46,7 +46,7 @@ local function spellIcon(id)
 		if ok then tex = t end
 	end
 	if type(tex) ~= "string" or tex == "" then return nil end
-	if not string.find(tex, "\\", 1, true) then tex = "Interface\Icons\\" .. tex end
+	if not string.find(tex, "\\", 1, true) then tex = "Interface\\Icons\\" .. tex end
 	return tex
 end
 
@@ -56,13 +56,14 @@ function C.BuffName(id)
 	if b and WhoDidItDB then
 		local icons = WhoDidItDB.buffIcons
 		if not icons then icons = {}; WhoDidItDB.buffIcons = icons end
-		if icons[b] == nil then icons[b] = spellIcon(id) or false end
+		local had = icons[b]
+		if had == nil or (had and string.sub(had, 1, 10) ~= "Interface\\") then icons[b] = spellIcon(id) or false end
 	end
 	return b
 end
 
 -- icons for consumables we haven't seen a spell ID for yet (old fights, the demo)
-local I = "Interface\Icons\\"
+local I = "Interface\\Icons\\"
 C.NAME_ICON = {
 	["Flask of the Titans"] = I .. "INV_Potion_62", ["Flask of Supreme Power"] = I .. "INV_Potion_41",
 	["Supreme Power"] = I .. "INV_Potion_41", ["Flask of Distilled Wisdom"] = I .. "INV_Potion_97",
@@ -86,10 +87,19 @@ C.SLOT_ICON = {
 -- the icon to show for a consumable buff
 function C.Icon(name)
 	local seen = WhoDidItDB and WhoDidItDB.buffIcons and WhoDidItDB.buffIcons[name]
-	if seen then return seen end
+	if seen and string.sub(seen, 1, 10) == "Interface\\" then return seen end
 	if C.NAME_ICON[name] then return C.NAME_ICON[name] end
 	local slot = W.Data.consumeSlot[name]
 	return (slot and C.SLOT_ICON[slot]) or (I .. "INV_Misc_QuestionMark")
+end
+
+-- the icon of what a need asks for (shown faded in a missing cell)
+function C.NeedIcon(need)
+	local slots = need[2]
+	if type(slots) == "table" then return C.SLOT_ICON[slots[1]] end
+	if slots == "IMBUE" and need[4] then return C.WeaponIcon(need[4][1]) end
+	if string.find(need[1] or "", "oil", 1, true) then return I .. "INV_Potion_101" end
+	return I .. "INV_Stone_SharpeningStone_01"
 end
 
 -- the icon for what's on a main hand (a name, or true = something unnamed)
@@ -100,7 +110,7 @@ function C.WeaponIcon(wpn)
 		if string.find(wpn, "Flametongue", 1, true) then return I .. "Spell_Fire_FlameTounge" end
 		if string.find(wpn, "Frostbrand", 1, true) then return I .. "Spell_Frost_FrostBrand" end
 	end
-	return "Interface\Buttons\UI-CheckBox-Check"
+	return "Interface\\Buttons\\UI-CheckBox-Check"
 end
 
 -- main-hand oil / stone: a name or true = has one, false = has none,
@@ -378,7 +388,7 @@ function C:OpenFull()
 	if DC_Matrix and DC_Matrix.Toggle then
 		DC_Matrix.Toggle()
 	else
-		W.Print("DopingControl isn't installed yet: double-click tools\\WhoDidIt-Sync.cmd once (it downloads it), then exit WoW and start it again.")
+		W.Print("DopingControl isn't installed yet: double-click tools\\WhoDidIt-Sync.cmd once (it downloads it), then " .. W.RESTART_HINT .. ".")
 	end
 end
 
