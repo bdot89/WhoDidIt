@@ -95,6 +95,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 | **Nampower** (dll) | Damage, healing, swings, buffs/debuffs, deaths and consumables. Without it, only deaths are tracked. |
 | **SuperWoW** (dll) | Player and mob names from GUIDs, who the boss is targeting, cast events (interrupts, activity, tranqs, saves). |
 | TWThreat (addon, optional) | If it's loaded, WhoDidIt reads the same server threat packets. If not, WhoDidIt asks the server itself (`/wdi threat off` to stop). |
+| [ClassicAPI](https://github.com/brues-code/ClassicAPI) (dll, optional) | Nice-to-have extras. Right now: the **Copy link** buttons (raidres, Chronicle logs) put the link straight on your clipboard; without it a box opens for Ctrl+C. Install: put `ClassicAPI.dll` in the WoW folder, add `ClassicAPI.dll` to `dlls.txt`, start through the launcher as usual. `/wdi status` shows whether it's loaded. |
 
 WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `NP_EnableSpellHealEvents`, `NP_EnableSpellGoEvents`).
 

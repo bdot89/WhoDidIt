@@ -90,6 +90,16 @@ function W:Prompt(text, default, fn)
 	StaticPopup_Show("WHODIDIT_PROMPT", text)
 end
 
+-- a link to copy: straight onto the clipboard with ClassicAPI, otherwise a
+-- box with it selected for Ctrl+C
+function W:CopyLink(what, url)
+	if CopyToClipboard and pcall(CopyToClipboard, url) then
+		W.Print(what .. " link copied - paste it with Ctrl+V: |cffffd100" .. url .. "|r")
+		return
+	end
+	W:Prompt(what .. "\n|cffffd100" .. url .. "|r\n|cff888888Press Ctrl+C to copy the link, then Esc.|r", url, function() end)
+end
+
 ------------------------------------------------------------------ environment
 
 function W:DetectEnv()
@@ -99,6 +109,8 @@ function W:DetectEnv()
 	e.unitxp   = (UnitXP ~= nil)
 	e.twthreat = IsAddOnLoaded("TWThreat") and true or false
 	e.unitdata = (GetUnitData ~= nil)
+	-- ClassicAPI (optional dll): modern API backported to 1.12, e.g. CopyToClipboard
+	e.classicapi = (GetClassicExpansionLevel ~= nil) or (C_EventUtils ~= nil)
 end
 
 -- Nampower only raises some events when these CVars are on
@@ -381,7 +393,8 @@ local function status()
 	local e = W.env
 	local function yn(v) return v and "|cff33ff33yes|r" or "|cffff3333no|r" end
 	W.Print("v" .. W.version)
-	DEFAULT_CHAT_FRAME:AddMessage("  Nampower: " .. yn(e.nampower) .. "   SuperWoW: " .. yn(e.superwow) .. "   UnitXP: " .. yn(e.unitxp) .. "   TWThreat: " .. yn(e.twthreat))
+	DEFAULT_CHAT_FRAME:AddMessage("  Nampower: " .. yn(e.nampower) .. "   SuperWoW: " .. yn(e.superwow) .. "   UnitXP: " .. yn(e.unitxp) .. "   TWThreat: " .. yn(e.twthreat)
+		.. "   ClassicAPI: " .. yn(e.classicapi) .. " |cff888888(optional)|r")
 	if not e.nampower then DEFAULT_CHAT_FRAME:AddMessage("  |cffff9933Without Nampower only deaths are tracked.|r") end
 	if not e.superwow then DEFAULT_CHAT_FRAME:AddMessage("  |cffff9933Without SuperWoW, GUIDs can't be resolved - most tracking is disabled.|r") end
 	local f = W.Tracker.fight

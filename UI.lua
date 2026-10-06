@@ -566,11 +566,11 @@ local SR_SITE = "https://raidres.fly.dev"
 local srCopy = button(header, "Copy link", 84, 20)
 srCopy:SetPoint("TOPRIGHT", header, "TOPRIGHT", -10, -10)
 srCopy:SetScript("OnClick", function()
-	W:Prompt("Soft-res sheets: |cffffd100raidres.fly.dev|r\n|cff888888Press Ctrl+C to copy the link, then Esc. Paste it in your browser or in chat.|r", SR_SITE, function() end)
+	W:CopyLink("Soft-res sheets", SR_SITE)
 end)
 tooltip(srCopy, "raidres.fly.dev", { "The website where you make the soft-res sheet: raiders pick their items there,",
 	"then you use its RollFor export to import the sheet here.",
-	"Click: a box with the link selected - Ctrl+C copies it." }, "ANCHOR_LEFT")
+	"Click: copies the link (with ClassicAPI straight to your clipboard,", "otherwise a box opens with it selected - press Ctrl+C)." }, "ANCHOR_LEFT")
 local srSite = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 srSite:SetPoint("RIGHT", srCopy, "LEFT", -8, 0)
 srSite:SetText("|cffaaaaaaSoft-res sheets:|r  |cffffd100raidres.fly.dev|r")
@@ -2285,7 +2285,7 @@ function UI:RankLogRows()
 		local url = B.LogURL(L.slug)
 		tinsert(rows, row("Chronicle log  " .. C_DIM .. url .. "|r", "|cffffd100copy link  >|r",
 			{ tipTitle = "Chronicle log", tip = { "Opens a box with the link selected: press Ctrl+C, then paste it in your browser." },
-			  click = function() W:Prompt("Chronicle log for " .. L.guild .. "\n|cff888888Press Ctrl+C to copy, then Esc.|r", url, function() end) end }))
+			  click = function() W:CopyLink("Chronicle log for " .. L.guild, url) end }))
 	end
 
 	if not log then
@@ -2815,7 +2815,7 @@ function UI:LootGuideRows()
 	head(rows, "Before the raid: soft-res")
 	step(rows, 1, { "Make a soft-res sheet at |cffffd100raidres.fly.dev|r and share the link.",
 		"Raiders pick the items they want." },
-		function() W:Prompt("Soft-res sheets: |cffffd100raidres.fly.dev|r\n|cff888888Press Ctrl+C to copy the link, then Esc.|r", "https://raidres.fly.dev", function() end) end, "copy link")
+		function() W:CopyLink("Soft-res sheets", "https://raidres.fly.dev") end, "copy link")
 	step(rows, 2, { "Lock the sheet, click |cffffd100RollFor export|r, then |cffffd100Copy RollFor data to clipboard|r." })
 	step(rows, 3, { "Click |cff33ff33Import soft-res|r, paste with Ctrl+V, click |cffffd100Import!|r" },
 		function() Lt:Key("softres_toggle") end, "open it")
