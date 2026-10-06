@@ -82,6 +82,16 @@ function L:Note(guid)
 	if UnitPosition then
 		local ok, a, b, c = pcall(UnitPosition, guid)
 		if ok then x, y, z = a, b, c end
+		-- by GUID didn't answer: the same mob as target / mouseover does
+		if not x then
+			for _, unit in ipairs({ "target", "mouseover" }) do
+				local e, g = UnitExists(unit)
+				if e and g == guid then
+					ok, a, b, c = pcall(UnitPosition, unit)
+					if ok and a then x, y, z = a, b, c; break end
+				end
+			end
+		end
 	end
 	seq = seq + 1
 	s[guid] = {
