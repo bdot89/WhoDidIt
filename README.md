@@ -8,7 +8,8 @@
 Records every boss fight, then tells you **why** the raid wiped and **who** did it.
 
 Death recaps · blame &amp; hero boards · threat · meters · consume checks (DopingControl built in) · Hall of Fame
-<br>Every guild's kill &amp; clear times from Chronicle, with rival banter · Chronicle logger · Auto Marker · SR master loot (RollFor) · Auto-loot
+<br>Every guild's kill &amp; clear times from Chronicle, synced in game · Chronicle logger · Auto Marker · SR master loot (RollFor) · Auto-loot
+<br>Nothing to install but the addon · nothing posted without you seeing it · no player data shared
 
 ![WoW 1.12.1](https://img.shields.io/badge/WoW-1.12.1-c79c6e?style=flat-square)
 ![Lua 5.0](https://img.shields.io/badge/Lua-5.0-2c2d72?style=flat-square)
@@ -34,10 +35,11 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check. **Full check** opens DopingControl (built in) for the whole raid matrix: buffs, debuffs, resistances, hit and enchants.
 - 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
-- 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), banter after kills, and a rival watch when someone beats your times. Click any time to open that guild's whole raid.
+- 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
 - 📝 **Logging.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Optional: needs ChronicleCompanion, installed normally or by the sync helper.*
-- 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, and quick save for your own packs. *The ~365 raid packs are optional: the sync helper downloads them.*
+- 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *WhoDidIt's standard packs come with the download; AutoMarker's ~365 packs are optional (the sync helper downloads them).*
 - 💰 **SR MasterLoot.** Soft-res master looting with RollFor, with a step-by-step guide. *Optional: needs RollFor, installed normally or by the sync helper.* **Auto-loot** hands out the trash loot for you.
+- 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and no player data leaves your PC. See [Privacy and security](#privacy-and-security).
 
 ## Screenshots
 
@@ -95,19 +97,26 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. *Optional:* **double-click `tools\WhoDidIt-Sync.cmd` once** (WoW can stay open). Without it everything works
-   except: the Auto Marker's raid packs, the Logging tab (or install ChronicleCompanion), SR MasterLoot (or install
-   RollFor) and Full check (or install DopingControl). Rankings gets its times from the master feed in game, or from
-   the helper. The helper only installs versions the WhoDidIt maintainer has tested (pinned), never whatever is newest. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
-5. *Optional:* [ClassicAPI](#classicapi-optional) for a few extras - close WoW and double-click `tools\Install-ClassicAPI.cmd`.
+4. That's it. Rankings fills in by itself from the [master feed](#master-feed-nothing-to-install): the first copy
+   takes about 10 minutes in the background while the maintainer is online, and the Rankings tab shows the progress.
+
+**Optional extras** (WhoDidIt works without them):
+
+| Extra | What it adds | How |
+| --- | --- | --- |
+| [Sync helper](#sync-helper-optional) | The [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and [AutoMarker's packs](#auto-marker) installed for you; your own fresher raid times and **Sync now** | double-click `tools\WhoDidIt-Sync.cmd` once (WoW can stay open), then restart WoW |
+| [ClassicAPI](#classicapi-optional) | Copy links straight to the clipboard, faster consume scans, "running out" warnings, `/reload` picks up updates | close WoW, double-click `tools\Install-ClassicAPI.cmd` |
+
+You can also install ChronicleCompanion, RollFor or DopingControl the normal way instead of using the helper. The
+helper only installs versions the WhoDidIt maintainer has tested (pinned), never whatever is newest.
 
 **Updating:** download the new zip and replace the `WhoDidIt` folder (keep the folder name), or `git pull` if you
 cloned it. Your fights, settings and Hall of Fame are in `WTF\...\SavedVariables` and are kept. A full restart of WoW
 loads new files (`/reload` is enough with ClassicAPI).
 
-**Nothing is posted to chat by itself** on a fresh install: banter, the rival watch and fight shout-outs are off
+**Nothing is posted to chat by itself** on a fresh install: banter, rival alerts and fight shout-outs are off
 until you (or your raid leader) switch them on. Clicking a name or a mistake shows it in **your own chat**;
-**Ctrl-click** posts it.
+**Ctrl-click** posts it. More in [Privacy and security](#privacy-and-security).
 
 ### Requirements
 
@@ -137,8 +146,8 @@ installed, these get better:
 `ClassicAPI.dll` from the project's latest GitHub release, checks its SHA-256 against the one GitHub publishes, backs
 up `dlls.txt` (`dlls.txt.bak`), copies the DLL into your WoW folder and adds it to `dlls.txt`. Start WoW through your
 launcher as usual. It needs VanillaFixes, which loads the DLLs in `dlls.txt` (most Turtle / OctoWoW setups have it).
-Once installed, `tools\WhoDidIt-Sync` keeps it up to date while WoW is closed. Ask your server first if you're
-unsure whether client DLLs are allowed.
+Nothing updates it behind your back: run `Install-ClassicAPI.cmd` again (WoW closed) when you want a newer version.
+Ask your server first if you're unsure whether client DLLs are allowed.
 
 **By hand:** download `ClassicAPI.dll` from the [releases page](https://github.com/brues-code/ClassicAPI/releases/latest),
 put it in your WoW folder and add a line `ClassicAPI.dll` to `dlls.txt`.
@@ -199,10 +208,7 @@ The **Rankings** button (title bar, or `/wdi rankings`) shows kill times and ful
   Click a boss there for its leaderboard.
 - **Full clears:** first combat inside the instance to the last required boss, all in one run. Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro) aren't required. A run in progress shows which bosses are down.
 - **Closest to you first:** it opens on your current instance, realm and faction, with your own and your guild's times pinned at the top. **Realm** and **Faction** switch the view.
-- **Every guild on your realm:** most times come from Chronicle (see below). WhoDidIt users also share their guild's
-  bests over a hidden realm channel (`WDIBoard`), automatically and in the background. That adds times right after a
-  kill, before anyone uploads the log, and from guilds that never upload. Turn it off with `/wdi share off`. Shared
-  times are self-reported: they're sanity-checked but can't be verified.
+- **Every guild on the server:** see [where the raid times come from](#where-the-raid-times-come-from) below.
 
 A kill or clear counts for the raid's majority guild (at least half the raid). Personal bests are kept per character.
 
@@ -210,116 +216,123 @@ A kill or clear counts for the raid's majority guild (at least half the raid). P
 other realm. Every leaderboard time is compared with your guild's ("1:38.6 faster" / "3:51.1 slower"). The left column
 shows your guild's clear, its rank (gold / silver / bronze) and a green bar for how close you are to #1.
 
-### Banter
+### Where the raid times come from
 
-After every boss kill and full clear, WhoDidIt posts a fun line to the **Post to** channel. It picks a random message
-type so it doesn't get repetitive:
-- **our own best**: a new guild best (and by how much), or how much slower ("…{d} of sightseeing")
-- **our realm**: passed another guild ("Sorry not sorry, Care Bears"), still behind one, #1, or our rank
-- **the other realms**: faster than anyone on N'Zoth (PvE), behind a guild on C'Thun (Hardcore), or the fastest on
-  every OctoWoW realm. Realm types are set in `Data.lua` (`D.realmTypes`).
-- **rivals**: if someone recently beat our time, the next kill either takes it back ("Took Lucifron back from Care
-  Bears! …") or rubs it in ("Care Bears beat our Lucifron 2 days ago and still own it by 0:05.0")
+Rankings fills up from three places (hover a row to see which one a time came from):
 
-It trolls you when you're slow and bigs you up when you're fast. With several WhoDidIt users in the raid, only one of
-them posts each line. Toggle it with **Kill banter / Clear banter** in Rankings or `/wdi banter kills|clears on|off`,
-and preview a line with **Test banter** or `/wdi banter test`.
+| Source | What it brings | You need |
+| --- | --- | --- |
+| **[Master feed](#master-feed-nothing-to-install)** | Every guild's Chronicle times on every realm, passed on in game by the maintainer's character | just the addon |
+| **[Sync helper](#sync-helper-optional)** | The same Chronicle times, fetched by your own PC every 10 minutes, plus **Sync now** | the optional helper (PowerShell, built into Windows) |
+| **Other WhoDidIt users** | Each guild's own bests, shared right after the kill: before anyone uploads a log, and from guilds that never upload | just the addon |
 
-### Rival watch
+With both the feed and the helper, whichever copy is newer is used.
 
-Every minute WhoDidIt checks the new times from the Chronicle sync and from WhoDidIt users on the realm. Any time that
-beats our guild's best, and was set after it, goes on the **Rival watch**. On another realm, it counts when that
-realm's fastest guild gets under our time.
-- Rankings marks those instances and bosses with a red **!** and lists them under **Rival watch**. Click one to see
-  it in your chat; Ctrl-click to post it with a taunt.
-- **Rival alerts** on (off by default): when the raid enters that instance, WhoDidIt shows who beat us in **your own
-  chat** (once per instance visit).
-- **Post rivals** posts them for the instance you're looking at. **Post standings** posts what's on screen: a boss's
-  top 3, the instance's top 3 clears, or on how many bosses we're #1 and who has the rest. Use **Realm: All realms**
-  to compare across the server.
-- **Other guilds' names are never posted by themselves.** They come from logs anyone can upload, and what WhoDidIt
-  posts is said in your name. So anything naming another guild shows you the exact text first and only goes out when
-  you click **Post**, and the automatic kill / clear banter says "another guild" instead of a name. Guild names that
-  aren't plain letters and spaces (24 at most) are dropped when they arrive.
+### Master feed (nothing to install)
 
-### Every guild's times from Chronicle (optional helper)
+Chronicle's times are on a website, and WoW addons can't go online. So the maintainer runs the sync helper, and while
+one of their master characters is online, their WhoDidIt passes the times on to every other WhoDidIt user on the realm
+over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.
+
+- **After a fresh install:** within a minute of the master being online, your WhoDidIt asks for the times. The first
+  copy is everything: about 530 messages at one a second, so about 10 minutes for OctoWoW. It comes in quietly in the
+  background while you play. After that only what changed is sent (seconds), and one send serves everyone listening.
+- **While you wait:** the top of the Rankings tab says what's happening: "Receiving them from Upsilon" with a progress
+  bar, the % and the minutes left; "Upsilon is online… your WhoDidIt is asking for them"; or "Waiting for Upsilon to
+  come online" (nothing to do). Under it, **How the sharing works** explains what arrives and what doesn't. Chat says
+  when the first copy starts and when it's in ("Raid times are in: 1,757 guild records from Upsilon").
+- **Kept:** what arrives is saved on your PC, so Rankings is full at your next login even when the master is offline,
+  and it updates as soon as they're back. The bar at the bottom of Rankings shows "Raid times from Upsilon - they're
+  online, updates are live"; the header says "Chronicle via Upsilon".
+- **Raid details:** when you open a raid (click a time), its boss list is asked for and sent there and then.
+- **All realms:** the master sends every realm's times (C'Thun, N'Zoth and Y'Shaarj in one). A chat channel only
+  reaches players on its own realm, so there's a master character on each realm.
+- **Only the maintainer can be the master.** The master characters are written into the addon (`B.MASTERS` in
+  `Board.lua`), and every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm
+  and the channel only reaches the sender's own realm, so nobody can send as them. The **Master** button and
+  `/wdi master` only work on those characters; someone editing their own copy only fools themselves.
+- **Opting out:** `/wdi feed off` ignores the feed (`/wdi feed on` takes it again). `/wdi share off` leaves the hidden
+  channel altogether.
+
+What's in the feed, and what never is, is listed under [Privacy and security](#privacy-and-security).
+
+### Sync helper (optional)
 
 WoW addons can't go online, so a small helper does it for them. `tools\WhoDidIt-Sync.cmd` (PowerShell, built into
 Windows) uses Chronicle's public [External API](https://legacy.chronicleclassic.com/developers/api) to pull:
 
 - **full clears** from Chronicle's speedrun leaderboards
 - **boss kill times** from every uploaded raid log on your server (OctoWoW: C'Thun, N'Zoth, Y'Shaarj)
+- **your personal bests:** it reads the character folder names in your `WTF` folder and looks for them in the raid
+  rosters it downloads. The names never leave your PC.
 
 It writes them to `CustomData\WhoDidIt_Chronicle.txt`, and WhoDidIt reads that file live through Nampower, with no
-`/reload`. Rankings then shows every guild's Chronicle times next to the WhoDidIt-shared ones (hover a row to see its
-source), plus Turtle's custom bosses and the Karazhan towers.
+`/reload`. It also installs and updates the built-in addons and packs (see [Install](#install)).
 
 ```
 tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (close the window to stop)
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
-tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the built-in addons (Chronicle logger, RollFor) and the mob packs
+tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the built-in addons and the mob packs
 tools\WhoDidIt-Sync.cmd -LoggerOnly        only install / update the built-in Chronicle logger
 tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
 tools\WhoDidIt-Sync.cmd -NoRollForUpdate   leave RollFor alone
+tools\WhoDidIt-Sync.cmd -NoDopingUpdate    leave DopingControl alone
 tools\WhoDidIt-Sync.cmd -NoPackUpdate      leave the mob packs alone
 tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (default 150)
 ```
 
-- **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.
-- **Later syncs:** only fetch new uploads, plus the raids behind the times on the boards in full detail (150 per sync, so clicking a time shows the whole raid).
-- **Progress in game:** the Rankings tab has a bar (bottom left) showing what the helper is doing: the step, how far
-  it is and about how long is left, or "Up to date - next sync in 7 min". It also says if the helper isn't running,
-  or has never run on this PC.
-- **Sync now:** the button under the bar asks the helper to sync straight away (it checks every few seconds), so you
-  get the newest times right after a raid is uploaded. The helper has to be running.
-- **Rate limit:** the helper stays within Chronicle's limit (about one request a second) and caches what it has read in `CustomData\WhoDidIt_ChronicleCache.json`.
+- **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Times appear in game
+  as it goes.
+- **Later syncs:** only new uploads, plus the raids behind the times on the boards in full detail (150 per sync, so
+  clicking a time shows the whole raid).
+- **Progress in game:** the bar at the bottom left of Rankings shows the step, how far it is and about how long is
+  left, or "Up to date - next sync in 7 min". It also says if the helper isn't running, or has never run on this PC.
+- **Sync now:** the button under the bar asks the running helper to sync straight away, so you get the newest times
+  right after a raid is uploaded.
+- **Rate limit:** the helper stays within Chronicle's limit (about one request a second) and caches what it has read in
+  `CustomData\WhoDidIt_ChronicleCache.json`. The API is marked experimental by Chronicle, so it may change.
 - **Faction:** comes from the raiders' races. OctoWoW raids cross-faction, so many guilds show as **M** (mixed).
 
-The API is marked experimental by Chronicle, so it may change.
+**Run it in the background:** double-click **`tools\AutoSync-On.cmd`** once. The helper then runs with **no window**,
+starting by itself every time you log into Windows (and right away). It adds one shortcut to your Windows Startup
+folder and a tiny launcher script (`tools\WhoDidIt-Sync-Hidden.vbs`); nothing else changes. **`tools\AutoSync-Off.cmd`**
+removes the shortcut and stops the helper. (`AutoSync.ps1 -Minimised` keeps a minimised window instead.) Only one copy
+of the helper ever runs, so double-clicking `WhoDidIt-Sync.cmd` as well does no harm.
 
-### Two ways to get the raid times
+**Maintainer:** keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
+characters). Logging into the master character on a realm feeds that realm.
 
-| | How | You need |
-| --- | --- | --- |
-| **Nothing to install** | The WhoDidIt maintainer's master character feeds everyone on the realm in game (see below). You get the times while they're online and keep them. | Just the addon |
-| **Fetch them yourself** | Run the sync helper: fresher times (every 10 minutes) and **Sync now** works. | PowerShell (built into Windows) |
+### Banter
 
-**Happy to have the helper running?** Double-click **`tools\AutoSync-On.cmd`** once. The helper then runs in the
-background with **no window**, starting by itself every time you log into Windows (and right away). Its progress shows
-on the Rankings bar in game. It adds one shortcut to your Windows Startup folder and a tiny launcher script
-(`tools\WhoDidIt-Sync-Hidden.vbs`); nothing else changes. **`tools\AutoSync-Off.cmd`** removes the shortcut and stops
-the helper. (`AutoSync.ps1 -Minimised` keeps a minimised window instead.) Only one copy of the helper ever runs at a
-time, so double-clicking `WhoDidIt-Sync.cmd` as well does no harm.
+**Kill banter** and **Clear banter** are **off by default**; most raids leave them to the raid leader. When they're on,
+WhoDidIt posts a fun line to the **Post to** channel after every boss kill or full clear, picking a random kind of line
+so it doesn't get repetitive:
+- **our own best**: a new guild best (and by how much), or how much slower ("…{d} of sightseeing")
+- **our realm**: passed another guild, still behind one, #1, or our rank
+- **the other realms**: faster than anyone on N'Zoth (PvE), behind a guild on C'Thun (Hardcore), or the fastest on
+  every OctoWoW realm. Realm types are set in `Data.lua` (`D.realmTypes`).
+- **rivals**: took a boss back from a guild that beat us, or how long they've held it
 
-### Master feed: one person syncs, everyone gets the times
-Only **one** person needs the sync helper: the maintainer. While one of their master characters is online with
-**Master** on (bottom left of Rankings, only shown to them), their WhoDidIt feeds every other WhoDidIt user on the realm
-with the Chronicle raid times, over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no
-helper, no PowerShell, no settings.
+Banter never names another guild: it says "another guild" instead (see [Privacy and security](#privacy-and-security)).
+It trolls you when you're slow and bigs you up when you're fast. With several WhoDidIt users in the raid, only one of
+them posts each line. Toggle it with **Kill banter / Clear banter** in Rankings or `/wdi banter kills|clears on|off`,
+and preview a line with **Test banter** or `/wdi banter test`.
 
-**Only the maintainer can be the master.** The master characters are listed in the addon (`B.MASTERS` in `Board.lua`),
-and every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm and the
-channel only reaches the sender's own realm, so nobody can send as them; someone editing their own copy only fools
-themselves.
+### Rival watch
 
-- **How it flows:** every minute the master says how fresh its times are. Anyone who's behind asks, and the master
-  sends the times packed into chat messages, one a second. The first time is everything (about 10 minutes for
-  OctoWoW: ~530 messages); after that, only what changed (seconds). One send serves everyone listening at once.
-- **Saved:** what arrives is kept, so Rankings is filled at the next login even when the master is offline. It updates
-  again as soon as they're back on.
-- **Raid details:** when someone opens a raid (clicks a time), its boss list is asked for and sent there and then.
-- **In game:** the bar on Rankings shows "Receiving raid times from Upsilon 120 / 340", then "Raid times from Upsilon -
-  they're online, updates are live". The header says "Chronicle via Upsilon".
-- **All realms:** the master sends every realm's times (C'Thun, N'Zoth and Y'Shaarj all in one). A chat channel only
-  reaches players on the realm you're logged into, so each realm has its own master character; logging into it feeds
-  that realm (the Master setting and the sync file are shared by your characters).
-- **Who's affected:** WhoDidIt users with **sharing** on (the default). Players who run the helper themselves use
-  whichever times are newer.
-- **Opting out:** `/wdi feed off` ignores the feed; `/wdi master off` stops sending.
-- **What's sent:** guild names, raid / boss names, times, dates, raid sizes and Chronicle log links. Nothing about
-  the master's or anyone else's characters.
+Every minute WhoDidIt checks the new times from Chronicle (feed or helper) and from WhoDidIt users on the realm. Any
+time that beats our guild's best, and was set after it, goes on the **Rival watch**. On another realm, it counts when
+that realm's fastest guild gets under our time.
+- Rankings marks those instances and bosses with a red **!** and lists them under **Rival watch**. Click one to see
+  it in your chat; Ctrl-click to post it with a taunt (you see the text first).
+- **Rival alerts** (off by default): when the raid enters that instance, WhoDidIt shows who beat us in **your own
+  chat**, once per instance visit.
+- **Post rivals** posts them for the instance you're looking at. **Post standings** posts what's on screen: a boss's
+  top 3, the instance's top 3 clears, or on how many bosses we're #1 and who has the rest. Use **Realm: All realms**
+  to compare across the server. Both show you the exact text before it goes out.
+
 ## Logging (Chronicle logs)
 
 WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official addon for
@@ -544,9 +557,9 @@ The only changes to RollFor's files: its version comes from `RollFor\wdi_version
 folder, and its library list is expanded into `WhoDidIt.toc`. Its key bindings are added to WhoDidIt's. Nothing in how
 it rolls is changed, and it still talks to raiders' copies of RollFor (roll windows, version checks).
 
-**Already have RollFor installed?** On each character's first login, WhoDidIt's copy stands down and switches the
-separate addon off. From your next `/reload`, WhoDidIt's copy takes over with that character's settings, soft-res sheet
-and winners. Once you've done this on every character you loot with, delete `Interface\AddOns\RollFor`.
+**Already have RollFor installed?** WhoDidIt's copy stands down, so nothing runs twice, and it asks once whether to
+switch the separate addon off. **No** keeps it running with its own settings untouched. **Yes** switches it off, and
+from your next `/reload` WhoDidIt's copy takes over with that character's settings, soft-res sheet and winners.
 
 ## The panel under the list
 
@@ -655,8 +668,8 @@ coloured. Say, yell and custom channels get one line a second, which is slow eno
 | Your bomb/injection hit others | 2 + 1 per victim (+3 per kill) |
 | Each separate hit by avoidable damage | 1 (0.5 for spread mechanics, max 6) |
 | Too many stacks | 2 |
-| Very low activity / low activity | 3 / 1.5 |
-| DPS under 40 % of the raid median | 1.5 |
+| Very low activity / low activity | 3 / 1.5 (off by default: shown with 0 points; `/wdi idleblame on`) |
+| DPS under 40 % of the raid median | 1.5 (off by default, as above) |
 | Dying | 1 (0.25 once the wipe was already happening) |
 
 The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
@@ -700,7 +713,10 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 ```
 /wdi                       open / close the window
 /wdi rankings              kill times & full clears
-/wdi share on|off          share your guild's times with WhoDidIt users on the realm
+/wdi share on|off          share your guild's times with WhoDidIt users on the realm (off = leave the hidden channel)
+/wdi feed on|off           take / ignore the raid times from the master feed
+/wdi banter kills|clears on|off   fun kill / clear time lines (off by default)
+/wdi banter test           preview a banter line in your own chat
 /wdi logs                  Chronicle log controls
 /wdi log start|stop|save   control Chronicle logging
 /wdi demo                  add two sample fights (a wipe and a kill)
@@ -722,9 +738,18 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi threat on|off         ask the server for threat when TWThreat isn't loaded
 /wdi start | stop          manually track your target / end tracking
 /wdi check [post]          who's missing consumables right now
+/wdi readycheck on|off     consume check on every ready check (only you see it)
+/wdi idleblame on|off      blame points for low activity / low DPS (off by default)
 /wdi fame                  Hall of Fame: heroes, Hall of Shame, best plays and worst blunders
 /dc                        DopingControl's full raid check (built in)
+/wdi marks                 Auto Marker tab (see Auto Marker for its commands)
+/wdi marks learn on|off    note mobs and where they stand, to build packs
+/wdi marks build [yards]   make packs from what was noted
+/wdi loot                  SR MasterLoot tab
+/wdi aml                   Auto-loot on / off (see Auto-loot for more)
 /wdi classicapi            what the optional ClassicAPI adds, and how to get it
+/wdi handover <addon>      ask again about switching a separate addon off
+/wdi errors                errors WhoDidIt caught (for bug reports)
 /wdi status | clear
 ```
 
@@ -751,7 +776,63 @@ Demo fights are labelled *(demo)*. Automatic post-fight messages for them stay i
 - Spell and boss names are matched in English (enUS client).
 - Threat comes from the Turtle server for **your current target**, so keep the boss targeted.
 - Turtle's custom raids (Karazhan, Emerald Sanctum) are detected as world bosses, but their mechanics aren't in the database yet. Add avoidable spells with `/wdi avoid <spell>`, or edit [`Data.lua`](Data.lua). Pull requests with mechanics are welcome!
-- Weapon oils and sharpening stones can't be seen on other players in the 1.12 client, so they don't show on the Consumes tab.
+- Weapon oils, stones and imbues on other players are read through SuperWoW; out of range they show as **?**, never as missing.
+- Something not working? `/wdi errors` lists any errors WhoDidIt caught, for a bug report.
+
+## Privacy and security
+
+WhoDidIt is built so it can't get you into trouble in chat, and so nothing about you or your PC leaves it.
+
+**Chat**
+
+- **Nothing goes to a public chat by itself** on a fresh install. Banter, rival alerts and fight shout-outs are off
+  until you switch them on. A plain click shows things in your own chat; posting needs Ctrl-click or a Post button.
+- **Other guilds' names are never posted automatically.** They come from logs anyone can upload to Chronicle, and
+  anything WhoDidIt posts is said in your name, so a guild could pick a name meant to get whoever posts it into trouble.
+  Anything that names another guild (Post rivals, Post standings, a rival taunt) shows you the exact text first and
+  only goes out when you click **Post**. Automatic banter says "another guild" instead.
+- **Names are filtered on arrival.** Guild names from Chronicle, the feed or other users are dropped unless they're
+  plain letters and spaces, 24 characters at most: no links, colour codes, numbers or symbols.
+- Posts are paced (0.3 s apart, one a second in say / yell / custom channels) to stay under the server's spam limit.
+
+**The hidden channel** (`WDIBoard`): only WhoDidIt users on your realm are in it, and its messages never show in chat.
+
+| Who sends | What they send |
+| --- | --- |
+| Every WhoDidIt user (sharing on) | Their guild's best kill and clear times: guild name, faction, boss or instance, time, date and raid size |
+| The master | Chronicle's times: guild names, raid and boss names, times, dates, raid sizes and Chronicle log links |
+| Anyone asking the master | Only "send me what's new since …" |
+
+Never sent: player or character names, gear, chat, where you are, or anything from your PC. `/wdi share off` leaves
+the channel altogether; `/wdi feed off` just ignores the feed.
+
+**What's accepted**
+
+- The feed only from the master characters written into the addon; anyone else sending feed messages is ignored.
+- Times from other users are self-reported, so they're sanity-checked (a real boss, a kill between 5 seconds and an
+  hour, a clear between 2 minutes and 8 hours, no future dates), capped at 60 records per sender, and each board keeps only the 60 fastest guilds (always
+  including yours). Hover a row to see where a time came from.
+
+**Your PC**
+
+- The addon can't go online. Through Nampower it only reads and writes its own files in `CustomData`.
+- The **sync helper** is optional. It only *reads* from Chronicle's public API and *downloads* from GitHub; it uploads
+  nothing. Your character names (from the `WTF` folder) are only matched against downloaded raid rosters on your PC.
+  It writes only to the WhoDidIt folder and `CustomData`, needs no admin rights, and runs one copy at a time.
+- **Built-in addons** (Chronicle logger, RollFor, DopingControl) and AutoMarker's packs are downloaded from their
+  authors' GitHub at a commit the maintainer has tested and pinned, never whatever is newest. None of their code is
+  stored in this repository, and code from other repositories only gets in through a reviewed commit, never a bot.
+- **AutoSync** adds one Startup shortcut and a launcher script; `AutoSync-Off.cmd` removes them.
+- The **ClassicAPI installer** checks the DLL's SHA-256 against the one GitHub publishes and backs up `dlls.txt`.
+- **Learn packs** notes mobs and where they stand into your own saved settings; nothing is shared.
+
+**Your other addons**
+
+- If you already have ChronicleCompanion, RollFor, DopingControl, AutoMarker or AutoMasterLooter, WhoDidIt's copy
+  stands down and **asks** before switching the separate one off. **No** leaves it and its settings untouched
+  (`/wdi handover <addon>` asks again).
+- Errors are caught: one bad event can't break the rest of WhoDidIt. Each error is printed once and kept for bug
+  reports (`/wdi errors`).
 
 ## Licence and credits
 
