@@ -791,6 +791,10 @@ local BANTER = {
 		"{what} down for the very first time in {time}. Somebody frame it.",
 		"New record unlocked: {what} in {time}. Admittedly it's our only record.",
 		"{what} in {time}. Our best ever, our worst ever, our only ever.",
+		"{time} on {what}. Write it down, it's the number to beat now.",
+		"Our first {what} on record: {time}. The only way is down. The time, that is.",
+		"{what} logged at {time}. Day one of the speedrun era.",
+		"{time} for {what}. A personal best and a personal worst at the same time. Efficient.",
 	},
 	pb = {
 		"{what} in {time} - {d} faster than our old best. Who even are we?!",
@@ -799,6 +803,26 @@ local BANTER = {
 		"{what} at {time}, our best ever by {d}. The grind is paying off.",
 		"PB! {what} in {time}, {d} quicker than last time. Screenshot it before we wipe again.",
 		"{what} melted in {time}. That's {d} off our record. Pump it.",
+		"{what} in {time}. {d} faster than ever. Whoever brought the flasks: thank you.",
+		"New best on {what}! {time}, beating our old {prev} by {d}. Raid leader is crying happy tears.",
+		"{time} on {what}. {d} off our best. Someone tell the healers they can blink now.",
+		"{what} never stood a chance: {time}, {d} faster than our {prev}.",
+		"Record broken: {what} in {time}. Our old {prev} has been retired with honours.",
+		"{d} faster on {what} ({time}). Same raid, new legends.",
+	},
+	pbtiny = {
+		"{what} in {time}. A new best... by {d}. We'll take it.",
+		"New record on {what}! By {d}. Don't blink or you'll miss the improvement.",
+		"{time} on {what}, {d} under our best. Photo finish.",
+		"{d} faster on {what}. Every tenth counts. Probably.",
+		"{what}: {time}. Beat our {prev} by a whisker ({d}). Whisker included.",
+	},
+	pbhuge = {
+		"{what} in {time}. That's {d} off our best. What happened? Who are you people?",
+		"{d} faster than our old {what} record. Did we skip a phase?",
+		"{what} in {time}, {d} under our {prev}. That's not an improvement, that's a rebuild.",
+		"Our {what} record just dropped by {d}. The boss has filed a complaint.",
+		"{time} on {what}. Old best {prev}. Someone's been reading guides.",
 	},
 	slower = {
 		"{what} in {time}. Our best is {prev}, so that was {d} of sightseeing.",
@@ -807,6 +831,32 @@ local BANTER = {
 		"{what} took {time}. Our record is {prev}. We'll pretend this one didn't happen.",
 		"{d} slower than our best on {what}. The boss must have eaten its vegetables today.",
 		"{what} in {time}. {d} slower than we've done it. Consumables are not decorations, people.",
+		"{what} in {time}. {d} off our best. Somebody left the oven on?",
+		"{time} on {what}. Our record {prev} is safe for another week.",
+		"{what} down, {d} slower than our best. At least it's down.",
+		"{d} slower on {what}. The repair bill says we tried our best.",
+		"{what} in {time}. Not a record, but nobody released early. Growth.",
+		"{time} for {what}. Our {prev} is still on the wall, untouched and smug.",
+	},
+	nearmiss = {
+		"{what} in {time}. {d} off our best. SO close.",
+		"{d} short of our {what} record. Somebody's /sit is to blame.",
+		"{time} on {what}, missed our {prev} by {d}. Pain in its purest form.",
+		"{what}: {d} slower than our best. One more global and it was ours.",
+		"Missed the {what} record by {d}. Whoever went to pee: we know.",
+	},
+	disaster = {
+		"{what} in {time}. That's {d} slower than our best. Were we fighting it or babysitting it?",
+		"{time} on {what}. Our best is {prev}. Let's never speak of this.",
+		"{what} took {d} longer than usual. Somebody check the boss for extra health.",
+		"{what} in {time}. {d} slower. Hope the scenery was nice.",
+		"{d} over our {what} record. The boss had time to make a cup of tea.",
+	},
+	speedy = {
+		"{what} in {time}. Blink and you missed it.",
+		"{time} on {what}. The boss barely finished its opening line.",
+		"{what} was over in {time}. Loading screen took longer.",
+		"{what} down in {time}. Somebody check it actually spawned.",
 	},
 	beat = {
 		"{what} in {time} - {d} faster than {g}. Sorry not sorry, {g}.",
@@ -815,6 +865,10 @@ local BANTER = {
 		"{what} in {time}: {g}, you've been passed. By {d}.",
 		"{d} quicker than {g} on {what}. Get those parses up, {g}.",
 		"{g} called, they want their {what} time back. It's {d} slower than ours.",
+		"{what} in {time}, {d} ahead of {g}. Nothing personal.",
+		"Moved past {g} on {what} by {d}. Wave as we go by.",
+		"{time} on {what}. That's {d} better than {g}. Sorry, the leaderboard doesn't do participation trophies.",
+		"Overtook {g} on {what}, {d} clear. Mind the gap.",
 	},
 	behind = {
 		"{what} in {time}. {g} still did it {d} faster. Pain.",
@@ -823,43 +877,69 @@ local BANTER = {
 		"{what} at {time}. {g} is {d} ahead and laughing at us right now.",
 		"Only {d} slower than {g} on {what}. Only. {d}.",
 		"{g} would like us to know they did {what} {d} faster. Thanks, {g}.",
+		"{what} in {time}. Still {d} behind {g}. The chase continues.",
+		"{d} between us and {g} on {what}. Consumes next week, everyone.",
+		"{time} on {what}. Not quite {g} pace yet ({d} behind). Yet.",
+		"We see you, {g}. {d} on {what}. We're coming.",
 	},
 	top = {
 		"{what} in {time} - #1 on {realm}! Bow down.",
 		"Fastest {what} on {realm}: {time}. Everyone else is playing for second.",
 		"{time} on {what}. #1 out of {of} on {realm}. Somebody call the server.",
 		"{realm} record on {what}: {time}. Put it on the guild banner.",
+		"#1 on {realm} for {what}. {time}. The view from up here is lovely.",
+		"{what} in {time}, nobody on {realm} has done it faster. Not one guild.",
+		"Top of {realm} on {what} with {time}. Everybody else: the bar is right here.",
+		"{time} on {what}. #1 of {of} on {realm}. Somebody update the history books.",
 	},
 	rank = {
 		"{what} in {time} puts us #{rank} of {of} on {realm}.",
 		"#{rank} of {of} on {realm} for {what} with {time}. Climbing.",
 		"{what}: {time}, #{rank} of {of} on {realm}. {g} is next on the hit list.",
 		"{time} on {what} - #{rank} of {of} on {realm}. Not bad, not legendary.",
+		"{what} in {time}. #{rank} of {of} on {realm}, and climbing.",
+		"#{rank} of {of} for {what} on {realm}. The podium can hear us coming.",
+		"{time} on {what}: #{rank} on {realm}. Plenty of guilds behind us, a few to catch.",
 	},
 	servertop = {
 		"{what} in {time} - fastest on ALL of {server}. {orealm}, take notes.",
 		"Nobody on any {server} realm has done {what} faster than our {time}. Not even {orealm}.",
 		"{time} on {what}: the record across every realm. {og} of {orealm} is {d} behind us.",
+		"{what} in {time}. Every realm, every guild, nobody faster. Server record.",
+		"The fastest {what} anywhere on {server}: {time}. Ours.",
+		"{time} on {what}. #1 on every {server} realm. Someone pin this.",
 	},
 	realmbeat = {
 		"{time} on {what} - faster than anyone on {orealm}. Their best, {og}, is {d} slower.",
 		"{what} in {time}. The whole of {orealm} can't match it: {og} is {d} slower.",
 		"Realm pride: {what} in {time}, {d} quicker than {orealm}'s fastest ({og}).",
+		"{orealm} called. Their best {what} is {d} slower than our {time}.",
+		"{what} in {time}. Good luck matching that on {orealm}: their best is {d} behind.",
+		"{time} on {what}. {orealm}'s fastest is {d} slower. Cross-realm bragging rights claimed.",
 	},
 	realmbehind = {
 		"{what} in {time}, but {og} over on {orealm} did it {d} faster. The other realm says hi.",
 		"{og} of {orealm} would like a word: their {what} is {d} faster than our {time}.",
 		"{time} on {what}. Meanwhile on {orealm}, {og} is {d} ahead. Cross-realm shame.",
+		"{what} in {time}. {orealm}'s best is still {d} faster. They're probably bragging.",
+		"{d} behind the best on {orealm} for {what}. A new target has appeared.",
+		"{what} in {time}. Over on {orealm} it's {d} faster. Not that we're counting.",
 	},
 	revenge = {
 		"Took {what} back from {g}! {time} - {d} faster than the {their} they set {ago}.",
 		"{g} had {what} for about five minutes. {time} now, {d} under their {their}. Revenge served.",
 		"Remember {g} beating our {what} {ago}? {time}, {d} faster. Remember that instead.",
+		"{what} is ours again: {time}, {d} under the {their} {g} set {ago}.",
+		"Back on top of {what}. {g} held it since {ago}. That's over now ({time}).",
+		"Revenge on {what}: {time}, beating {g}'s {their} by {d}. Enjoyed that.",
 	},
 	chase = {
 		"{g} beat our {what} {ago} ({their}) and still own it by {d}. Again. Faster.",
 		"{what} in {time} - still {d} behind the {their} {g} set {ago}. They're laughing.",
 		"{g}'s {their} on {what} from {ago} still stands. {d} to find. Who's slacking?",
+		"{what} in {time}. {g}'s {their} from {ago} lives another day. {d} to go.",
+		"Still {d} off the {their} {g} set {ago} on {what}. Next week it's ours.",
+		"{g} still owns {what} ({their}, {ago}). We're {d} away. Flasks on, everyone.",
 	},
 }
 B.BANTER = BANTER
@@ -909,8 +989,17 @@ function B:BanterLine(kind, key, what, secs, old, realm, guild, rival, anon)
 	local cats, total = {}, 0
 	local function add(c, w) tinsert(cats, { c, w }); total = total + w end
 	if not old then add("first", 2) end
-	if old and improved then add("pb", 3) end
-	if not improved then add("slower", 3) end
+	if old and improved then
+		add("pb", 3)
+		if old.t - secs < 2 then add("pbtiny", 4) end
+		if old.t - secs >= old.t * 0.15 then add("pbhuge", 4) end
+	end
+	if not improved then
+		add("slower", 3)
+		if secs - old.t < 3 then add("nearmiss", 4) end
+		if secs - old.t > old.t * 0.3 then add("disaster", 3) end
+	end
+	if kind == "kill" and secs < 60 then add("speedy", 2) end
 	if rank == 1 and of > 1 then add("top", 3) end
 	if passed then add("beat", 4) elseif behind then add("beat", 1) end
 	if ahead then add("behind", improved and 1 or 3) end
@@ -936,8 +1025,8 @@ function B:BanterLine(kind, key, what, secs, old, realm, guild, rival, anon)
 		realm = B.RealmLabel(realm), server = B.ServerName(),
 		og = orow and orow[1] or "", orealm = orow and B.RealmLabel(orow[3]) or "the other realms",
 	}
-	if cat == "pb" then v.d = B.Fmt(old.t - secs)
-	elseif cat == "slower" then v.d = B.Fmt(secs - old.t)
+	if cat == "pb" or cat == "pbtiny" or cat == "pbhuge" then v.d = B.Fmt(old.t - secs)
+	elseif cat == "slower" or cat == "nearmiss" or cat == "disaster" then v.d = B.Fmt(secs - old.t)
 	elseif cat == "beat" then v.g = other[1]; v.d = B.Fmt(other[2].t - secs)
 	elseif cat == "behind" then v.g = ahead[1]; v.d = B.Fmt(secs - ahead[2].t)
 	elseif cat == "servertop" then

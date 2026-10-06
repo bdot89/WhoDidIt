@@ -309,7 +309,9 @@ characters). Logging into the master character on a realm feeds that realm.
 **Kill banter** and **Clear banter** are **off by default**; most raids leave them to the raid leader. When they're on,
 WhoDidIt posts a fun line to the **Post to** channel after every boss kill or full clear, picking a random kind of line
 so it doesn't get repetitive:
-- **our own best**: a new guild best (and by how much), or how much slower ("…{d} of sightseeing")
+- **our own best**: a new guild best (and by how much), a photo finish (under 2 seconds), a huge leap (15% or
+  more), how much slower ("…{d} of sightseeing"), a near miss (under 3 seconds off) or a disaster (30% slower)
+- **speed kills**: a boss down in under a minute
 - **our realm**: passed another guild, still behind one, #1, or our rank
 - **the other realms**: faster than anyone on N'Zoth (PvE), behind a guild on C'Thun (Hardcore), or the fastest on
   every OctoWoW realm. Realm types are set in `Data.lua` (`D.realmTypes`).
