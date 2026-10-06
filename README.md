@@ -271,8 +271,8 @@ While they're online, their WhoDidIt feeds every other WhoDidIt user on the real
 WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.
 
 - **How it flows:** every minute the master says how fresh its times are. Anyone who's behind asks, and the master
-  sends the times packed into chat messages, one a second. The first time is everything (a few minutes); after that,
-  only what changed (seconds). One send serves everyone listening at once.
+  sends the times packed into chat messages, one a second. The first time is everything (about 10 minutes for
+  OctoWoW: ~530 messages); after that, only what changed (seconds). One send serves everyone listening at once.
 - **Saved:** what arrives is kept, so Rankings is filled at the next login even when the master is offline. It updates
   again as soon as they're back on.
 - **Raid details:** when someone opens a raid (clicks a time), its boss list is asked for and sent there and then.

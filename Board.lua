@@ -1215,7 +1215,7 @@ end)
 --   H~synced~lines~server              master: what I have (every minute)
 --   A~since                             player: please send what's new since
 --   B~sid~synced~since~total~server     stream start (total D + R messages)
---   D~sid~idx~text                      a name (realm, raid, boss, guild)
+--   D~sid~idx=text;idx=text;...         names (realm, raid, boss, guild)
 --   R~sid~rec;rec;...                   records (idx refer to D)
 --   E~sid~total                         stream end
 --   Q~slug / L~slug~i~n~part            a raid's boss list, asked / sent in parts
@@ -1243,7 +1243,7 @@ local function b36(n)
 	return s
 end
 local function unb36(s) return tonumber(s or "", 36) end
-local function clean(s) return (string.gsub(s or "", "[~;,|\n]", " ")) end
+local function clean(s) return (string.gsub(s or "", "[~;,|=\n]", " ")) end
 
 local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
 function B.IsMaster() return opts().master and B.chronRaw ~= nil end
@@ -1283,19 +1283,31 @@ local function buildStream(since)
 	local raw = B.chronRaw
 	if not raw then return end
 	local sid = b36(time())
-	local dict, n, out, buf = {}, 0, {}, {}
+	local dict, n, out, buf, names = {}, 0, {}, {}, {}
 	local recs = 0
+	-- new names wait in "names" and go out (packed) just before the records using them
 	local function idx(s)
 		s = clean(s)
 		if not dict[s] then
 			n = n + 1
 			dict[s] = b36(n)
-			tinsert(out, "D~" .. sid .. "~" .. dict[s] .. "~" .. s)
+			tinsert(names, dict[s] .. "=" .. s)
 		end
 		return dict[s]
 	end
 	local blen = 0
 	local function flush()
+		local pack, plen = {}, 0
+		for i = 1, getn(names) do
+			if plen + string.len(names[i]) + 1 > 220 then
+				tinsert(out, "D~" .. sid .. "~" .. table.concat(pack, ";"))
+				pack, plen = {}, 0
+			end
+			tinsert(pack, names[i])
+			plen = plen + string.len(names[i]) + 1
+		end
+		if getn(pack) > 0 then tinsert(out, "D~" .. sid .. "~" .. table.concat(pack, ";")) end
+		names = {}
 		if getn(buf) > 0 then tinsert(out, "R~" .. sid .. "~" .. table.concat(buf, ";")) end
 		buf, blen = {}, 0
 	end
@@ -1426,7 +1438,14 @@ function B:FeedReceive(msg, sender)
 		want = nil
 	elseif kind == "D" then
 		local s = recv[p[3]]
-		if s then s.dict[p[4]] = p[5]; s.got = s.got + 1; s.at = GetTime() end
+		if s then
+			for entry in string.gfind((p[4] or "") .. ";", "(.-);") do
+				local _, _, k, v = string.find(entry, "^([^=]+)=(.*)$")
+				if k then s.dict[k] = v end
+			end
+			s.got = s.got + 1
+			s.at = GetTime()
+		end
 	elseif kind == "R" then
 		local s = recv[p[3]]
 		if s then
