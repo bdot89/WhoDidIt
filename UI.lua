@@ -731,7 +731,7 @@ local HINTS = {
 	deaths   = "Hover a death for its recap  -  click it for the full timeline",
 	mistakes = "Click a mistake to post it (Ctrl-click: preview)  -  hover for advice",
 	threat   = "Click a name to open their timeline at that moment  -  keep the boss targeted for threat %",
-	timeline = "Everything that happened, in order",
+	timeline = "Everything that happened, in order  -  click a name for that player's timeline at that moment",
 	consumes = "Buffs active during the fight, then items used  -  hover a player for the full list",
 	heroes   = "Click a name or a game-saving moment to post it (Ctrl-click: preview)  -  hover for details",
 }
@@ -1843,6 +1843,43 @@ local function mentions(text, name)
 	return false
 end
 
+-- which player's name in a timeline line was clicked: the names in the line
+-- (in order), measured with a hidden font string in the row's font
+local measure
+local function nameAt(text, rec, x)
+	local found = {}
+	for name in pairs(rec.players) do
+		local s, e = string.find(text, name, 1, true)
+		while s do
+			local before, after = string.sub(text, s - 1, s - 1), string.sub(text, e + 1, e + 1)
+			if not string.find(before, "%a") and not string.find(after, "%a") then
+				tinsert(found, { name, s, e })
+				break
+			end
+			s, e = string.find(text, name, e + 1, true)
+		end
+	end
+	if getn(found) == 0 then return nil end
+	table.sort(found, function(a, b) return a[2] < b[2] end)
+	if not measure then
+		measure = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		measure:Hide()
+	end
+	local function width(s)
+		measure:SetText(s)
+		return measure:GetStringWidth() or 0
+	end
+	if x then
+		for i = 1, getn(found) do
+			local n = found[i]
+			local left = width(string.sub(text, 1, n[2] - 1))
+			local right = width(string.sub(text, 1, n[3]))
+			if x >= left - 3 and x <= right + 3 then return n[1] end
+		end
+	end
+	return found[1][1]   -- not on a name: the first player in the line
+end
+
 function UI:TimelineRows(rec)
 	local rows = {}
 	local tl = rec.timeline or {}
@@ -1868,7 +1905,14 @@ function UI:TimelineRows(rec)
 	for i = 1, getn(tl) do
 		local l = tl[i]
 		if not who or mentions(l.x, who) then
-			tinsert(rows, cells(TL_SPEC, { C_DIM .. FmtTime(l.t) .. "|r", tint(colorNames(l.x or "", rec), KIND_COLOR[l.k] or "|cffffffff") }))
+			local line, t = l.x or "", l.t
+			tinsert(rows, cells(TL_SPEC, { C_DIM .. FmtTime(l.t) .. "|r", tint(colorNames(line, rec), KIND_COLOR[l.k] or "|cffffffff") },
+				{ tipTitle = FmtTime(l.t), tip = { line, " ", "|cff33ff33Click a name: that player's full timeline, at " .. FmtTime(l.t) .. "|r" },
+				  click = function(d, btn, x)
+					-- the text column starts after the time column (4 + 40 + 6)
+					local name = nameAt(line, rec, x and (x - 50))
+					if name then UI:ShowTimeline(name, t) end
+				  end }))
 			if focus and focus.t then
 				local gap = math.abs((l.t or 0) - focus.t)
 				if not bestGap or gap < bestGap then best, bestGap = getn(rows), gap end
