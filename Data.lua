@@ -459,6 +459,23 @@ D.consumeNeedsClass = {
 		          { "Windfury weapon", "IMBUE", { "Windfury", "Rockbiter", "Flametongue", "Frostbrand" } } },
 	},
 }
+-- class cooldowns that can stop a death, and their cooldown in seconds
+-- (true = a talent, so only if they took it). When someone dies, WhoDidIt
+-- freezes which of these (and potion / healthstone) were off cooldown.
+D.defensives = {
+	WARRIOR = { { "Shield Wall", 1800 }, { "Last Stand", 600, true } },
+	PALADIN = { { "Divine Shield", 300 }, { "Blessing of Protection", 300 }, { "Lay on Hands", 3600 } },
+	MAGE    = { { "Ice Block", 300, true } },
+	ROGUE   = { { "Evasion", 300 }, { "Vanish", 300 } },
+	HUNTER  = { { "Feign Death", 30 } },
+	PRIEST  = { { "Desperate Prayer", 600, true } },
+	DRUID   = { { "Frenzied Regeneration", 180 } },
+}
+D.defensiveSpell = {}
+for _, list in pairs(D.defensives) do
+	for i = 1, table.getn(list) do D.defensiveSpell[list[i][1]] = true end
+end
+
 -- the kind of a game-saving play, from words in its text (Heroes tab, Hall of Fame)
 D.saveTypes = {
 	{ "absorbed", "Shield" }, { "healed", "Heal" }, { "taunted", "Taunt" }, { "back off", "Taunt" },

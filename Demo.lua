@@ -165,6 +165,14 @@ local function die(s, name, lines, debuffs, hadAggro)
 		local l = lines[i]
 		tinsert(d.lines, { t = s + l[1], k = l[2], s = l[3], sp = l[4], a = l[5], hp = floor(l[6] * p.maxhp), hm = p.maxhp, c = l[7], x = l[8] })
 	end
+	-- what was off cooldown when they died: anyone who drank a potion this
+	-- fight used it 30 seconds before, so theirs was still cooling down
+	local log = { warlock = true }   -- the demo raid has warlocks
+	for item in pairs(p.consumes or {}) do
+		if string.find(item, "Potion", 1, true) then log.potion = { F.t0 + s - 30, item } end
+		if string.find(item, "Healthstone", 1, true) then log.healthstone = { F.t0 + s - 50, item } end
+	end
+	d.ready, d.cooling = W.Tracker:Readiness(name, p.class, F.t0 + s, log)
 	tinsert(F.deaths, d)
 	line(s, "death", name .. " died", name)
 end

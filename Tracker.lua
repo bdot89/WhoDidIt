@@ -607,6 +607,49 @@ end
 
 ------------------------------------------------------------------ deaths
 
+-- when each raider last used a potion, a healthstone or a class defensive.
+-- Kept for the whole session (not just the fight), so a potion drunk just
+-- before the pull still counts as on cooldown when they die.
+T.cdLog = {}
+
+function T:NoteUse(name, item)
+	local log = T.cdLog[name]
+	if not log then log = {}; T.cdLog[name] = log end
+	if string.find(item, "Healthstone", 1, true) then
+		log.healthstone = { GetTime(), item }
+	elseif string.find(item, "Potion", 1, true) or item == "Restore Mana" or item == "Healing Potion" then
+		log.potion = { GetTime(), item }   -- every potion shares one 2 minute cooldown
+	end
+end
+
+local function warlockInRaid()
+	for _, e in pairs(W.roster.byName) do
+		if e.class == "WARLOCK" then return true end
+	end
+end
+
+-- at a death: what was off cooldown ({ { label, kind, note }, ... }) and what
+-- wasn't ({ { label, seconds left, what they used }, ... }). log: optional
+-- (the demo passes its own)
+function T:Readiness(name, class, now, log)
+	log = log or T.cdLog[name] or {}
+	local ready, cooling = {}, {}
+	local function check(key, label, cd, kind, note)
+		local u = log[key]
+		local t = (type(u) == "table") and u[1] or u
+		if t and now - t < cd then
+			tinsert(cooling, { label, floor(cd - (now - t)), (type(u) == "table") and u[2] or nil })
+		else
+			tinsert(ready, { label, kind, note })
+		end
+	end
+	check("potion", "Healing / protection potion", 120, "potion")
+	if log.healthstone or log.warlock or warlockInRaid() then check("healthstone", "Healthstone", 120, "healthstone") end
+	local defs = W.Data.defensives[class or ""] or {}
+	for i = 1, getn(defs) do check(defs[i][1], defs[i][1], defs[i][2], "spell", defs[i][3] and "if they took the talent" or nil) end
+	return ready, cooling
+end
+
 function T:Died(guid)
 	if not F then return end
 	local b = F.bosses[guid]
@@ -649,6 +692,8 @@ function T:Death(e, guid)
 		for sp in pairs(ad) do tinsert(d.debuffs, sp) end
 	end
 	d.cons = p.nCons
+	-- freeze what was off cooldown at this moment: what could have saved them
+	d.ready, d.cooling = T:Readiness(e.name, e.class, now)
 	for _, b in pairs(F.bosses) do
 		if guid and b.holder == guid then d.hadAggro = b.name end
 	end
@@ -745,6 +790,16 @@ end
 ------------------------------------------------------------------ casts (SuperWoW)
 
 function T:CastEvent(caster, target, evt, spellId, dur)
+	if evt == "CAST" then
+		local sp = W.SpellName(spellId)
+		if W.Data.defensiveSpell[sp] then
+			local who, pet = W.Owner(caster)
+			if who and not pet then
+				T.cdLog[who] = T.cdLog[who] or {}
+				T.cdLog[who][sp] = GetTime()
+			end
+		end
+	end
 	if not F then return end
 	local now = GetTime()
 	local n, isPet = W.Owner(caster)
@@ -856,14 +911,15 @@ function T:CastEvent(caster, target, evt, spellId, dur)
 end
 
 function T:SpellGo(itemId, spellId, casterGuid)
-	if not F then return end
 	itemId = tonumber(itemId)
 	if not itemId or itemId == 0 then return end
 	local e = W.roster.byGuid[casterGuid]
 	if not e then return end
-	local p = T:P(e.name)
 	-- prefer the item's name ("Major Mana Potion") over its spell ("Restore Mana")
 	local sp = GetItemInfo(itemId) or W.SpellName(spellId)
+	T:NoteUse(e.name, sp)   -- cooldowns are tracked between fights too
+	if not F then return end
+	local p = T:P(e.name)
 	p.consumes[sp] = (p.consumes[sp] or 0) + 1
 	p.nCons = p.nCons + 1
 	-- last-second health potion / healthstone

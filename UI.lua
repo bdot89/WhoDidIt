@@ -240,6 +240,7 @@ UI.GRID_LOOK = {   -- edge r, g, b, a, then fill r, g, b
 	miss = { 0.85, 0.15, 0.15, 1,   0.32, 0.04, 0.04 },
 	unk  = { 0.5, 0.5, 0.55, 1,     0.12, 0.12, 0.14 },
 	na   = { 0.2, 0.2, 0.24, 0.8,   0.07, 0.07, 0.09 },
+	ready = { 1, 0.82, 0, 1,        0.2, 0.16, 0.02 },   -- off cooldown when they died
 }
 function UI.GridCell(row, size, wheel)
 	local c = CreateFrame("Button", nil, row)
@@ -292,8 +293,12 @@ function UI.SetGridCell(c, g, row)
 	if g[3] then
 		c.icon:SetTexture(g[3])
 		c.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-		-- a missing one: the icon of what's needed, faded red under the X
-		if g[2] == "miss" then
+		-- a missing one: the icon of what's needed, faded red under the X;
+		-- off cooldown at death: faded under a yellow !
+		if g[2] == "ready" then
+			c.icon:SetVertexColor(1, 1, 0.6)
+			c.icon:SetAlpha(0.45)
+		elseif g[2] == "miss" then
 			c.icon:SetVertexColor(1, 0.35, 0.35)
 			c.icon:SetAlpha(0.5)
 		else
@@ -1632,6 +1637,28 @@ function UI:CauseRows(rec, idx)
 	return rows
 end
 
+-- frozen at the moment of death: what was off cooldown (could have saved
+-- them) and what wasn't. {} for fights from before this was recorded.
+function UI.ReadyLines(d)
+	local out = {}
+	if not d or not d.ready then return out end
+	if getn(d.ready) > 0 then
+		tinsert(out, "|cffffd100Off cooldown when they died - could have saved them:|r")
+		for i = 1, getn(d.ready) do
+			local r = d.ready[i]
+			tinsert(out, "   |cffffff66" .. r[1] .. "|r" .. (r[3] and (" |cff888888(" .. r[3] .. ")|r") or ""))
+		end
+	end
+	for i = 1, getn(d.cooling or {}) do
+		local c = d.cooling[i]
+		tinsert(out, "|cff888888On cooldown: " .. c[1] .. (c[3] and (" (used " .. c[3] .. ")") or "") .. ", " .. c[2] .. "s left|r")
+	end
+	if getn(out) > 0 then
+		tinsert(out, "|cff888888Not seen used within its cooldown. They may not have had it with them.|r")
+	end
+	return out
+end
+
 local function recapTip(d)
 	local tip = {}
 	for i = 1, getn(d.lines) do
@@ -1657,6 +1684,9 @@ local function recapTip(d)
 	if d.debuffs and getn(d.debuffs) > 0 then tinsert(tip, "Debuffs: " .. table.concat(d.debuffs, ", ")) end
 	tinsert(tip, "Consumables/items used this fight: " .. (d.cons or 0))
 	if d.hadAggro then tinsert(tip, "Had aggro on " .. d.hadAggro) end
+	local rl = UI.ReadyLines(d)
+	if getn(rl) > 0 then tinsert(tip, " ") end
+	for i = 1, getn(rl) do tinsert(tip, rl[i]) end
 	tinsert(tip, "|cff888888Click for the full recap|r")
 	return tip
 end
@@ -1667,6 +1697,8 @@ function UI:DeathRows(rec)
 		local d = UI.detail
 		tinsert(rows, row("|cffffd100<< Back to deaths|r", nil, { head = true, click = function() UI.detail = nil; UI:Refresh() end }))
 		tinsert(rows, row(W.CName(d.name, d.class) .. " died at " .. FmtTime(d.t) .. " - " .. d.text, nil, { head = true }))
+		local rl = UI.ReadyLines(d)
+		for i = 1, getn(rl) do tinsert(rows, row(rl[i])) end
 		colHead(rows, RECAP_SPEC, { "Time", "What happened", "From", "Amount", "Health" })
 		for i = 1, getn(d.lines) do
 			local l = d.lines[i]
@@ -2185,8 +2217,19 @@ function UI:UsedRows(rec)
 		local pats = cols[i][3] and table.concat(cols[i][3], ", ") or "anything not in the other columns"
 		hdr[i] = { cols[i][1], cols[i][2], { "Items whose name has: " .. pats, " ", "The number is how many they used. Hover a square for the items." } }
 	end
-	UI.SetGridHead(hdr, { "TOTAL", "Total", { "Every item they used during the fight." } }, { "" })
-
+	UI.SetGridHead(hdr, { "TOTAL", "Total", { "Every item they used during the fight." } },
+		{ "DIED", "Died", { "When they died. The row is frozen at that moment: a |cffffd100yellow !|r square was",
+			"off cooldown and unused - it could have saved them. Hover the name for their class cooldowns too." } })
+	-- each player's first death (the frozen snapshot), and the columns it lights up
+	local deathOf = {}
+	for i = 1, getn(rec.deaths or {}) do
+		local d = rec.deaths[i]
+		if not d.late and not deathOf[d.name] then deathOf[d.name] = d end
+	end
+	local readyCol = {}
+	for i = 1, n do
+		if cols[i][1] == "HP" then readyCol[i] = "potion" elseif cols[i][1] == "HS" then readyCol[i] = "healthstone" end
+	end
 	local groups, totals, nPlayers, all = {}, {}, 0, 0
 	for name, p in pairs(rec.players) do
 		nPlayers = nPlayers + 1
@@ -2209,14 +2252,36 @@ function UI:UsedRows(rec)
 		end
 		all = all + sum
 		if getn(tip) == 0 then tip = { C_DIM .. "Used nothing this fight.|r" } end
+		local dd = deathOf[name]
+		local readyKind, nReady = {}, 0
+		if dd then
+			tinsert(tip, 1, "|cffff5555Died at " .. FmtTime(dd.t) .. "|r - " .. (dd.text or ""))
+			local rl = UI.ReadyLines(dd)
+			for j = 1, getn(rl) do tinsert(tip, 1 + j, rl[j]) end
+			for j = 1, getn(dd.ready or {}) do
+				readyKind[dd.ready[j][2]] = dd.ready[j][1]
+				nReady = nReady + 1
+			end
+		end
 		tip = withLegend(tip, "consumes")
 		local grid = {}
 		for c = 1, n do
 			local x = CG.X + (c - 1) * CG.STEP + 4
 			local title = cols[c][2] .. " - " .. W.CName(name, p.class)
+			local rk = readyCol[c] and readyKind[readyCol[c]]
 			if per[c] then
 				totals[c] = (totals[c] or 0) + per[c].n
-				tinsert(grid, { x, "ok", cols[c][4], title, per[c].items, nil, per[c].n })
+				local items = per[c].items
+				if rk then
+					items = { unpack(items) }
+					tinsert(items, "|cffffd100Off cooldown again when they died at " .. FmtTime(dd.t) .. ".|r")
+				end
+				tinsert(grid, { x, "ok", cols[c][4], title, items, nil, per[c].n })
+			elseif rk then
+				tinsert(grid, { x, "ready", cols[c][4], title, { "|cffffd100Off cooldown when they died at " .. FmtTime(dd.t) .. "|r",
+					(readyCol[c] == "potion") and "No potion used in the 2 minutes before - a healing or protection potion could have saved them."
+						or "No healthstone used in the 2 minutes before - it could have saved them.",
+					C_DIM .. "They may not have had one with them.|r" }, "|cffffd100!|r" })
 			else
 				tinsert(grid, { x, "na", nil, title, { "None used." }, C_DIM .. "-|r" })
 			end
@@ -2235,8 +2300,9 @@ function UI:UsedRows(rec)
 				{ CG.NAME, 110, W.CName(name, p.class), "LEFT" },
 				{ CG.ROLE, 52, "|cff" .. g[3] .. string.upper(Cons.ROLE_TEXT[role] or "?") .. "|r", "CENTER" },
 				{ CG.READY, 44, (sum > 0) and (C_YOU .. sum .. "|r") or (C_DIM .. "0|r"), "CENTER" },
+				{ CG.USED, 54, dd and ("|cffff5555" .. FmtTime(dd.t) .. "|r" .. ((nReady > 0) and " |cffffd100!|r" or "")) or "", "CENTER" },
 			},
-			grid = grid, tip = tip, tipTitle = name .. " - used in the fight", name = name, click = playerClick("consumes"),
+			grid = grid, tip = tip, tipTitle = name .. " - used in the fight" .. (dd and " (frozen at death)" or ""), name = name, click = playerClick("consumes"),
 		} })
 	end
 	if nPlayers == 0 then

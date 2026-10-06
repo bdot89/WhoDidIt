@@ -318,7 +318,7 @@ function A:Build(F, final)
 			kind = kind, text = text, lines = d.lines, debuffs = d.debuffs, cons = d.cons,
 			killer = killer and ((ksp or "?") .. (ksrc and (" (" .. ksrc .. ")") or "")) or "Unknown",
 			killAmt = killer and killer.a, dmg5 = dmg5, heal5 = heal5, nheal = nheal, crush = crush,
-			hadAggro = d.hadAggro,
+			hadAggro = d.hadAggro, ready = d.ready, cooling = d.cooling,
 		})
 		local ri = getn(rec.deaths)
 

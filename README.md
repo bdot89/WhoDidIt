@@ -362,6 +362,15 @@ Flasks are only expected in the big raids (MC, BWL, AQ40, Naxx, ES, Karazhan).
 - **Used** (top left of the grid): every item each player used during the fight, a column per kind (protection,
   healthstones, healing potions, mana gems, mana potions, runes, tea, bandages, explosives, other potions, everything
   else) with the count on the icon. Hover a square for the exact items; the bottom row is the raid's total.
+- **Frozen at death:** when someone dies, WhoDidIt freezes what was off cooldown at that moment: their potion (all
+  potions share one 2 minute cooldown), a healthstone (if there's a warlock in the raid) and their class's lifesavers
+  (Shield Wall, Last Stand, Divine Shield, Blessing of Protection, Lay on Hands, Ice Block, Evasion, Vanish, Feign
+  Death, Desperate Prayer, Frenzied Regeneration). In the **Used** grid, a dead player's **Died** column shows the
+  time (and a yellow **!** if something was ready), and the healing potion / healthstone squares turn **yellow with a
+  !** when they were off cooldown and unused. Hover the name for the class cooldowns too. The death's tooltip and its
+  full recap on the Deaths tab show the same list. Cooldowns are followed for the whole session, so a potion drunk just
+  before the pull still counts. It can't see bags, so "ready" means not used within its cooldown, not that they
+  carried one.
 - **Name & Shame:** a **Consume Slacker** award.
 - **Ready checks:** every ready check (and **Check raid now**, or `/wdi check`) scans the raid and shows you who's
   missing what. Only you see it; Shift-click or `/wdi check post` posts it. Turn it off with `/wdi readycheck off`.
