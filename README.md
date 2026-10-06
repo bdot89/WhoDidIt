@@ -738,3 +738,19 @@ Demo fights are labelled *(demo)*. Automatic post-fight messages for them stay i
 - Threat comes from the Turtle server for **your current target**, so keep the boss targeted.
 - Turtle's custom raids (Karazhan, Emerald Sanctum) are detected as world bosses, but their mechanics aren't in the database yet. Add avoidable spells with `/wdi avoid <spell>`, or edit [`Data.lua`](Data.lua). Pull requests with mechanics are welcome!
 - Weapon oils and sharpening stones can't be seen on other players in the 1.12 client, so they don't show on the Consumes tab.
+
+## Licence and credits
+
+WhoDidIt is released under the [MIT licence](LICENSE): use it, change it and pass it on, keeping the copyright notice.
+
+It works with other people's projects. None of their code is part of this repository; the sync helper downloads each
+one, pinned to a tested version, onto your own PC, and each keeps its own terms:
+
+| Project | Author | Used for | Licence |
+| --- | --- | --- | --- |
+| [ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion) | Emyrk | the Logging tab | none stated |
+| [RollFor](https://github.com/sica42/roll-for-vanilla) (1.12 fork) | Obszczymucha, sica42 | SR MasterLoot | none stated |
+| [DopingControl](https://github.com/ShempError/DopingControl) | ShempError | Full check, consume data | MIT |
+| [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the Auto Marker's raid packs | none stated |
+| [Chronicle External API](https://legacy.chronicleclassic.com/developers/api) | Chronicle | every guild's raid times | API terms |
+| [ClassicAPI](https://github.com/brues-code/ClassicAPI) (optional) | brues-code | extras, see above | GPL-3.0 |
