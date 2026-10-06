@@ -442,6 +442,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi fame|r - Hall of Fame: the biggest heroes and the Hall of Shame over every fight, best plays and worst blunders")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - feed your Chronicle raid times to every WhoDidIt user on the realm (needs the sync helper),  " .. c .. "/wdi feed on|off|r - use a master's feed")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi banter kills|clears [on|off]|r - fun kill / clear time announcements,  " .. c .. "/wdi banter test|r - preview one")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi loot|r - master looting with RollFor (built in): soft-res, rolls, winners and a step-by-step guide")
@@ -542,6 +543,16 @@ local function slash(msg)
 		W.Print("Threat queries: " .. (db.opts.queryThreat and "on" or "off"))
 	elseif (cmd == "log" or cmd == "share" or cmd == "banter") and not (W.Board and W.Logs) then
 		W.Print(W.RESTART_MSG)
+	elseif cmd == "master" then
+		db.opts.master = (rest == "on") or (rest == "" and not db.opts.master)
+		if rest == "off" then db.opts.master = false end
+		W.Print("Master feed: " .. (db.opts.master and "|cff33ff33on|r - while you're online, every WhoDidIt user on your realm gets your Chronicle raid times (needs the sync helper running on this PC)" or "off"))
+		if W.UI then W.UI:Refresh() end
+	elseif cmd == "feed" then
+		db.opts.noFeed = (rest == "off")
+		W.Print("Raid times from a master's feed: " .. (db.opts.noFeed and "off (ignored)" or "|cff33ff33on|r"))
+		if W.Board then W.Board:LoadChronicle() end
+		if W.UI then W.UI:Refresh() end
 	elseif cmd == "banter" then
 		local _, _, what, onoff = string.find(rest, "^(%a+)%s*(%a*)$")
 		if what == "test" then

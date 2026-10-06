@@ -264,6 +264,25 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
 
 The API is marked experimental by Chronicle, so it may change.
 
+### Master feed: one person syncs, everyone gets the times
+
+Only **one** person needs the sync helper. They switch on **Master** (bottom left of Rankings, or `/wdi master on`).
+While they're online, their WhoDidIt feeds every other WhoDidIt user on the realm with the Chronicle raid times, over
+WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.
+
+- **How it flows:** every minute the master says how fresh its times are. Anyone who's behind asks, and the master
+  sends the times packed into chat messages, one a second. The first time is everything (a few minutes); after that,
+  only what changed (seconds). One send serves everyone listening at once.
+- **Saved:** what arrives is kept, so Rankings is filled at the next login even when the master is offline. It updates
+  again as soon as they're back on.
+- **Raid details:** when someone opens a raid (clicks a time), its boss list is asked for and sent there and then.
+- **In game:** the bar on Rankings shows "Receiving raid times from Upsilon 120 / 340", then "Raid times from Upsilon -
+  they're online, updates are live". The header says "Chronicle via Upsilon".
+- **Who's affected:** only WhoDidIt users with **sharing** on (the default), on the **same realm** as the master
+  (custom chat channels are per realm). Players who run the helper themselves use whichever times are newer.
+- **Opting out:** `/wdi feed off` ignores feeds; `/wdi master off` stops sending.
+- **What's sent:** guild names, raid / boss names, times, dates, raid sizes and Chronicle log links. Nothing about
+  the master's or anyone else's characters.
 ## Logging (Chronicle logs)
 
 WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official addon for

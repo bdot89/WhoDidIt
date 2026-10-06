@@ -95,17 +95,35 @@ end
 
 -- (re)read the sync file; true if it changed
 function B:LoadChronicle()
-	if not ReadCustomFile then return false end
-	local ok, s = pcall(ReadCustomFile, CHRON_FILE)
-	if not ok or type(s) ~= "string" or s == "" then
+	-- the sync helper's file on this PC, or the master's feed (whichever is newer)
+	local s, fromFile
+	if ReadCustomFile then
+		local ok, v = pcall(ReadCustomFile, CHRON_FILE)
+		if ok and type(v) == "string" and v ~= "" then s, fromFile = v, true end
+	end
+	local f = WhoDidItDB and WhoDidItDB.feed
+	if f and (f.synced or 0) > 0 and not (WhoDidItDB.opts and WhoDidItDB.opts.noFeed) then
+		local _, _, a = string.find(s or "", "^WDICHRON|%d+|(%d+)")
+		if not s or f.synced > (tonumber(a) or 0) then s, fromFile = B.FeedText(), false end
+	end
+	if not s then
 		local had = B.chron ~= nil
 		B.chron = nil
 		chronHead = nil
+		B.chronRaw, B.chronRawL, B.chronFeed = nil, nil, nil
 		return had
 	end
 	local _, _, head = string.find(s, "^([^\n]*)")
+	-- (a feed that grew by raid boss lists keeps its header: count those too)
+	head = (head or "") .. (fromFile and "" or ("#" .. string.len(s)))
 	if head == chronHead then return false end
 	chronHead = head
+	-- the master sends what's in its own file
+	B.chronRaw = fromFile and s or nil
+	B.chronRawL = fromFile and {} or nil
+	B.chronFeed = not fromFile
+	B.chronFrom = (not fromFile) and f and f.from or nil
+	B.chronLines = 0
 
 	local data = { realms = {}, bosses = {}, zones = {}, me = {}, logs = {} }
 	for line in string.gfind(s, "[^\n]+") do
@@ -115,6 +133,7 @@ function B:LoadChronicle()
 			data.synced, data.server, data.days, data.status = tonumber(p[3]), p[4], tonumber(p[5]), p[6]
 		elseif t == "L" then
 			-- a whole raid: L|slug|realm|instance|guild|faction|ended|players|Boss=secs=into raid=wipes;...
+			if B.chronRawL then B.chronRawL[p[2]] = line end
 			local kills = {}
 			for part in string.gfind((p[9] or "") .. ";", "(.-);") do
 				local _, _, n, secs, at, w = string.find(part, "^(.-)=([%d%.]*)=([%d%.]*)=(%d*)$")
@@ -140,6 +159,7 @@ function B:LoadChronicle()
 				if secs and secs >= CHRON_KILL_MIN and secs <= KILL_MAX then me.kills[p[5]] = { t = secs, d = tonumber(p[7]), g = p[8], slug = p[9], chron = true } end
 			end
 		elseif t == "C" or t == "K" then
+			B.chronLines = B.chronLines + 1
 			local realm = p[2]
 			local zone = CHRON_ZONE[p[3]] or p[3]
 			local kind, key, guild, fac, secs, d, n, slug
@@ -1181,4 +1201,297 @@ W:Every(2, function()
 		return
 	end
 	SendChatMessage(tremove(outq, 1), "CHANNEL", nil, id)
+end)
+
+------------------------------------------------------------------ master feed
+-- One WhoDidIt user who runs the sync helper can be the "master" (/wdi master
+-- on): while they're online, their WhoDidIt feeds every other WhoDidIt user on
+-- the realm with Chronicle's raid times over the hidden channel, so nobody
+-- else needs anything but the addon. Every minute the master says how fresh
+-- its times are; anyone behind asks, and the master streams the raw lines
+-- (all of them once, then only what changed) packed into chat messages. One
+-- stream serves everyone listening. A raid's boss list is only sent when
+-- someone opens that raid. What arrives is saved, so it's there next login.
+--   H~synced~lines~server              master: what I have (every minute)
+--   A~since                             player: please send what's new since
+--   B~sid~synced~since~total~server     stream start (total D + R messages)
+--   D~sid~idx~text                      a name (realm, raid, boss, guild)
+--   R~sid~rec;rec;...                   records (idx refer to D)
+--   E~sid~total                         stream end
+--   Q~slug / L~slug~i~n~part            a raid's boss list, asked / sent in parts
+local FEED = "WDIF1"
+local FEED_MARGIN = 14 * 86400   -- re-send records this much older than "since" (late uploads)
+local feedq = {}
+local feedSent, feedTotal = 0, 0    -- master: the stream going out
+local pendingSince                   -- master: a stream to start (lowest "since" asked)
+local lastStream = 0
+local want                           -- player: { at, since } when to ask
+local recv = {}                      -- player: streams coming in, by sid
+local logParts = {}                  -- player: raid boss lists coming in, by slug
+local askedLog = {}
+local DIG = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+local function b36(n)
+	n = floor(tonumber(n) or 0)
+	if n <= 0 then return "0" end
+	local s = ""
+	while n > 0 do
+		local d = math.mod(n, 36)
+		s = string.sub(DIG, d + 1, d + 1) .. s
+		n = floor(n / 36)
+	end
+	return s
+end
+local function unb36(s) return tonumber(s or "", 36) end
+local function clean(s) return (string.gsub(s or "", "[~;,|\n]", " ")) end
+
+local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
+function B.IsMaster() return opts().master and B.chronRaw ~= nil end
+local function feedOn() return opts().shareBoard and not opts().noFeed end
+
+local function feedSend(msg)
+	tinsert(feedq, FEED .. "~" .. msg)
+end
+
+-- the saved feed (players): raw lines by identity, and raid boss lists
+local function store()
+	local f = WhoDidItDB.feed
+	if not f then
+		f = { synced = 0, lines = {}, logs = {} }
+		WhoDidItDB.feed = f
+	end
+	return f
+end
+
+-- the feed as the same text the sync file has, for LoadChronicle
+function B.FeedText()
+	local f = WhoDidItDB and WhoDidItDB.feed
+	if not f or not f.synced or f.synced == 0 then return nil end
+	if f.text and not f.dirty then return f.text end
+	local out = { "WDICHRON|2|" .. f.synced .. "|" .. (f.server or "?") .. "|90|ok" }
+	for _, line in pairs(f.lines) do tinsert(out, line) end
+	for _, line in pairs(f.logs) do tinsert(out, line) end
+	f.text = table.concat(out, "\n") .. "\n"
+	f.dirty = nil
+	return f.text
+end
+
+------------------------------------------------------------------ master side
+
+-- pack the master's lines newer than "since" into a stream
+local function buildStream(since)
+	local raw = B.chronRaw
+	if not raw then return end
+	local sid = b36(time())
+	local dict, n, out, buf = {}, 0, {}, {}
+	local recs = 0
+	local function idx(s)
+		s = clean(s)
+		if not dict[s] then
+			n = n + 1
+			dict[s] = b36(n)
+			tinsert(out, "D~" .. sid .. "~" .. dict[s] .. "~" .. s)
+		end
+		return dict[s]
+	end
+	local blen = 0
+	local function flush()
+		if getn(buf) > 0 then tinsert(out, "R~" .. sid .. "~" .. table.concat(buf, ";")) end
+		buf, blen = {}, 0
+	end
+	for line in string.gfind(raw, "[^\n]+") do
+		local t = string.sub(line, 1, 2)
+		if t == "C|" or t == "K|" then
+			local p = {}
+			for part in string.gfind(line .. "|", "(.-)|") do tinsert(p, part) end
+			local ended = tonumber(t == "C|" and p[7] or p[8]) or 0
+			if since == 0 or ended >= since - FEED_MARGIN then
+				local rec
+				if t == "C|" then
+					-- C|realm|instance|guild|faction|secs|ended|players|slug
+					rec = "C" .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. string.sub(p[5] or "?", 1, 1) .. ","
+						.. (p[6] or "") .. "," .. b36(p[7]) .. "," .. b36(p[8]) .. "," .. clean(p[9])
+				else
+					-- K|realm|instance|boss|guild|faction|secs|ended|players|slug
+					rec = "K" .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. idx(p[5]) .. "," .. string.sub(p[6] or "?", 1, 1) .. ","
+						.. (p[7] or "") .. "," .. b36(p[8]) .. "," .. b36(p[9]) .. "," .. clean(p[10])
+				end
+				if blen + string.len(rec) + 1 > 220 then flush() end
+				tinsert(buf, rec)
+				blen = blen + string.len(rec) + 1
+				recs = recs + 1
+			end
+		end
+	end
+	flush()
+	local c = B.chron
+	feedSend("B~" .. sid .. "~" .. (c and c.synced or 0) .. "~" .. since .. "~" .. getn(out) .. "~" .. clean(c and c.server or "?"))
+	for i = 1, getn(out) do feedSend(out[i]) end
+	feedSend("E~" .. sid .. "~" .. getn(out))
+	feedSent, feedTotal = 0, getn(out) + 2
+	lastStream = GetTime()
+	return recs
+end
+
+-- a raid's boss list, in parts that fit a chat message
+local function sendLog(slug)
+	local line = B.chronRawL and B.chronRawL[slug]
+	if not line then return end
+	local parts = {}
+	local i = 1
+	while i <= string.len(line) do
+		tinsert(parts, string.sub(line, i, i + 199))
+		i = i + 200
+	end
+	for k = 1, getn(parts) do
+		-- chat treats | as the start of a colour / link code: send it as ^
+		local part = string.gsub(string.gsub(parts[k], "~", " "), "|", "^")
+		feedSend("L~" .. clean(slug) .. "~" .. k .. "~" .. getn(parts) .. "~" .. part)
+	end
+end
+
+------------------------------------------------------------------ player side
+
+local function applyStream(s, sender)
+	local f = store()
+	for key, line in pairs(s.lines) do f.lines[key] = line end
+	f.synced, f.server, f.from, f.dirty = s.synced, s.server, sender, true
+	if B:LoadChronicle() then
+		B.rivalsDirty = true
+		if W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
+	end
+end
+
+local function decode(s, rec)
+	local p = {}
+	for part in string.gfind(string.sub(rec, 2) .. ",", "(.-),") do tinsert(p, part) end
+	local d = s.dict
+	local fac = { A = "Alliance", H = "Horde", M = "Mixed", U = "Unknown" }
+	if string.sub(rec, 1, 1) == "C" then
+		local realm, inst, guild = d[p[1]], d[p[2]], d[p[3]]
+		if not (realm and inst and guild) then return end
+		s.lines["C|" .. realm .. "|" .. inst .. "|" .. guild] = "C|" .. realm .. "|" .. inst .. "|" .. guild .. "|" .. (fac[p[4]] or "Unknown")
+			.. "|" .. (p[5] or "") .. "|" .. (unb36(p[6]) or 0) .. "|" .. (unb36(p[7]) or 0) .. "|" .. (p[8] or "")
+	else
+		local realm, inst, boss, guild = d[p[1]], d[p[2]], d[p[3]], d[p[4]]
+		if not (realm and inst and boss and guild) then return end
+		s.lines["K|" .. realm .. "|" .. inst .. "|" .. boss .. "|" .. guild] = "K|" .. realm .. "|" .. inst .. "|" .. boss .. "|" .. guild .. "|" .. (fac[p[5]] or "Unknown")
+			.. "|" .. (p[6] or "") .. "|" .. (unb36(p[7]) or 0) .. "|" .. (unb36(p[8]) or 0) .. "|" .. (p[9] or "")
+	end
+end
+
+-- ask the master for one raid's boss list (when someone opens it)
+function B:AskLog(slug)
+	if not slug or not B.master or askedLog[slug] then return false end
+	askedLog[slug] = GetTime()
+	feedSend("Q~" .. clean(slug))
+	return true
+end
+
+-- what's happening, for the Rankings bar: { from, got, total } while receiving
+function B:FeedStatus()
+	for _, s in pairs(recv) do
+		if GetTime() - s.at < 60 then return { from = s.from, got = s.got, total = s.total } end
+	end
+	if B.IsMaster() and feedTotal > 0 and feedSent < feedTotal then return { master = true, got = feedSent, total = feedTotal } end
+end
+
+function B:FeedReceive(msg, sender)
+	local p = {}
+	for part in string.gfind(msg .. "~", "(.-)~") do tinsert(p, part) end
+	local kind = p[2]
+	local me = UnitName("player")
+	if sender == me then return end
+	if kind == "H" then
+		B.master = { name = sender, synced = tonumber(p[3]) or 0, n = tonumber(p[4]) or 0, at = GetTime() }
+		if not feedOn() or B.IsMaster() then return end
+		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
+		-- the helper's own file counts too: no need to ask if it's as fresh
+		local c = B.chron
+		if c and not B.chronFeed and (c.synced or 0) >= B.master.synced then return end
+		if B.master.synced > mine and not want then want = { at = GetTime() + 3 + math.random(12), since = mine } end
+	elseif kind == "A" then
+		local since = tonumber(p[3]) or 0
+		if want and since <= want.since then want = nil end   -- their stream will cover us
+		if B.IsMaster() then pendingSince = math.min(pendingSince or since, since) end
+	elseif kind == "Q" then
+		if B.IsMaster() and p[3] then sendLog(p[3]) end
+	elseif kind == "B" then
+		if not feedOn() or B.IsMaster() then return end
+		local since, synced = tonumber(p[5]) or 0, tonumber(p[4]) or 0
+		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
+		-- only useful if it starts where we are (or from scratch) and is newer
+		if synced <= mine or (since > 0 and since > mine) then return end
+		recv[p[3]] = { since = since, synced = synced, total = tonumber(p[6]) or 0, server = p[7], got = 0, dict = {}, lines = {}, from = sender, at = GetTime() }
+		want = nil
+	elseif kind == "D" then
+		local s = recv[p[3]]
+		if s then s.dict[p[4]] = p[5]; s.got = s.got + 1; s.at = GetTime() end
+	elseif kind == "R" then
+		local s = recv[p[3]]
+		if s then
+			for rec in string.gfind((p[4] or "") .. ";", "(.-);") do
+				if rec ~= "" then decode(s, rec) end
+			end
+			s.got = s.got + 1
+			s.at = GetTime()
+		end
+	elseif kind == "E" then
+		local s = recv[p[3]]
+		recv[p[3]] = nil
+		-- a missed message means a gap: don't trust it, ask again next minute
+		if s and s.got == s.total then applyStream(s, sender) end
+	elseif kind == "L" then
+		local slug, i, n = p[3], tonumber(p[4]), tonumber(p[5])
+		if not (slug and i and n) or not askedLog[slug] then return end
+		local parts = logParts[slug] or {}
+		logParts[slug] = parts
+		parts[i] = p[6] or ""
+		for k = 1, n do if not parts[k] then return end end
+		local line = string.gsub(table.concat(parts, "", 1, n), "%^", "|")
+		logParts[slug] = nil
+		if string.sub(line, 1, 2) == "L|" then
+			local f = store()
+			f.logs[slug] = line
+			f.dirty = true
+			if B:LoadChronicle() and W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
+		end
+	end
+end
+
+W:On("CHAT_MSG_CHANNEL", function(msg, sender, lang, chanFull, target, flags, zoneId, chanNum, chanName)
+	if not msg or string.sub(msg, 1, string.len(FEED) + 1) ~= FEED .. "~" then return end
+	local name = strlower(chanName or "")
+	if name ~= strlower(CHANNEL) and not string.find(strlower(chanFull or ""), strlower(CHANNEL), 1, true) then return end
+	if not WhoDidItDB then return end
+	B:FeedReceive(msg, sender)
+end)
+
+-- one feed message a second; the master's "what I have" every minute
+local lastHello = 0
+W:Every(1, function()
+	if not WhoDidItDB or not opts().shareBoard then return end
+	local now = GetTime()
+	if B.IsMaster() then
+		if now - lastHello > 60 and chanId() then
+			lastHello = now
+			local c = B.chron
+			feedSend("H~" .. (c and c.synced or 0) .. "~" .. (B.chronLines or 0) .. "~" .. clean(c and c.server or "?"))
+		end
+		-- start a stream someone asked for (one at a time, not more than every 20s)
+		if pendingSince and getn(feedq) == 0 and now - lastStream > 20 then
+			local since = pendingSince
+			pendingSince = nil
+			buildStream(since)
+		end
+	elseif want and now >= want.at then
+		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
+		want = nil
+		if B.master and B.master.synced > mine then feedSend("A~" .. mine) end
+	end
+	if getn(feedq) == 0 then return end
+	local id = chanId()
+	if not id then B:Join() return end
+	SendChatMessage(tremove(feedq, 1), "CHANNEL", nil, id)
+	if B.IsMaster() and feedSent < feedTotal then feedSent = feedSent + 1 end
 end)

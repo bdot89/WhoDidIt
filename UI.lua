@@ -1315,6 +1315,27 @@ local function syncNow()
 	UI:UpdateSync()
 end
 syncBtn:SetScript("OnClick", syncNow)
+local masterBtn = gridButton("Master: off", 1, 2)
+masterBtn:SetScript("OnClick", function()
+	local o = WhoDidItDB.opts
+	o.master = not o.master
+	if o.master and not (W.Board and W.Board.chronRaw) then
+		W.Print("Master is on, but there's nothing to send yet: it sends the times the sync helper writes on this PC (tools\\WhoDidIt-Sync.cmd).")
+	elseif o.master then
+		W.Print("Master on: while you're online, every WhoDidIt user on " .. W.Board.Realm() .. " gets your raid times - they don't need the sync helper.")
+	end
+	UI:Refresh()
+end)
+tooltip(masterBtn, "Master feed", function()
+	return { "For one person (with the sync helper running): feed everyone else.",
+		"While you're online, your WhoDidIt sends the Chronicle raid times to every",
+		"WhoDidIt user on your realm over its hidden channel: everything once, then",
+		"only what changed. They need nothing but the addon, and keep what they got.",
+		"A raid's boss list is sent when someone opens that raid.",
+		" ",
+		"|cff888888Needs \"sharing\" on. Everyone else just leaves this off - they receive automatically.|r",
+		"|cff888888Only reaches players on the same realm (custom channels are per realm).|r" }
+end, "ANCHOR_TOP")
 syncBar:SetScript("OnClick", syncNow)
 local function syncTip()
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
@@ -1339,6 +1360,25 @@ function UI:UpdateSync()
 	local w = BW * 2 + 4
 	local function bar(frac, r, g, b) syncBar.fill:SetWidth(math.max(1, w * math.min(1, frac))); syncBar.fill:SetVertexColor(r, g, b, 0.55) end
 	local function ago(t) local m = floor((time() - t) / 60); return (m < 1) and "just now" or (m < 120 and (m .. " min ago") or (floor(m / 60) .. " h ago")) end
+	masterBtn:SetText("Master: " .. (WhoDidItDB.opts.master and "|cff33ff33on|r" or "off"))
+	local fs = B.FeedStatus and B:FeedStatus()
+	if fs and not fs.master then
+		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.2, 0.55, 1)
+		syncBar.top:SetText("|cff66ccffReceiving raid times|r from " .. (fs.from or "?"))
+		syncBar.bot:SetText(fs.got .. " / " .. fs.total .. " messages - about " .. math.max(1, floor((fs.total - fs.got) / 60 + 0.5)) .. " min")
+		return
+	elseif fs and fs.master then
+		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.85, 0.65, 0.1)
+		syncBar.top:SetText("|cffffd100Master:|r sending raid times")
+		syncBar.bot:SetText(fs.got .. " / " .. fs.total .. " messages to everyone on the realm")
+		return
+	elseif c and B.chronFeed then
+		bar(1, 0.15, 0.55, 0.85)
+		syncBar.top:SetText("|cff66ccffRaid times from " .. (B.chronFrom or "the master") .. "|r")
+		local live = B.master and (GetTime() - B.master.at) < 150
+		syncBar.bot:SetText("synced " .. ago(c.synced or 0) .. (live and " - they're online, updates are live" or " - updates when they're online"))
+		return
+	end
 	if not ReadCustomFile then
 		bar(1, 0.6, 0.15, 0.15)
 		syncBar.top:SetText("|cffff7777Needs Nampower|r")
@@ -1382,7 +1422,7 @@ W:Every(3, function()
 	if UI.mode == "rankings" and f:IsVisible() and syncBar:IsVisible() then UI:UpdateSync() end
 end)
 
-local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn, syncBar, syncBtn }
+local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn, syncBar, syncBtn, masterBtn }
 for i = 1, getn(rankOnly) do rankOnly[i]:Hide() end
 
 -- Hall of Fame: post what's on screen, points per fight, start over
@@ -3001,7 +3041,13 @@ function UI:RankLogRows()
 	if not log then
 		head(rows, "Boss kills in this raid")
 		if L.slug then
-			tinsert(rows, row(C_DIM .. "This raid's boss list isn't downloaded yet. tools\\WhoDidIt-Sync fetches it on its next sync.|r"))
+			if B.chronFeed and B.master and B:AskLog(L.slug) then
+				tinsert(rows, row(C_DIM .. "Asked " .. B.master.name .. " for this raid's boss list - it appears here in a few seconds.|r"))
+			elseif B.chronFeed then
+				tinsert(rows, row(C_DIM .. "This raid's boss list comes from " .. (B.chronFrom or "the master") .. " - open it again while they're online.|r"))
+			else
+				tinsert(rows, row(C_DIM .. "This raid's boss list isn't downloaded yet. tools\\WhoDidIt-Sync fetches it on its next sync.|r"))
+			end
 		else
 			tinsert(rows, row(C_DIM .. (rec.net and ("Shared by a WhoDidIt user" .. (rec.by and (" (" .. rec.by .. ")") or "") .. " - there's no Chronicle log for it.")
 				or "Recorded by your WhoDidIt - there's no Chronicle log for it.") .. "|r"))
@@ -3080,6 +3126,9 @@ function UI:RefreshRankings()
 	local st = B.SyncStatus and B:SyncStatus()
 	if st and st.alive and st.state == "running" then
 		chron = "|cff66ccffChronicle syncing (see the bar, bottom left)|r"
+	elseif c and c.synced and B.chronFeed then
+		local mins = floor((time() - c.synced) / 60)
+		chron = "Chronicle via " .. (B.chronFrom or "the master") .. " (" .. (mins < 2 and "just synced" or (mins < 120 and (mins .. " min ago") or (floor(mins / 60) .. " h ago"))) .. ")"
 	elseif c and c.synced then
 		local mins = floor((time() - c.synced) / 60)
 		chron = "Chronicle " .. ((c.status ~= "ok") and ("|cffffd100" .. (c.status or "") .. "|r") or (mins < 2 and "just synced" or (mins .. " min ago")))
