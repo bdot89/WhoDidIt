@@ -7,6 +7,9 @@
 
 Records every boss fight, then tells you **why** the raid wiped and **who** did it.
 
+Death recaps · blame &amp; hero boards · threat · meters · consume checks (DopingControl built in) · Hall of Fame
+<br>Every guild's kill &amp; clear times from Chronicle, with rival banter · Chronicle logger · Auto Marker · SR master loot (RollFor) · Auto-loot
+
 ![WoW 1.12.1](https://img.shields.io/badge/WoW-1.12.1-c79c6e?style=flat-square)
 ![Lua 5.0](https://img.shields.io/badge/Lua-5.0-2c2d72?style=flat-square)
 ![Nampower](https://img.shields.io/badge/needs-Nampower-8a2be2?style=flat-square)
