@@ -268,21 +268,26 @@ The API is marked experimental by Chronicle, so it may change.
 
 | | How | You need |
 | --- | --- | --- |
-| **Nothing to install** | A WhoDidIt user with Master on feeds everyone on the realm in game (see below). You get the times while they're online and keep them. | Just the addon |
+| **Nothing to install** | The WhoDidIt maintainer's master character feeds everyone on the realm in game (see below). You get the times while they're online and keep them. | Just the addon |
 | **Fetch them yourself** | Run the sync helper: fresher times (every 10 minutes) and **Sync now** works. | PowerShell (built into Windows) |
 
-**Happy to have the helper running?** Double-click **`tools\AutoSync-On.cmd`** once. It adds a shortcut to your
-Windows Startup folder, so the helper starts by itself (minimised on the taskbar) every time you log into Windows, and
-starts it right away. Nothing else changes; **`tools\AutoSync-Off.cmd`** removes it again. Only one copy of the helper
-ever runs at a time, so double-clicking `WhoDidIt-Sync.cmd` as well does no harm.
-
-**The master's setup:** AutoSync-On plus **Master** on Rankings. New times then arrive by themselves every 10 minutes
-(or straight away with **Sync now**) and go out to everyone on your realm whenever you're online.
+**Happy to have the helper running?** Double-click **`tools\AutoSync-On.cmd`** once. The helper then runs in the
+background with **no window**, starting by itself every time you log into Windows (and right away). Its progress shows
+on the Rankings bar in game. It adds one shortcut to your Windows Startup folder and a tiny launcher script
+(`tools\WhoDidIt-Sync-Hidden.vbs`); nothing else changes. **`tools\AutoSync-Off.cmd`** removes the shortcut and stops
+the helper. (`AutoSync.ps1 -Minimised` keeps a minimised window instead.) Only one copy of the helper ever runs at a
+time, so double-clicking `WhoDidIt-Sync.cmd` as well does no harm.
 
 ### Master feed: one person syncs, everyone gets the times
-Only **one** person needs the sync helper. They switch on **Master** (bottom left of Rankings, or `/wdi master on`).
-While they're online, their WhoDidIt feeds every other WhoDidIt user on the realm with the Chronicle raid times, over
-WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.
+Only **one** person needs the sync helper: the maintainer. While one of their master characters is online with
+**Master** on (bottom left of Rankings, only shown to them), their WhoDidIt feeds every other WhoDidIt user on the realm
+with the Chronicle raid times, over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no
+helper, no PowerShell, no settings.
+
+**Only the maintainer can be the master.** The master characters are listed in the addon (`B.MASTERS` in `Board.lua`),
+and every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm and the
+channel only reaches the sender's own realm, so nobody can send as them; someone editing their own copy only fools
+themselves.
 
 - **How it flows:** every minute the master says how fresh its times are. Anyone who's behind asks, and the master
   sends the times packed into chat messages, one a second. The first time is everything (about 10 minutes for
@@ -292,17 +297,12 @@ WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no hel
 - **Raid details:** when someone opens a raid (clicks a time), its boss list is asked for and sent there and then.
 - **In game:** the bar on Rankings shows "Receiving raid times from Upsilon 120 / 340", then "Raid times from Upsilon -
   they're online, updates are live". The header says "Chronicle via Upsilon".
-- **All realms:** the master sends every realm's times (C'Thun, N'Zoth and Y'Shaarj all in one). But a chat channel
-  only reaches players on the realm you're logged into, so to get them to the other realms:
-  - **Your characters there:** the Master setting and the sync file are shared by all your characters, so logging
-    into a character on another realm makes you the master there too.
-  - **Relays:** anyone who has received the times passes them on to their realm when the master isn't there. Someone
-    with characters on two realms carries them across just by logging in. Only one copy talks per realm at a time:
-    the master, else whoever has the newest times, so it never turns into spam.
+- **All realms:** the master sends every realm's times (C'Thun, N'Zoth and Y'Shaarj all in one). A chat channel only
+  reaches players on the realm you're logged into, so each realm has its own master character; logging into it feeds
+  that realm (the Master setting and the sync file are shared by your characters).
 - **Who's affected:** WhoDidIt users with **sharing** on (the default). Players who run the helper themselves use
   whichever times are newer.
-- **Opting out:** `/wdi feed off` ignores feeds; `/wdi relay off` stops passing them on; `/wdi master off` stops
-  being the master.
+- **Opting out:** `/wdi feed off` ignores the feed; `/wdi master off` stops sending.
 - **What's sent:** guild names, raid / boss names, times, dates, raid sizes and Chronicle log links. Nothing about
   the master's or anyone else's characters.
 ## Logging (Chronicle logs)

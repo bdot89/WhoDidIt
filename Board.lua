@@ -1213,10 +1213,11 @@ end)
 -- stream serves everyone listening. A raid's boss list is only sent when
 -- someone opens that raid. What arrives is saved, so it's there next login.
 --   H~synced~lines~server~m            what I have (every minute; m 1 = the master)
--- Relays: anyone who has the times passes them on when the master isn't
--- there, so they reach realms the master never logs into (a player with
--- characters on two realms carries them over). Per realm only one copy
--- talks: the master, else whoever has the newest times (then by name).
+-- Only the maintainer's characters (B.MASTERS) can be the master: every copy
+-- of WhoDidIt ignores feed messages from anyone else. Character names are
+-- unique per realm and the channel only reaches the sender's own realm, so
+-- nobody can send as them. Someone editing their own copy only fools
+-- themselves. To feed a realm, log into that realm's master character.
 --   A~since                             player: please send what's new since
 --   B~sid~synced~since~total~server     stream start (total D + R messages)
 --   D~sid~idx=text;idx=text;...         names (realm, raid, boss, guild)
@@ -1250,10 +1251,21 @@ local function unb36(s) return tonumber(s or "", 36) end
 local function clean(s) return (string.gsub(s or "", "[~;,|=\n]", " ")) end
 
 local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
--- the master: /wdi master on, with the sync helper's own file on this PC
-function B.IsMaster() return opts().master and B.chronRaw ~= nil and not B.chronFeed end
--- a server: the master, or (unless /wdi relay off) anyone who has the times
-local function canServe() return B.chronRaw ~= nil and (B.IsMaster() or opts().relay ~= false) end
+-- the characters allowed to be the master, per realm
+B.MASTERS = {
+	["Y'Shaarj"] = { Upsilon = true },
+	["C'Thun"]   = { Upsy = true },
+	["N'Zoth"]   = { Upsi = true },
+}
+local function trusted(name)
+	local list = B.MASTERS[B.Realm()]
+	return name and list and list[name] and true or false
+end
+B.Trusted = trusted
+function B.CanMaster() return trusted(UnitName("player")) end
+-- the master: one of those characters, /wdi master on, with the sync helper's own file on this PC
+function B.IsMaster() return opts().master and B.CanMaster() and B.chronRaw ~= nil and not B.chronFeed end
+local function canServe() return B.IsMaster() end
 local servers = {}   -- other servers heard lately: name -> { name, synced, master, at }
 local function better(a, b)
 	if (a.master and 1 or 0) ~= (b.master and 1 or 0) then return a.master end
@@ -1438,6 +1450,8 @@ function B:FeedReceive(msg, sender)
 	local kind = p[2]
 	local me = UnitName("player")
 	if sender == me then return end
+	-- times only ever come from the master's characters; anyone may ask (A, Q)
+	if kind ~= "A" and kind ~= "Q" and not trusted(sender) then return end
 	if kind == "H" then
 		local s = { name = sender, synced = tonumber(p[3]) or 0, n = tonumber(p[4]) or 0, master = (p[6] == "1"), at = GetTime() }
 		servers[sender] = s

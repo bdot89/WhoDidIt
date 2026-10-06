@@ -1339,9 +1339,9 @@ tooltip(masterBtn, "Master feed", function()
 		"only what changed. They need nothing but the addon, and keep what they got.",
 		"A raid's boss list is sent when someone opens that raid.",
 		" ",
-		"All realms' times go out. To reach players on another realm, log into a character",
-		"there (this setting and the sync file are shared by your characters), or let it",
-		"spread: anyone who has the times passes them on when you're not there (a relay).",
+		"All realms' times go out. To reach players on another realm, log into your master",
+		"character there (this setting and the sync file are shared by your characters).",
+		"Only those characters can be the master: everyone else's WhoDidIt ignores anyone else.",
 		" ",
 		"|cff888888Needs \"sharing\" on. Everyone else just leaves this off - they receive automatically.|r",
 		"|cff888888Only reaches players on the same realm (custom channels are per realm).|r" }
@@ -1377,6 +1377,8 @@ function UI:UpdateSync()
 	local function bar(frac, r, g, b) syncBar.fill:SetWidth(math.max(1, w * math.min(1, frac))); syncBar.fill:SetVertexColor(r, g, b, 0.55) end
 	local function ago(t) local m = floor((time() - t) / 60); return (m < 1) and "just now" or (m < 120 and (m .. " min ago") or (floor(m / 60) .. " h ago")) end
 	masterBtn:SetText("Master: " .. (WhoDidItDB.opts.master and "|cff33ff33on|r" or "off"))
+	-- only the maintainer's characters see the master switch
+	if B.CanMaster and B.CanMaster() then masterBtn:Show() else masterBtn:Hide() end
 	local fs = B.FeedStatus and B:FeedStatus()
 	if fs and not fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.2, 0.55, 1)
@@ -1385,7 +1387,7 @@ function UI:UpdateSync()
 		return
 	elseif fs and fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.85, 0.65, 0.1)
-		syncBar.top:SetText(fs.relay and "|cffffd100Passing on raid times|r (relay)" or "|cffffd100Master:|r sending raid times")
+		syncBar.top:SetText("|cffffd100Master:|r sending raid times")
 		syncBar.bot:SetText(fs.got .. " / " .. fs.total .. " messages to everyone on the realm")
 		return
 	elseif c and B.chronFeed then
