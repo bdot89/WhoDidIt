@@ -12,6 +12,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 ![Nampower](https://img.shields.io/badge/needs-Nampower-8a2be2?style=flat-square)
 ![SuperWoW](https://img.shields.io/badge/needs-SuperWoW-1e90ff?style=flat-square)
 ![TWThreat](https://img.shields.io/badge/optional-TWThreat-555?style=flat-square)
+![ClassicAPI](https://img.shields.io/badge/optional-ClassicAPI-555?style=flat-square)
 
 <img src="docs/summary.jpg" alt="WhoDidIt summary: why the raid wiped and the blame board" width="100%">
 
@@ -27,7 +28,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 - ☠️ **Death recaps.** The last 15 seconds before every death (hits, heals, debuffs, items, health %), with the cause worked out for you.
 - 📋 **Blame board & heroes.** Points for every mistake (standing in fire, pulling aggro, bombing the raid, idling, low DPS) and every game-saving play (clutch heals, shields, taunts, BoP, battle res, dispels).
 - 🎯 **Threat & timeline.** Who the boss attacked and why, with the server's threat %. Click any name to jump to that player's own timeline at that moment.
-- 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check.
+- 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check. **Full check** opens DopingControl (built in) for the whole raid matrix: buffs, debuffs, resistances, hit and enchants.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), banter after kills, and a rival watch when someone beats your times. Click any time to open that guild's whole raid.
 - 📝 **Logging.** The Chronicle combat logger built in: start, save, archive and upload your logs.
@@ -51,7 +52,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
   </tr>
   <tr>
     <td width="50%"><img src="docs/threat.jpg" alt="Threat"><br><b>Threat.</b> Every time the boss changed target, who it went for, who lost it, their threat % and why (tank, pulled aggro, opened on the boss), plus everyone's peak threat. Click a name to see their timeline at that moment.</td>
-    <td width="50%"><img src="docs/meters.jpg" alt="Meters"><br><b>Meters.</b> Damage, healing, damage taken, activity (how much of their time alive each player did something) and utility (kicks, dispels, tranqs, items), with role, per second, share and deaths.</td>
+    <td width="50%"><img src="docs/meters.jpg" alt="Meters"><br><b>Meters.</b> Damage, healing, damage taken, activity (how much of their time alive each player did something) and utility (kicks, dispels, tranqs, items), with role, per second, share, crit %, biggest hit and deaths. Hover a player for every spell: total, share, hits, crit % and biggest.</td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/timeline.jpg" alt="Timeline"><br><b>Timeline.</b> Everything that happened, second by second, colour-coded by kind. Click a name in any line for that player's own timeline, focused on that moment.</td>
@@ -86,7 +87,8 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+5. *Optional:* [ClassicAPI](#classicapi-optional) for a few extras - close WoW and double-click `tools\Install-ClassicAPI.cmd`.
 
 ### Requirements
 
@@ -95,9 +97,38 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 | **Nampower** (dll) | Damage, healing, swings, buffs/debuffs, deaths and consumables. Without it, only deaths are tracked. |
 | **SuperWoW** (dll) | Player and mob names from GUIDs, who the boss is targeting, cast events (interrupts, activity, tranqs, saves). |
 | TWThreat (addon, optional) | If it's loaded, WhoDidIt reads the same server threat packets. If not, WhoDidIt asks the server itself (`/wdi threat off` to stop). |
-| [ClassicAPI](https://github.com/brues-code/ClassicAPI) (dll, optional) | Nice-to-have extras. Right now: the **Copy link** buttons (raidres, Chronicle logs) put the link straight on your clipboard; without it a box opens for Ctrl+C. Install: put `ClassicAPI.dll` in the WoW folder, add `ClassicAPI.dll` to `dlls.txt`, start through the launcher as usual. `/wdi status` shows whether it's loaded. |
+| [ClassicAPI](https://github.com/brues-code/ClassicAPI) (dll, **optional**) | Not needed. Adds a few extras when it's there - see [ClassicAPI (optional)](#classicapi-optional). |
 
 WhoDidIt switches on the Nampower CVars it needs (`NP_EnableAutoAttackEvents`, `NP_EnableSpellHealEvents`, `NP_EnableSpellGoEvents`).
+
+### ClassicAPI (optional)
+
+[ClassicAPI](https://github.com/brues-code/ClassicAPI) (by brues-code, GPL-3.0) is a client DLL that adds many newer
+WoW API functions to the 1.12 client. **WhoDidIt does not need it**: everything works the same without it. When it's
+installed, these get better:
+
+| | Without ClassicAPI | With ClassicAPI |
+| --- | --- | --- |
+| **Copy link** buttons (raidres, Chronicle logs) | a box opens with the link selected; press Ctrl+C | the link goes straight on your clipboard |
+| Consume checks (every pull, ready check, **Check raid now**) | each raider's buffs are read one at a time (up to 32 calls each) | all of a raider's buffs in one call: quicker scans, less work during the pull |
+| Ready-check warnings | who's missing a flask, elixir or food | also whose flask, elixir or food **runs out in under 5 minutes** |
+| Updates that add new files | exit WoW and start it again | `/reload` is enough |
+
+**Getting it** (the easy way): close WoW and double-click **`tools\Install-ClassicAPI.cmd`**. It downloads
+`ClassicAPI.dll` from the project's latest GitHub release, checks its SHA-256 against the one GitHub publishes, backs
+up `dlls.txt` (`dlls.txt.bak`), copies the DLL into your WoW folder and adds it to `dlls.txt`. Start WoW through your
+launcher as usual. It needs VanillaFixes, which loads the DLLs in `dlls.txt` (most Turtle / OctoWoW setups have it).
+Once installed, `tools\WhoDidIt-Sync` keeps it up to date while WoW is closed. Ask your server first if you're
+unsure whether client DLLs are allowed.
+
+**By hand:** download `ClassicAPI.dll` from the [releases page](https://github.com/brues-code/ClassicAPI/releases/latest),
+put it in your WoW folder and add a line `ClassicAPI.dll` to `dlls.txt`.
+
+**In game:** the title bar shows **ClassicAPI** in green when it's loaded, or grey **ClassicAPI?** when it isn't.
+Hover it for what it adds; click it (or type `/wdi classicapi`) for the same in chat. Without it, WhoDidIt mentions it
+once, in chat, and never again.
+
+**Removing it:** delete the `ClassicAPI.dll` line from `dlls.txt` (or put `dlls.txt.bak` back) and restart WoW.
 
 ## Quick start
 
@@ -324,8 +355,26 @@ Flasks are only expected in the big raids (MC, BWL, AQ40, Naxx, ES, Karazhan).
 - **Fairness:** a player who can't be read (out of range) shows **?**. They're never counted as missing anything.
 
 The spell IDs, the aura names this server really uses and the per-role idea come from **DopingControl** by ShempError
-(MIT licence, [octowow.st/git/ShempError/DopingControl](https://octowow.st/git/ShempError/DopingControl)). For a full
-pre-raid matrix (gear enchants, hit, resistances), use DopingControl itself.
+(MIT licence, [github.com/ShempError/DopingControl](https://github.com/ShempError/DopingControl)).
+With [ClassicAPI](#classicapi-optional), ready checks also list whose flask, elixir or food runs out in under 5 minutes.
+
+### Full check (DopingControl)
+
+DopingControl itself is built into WhoDidIt, exactly as its author made it. Click **Full check** on the Consumes tab
+(or type `/dc`) for its window:
+
+- **Consumables**: eleven slots per player (flask, food, attack power, strength, agility, spell power, mana regen,
+  armor, stamina, fire protection, weapon oil / stone / imbue), showing the actual buff icon.
+- **Class buffs**: Arcane Intellect, Mark of the Wild, Fortitude, Shadow Protection, Emerald Blessing, Soulstone.
+- **Debuffs**: a column for each debuff actually on the raid.
+- **Resistances**: each player's fire / nature / frost / shadow / arcane total, rebuilt from their gear.
+- **Hit**: melee, ranged and spell hit against the cap, with every source on its own line.
+- **Equipment**: every slot, with missing enchants marked.
+- **Options**: what each role and class is expected to have, a whisper / report button and a minimap button.
+
+A player it can't read is shown as unknown, never as missing. `tools\WhoDidIt-Sync` downloads it from the author's
+GitHub and keeps it up to date (it isn't stored in this repository). If you already have DopingControl installed,
+WhoDidIt switches the separate copy off for your next login; your settings carry over.
 
 ## Auto-loot (auto master looting)
 
@@ -351,7 +400,7 @@ item and who soft-reserved it, it runs the roll, handles ties, and gives the ite
 
 **The SR MasterLoot tab**
 
-- **raidres.fly.dev** is shown at the top right, with a **Copy link** button (Ctrl+C in the box that opens), for anyone who doesn't know where soft-res sheets are made.
+- **raidres.fly.dev** is shown at the top right, with a **Copy link** button (straight to your clipboard with [ClassicAPI](#classicapi-optional), otherwise Ctrl+C in the box that opens), for anyone who doesn't know where soft-res sheets are made.
 
 - **How it works**: step by step, from making the soft-res sheet to awarding the last item, plus every command. Gold
   lines do that step when clicked (open the import window, post how to roll, and so on).
@@ -541,6 +590,9 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi trash on|off          also track elite trash pulls
 /wdi threat on|off         ask the server for threat when TWThreat isn't loaded
 /wdi start | stop          manually track your target / end tracking
+/wdi check [post]          who's missing consumables right now
+/dc                        DopingControl's full raid check (built in)
+/wdi classicapi            what the optional ClassicAPI adds, and how to get it
 /wdi status | clear
 ```
 

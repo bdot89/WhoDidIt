@@ -13,8 +13,11 @@
 
     It also installs and updates what's built into WhoDidIt, each from its
     official source, checking every hour:
-      - the Chronicle logger (github.com/Emyrk/ChronicleCompanion) and
-        RollFor (github.com/sica42/roll-for-vanilla) - see EmbedUpdate.ps1
+      - the Chronicle logger (github.com/Emyrk/ChronicleCompanion),
+        RollFor (github.com/sica42/roll-for-vanilla) and DopingControl
+        (github.com/ShempError/DopingControl) - see EmbedUpdate.ps1
+      - ClassicAPI, only if you installed it (optional; see
+        ClassicApiUpdate.ps1 / Install-ClassicAPI.cmd)
       - the auto marker's mob packs (github.com/MarcelineVQ/AutoMarker) -
         see MarkDataUpdate.ps1
 
@@ -27,6 +30,7 @@
       WhoDidIt-Sync.ps1 -LoggerOnly        only install / update the Chronicle logger
       WhoDidIt-Sync.ps1 -NoLoggerUpdate    leave the Chronicle logger alone
       WhoDidIt-Sync.ps1 -NoRollForUpdate   leave RollFor alone
+      WhoDidIt-Sync.ps1 -NoDopingUpdate    leave DopingControl alone
       WhoDidIt-Sync.ps1 -NoPackUpdate      leave the mob packs alone
       WhoDidIt-Sync.ps1 -DetailsPerSync 600  read more raids in full per sync (default 150)
 
@@ -43,6 +47,7 @@ param(
     [switch]$UpdatesOnly,
     [switch]$NoLoggerUpdate,
     [switch]$NoRollForUpdate,
+    [switch]$NoDopingUpdate,
     [switch]$NoPackUpdate,
     [int]$DetailsPerSync = 150
 )
@@ -432,6 +437,7 @@ function Sync {
 
 . (Join-Path $PSScriptRoot "EmbedUpdate.ps1")
 . (Join-Path $PSScriptRoot "MarkDataUpdate.ps1")
+. (Join-Path $PSScriptRoot "ClassicApiUpdate.ps1")
 if ($LoggerOnly) {
     Update-Chronicle
     return
@@ -439,7 +445,9 @@ if ($LoggerOnly) {
 if ($UpdatesOnly) {
     Update-Chronicle
     Update-RollFor
+    Update-Doping
     Update-MarkData
+    Update-ClassicAPI
     return
 }
 
@@ -454,6 +462,10 @@ while ($true) {
         if (-not $NoRollForUpdate) {
             try { Update-RollFor } catch { Log ("RollFor check failed: " + $_.Exception.Message) }
         }
+        if (-not $NoDopingUpdate) {
+            try { Update-Doping } catch { Log ("DopingControl check failed: " + $_.Exception.Message) }
+        }
+        try { Update-ClassicAPI } catch { Log ("ClassicAPI check failed: " + $_.Exception.Message) }
         if (-not $NoPackUpdate) {
             try { Update-MarkData } catch { Log ("Mob pack check failed: " + $_.Exception.Message) }
         }

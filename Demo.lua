@@ -592,6 +592,22 @@ local function finishRec(wipe)
 	F.result = wipe and "WIPE" or "KILL"
 	if not wipe then F.killedAt = F.t0 + DUR end
 	line(DUR, wipe and "wipe" or "kill", wipe and "Wipe" or "Encounter won")
+	-- the demo adds damage / healing as totals: make up believable hit
+	-- counts, crits and biggest hits for the meters
+	for _, p in pairs(F.players) do
+		local function fake(src, n, c, m, avg, crit)
+			for k, v in pairs(src) do
+				local hits = math.max(1, math.floor(v / avg))
+				n[k] = hits
+				c[k] = math.floor(hits * crit + 0.5)
+				m[k] = math.floor(v / hits * (1.6 + math.mod(hits, 5) * 0.1))
+			end
+		end
+		if p.dn then
+			fake(p.ds, p.dn, p.dc, p.dm, 650, 0.24)
+			fake(p.hs, p.hn, p.hc, p.hm, 900, 0.12)
+		end
+	end
 	local rec = W.Analyzer:Build(F, true)
 	rec.demo = true
 	rec.zone = F.zone

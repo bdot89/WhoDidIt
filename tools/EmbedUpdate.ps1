@@ -1,8 +1,8 @@
 <#
     EmbedUpdate - keeps the addons built into WhoDidIt up to date.
 
-    WhoDidIt carries two other addons inside it, so they don't have to be
-    installed separately. Neither is stored in the WhoDidIt repository:
+    WhoDidIt carries other addons inside it, so they don't have to be
+    installed separately. None of them is stored in the WhoDidIt repository:
     this downloads each from its official source and, whenever its authors
     push a new version, fetches that too.
 
@@ -13,6 +13,9 @@
                         1.12 fork (the original now only supports TBC)
                         github.com/sica42/roll-for-vanilla, latest release
                         -> WhoDidIt\RollFor
+      DopingControl     the raid consumables / buffs / enchants checker by
+                        ShempError (MIT), github.com/ShempError/DopingControl,
+                        branch main -> WhoDidIt\DopingControl
 
     To run from inside WhoDidIt, a few things in their files are changed,
     and nothing else is touched:
@@ -31,8 +34,8 @@
     you're playing is downloaded and installed when you exit.
 
     WhoDidIt-Sync.ps1 runs this every hour. To run it on its own:
-      EmbedUpdate.ps1                    check both and install updates
-      EmbedUpdate.ps1 -Only RollFor      just one (Chronicle or RollFor)
+      EmbedUpdate.ps1                    check all of them and install updates
+      EmbedUpdate.ps1 -Only RollFor      just one (Chronicle, RollFor or Doping)
       EmbedUpdate.ps1 -Force             download and reinstall even if up to date
 #>
 param([switch]$Force, [string]$Only = "")
@@ -45,7 +48,7 @@ $EmbedBinds = Join-Path $AddonDir "Bindings.xml"
 $EmbedUtf8  = New-Object Text.UTF8Encoding $false
 # not needed in game: tests, docs, editor files, the other client's libraries
 $EmbedSkip  = @("tests", "test", "examples", "docs", ".github", ".gitignore", ".idea", ".vscode", ".luarc.json",
-                ".editorconfig", "bcc", "globaldefs.lua")
+                ".editorconfig", "bcc", "globaldefs.lua", "screenshots", "dev")
 
 $EmbedSpecs = @{
     Chronicle = @{
@@ -64,6 +67,16 @@ $EmbedSpecs = @{
         # "RollFor" is also its chat/addon-message prefix, so only API uses are checked
         Forbid = @('GetAddOnMetadata\(\s*["'']RollFor["'']', 'IsAddOnLoaded\(\s*["'']RollFor["'']',
                    'AddOns[\\/]+RollFor[\\/]', 'ADDON_LOADED')
+    }
+    Doping = @{
+        Name = "DopingControl"; Key = "DOPING"; Addon = "DopingControl"; Dest = "DopingControl"
+        Repo = "ShempError/DopingControl"; Ref = "branch"; Branch = "main"; SubDir = ""
+        VersionFn = "WDI_DopingVersion"; EqualsName = $true; Bindings = $false
+        Begin = "# >>> DopingControl files (generated)"; End = "# <<< DopingControl files"
+        # its .toc lists a developer-only file (dev\raiddump.lua) that isn't published
+        AllowMissing = $true
+        Forbid = @('GetAddOnMetadata\(\s*["'']DopingControl["'']', 'IsAddOnLoaded\(\s*["'']DopingControl["'']',
+                   'AddOns[\\/]+DopingControl[\\/]', 'arg1\s*[~=]=\s*["'']DopingControl["'']')
     }
 }
 
@@ -261,6 +274,10 @@ function Build-EmbedStaging($s, $t) {
         }
 
         if (Test-Path $p.new) { Remove-Item $p.new -Recurse -Force }
+        if ($s.AllowMissing) {
+            # the game skips a listed file that doesn't exist, so do the same
+            $files = @($files | Where-Object { Test-Path -LiteralPath (Join-Path $src $_) })
+        }
         Copy-EmbedTree $src $p.new
         $bad = @()
         foreach ($f in $files) {
@@ -376,12 +393,13 @@ function Update-Embedded($s, [switch]$Force) {
 
 function Update-Chronicle([switch]$Force) { Update-Embedded $EmbedSpecs.Chronicle -Force:$Force }
 function Update-RollFor([switch]$Force) { Update-Embedded $EmbedSpecs.RollFor -Force:$Force }
+function Update-Doping([switch]$Force) { Update-Embedded $EmbedSpecs.Doping -Force:$Force }
 
 # run directly (not dot-sourced by WhoDidIt-Sync)
 if ($MyInvocation.InvocationName -ne ".") {
     $ErrorActionPreference = "Stop"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    foreach ($k in @("Chronicle", "RollFor")) {
+    foreach ($k in @("Chronicle", "RollFor", "Doping")) {
         if ($Only -and $Only -ne $k) { continue }
         Update-Embedded $EmbedSpecs[$k] -Force:$Force
     }

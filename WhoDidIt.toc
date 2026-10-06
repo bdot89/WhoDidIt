@@ -1,11 +1,11 @@
 ## Interface: 11200
 ## Title: |cffff5555Who|cffffd100DidIt|r
-## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. Includes the Chronicle logger, an auto marker and RollFor for master looting. /whodidit
+## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. Includes the Chronicle logger, an auto marker, RollFor for master looting and DopingControl. /whodidit
 ## Author: bdot1
-## Version: 1.4.0
-## SavedVariables: WhoDidItDB, ChronicleCompanionDB, RollForDb
+## Version: 1.4.1
+## SavedVariables: WhoDidItDB, ChronicleCompanionDB, RollForDb, DopingControlDB
 ## SavedVariablesPerCharacter: ChronicleCompanionCharDB, RollForCharDb
-## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, AutoMasterLooter, TWThreat
+## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, AutoMasterLooter, DopingControl, TWThreat
 
 # Built-in Chronicle logger (ChronicleCompanion by Emyrk). tools\WhoDidIt-Sync
 # downloads it into Chronicle\ and rewrites the list below when it updates.
@@ -126,6 +126,41 @@ RollFor\src\Client.lua
 RollFor\src\ClientBroadcast.lua
 RollFor\main.lua
 # <<< RollFor files
+
+# Built-in DopingControl (raid consumables / buffs / enchants checker, by
+# ShempError). tools\WhoDidIt-Sync downloads it into DopingControl\.
+DopingLoader.lua
+# >>> DopingControl files (generated)
+DopingControl\wdi_version.lua
+DopingControl\core\const.lua
+DopingControl\core\config.lua
+DopingControl\data\consumables.lua
+DopingControl\data\classbuffs.lua
+DopingControl\data\enchants.lua
+DopingControl\data\expectations.lua
+DopingControl\data\hit.lua
+DopingControl\data\talenthit.lua
+DopingControl\data\resist.lua
+DopingControl\core\model.lua
+DopingControl\core\roles.lua
+DopingControl\core\sim.lua
+DopingControl\core\demo.lua
+DopingControl\scan\talents.lua
+DopingControl\scan\reach.lua
+DopingControl\scan\aura.lua
+DopingControl\scan\gear.lua
+DopingControl\scan\resist.lua
+DopingControl\scan\hit.lua
+DopingControl\scan\engine.lua
+DopingControl\core\probe.lua
+DopingControl\ui\cellsheet.lua
+DopingControl\ui\widgets.lua
+DopingControl\ui\matrix.lua
+DopingControl\ui\options.lua
+DopingControl\ui\report.lua
+DopingControl\features\minimap.lua
+DopingControl\core\init.lua
+# <<< DopingControl files
 
 Core.lua
 Data.lua

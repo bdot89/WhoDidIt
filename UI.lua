@@ -392,6 +392,37 @@ local function tooltip(b, titleText, lines, anchor)
 	b:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
+-- the add-on lights in the title bar: hover explains them, click = ClassicAPI guide
+do
+	local hover = CreateFrame("Button", nil, f)
+	hover:SetPoint("TOPLEFT", envText, "TOPLEFT", -2, 3)
+	hover:SetPoint("BOTTOMRIGHT", envText, "BOTTOMRIGHT", 2, -3)
+	hover:SetScript("OnClick", function() W:ClassicApiInfo() end)
+	tooltip(hover, "Add-ons WhoDidIt uses", function()
+		local e = W.env
+		local function st(v, yes, no) return v and ("|cff33ff33" .. yes .. "|r") or no end
+		local l = {
+			"Nampower: " .. st(e.nampower, "found", "|cffff5555missing - only deaths are tracked|r"),
+			"SuperWoW: " .. st(e.superwow, "found", "|cffff5555missing - most tracking is off|r"),
+			"Threat: " .. st(e.twthreat or WhoDidItDB.opts.queryThreat, "on", "|cffff5555off|r"),
+			"ClassicAPI: " .. st(e.classicapi, "found", "|cff999999not installed (optional)|r"),
+			" ",
+		}
+		if e.classicapi then
+			tinsert(l, "|cff33ff33ClassicAPI adds:|r")
+		else
+			tinsert(l, "|cffffd100Optional - WhoDidIt works fine without it. ClassicAPI would add:|r")
+		end
+		for i = 1, getn(W.CAPI_PERKS) do tinsert(l, "|cff33ff33+|r " .. W.CAPI_PERKS[i]) end
+		if not e.classicapi then
+			tinsert(l, " ")
+			tinsert(l, "|cffffd100To get it:|r exit WoW and double-click tools\\Install-ClassicAPI.cmd in the WhoDidIt folder.")
+			tinsert(l, "|cff888888Click for the details in chat.|r")
+		end
+		return l
+	end, "ANCHOR_BOTTOMLEFT")
+end
+
 local function cycle(list, cur)
 	for i = 1, getn(list) do
 		if list[i] == cur then return list[i + 1] or list[1] end
@@ -617,7 +648,7 @@ local TABS = {
 	{ id = "mistakes", text = "Mistakes", tip = { "Everything WhoDidIt counted against someone: standing in fire,", "pulling aggro, missed interrupts... with the blame points for each." } },
 	{ id = "heroes",   text = "Heroes",   tip = { "The plays that saved someone: clutch heals, shields, taunts,", "battle res, dispels and more." } },
 	{ id = "threat",   text = "Threat",   tip = { "Every time the boss changed target, who it went for and their threat %,", "plus each player's highest threat. Keep the boss targeted to record it." } },
-	{ id = "meters",   text = "Meters",   tip = { "Damage, healing, damage taken, activity and utility for the fight.", "Pick one with the buttons at the bottom." } },
+	{ id = "meters",   text = "Meters",   tip = { "Damage, healing, damage taken, activity and utility for the fight.", "Damage and healing also show crit % and the biggest hit.", "Hover a player for every spell: total, share, hits, crit % and biggest.", "Pick one with the buttons at the bottom." } },
 	{ id = "timeline", text = "Timeline", tip = { "Everything that happened, second by second." } },
 	{ id = "consumes", text = "Consumes", tip = { "Each player's flask, elixirs, food and protection potions,", "and every potion, rune and healthstone they used." } },
 }
@@ -677,6 +708,9 @@ local ACTIONS = {
 		{ "Check raid now", function() W.Cons:Check(IsShiftKeyDown()) end,
 		  "Scan everyone's buffs right now (before the pull) and list who's missing what their role needs. Only you see it - Shift-click to post it. Also runs by itself on every ready check.",
 		  true },
+		{ "Full check", function() W.Cons:OpenFull() end,
+		  "DopingControl's full raid check: every consumable, class buff, debuff, resistance, hit cap and enchant, per player, with icons. Built in - also /dc.",
+		  true, true },
 	},
 	mistakes = {
 		{ "Post mistakes", function(rec) W.Shout:Mistakes(rec) end,
@@ -698,13 +732,14 @@ for tab, list in pairs(ACTIONS) do
 		local a = list[i]
 		local b = button(f, a[1], 112, 20)
 		b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + (i - 1) * 116, PAD)
-		local fn, live = a[2], a[4]
+		local fn, live, nopost = a[2], a[4], a[5]
 		b:SetScript("OnClick", function()
 			if live then fn() return end   -- works on the raid right now, not a saved fight
 			local rec = finishedRec()
 			if rec then fn(rec) end
 		end)
 		tooltip(b, a[1], function()
+			if nopost then return { a[3] } end
 			return { a[3], "|cff888888" .. (live and "Shift-click posts to: " or "Posts to: ") .. W.Shout:ChannelLabel() .. "  (coloured, like every WhoDidIt post)|r" }
 		end, "ANCHOR_TOP")
 		b:Hide()
@@ -1115,7 +1150,7 @@ local DEATH_SPEC = { { 40, "RIGHT" }, { 96, "LEFT" }, { 246, "LEFT" }, { 110, "L
 local MISTAKE_SPEC = { { 40, "RIGHT" }, { 78, "LEFT" }, { 390, "LEFT" }, { 40, "RIGHT" } }
 local AGGRO_SPEC = { { 40, "RIGHT" }, { 130, "LEFT" }, { 100, "LEFT" }, { 100, "LEFT" }, { 46, "RIGHT" }, { 116, "RIGHT" } }
 local PEAK_SPEC = { { 24, "RIGHT" }, { 150, "LEFT" }, { 80, "RIGHT" }, { 70, "RIGHT" } }
-local METER_SPEC = { { 24, "RIGHT" }, { 140, "LEFT" }, { 50, "LEFT" }, { 80, "RIGHT" }, { 70, "RIGHT" }, { 60, "RIGHT" }, { 60, "RIGHT" } }
+local METER_SPEC = { { 24, "RIGHT" }, { 140, "LEFT" }, { 50, "LEFT" }, { 80, "RIGHT" }, { 70, "RIGHT" }, { 60, "RIGHT" }, { 54, "RIGHT" }, { 74, "RIGHT" }, { 56, "RIGHT" } }
 local ACT_SPEC = { { 24, "RIGHT" }, { 140, "LEFT" }, { 50, "LEFT" }, { 80, "RIGHT" }, { 70, "RIGHT" }, { 60, "RIGHT" } }
 local UTIL_SPEC = { { 24, "RIGHT" }, { 140, "LEFT" }, { 50, "LEFT" }, { 60, "RIGHT" }, { 60, "RIGHT" }, { 60, "RIGHT" }, { 60, "RIGHT" } }
 local ROLE_SHORT = { tank = "Tank", heal = "Healer", dps = "DPS" }
@@ -1559,7 +1594,7 @@ function UI:MeterRows(rec)
 		elseif mode == "util" then
 			colHead(rows, spec, { "#", "Player", "Role", "Kicks", "Dispels", "Tranqs", "Items" })
 		else
-			colHead(rows, spec, { "#", "Player", "Role", "Total", "Per sec", "Share", "Deaths" })
+			colHead(rows, spec, { "#", "Player", "Role", "Total", "Per sec", "Share", "Crit", "Biggest", "Deaths" })
 		end
 	end
 
@@ -1577,11 +1612,29 @@ function UI:MeterRows(rec)
 			tinsert(vals, vc .. FmtNum(it.v) .. "|r")
 			tinsert(vals, C_TIME .. FmtNum(it.v / alive) .. "|r")
 			tinsert(vals, "|cffaaaaaa" .. pct(it.v / total) .. "|r")
+			-- crit rate and biggest single hit / heal (fights recorded from v1.4.1 on)
+			local hits = (mode == "dmg" and p.dHits) or (mode == "heal" and p.hHits) or nil
+			local big = (mode == "dmg" and p.dMax) or (mode == "heal" and p.hMax) or nil
+			local crits = (mode == "dmg" and p.dCrits) or (mode == "heal" and p.hCrits) or 0
+			tinsert(vals, (hits and hits > 0) and (C_TIME .. pct(crits / hits) .. "|r") or (C_DIM .. "-|r"))
+			tinsert(vals, (big and big > 0) and ("|cffffffff" .. FmtNum(big) .. "|r") or (C_DIM .. "-|r"))
 			tinsert(vals, deaths)
 			local src = (mode == "dmg" and p.ds) or (mode == "heal" and p.hs) or p.ts
 			tip = {}
+			if src and src[1] and src[1][3] then
+				tinsert(tip, { C_DIM .. "Spell|r", C_DIM .. "total   share   hits   crit   biggest|r" })
+			end
 			for j = 1, getn(src or {}) do
-				tinsert(tip, { src[j][1], FmtNum(src[j][2]) .. "  " .. pct(src[j][2] / it.v) })
+				local s = src[j]
+				local right = FmtNum(s[2]) .. "  " .. pct(s[2] / it.v)
+				if s[3] and s[3] > 0 then
+					right = right .. C_DIM .. "   " .. s[3] .. "x   " .. pct((s[4] or 0) / s[3]) .. "   " .. FmtNum(s[5] or 0) .. "|r"
+				end
+				tinsert(tip, { s[1], right })
+			end
+			if big and big > 0 then
+				local sp = (mode == "dmg") and p.dMaxSp or p.hMaxSp
+				tinsert(tip, { "Biggest " .. (mode == "heal" and "heal" or "hit"), FmtNum(big) .. (sp and ("  (" .. sp .. ")") or "") })
 			end
 			if mode == "dmg" then tinsert(tip, { "Damage to bosses", FmtNum(p.boss) }) end
 		elseif mode == "act" then
@@ -1619,7 +1672,7 @@ local CONS_DETAIL = { { 56, "RIGHT" }, { 500, "LEFT" } }
 function UI:ConsumeRows(rec)
 	local rows = {}
 	if not W.Cons then
-		tinsert(rows, row("|cffff7777Exit WoW and start it again to finish updating (a /reload isn't enough).|r"))
+		tinsert(rows, row("|cffff7777To finish updating: " .. W.RESTART_HINT .. ".|r"))
 		return rows
 	end
 	local list = {}
@@ -2440,9 +2493,9 @@ function UI:LogRows()
 		head(rows, "The Chronicle logger isn't installed yet")
 		tinsert(rows, row("WhoDidIt has Chronicle's logger (|cffffd100ChronicleCompanion|r) built in - it writes the logs you upload to chronicleclassic.com."))
 		tinsert(rows, row("It's downloaded from the official source by the helper: run |cffffd100tools\\WhoDidIt-Sync.cmd|r once,"))
-		tinsert(rows, row("then exit WoW and start it again. The helper keeps it up to date from then on."))
+		tinsert(rows, row("then " .. W.RESTART_HINT .. ". The helper keeps it up to date from then on."))
 		if WDI_CHRON_VERSION then
-			tinsert(rows, row("|cffff7777v" .. WDI_CHRON_VERSION .. " is downloaded but didn't load - restart WoW (a /reload isn't enough).|r"))
+			tinsert(rows, row("|cffff7777v" .. WDI_CHRON_VERSION .. " is downloaded but didn't load - " .. W.RESTART_HINT .. ".|r"))
 		end
 		return rows
 	end
@@ -3051,9 +3104,9 @@ function UI:RefreshLoot()
 	local src = Lt:Source()
 	if not src then
 		rTitle:SetText("SR MasterLoot  |cffff5555RollFor isn't installed yet|r")
-		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once, then restart WoW|r")
+		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once, then " .. W.RESTART_HINT .. "|r")
 		rVerdict:SetText("RollFor is built in - the helper downloads it from its official source.\n"
-			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is downloaded: restart WoW (a /reload isn't enough).|r") or "|cff888888The guide below works without it.|r"))
+			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is downloaded: " .. W.RESTART_HINT .. ".|r") or "|cff888888The guide below works without it.|r"))
 	else
 		rTitle:SetText("SR MasterLoot  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
 			.. (src == "builtin" and "|cff33ff33built in|r" or "|cffffd100separate addon|r"))
@@ -3118,7 +3171,8 @@ function UI:RefreshMissing()
 	fightList:SetData({})
 	rTitle:SetText("Restart WoW to finish updating")
 	rInfo:SetText("|cffaaaaaaNew WhoDidIt files aren't loaded yet|r")
-	rVerdict:SetText("|cffff7777Exit the game completely and start it again.|r\n|cff888888A /reload isn't enough: WoW only picks up new addon files at start-up.|r")
+	rVerdict:SetText(W.CAPI and "|cffff7777Type /reload to load the new files.|r\n|cff888888ClassicAPI is installed, so a /reload picks up new addon files.|r"
+		or "|cffff7777Exit the game completely and start it again.|r\n|cff888888A /reload isn't enough: WoW only picks up new addon files at start-up.|r")
 	hintText:SetText("")
 	local rows = {}
 	head(rows, "Why")
@@ -3136,7 +3190,8 @@ function UI:Refresh()
 
 	local e = W.env
 	local function yn(v, n) return (v and "|cff33ff33" or "|cffff3333") .. n .. "|r" end
-	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat"))
+	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat")
+		.. "  " .. (e.classicapi and "|cff33ff33ClassicAPI|r" or "|cff777777ClassicAPI?|r"))
 	UI:UpdateAML()
 
 	UI:ApplyMode()
@@ -3263,6 +3318,8 @@ function UI:EmptyRows()
 	local e = W.env
 	local function yn(v) return v and "|cff33ff33found|r" or "|cffff3333missing|r" end
 	tinsert(rows, row("Nampower: " .. yn(e.nampower) .. "     SuperWoW: " .. yn(e.superwow) .. "     TWThreat: " .. (e.twthreat and "|cff33ff33found|r" or "|cff888888not loaded (server queries used)|r")))
+	tinsert(rows, row("ClassicAPI: " .. (e.classicapi and "|cff33ff33found|r" or "|cff999999not installed - optional extra, /wdi classicapi shows what it adds and how to get it|r"),
+		nil, { click = function() W:ClassicApiInfo() end }))
 	tinsert(rows, row("|cff888888All commands: /wdi help|r"))
 	return rows
 end

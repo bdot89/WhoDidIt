@@ -72,6 +72,22 @@ end
 -- every buff (spell ID) on a unit, or nil when it can't be read
 function C.Auras(unit, guid)
 	local ids = {}
+	-- ClassicAPI (optional): every buff in one call, plus when each runs out
+	-- (exp = { [spellId] = GetTime() it ends }, only for casts seen this session)
+	if W.env.capiAuras then
+		local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL")
+		if ok and type(list) == "table" then
+			local exp = {}
+			for i = 1, getn(list) do
+				local a = list[i]
+				if a and a.spellId and a.spellId > 0 then
+					tinsert(ids, a.spellId)
+					if a.expirationTime and a.expirationTime > 0 then exp[a.spellId] = a.expirationTime end
+				end
+			end
+			if getn(ids) > 0 then return ids, exp end
+		end
+	end
 	if GetUnitData and guid then
 		local ok, ud = pcall(GetUnitData, guid)
 		if ok and type(ud) == "table" and type(ud.aura) == "table" then
@@ -198,11 +214,19 @@ function C:Scan()
 	local rec = { players = {}, zone = GetRealZoneText(), enc = "Ready check" }
 	for name, e in pairs(W.roster.byName) do
 		local p = { class = e.class, role = roles[name], cbuffs = {} }
-		local ids = C.Auras(e.unit, e.guid)
+		local ids, exp = C.Auras(e.unit, e.guid)
 		if ids then
+			local now = GetTime()
 			for i = 1, getn(ids) do
 				local b = C.BuffName(ids[i])
-				if b then tinsert(p.cbuffs, { b, W.Data.consumeBuffs[b], 0 }) end
+				if b then
+					tinsert(p.cbuffs, { b, W.Data.consumeBuffs[b], 0 })
+					local ends = exp and exp[ids[i]]
+					if ends and ends > now then
+						p.ending = p.ending or {}
+						tinsert(p.ending, { b, ends - now })
+					end
+				end
 			end
 		else
 			p.read = false
@@ -224,14 +248,34 @@ function C:Lines(rec, title)
 	for _ in pairs(rec.players) do n = n + 1 end
 	local out = { "[WhoDidIt] " .. (title or "CONSUME CHECK") .. ": " .. (n - unknown - getn(list)) .. " of " .. n .. " ready"
 		.. ((unknown > 0) and (", " .. unknown .. " out of range") or "") }
+	local soon = C.EndingSoon(rec)
 	if getn(list) == 0 then
 		tinsert(out, "Everyone in range has their consumables. Nice.")
-		return out
+	else
+		local order, groups = C.ByNeed(list)
+		for i = 1, getn(order) do
+			tinsert(out, "No " .. order[i] .. ": " .. table.concat(groups[order[i]], ", "))
+		end
 	end
-	local order, groups = C.ByNeed(list)
-	for i = 1, getn(order) do
-		tinsert(out, "No " .. order[i] .. ": " .. table.concat(groups[order[i]], ", "))
+	if getn(soon) > 0 then tinsert(out, "Running out in under 5 min: " .. table.concat(soon, ", ")) end
+	return out
+end
+
+-- flasks / elixirs / food that end within 5 minutes (needs ClassicAPI):
+-- { "Name (flask 3m)", ... }
+local SOON_CAT = { Flask = "flask", Elixir = "elixir", Food = "food" }
+function C.EndingSoon(rec)
+	local out = {}
+	for name, p in pairs(rec.players or {}) do
+		local bits = {}
+		for i = 1, getn(p.ending or {}) do
+			local b, left = p.ending[i][1], p.ending[i][2]
+			local cat = SOON_CAT[W.Data.consumeBuffs[b] or ""]
+			if cat and left < 300 then tinsert(bits, cat .. " " .. math.ceil(left / 60) .. "m") end
+		end
+		if getn(bits) > 0 then tinsert(out, name .. " (" .. table.concat(bits, ", ") .. ")") end
 	end
+	table.sort(out)
 	return out
 end
 
@@ -246,6 +290,15 @@ function C:Check(post)
 	local classes = {}
 	for name, p in pairs(rec.players) do classes[name] = p.class end
 	W:Send(C:Lines(rec, "READY CHECK - CONSUMES"), post and nil or "SELF", classes)
+end
+
+-- the full check: DopingControl's window (built in, or the separate addon)
+function C:OpenFull()
+	if DC_Matrix and DC_Matrix.Toggle then
+		DC_Matrix.Toggle()
+	else
+		W.Print("DopingControl isn't installed yet: double-click tools\\WhoDidIt-Sync.cmd once (it downloads it), then exit WoW and start it again.")
+	end
 end
 
 -- a ready check: scan and show it to you (only you - nobody gets spammed)

@@ -69,6 +69,8 @@ function T.NewPlayer(name, class)
 		name = name, class = class or "WARRIOR",
 		dmg = 0, bossDmg = 0, heal = 0, taken = 0,
 		ds = {}, hs = {}, ts = {},
+		-- per spell: hits, crits, biggest hit (damage dn/dc/dm, healing hn/hc/hm)
+		dn = {}, dc = {}, dm = {}, hn = {}, hc = {}, hm = {},
 		act = {}, nAct = 0,
 		deadTotal = 0, aggroTime = 0, bossSwings = 0, crush = 0,
 		consumes = {}, nCons = 0, kicks = 0, dispels = 0, tranqs = 0,
@@ -322,6 +324,11 @@ function T:Damage(src, dst, spell, amt, crit, swing, hitInfo, absorb)
 		p.dmg = p.dmg + amt
 		local key = srcPet and ("Pet: " .. spell) or spell
 		p.ds[key] = (p.ds[key] or 0) + amt
+		if amt > 0 then
+			p.dn[key] = (p.dn[key] or 0) + 1
+			if crit then p.dc[key] = (p.dc[key] or 0) + 1 end
+			if amt > (p.dm[key] or 0) then p.dm[key] = amt end
+		end
 		if F.bosses[dst] then p.bossDmg = p.bossDmg + amt end
 		if not srcPet then mark(p, now, swing and (now + 1.5) or now) end
 		return
@@ -383,6 +390,11 @@ function T:Heal(targetGuid, casterGuid, spellId, amount, crit, periodic)
 		local p = T:P(cn)
 		p.heal = p.heal + amount
 		p.hs[sp] = (p.hs[sp] or 0) + amount
+		if amount > 0 then
+			p.hn[sp] = (p.hn[sp] or 0) + 1
+			if tonumber(crit) == 1 then p.hc[sp] = (p.hc[sp] or 0) + 1 end
+			if amount > (p.hm[sp] or 0) then p.hm[sp] = amount end
+		end
 		if not cpet and tonumber(periodic) ~= 1 then mark(p, now) end
 	end
 	local te = W.roster.byGuid[targetGuid]

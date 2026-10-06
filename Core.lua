@@ -9,8 +9,11 @@ local W = WhoDidIt
 W.version = GetAddOnMetadata("WhoDidIt", "Version") or "1.0.0"
 
 -- WoW only reads an addon's file list at start-up, so files added by an
--- update stay missing after /reload until the game is restarted
-W.RESTART_MSG = "|cffff5555WhoDidIt was updated with new files - exit and restart WoW (a /reload isn't enough) to load them.|r"
+-- update stay missing after /reload until the game is restarted - except
+-- with ClassicAPI (optional dll), where /reload picks up new files too
+W.CAPI = (ClassicAPI ~= nil) or (CLASSIC_API_VERSION ~= nil)
+W.RESTART_HINT = W.CAPI and "type /reload" or "exit WoW and start it again (a /reload isn't enough)"
+W.RESTART_MSG = "|cffff5555WhoDidIt was updated with new files - " .. W.RESTART_HINT .. " to load them.|r"
 W.env = {}
 
 local floor = math.floor
@@ -109,8 +112,9 @@ function W:DetectEnv()
 	e.unitxp   = (UnitXP ~= nil)
 	e.twthreat = IsAddOnLoaded("TWThreat") and true or false
 	e.unitdata = (GetUnitData ~= nil)
-	-- ClassicAPI (optional dll): modern API backported to 1.12, e.g. CopyToClipboard
-	e.classicapi = (GetClassicExpansionLevel ~= nil) or (C_EventUtils ~= nil)
+	-- ClassicAPI (optional dll): newer WoW API added to the 1.12 client
+	e.classicapi = W.CAPI
+	e.capiAuras = W.CAPI and C_UnitAuras ~= nil and C_UnitAuras.GetUnitAuras ~= nil
 end
 
 -- Nampower only raises some events when these CVars are on
@@ -313,6 +317,12 @@ W:On("PLAYER_ENTERING_WORLD", function()
 	W:DetectEnv()
 	W:EnableNampowerEvents()
 	W:UpdateRoster()
+	-- one friendly tip per account about the optional ClassicAPI
+	local o = WhoDidItDB and WhoDidItDB.opts
+	if o and not W.env.classicapi and not o.capiTipped then
+		o.capiTipped = true
+		W.Print("Tip: the free, optional |cffffd100ClassicAPI|r add-on makes WhoDidIt quicker and adds a few extras. Type |cffffd100/wdi classicapi|r to see what it does and how to get it.")
+	end
 end)
 
 W:On("RAID_ROSTER_UPDATE", function() W:UpdateRoster() end)
@@ -362,6 +372,33 @@ local function setToList(t)
 	return table.concat(l, ", ")
 end
 
+------------------------------------------------------------------ ClassicAPI (optional)
+
+-- ClassicAPI (github.com/brues-code/ClassicAPI) is an optional client dll.
+-- WhoDidIt works the same without it; with it these get better. Every use
+-- checks W.env first and falls back to the plain 1.12 way.
+W.CAPI_URL = "https://github.com/brues-code/ClassicAPI"
+W.CAPI_PERKS = {
+	"Copy link buttons put the link straight on your clipboard (no Ctrl+C box).",
+	"Consume checks read each raider's buffs in one go - quicker ready checks and pull snapshots.",
+	"Ready checks also warn when someone's flask, elixir or food runs out in under 5 minutes.",
+	"WhoDidIt updates load with /reload - no full game restart.",
+}
+
+function W:ClassicApiInfo()
+	local add = function(s) DEFAULT_CHAT_FRAME:AddMessage(s) end
+	if W.env.classicapi then
+		W.Print("ClassicAPI " .. (CLASSIC_API_VERSION and ("v" .. tostring(CLASSIC_API_VERSION) .. " ") or "") .. "is installed. What it adds to WhoDidIt:")
+	else
+		W.Print("ClassicAPI isn't installed. It's |cffffd100optional|r - WhoDidIt works fine without it. With it:")
+	end
+	for i = 1, getn(W.CAPI_PERKS) do add("  |cff33ff33+|r " .. W.CAPI_PERKS[i]) end
+	if not W.env.classicapi then
+		add("  |cffffd100To get it:|r exit WoW, then double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\Install-ClassicAPI.cmd|r")
+		add("  |cff888888It downloads ClassicAPI.dll from " .. W.CAPI_URL .. ", checks it, copies it into your WoW folder and adds it to dlls.txt (backed up first). Then start WoW as usual. It needs VanillaFixes, which most Turtle / OctoWoW launchers already use.|r")
+	end
+end
+
 local function help()
 	W.Print("v" .. W.version .. " commands:")
 	local c = "|cffffd100"
@@ -387,6 +424,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi demo|r - add two sample fights to try every feature, " .. c .. "/wdi demo live|r - watch one play out live, " .. c .. "/wdi demo clear|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi start|r / " .. c .. "/wdi stop|r - manually track your target / end tracking")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi status|r, " .. c .. "/wdi clear|r")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi classicapi|r - what the optional ClassicAPI add-on improves, and how to get it")
 end
 
 local function status()
@@ -395,6 +433,7 @@ local function status()
 	W.Print("v" .. W.version)
 	DEFAULT_CHAT_FRAME:AddMessage("  Nampower: " .. yn(e.nampower) .. "   SuperWoW: " .. yn(e.superwow) .. "   UnitXP: " .. yn(e.unitxp) .. "   TWThreat: " .. yn(e.twthreat)
 		.. "   ClassicAPI: " .. yn(e.classicapi) .. " |cff888888(optional)|r")
+	if not e.classicapi then DEFAULT_CHAT_FRAME:AddMessage("  |cff888888ClassicAPI is optional - /wdi classicapi shows what it adds and how to get it.|r") end
 	if not e.nampower then DEFAULT_CHAT_FRAME:AddMessage("  |cffff9933Without Nampower only deaths are tracked.|r") end
 	if not e.superwow then DEFAULT_CHAT_FRAME:AddMessage("  |cffff9933Without SuperWoW, GUIDs can't be resolved - most tracking is disabled.|r") end
 	local f = W.Tracker.fight
@@ -416,6 +455,8 @@ local function slash(msg)
 		help()
 	elseif cmd == "status" then
 		status()
+	elseif cmd == "classicapi" or cmd == "capi" then
+		W:ClassicApiInfo()
 	elseif cmd == "tank" then
 		if rest == "" then rest = UnitName("target") or "" end
 		if rest == "" then W.Print("Usage: /wdi tank <name> (or target them)") return end

@@ -22,6 +22,28 @@ local function topList(t, n)
 	return list
 end
 
+-- topList rows plus hits, crits and the biggest hit: { spell, total, hits, crits, max }
+-- (on A, not locals: the analyse function is at Lua's upvalue limit)
+function A.WithStats(list, n, c, m)
+	if not n then return list end
+	for i = 1, getn(list) do
+		local k = list[i][1]
+		list[i][3] = n[k] or 0
+		list[i][4] = c and c[k] or 0
+		list[i][5] = m and m[k] or 0
+	end
+	return list
+end
+
+-- over every spell: hits, crits, the biggest hit and which spell it was
+function A.HitTotals(n, c, m)
+	local hits, crits, best, bestK = 0, 0, 0, nil
+	for _, v in pairs(n or {}) do hits = hits + v end
+	for _, v in pairs(c or {}) do crits = crits + v end
+	for k, v in pairs(m or {}) do if v > best then best, bestK = v, k end end
+	return hits, crits, best, bestK
+end
+
 local function round1(v) return floor(v * 10 + 0.5) / 10 end
 
 function A.AvoidRule(spell, role)
@@ -1004,6 +1026,8 @@ function A:Build(F, final)
 			local deathsN = 0
 			for i = 1, getn(rec.deaths) do if rec.deaths[i].name == name then deathsN = deathsN + 1 end end
 			local tl = tally[name] or {}
+			local dh, dcr, dmx, dsp = A.HitTotals(p.dn, p.dc, p.dm)
+			local hh, hcr, hmx, hsp = A.HitTotals(p.hn, p.hc, p.hm)
 			rec.players[name] = {
 				avoidDmg = tl.avoidDmg or 0, avoidHits = tl.avoidHits or 0,
 				worstSpell = tl.worstSpell, worstHits = tl.worstHits,
@@ -1016,9 +1040,12 @@ function A:Build(F, final)
 				cbuffs = buffList(p), used = usedList(p), read = p.read, wpn = p.wpn,
 				hero = hero[name] and round1(hero[name].pts) or 0,
 				saves = hero[name] and getn(hero[name].list) or 0,
-				ds = topList(p.ds, 8), hs = topList(p.hs, 8), ts = topList(p.ts, 8),
+				ds = A.WithStats(topList(p.ds, 8), p.dn, p.dc, p.dm), hs = A.WithStats(topList(p.hs, 8), p.hn, p.hc, p.hm),
+				ts = topList(p.ts, 8),
 				aggro = p.aggroTime, swings = p.bossSwings, crush = p.crush,
 				threat = pk and pk.perc,
+				dHits = dh, dCrits = dcr, dMax = dmx, dMaxSp = dsp,
+				hHits = hh, hCrits = hcr, hMax = hmx, hMaxSp = hsp,
 			}
 		end
 	end

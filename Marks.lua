@@ -517,11 +517,17 @@ function M:PickMark(current, fn, removeFn, who)
 			M.picker:Hide()
 			if f then f() end
 		end)
+		-- X in the top-right corner closes it without changing anything
+		local x = CreateFrame("Button", nil, p, "UIPanelCloseButton")
+		x:SetWidth(24)
+		x:SetHeight(24)
+		x:SetPoint("TOPRIGHT", p, "TOPRIGHT", 2, 2)
+		x:SetScript("OnClick", function() M.picker:Hide() end)
 		tinsert(UISpecialFrames, "WhoDidItMarkPicker")
 		M.picker = p
 	end
 	p.fn, p.removeFn = fn, removeFn
-	p.title:SetText("Mark for |cffffffff" .. (who or "this mob") .. "|r  |cff888888(Esc to cancel)|r")
+	p.title:SetText("Mark for |cffffffff" .. (who or "this mob") .. "|r  |cff888888(X or Esc to close)|r")
 	-- highlight the current mark
 	p.sel:ClearAllPoints()
 	local k = (current and current > 0) and (9 - current) or 9
