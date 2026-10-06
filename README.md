@@ -56,7 +56,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
   </tr>
   <tr>
     <td width="50%"><img src="docs/timeline.jpg" alt="Timeline"><br><b>Timeline.</b> Everything that happened, second by second, colour-coded by kind. Click a name in any line for that player's own timeline, focused on that moment.</td>
-    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> Raid overview (flasks, food, protection potions, items used), then each player's buffs and items, and what they were <b>missing for their role</b>. <b>Check raid now</b> scans the raid before the pull.</td>
+    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> A grid like DopingControl's: players grouped by role (gaps first), a column per consumable slot with the buff's icon, a <b>red X</b> where their role needs something they didn't have, ready counts and items used. <b>Check raid now</b> scans the raid before the pull; <b>Full check</b> opens DopingControl itself.</td>
   </tr>
 </table>
 
@@ -347,8 +347,12 @@ checks them against what their role should bring:
 | Shaman melee | as Melee, but a weapon imbue (Windfury etc.) instead of a stone |
 
 Flasks are only expected in the big raids (MC, BWL, AQ40, Naxx, ES, Karazhan).
-- **Consumes tab:** a "Missing something for their role" line (click it to post it), plus a **Missing** column for
-  each player.
+- **Consumes tab:** a grid with players grouped by role (tanks, healers, melee, ranged, casters; click a group to
+  fold it, players with gaps first) and a column per slot: FLK flask, FOD food, AP, STR, AGI, SP spell power, MP5,
+  ARM armor, STA stamina, BLS Blasted Lands, PROT protection potion, WPN weapon. Green = they had it (hover for the
+  buff), **red X** = their role needs it, **-** = not expected, **?** = out of range. **Ready** shows must-haves had
+  out of needed, **Used** the items used. The top line ("Missing something", click to post) and **Missing per slot**
+  at the bottom sum it up.
 - **Name & Shame:** a **Consume Slacker** award.
 - **Ready checks:** every ready check (and **Check raid now**, or `/wdi check`) scans the raid and shows you who's
   missing what. Only you see it; Shift-click or `/wdi check post` posts it. Turn it off with `/wdi readycheck off`.
@@ -507,9 +511,10 @@ Every post (Report, shout-outs, Consumes, Heroes, banter, rival watch, standings
 | Your guild / other guilds | green / orange |
 | Realms (`N'Zoth (PvE)`) | purple |
 
-WhoDidIt checks each chat separately. If a coloured post doesn't show up in one chat, or comes back without its
-colours, that chat gets plain text from then on, the lost lines are sent again in plain text, and every other chat
-stays coloured. `/wdi colors on` tries every chat again; `/wdi colors off` posts plain text everywhere.
+WhoDidIt checks each chat separately. Once a coloured line has shown up in a chat, that chat is known to take colours:
+a line that goes missing there later was dropped by the server's spam limit, so it's simply sent once more. Only a
+chat that never showed a coloured line (or strips the colours) gets plain text from then on; every other chat stays
+coloured. Say, yell and custom channels get one line a second, which is slow enough for the server's spam limit. `/wdi colors on` tries every chat again; `/wdi colors off` posts plain text everywhere.
 
 ## How the verdict works
 

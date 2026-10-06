@@ -305,9 +305,10 @@ W:On("ADDON_LOADED", function(name)
 	if db.opts.announce == "raid" then db.opts.announce = "channel" end
 	-- colours used to switch off for every chat after one missed line; now it's
 	-- per chat (opts.plainKinds), so turn them back on once
-	-- (2: the first per-chat check wrongly turned guild chat plain)
-	if (db.opts.colorsPerChat or 0) ~= 2 then
-		db.opts.colorsPerChat = 2
+	-- (2: the first per-chat check wrongly turned guild chat plain;
+	--  3: a line the server dropped for spam wrongly turned say chat plain)
+	if (db.opts.colorsPerChat or 0) ~= 3 then
+		db.opts.colorsPerChat = 3
 		db.opts.chatColors = true
 		db.opts.plainKinds = {}
 	end

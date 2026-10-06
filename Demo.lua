@@ -263,6 +263,12 @@ local function newFight(t0, wipe)
 		for b in pairs(buffs) do
 			if W.Data.consumeBuffs[b] then p.cbuffs[b] = 0 end
 		end
+		-- their main hand: most have an oil / stone / imbue, the slackers don't
+		if r[1] == "Afkerson" or r[1] == "Shockadin" then p.wpn = false
+		elseif r[2] == "SHAMAN" and r[3] ~= "heal" then p.wpn = "Windfury Weapon"
+		elseif W.Data.manaClasses[r[2]] then p.wpn = (r[3] == "heal") and "Brilliant Mana Oil" or "Brilliant Wizard Oil"
+		else p.wpn = "Dense Sharpening Stone" end
+		p.read = true
 	end
 	F.bossDebuffs = {
 		["Sunder Armor"] = { total = 0, max = 5, rate = 0.95 },

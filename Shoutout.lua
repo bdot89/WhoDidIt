@@ -258,6 +258,7 @@ local queue = {}
 -- gets plain text from then on (WhoDidItDB.opts.plainKinds) and the lost
 -- lines are sent again in plain text. Other channels stay coloured.
 local waiting = {}   -- { at, kind, colored, plain, target }, oldest first
+local lastSlow   -- when the last say / yell / channel line went out
 
 -- can this channel take coloured text?
 local function colorsOK(kind)
@@ -265,10 +266,24 @@ local function colorsOK(kind)
 	return o.chatColors and not (o.plainKinds and o.plainKinds[kind])
 end
 
+-- a chat that has shown one of our coloured lines takes colours: a line
+-- that goes missing there later was dropped (spam limit), not uncoloured
+local function confirmed(kind)
+	local ok = WhoDidItDB.opts.colorsSeen
+	return ok and ok[kind]
+end
+local function confirm(kind)
+	local o = WhoDidItDB.opts
+	o.colorsSeen = o.colorsSeen or {}
+	o.colorsSeen[kind] = true
+	if kind == "RAID_WARNING" then o.colorsSeen.RAID = true elseif kind == "RAID" then o.colorsSeen.RAID_WARNING = true end
+end
+
 local function goPlain(kind, why)
 	local o = WhoDidItDB.opts
 	o.plainKinds = o.plainKinds or {}
 	if o.plainKinds[kind] then return end
+	if confirmed(kind) then return end
 	o.plainKinds[kind] = true
 	W.Print("|cffff9933" .. (S.LABELS[kind] or string.lower(kind)) .. " chat " .. why
 		.. ", so WhoDidIt posts plain text there from now on. Every other chat stays coloured.|r  |cff888888(/wdi colors on to try again)|r")
@@ -317,19 +332,26 @@ W:Every(0.3, function()
 	-- a coloured line that never showed up: that chat drops colour codes.
 	-- Send what was lost again, in plain text.
 	local now = GetTime()
-	while waiting[1] and now - waiting[1].at > 5 do
+	while waiting[1] and now - waiting[1].at > 8 do
 		local w = tremove(waiting, 1)
-		if w.colored then
+		if w.colored and confirmed(w.kind) then
+			-- colours work here, so the server dropped it: send it once more
+			if not w.retry then tinsert(queue, 1, { w.sent, w.plain, w.kind, w.target, true }) end
+		elseif w.colored then
 			goPlain(w.kind, "didn't show coloured text")
-			tinsert(queue, 1, { nil, w.plain, w.kind, w.target })
+			tinsert(queue, 1, { nil, w.plain, w.kind, w.target, true })
 		end
 	end
-	local q = tremove(queue, 1)
+	local q = queue[1]
 	if not q then return end
+	-- say / yell / channels have a stricter spam limit: one line a second
+	if (q[3] == "SAY" or q[3] == "YELL" or q[3] == "CHANNEL") and now - (lastSlow or 0) < 1 then return end
+	tremove(queue, 1)
+	if q[3] == "SAY" or q[3] == "YELL" or q[3] == "CHANNEL" then lastSlow = now end
 	local colored = q[1] and colorsOK(q[3])
 	local text = colored and q[1] or q[2]
 	SendChatMessage(text, q[3], nil, q[4])
-	tinsert(waiting, { at = now, kind = q[3], colored = colored, sent = text, plain = q[2], target = q[4] })
+	tinsert(waiting, { at = now, kind = q[3], colored = colored, sent = text, plain = q[2], target = q[4], retry = q[5] })
 end)
 
 -- our own messages come back through these events: the line made it
@@ -356,6 +378,7 @@ for ev, kind in pairs(ECHO_EVENTS) do
 			local w = waiting[i]
 			if sameChat(w, k) then
 				if m == squash(w.sent) then
+					if w.colored then confirm(w.kind) end
 					tremove(waiting, i)
 					return
 				elseif w.colored and m == squash(w.plain) and not string.find(msg, "|c", 1, true) then
@@ -369,6 +392,7 @@ for ev, kind in pairs(ECHO_EVENTS) do
 		if string.find(msg, "|c", 1, true) then
 			for i = 1, getn(waiting) do
 				if sameChat(waiting[i], k) and waiting[i].colored then
+					confirm(waiting[i].kind)
 					tremove(waiting, i)
 					return
 				end

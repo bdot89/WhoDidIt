@@ -199,6 +199,14 @@ local function CreateList(parent, nrows, rowh, width)
 					tex:Show()
 				end
 				for j = nic + 1, getn(b.ic) do b.ic[j]:Hide() end
+				-- icon cells (the Consumes grid): d.grid = { { x, state, icon, title, tip, text }, ... }
+				b.g = b.g or {}
+				local ng = d.grid and getn(d.grid) or 0
+				for j = 1, ng do
+					if not b.g[j] then b.g[j] = UI.GridCell(b, self.rowh - 4, wheel) end
+					UI.SetGridCell(b.g[j], d.grid[j], b)
+				end
+				for j = ng + 1, getn(b.g) do b.g[j]:Hide() end
 				if d.bar then
 					b.bar:SetWidth(math.max(1, self.rowW * math.min(1, d.bar)))
 					b.bar:SetVertexColor(d.cr or 0.5, d.cg or 0.5, d.cb or 0.5, d.ba or 0.45)
@@ -223,6 +231,68 @@ local function CreateList(parent, nrows, rowh, width)
 	end
 
 	return L
+end
+
+-- one icon cell of a grid row: coloured edge, icon, hover tooltip; a click
+-- counts as a click on its row
+UI.GRID_LOOK = {   -- edge r, g, b, a, then fill r, g, b
+	ok   = { 0.25, 0.75, 0.3, 1,    0.06, 0.12, 0.06 },
+	miss = { 0.85, 0.15, 0.15, 1,   0.32, 0.04, 0.04 },
+	unk  = { 0.5, 0.5, 0.55, 1,     0.12, 0.12, 0.14 },
+	na   = { 0.2, 0.2, 0.24, 0.8,   0.07, 0.07, 0.09 },
+}
+function UI.GridCell(row, size, wheel)
+	local c = CreateFrame("Button", nil, row)
+	c:SetWidth(size)
+	c:SetHeight(size)
+	c.edge = c:CreateTexture(nil, "BACKGROUND")
+	c.edge:SetAllPoints(c)
+	c.fill = c:CreateTexture(nil, "BORDER")
+	c.fill:SetPoint("TOPLEFT", c, "TOPLEFT", 1, -1)
+	c.fill:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -1, 1)
+	c.icon = c:CreateTexture(nil, "ARTWORK")
+	c.icon:SetPoint("TOPLEFT", c, "TOPLEFT", 2, -2)
+	c.icon:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -2, 2)
+	c.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	c.txt = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	c.txt:SetPoint("CENTER", c, "CENTER", 0, 0)
+	local hl = c:CreateTexture(nil, "HIGHLIGHT")
+	hl:SetAllPoints(c)
+	hl:SetTexture(1, 1, 1, 0.18)
+	c:EnableMouseWheel(true)
+	c:SetScript("OnMouseWheel", wheel)
+	c:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	c:SetScript("OnClick", function()
+		local d = this:GetParent().d
+		if d and d.click then d.click(d, arg1, 0) end
+	end)
+	c:SetScript("OnEnter", function()
+		local g = this.g
+		if not g then return end
+		GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+		GameTooltip:SetText(g[4] or "", 1, 0.82, 0)
+		for i = 1, getn(g[5] or {}) do GameTooltip:AddLine(g[5][i], 0.9, 0.9, 0.9, 1) end
+		GameTooltip:Show()
+	end)
+	c:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	return c
+end
+
+function UI.SetGridCell(c, g, row)
+	c.g = g
+	local k = UI.GRID_LOOK[g[2]] or UI.GRID_LOOK.na
+	c.edge:SetTexture(k[1], k[2], k[3], k[4])
+	c.fill:SetTexture(k[5], k[6], k[7], 1)
+	if g[3] then
+		c.icon:SetTexture(g[3])
+		c.icon:Show()
+	else
+		c.icon:Hide()
+	end
+	c.txt:SetText(g[6] or "")
+	c:ClearAllPoints()
+	c:SetPoint("LEFT", row, "LEFT", g[1], 0)
+	c:Show()
 end
 
 function UI.RowEnter(b)
@@ -673,6 +743,76 @@ local content = panel(RX, CONTY, RW, CONTH)
 local mainList = CreateList(content, NROWS, ROWH, RW - 10)
 mainList:SetPoint("TOPLEFT", content, "TOPLEFT", 5, -6)
 
+-- Consumes tab: a grid like DopingControl's - taller rows, a column per
+-- consumable slot, and a column header that stays put while you scroll
+UI.CG = {
+	ROWH = 26, NAME = 6, ROLE = 120, X = 178, STEP = 30, READY = 540, USED = 588,
+	COLS = {   -- label, name, slots (or "WPN"), what counts
+		{ "FLK", "Flask", { FLASK = true }, "Titans, Supreme Power, Distilled Wisdom..." },
+		{ "FOD", "Food", { FOOD = true, ALC = true }, "Well Fed and the other food buffs, drinks" },
+		{ "AP", "Attack power", { AP = true }, "Juju Might, Winterfall Firewater" },
+		{ "STR", "Strength", { STR = true }, "Elixir of Giants, Juju Power" },
+		{ "AGI", "Agility", { AGI = true }, "Elixir of the Mongoose, Greater Agility" },
+		{ "SP", "Spell power", { GAE = true, SCHOOL = true, DREAMT = true, SHARD = true }, "Greater Arcane Elixir, Firepower, Shadow / Frost Power, Dreamshard" },
+		{ "MP5", "Mana regen", { MP5 = true }, "Mageblood" },
+		{ "ARM", "Armor", { ARM = true }, "Elixir of Superior / Greater Defense" },
+		{ "STA", "Stamina / health", { HPELX = true, ZANZA = true }, "Elixir of Fortitude, Spirit of Zanza" },
+		{ "BLS", "Blasted Lands", { BL = true }, "R.O.I.D.S., Scorpok, Rage of Ages, Lung Juice, Cerebral Cortex..." },
+		{ "PROT", "Protection potion", { PROT = true }, "Fire / Nature / Frost / Shadow / Arcane Protection" },
+		{ "WPN", "Weapon", "WPN", "Oil or sharpening / weight stone; shamans: their weapon imbue" },
+	},
+}
+local consList = CreateList(content, floor(NROWS * ROWH / UI.CG.ROWH) - 1, UI.CG.ROWH, RW - 10)
+consList:SetPoint("TOPLEFT", content, "TOPLEFT", 5, -6 - UI.CG.ROWH)
+consList:Hide()
+do
+	local CG = UI.CG
+	local h = CreateFrame("Frame", nil, content)
+	h:SetWidth(RW - 28)
+	h:SetHeight(CG.ROWH - 2)
+	h:SetPoint("TOPLEFT", content, "TOPLEFT", 5, -6)
+	local bg = h:CreateTexture(nil, "BACKGROUND")
+	bg:SetAllPoints(h)
+	bg:SetTexture(0.25, 0.25, 0.32, 0.55)
+	local function label(x, w, text, tipTitle, tip)
+		local b = CreateFrame("Button", nil, h)
+		b:SetWidth(w)
+		b:SetHeight(CG.ROWH - 2)
+		b:SetPoint("LEFT", h, "LEFT", x, 0)
+		local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		fs:SetAllPoints(b)
+		fs:SetJustifyH(w > 60 and "LEFT" or "CENTER")
+		fs:SetText(text)
+		if tipTitle then tooltip(b, tipTitle, tip, "ANCHOR_TOP") end
+	end
+	label(CG.NAME, 100, "PLAYER")
+	label(CG.ROLE, 52, "ROLE", "Role", { "Tank, healer, melee, ranged or caster - from what they did in the fight.", "Each role is expected to bring different consumables." })
+	for i = 1, getn(CG.COLS) do
+		local col = CG.COLS[i]
+		label(CG.X + (i - 1) * CG.STEP, CG.STEP, col[1], col[2], { col[4],
+			" ", "|cff40bf4dGreen|r  they had it (hover for which one)",
+			"|cffd92626Red X|r  their role needs it and they didn't have it",
+			"|cff888888-|r  not expected for their role", "|cff888888?|r  out of range at the pull - not counted" })
+	end
+	label(CG.READY, 44, "READY", "Ready", { "Must-haves they had, out of what their role needs.", "Green = everything. Flasks only count in the big raids." })
+	label(CG.USED, 54, "USED", "Used", { "Potions, runes, healthstones and other items used during the fight.", "Hover a player for the list." })
+	consList.head = h
+	h:Hide()
+end
+
+-- the Consumes grid replaces the normal list while that tab is open
+function UI.ShowGrid(on)
+	if on then
+		mainList:Hide()
+		consList:Show()
+		consList.head:Show()
+	else
+		consList:Hide()
+		consList.head:Hide()
+		mainList:Show()
+	end
+end
+
 ------------------------------------------------------------------ bottom bar
 
 local METERS = {
@@ -767,7 +907,7 @@ local HINTS = {
 	mistakes = "Click a mistake to post it (Ctrl-click: preview)  -  hover for advice",
 	threat   = "Click a name to open their timeline at that moment  -  keep the boss targeted for threat %",
 	timeline = "Everything that happened, in order  -  click a name for that player's timeline at that moment",
-	consumes = "Buffs active during the fight, then items used  -  hover a player for the full list",
+	consumes = "Hover a square for the buff  -  red X = their role needs it  -  hover a name for items used  -  click a group to fold it",
 	heroes   = "Click a name or a game-saving moment to post it (Ctrl-click: preview)  -  hover for details",
 }
 
@@ -1662,12 +1802,50 @@ function UI:MeterRows(rec)
 	return rows
 end
 
-local BUFF_COL = { Flask = "cc99ff", Elixir = "66ccff", Food = "ffcc66", Buff = "ff9933", Protection = "ff6666", Potion = "33ff33" }
 local USED_COL = { Mana = "66aaff", Health = "33ff33", Protection = "ff6666", Other = "dddddd" }
-local ROLE_ORDER = { tank = 1, heal = 2, dps = 3 }
-local ROLE_TAG = ROLE_SHORT
-local CONS_SPEC = { { 128, "LEFT" }, { 48, "LEFT" }, { 58, "LEFT" }, { 54, "RIGHT" }, { 62, "RIGHT" }, { 182, "LEFT" } }
-local CONS_DETAIL = { { 56, "RIGHT" }, { 500, "LEFT" } }
+-- role groups in the Consumes grid, top to bottom
+local CONS_GROUPS = {
+	{ "tank", "TANKS", "c79c6e" }, { "healer", "HEALERS", "33ff99" }, { "melee", "MELEE", "ff6666" },
+	{ "ranged", "RANGED", "abd473" }, { "caster", "CASTERS", "69ccf0" }, { "other", "OTHERS", "aaaaaa" },
+}
+
+-- one grid cell: { x, state, icon, title, tip, text }
+local function consCell(rec, p, name, c, ctx)
+	local Cons, CG = W.Cons, UI.CG
+	local col = CG.COLS[c]
+	local x = CG.X + (c - 1) * CG.STEP + 4
+	local title = col[2] .. " - " .. W.CName(name, p.class)
+	local X = "|cffff4444X|r"
+	local missing = ctx.missAt[c] and { "|cffff7777Missing|r - a " .. ctx.roleText .. " should have: " .. ctx.missAt[c] }
+	if col[3] == "WPN" then
+		-- the main hand: oil / stone / imbue (read separately from buffs)
+		if p.wpn and ctx.missAt[c] then
+			return { x, "miss", nil, title, { "|cffff7777Wrong one|r - a " .. ctx.roleText .. " should have: " .. ctx.missAt[c],
+				"Has: " .. ((type(p.wpn) == "string") and p.wpn or "?") }, X }
+		elseif p.wpn then
+			return { x, "ok", Cons.WeaponIcon(p.wpn), title, { (type(p.wpn) == "string") and p.wpn or "Something on their main hand" } }
+		elseif missing then
+			return { x, "miss", nil, title, missing, X }
+		elseif p.wpn == nil and ctx.expected[c] then
+			return { x, "unk", nil, title, { "Couldn't see their weapon (out of range, or no SuperWoW)." }, "|cffcccccc?|r" }
+		end
+		return { x, "na", nil, title, { ctx.expected[c] and "Nothing on their main hand." or ("Not expected for a " .. ctx.roleText .. ".") }, C_DIM .. "-|r" }
+	end
+	local have = ctx.inCol[c]
+	if have then
+		local tip = {}
+		for k = 1, getn(have) do
+			local bf = have[k]
+			tinsert(tip, "|cff33ff33" .. bf[1] .. "|r  " .. C_DIM .. ((bf[3] and bf[3] > 0) and ("gained " .. FmtTime(bf[3]) .. " into the fight") or "had it at the pull") .. "|r")
+		end
+		return { x, "ok", W.Cons.Icon(have[1][1]), title, tip }
+	elseif ctx.unread then
+		return { x, "unk", nil, title, { "Out of range at the pull - can't tell, so not counted." }, "|cffcccccc?|r" }
+	elseif missing then
+		return { x, "miss", nil, title, missing, X }
+	end
+	return { x, "na", nil, title, { ctx.expected[c] and "Not needed: they covered it with another buff." or ("Not expected for a " .. ctx.roleText .. ".") }, C_DIM .. "-|r" }
+end
 
 function UI:ConsumeRows(rec)
 	local rows = {}
@@ -1675,126 +1853,159 @@ function UI:ConsumeRows(rec)
 		tinsert(rows, row("|cffff7777To finish updating: " .. W.RESTART_HINT .. ".|r"))
 		return rows
 	end
-	local list = {}
-	for name, p in pairs(rec.players) do tinsert(list, { name = name, p = p }) end
-	table.sort(list, function(a, b)
-		local x, y = ROLE_ORDER[a.p.role] or 9, ROLE_ORDER[b.p.role] or 9
-		if x ~= y then return x < y end
-		return a.name < b.name
-	end)
-	if getn(list) == 0 then
-		tinsert(rows, row("|cff888888No players recorded.|r"))
-		return rows
-	end
-	if not list[1].p.cbuffs then
-		tinsert(rows, row("|cff888888This fight was recorded by an older version - only items used are available.|r"))
-	end
-
-	-- raid overview
-	local n = getn(list)
-	local flask, food, prot = {}, {}, {}
-	local noFlask, noFood = {}, {}
-	local usedTotals = { Mana = 0, Health = 0, Protection = 0, Other = 0 }
-	for i = 1, n do
-		local it = list[i]
-		local has = {}
-		for j = 1, getn(it.p.cbuffs or {}) do has[it.p.cbuffs[j][2]] = true end
-		if has.Flask then tinsert(flask, it.name) else tinsert(noFlask, it.name) end
-		if has.Food then tinsert(food, it.name) else tinsert(noFood, it.name) end
-		if has.Protection then tinsert(prot, it.name) end
-		for j = 1, getn(it.p.used or {}) do
-			local u = it.p.used[j]
-			usedTotals[u[3]] = (usedTotals[u[3]] or 0) + u[2]
+	local Cons, CG = W.Cons, UI.CG
+	local nCols = getn(CG.COLS)
+	local slotCol = {}
+	for i = 1, nCols do
+		if type(CG.COLS[i][3]) == "table" then
+			for s in pairs(CG.COLS[i][3]) do slotCol[s] = i end
 		end
 	end
-	local function frac(have, total)
-		return ((have == total) and "|cff33ff33" or "|cffff9933") .. have .. " / " .. total .. "|r"
-	end
-	head(rows, "Raid overview")
-	tinsert(rows, row("Flasked", frac(getn(flask), n), { tip = getn(noFlask) > 0 and { "No flask: " .. table.concat(noFlask, ", ") } or nil, tipTitle = "Flasks" }))
-	tinsert(rows, row("Food buff", frac(getn(food), n), { tip = getn(noFood) > 0 and { "No food buff: " .. table.concat(noFood, ", ") } or nil, tipTitle = "Food" }))
-	tinsert(rows, row("Protection potion active", getn(prot) .. " player(s)", { tip = getn(prot) > 0 and { table.concat(prot, ", ") } or nil, tipTitle = "Protection potions" }))
-	-- the slacker check: what each role should bring (DopingControl-style)
-	local slack, unknown = W.Cons.Slackers(rec)
-	local stip = { "Each role's must-haves: flask (big raids), food, the role's elixir,", "and a weapon oil / stone (shamans: Rockbiter on tanks, Windfury on melee)." }
-	if getn(slack) > 0 then
-		tinsert(stip, " ")
-		local order, groups = W.Cons.ByNeed(slack)
-		for i = 1, getn(order) do tinsert(stip, "|cffff7777No " .. order[i] .. ":|r " .. table.concat(groups[order[i]], ", ")) end
-	end
-	if unknown > 0 then tinsert(stip, C_DIM .. unknown .. " out of range at the pull - not counted|r") end
-	tinsert(stip, "|cffffd100Click: post it (" .. W.Shout:ChannelLabel() .. ")|r")
-	tinsert(rows, row("Missing something for their role",
-		((getn(slack) == 0) and (C_GUILD .. "nobody|r") or ("|cffff7777" .. getn(slack) .. " player(s)|r"))
-			.. ((unknown > 0) and (C_DIM .. "  (" .. unknown .. " out of range)|r") or ""),
-		{ tipTitle = "Slacker check", tip = stip, click = function() W.Shout:Consumes(rec, "missing") end }))
-	tinsert(rows, row("Items used",
-		"|cff" .. USED_COL.Mana .. usedTotals.Mana .. " mana|r   |cff" .. USED_COL.Health .. usedTotals.Health .. " health|r   |cff"
-		.. USED_COL.Protection .. usedTotals.Protection .. " protection|r   |cff" .. USED_COL.Other .. usedTotals.Other .. " other|r"))
+	UI.consFold = UI.consFold or {}
 
-	-- per player
-	head(rows, "Players")
-	colHead(rows, CONS_SPEC, { "Player", "Role", "Flask", "Buffs", "Items used", "Missing for their role" })
-	for i = 1, n do
-		local it = list[i]
-		local p = it.p
+	-- every player: grid cells, ready count, items used, tooltip
+	local groups, missCount, nPlayers, anyBuffs = {}, {}, 0, false
+	local usedTotals = { Mana = 0, Health = 0, Protection = 0, Other = 0 }
+	for name, p in pairs(rec.players) do
+		nPlayers = nPlayers + 1
+		if p.cbuffs then anyBuffs = true end
+		local role = Cons.Role(p) or "other"
+		local needs = Cons.Needs(p, rec.zone)
+		local ctx = { roleText = string.lower(Cons.ROLE_TEXT[role] or "raider"), unread = (needs == nil),
+			inCol = {}, missAt = {}, expected = {} }
 		local cb = p.cbuffs or {}
+		for j = 1, getn(cb) do
+			local c = slotCol[W.Data.consumeSlot[cb[j][1]] or ""]
+			if c then
+				ctx.inCol[c] = ctx.inCol[c] or {}
+				tinsert(ctx.inCol[c], cb[j])
+			end
+		end
+		-- an unmet need shows in the column of its first slot
+		local met, total = 0, 0
+		for j = 1, getn(needs or {}) do
+			local nd = needs[j]
+			local c = nCols
+			if type(nd[2]) == "table" then
+				c = slotCol[nd[2][1]]
+				for k = 1, getn(nd[2]) do if slotCol[nd[2][k]] then ctx.expected[slotCol[nd[2][k]]] = true end end
+			else
+				ctx.expected[nCols] = true
+			end
+			total = total + 1
+			if nd[3] then met = met + 1 elseif c then ctx.missAt[c] = nd[1] end
+		end
+		local grid = {}
+		for c = 1, nCols do
+			local cell = consCell(rec, p, name, c, ctx)
+			if cell[2] == "miss" then missCount[c] = (missCount[c] or 0) + 1 end
+			tinsert(grid, cell)
+		end
+
+		-- items used, and the row tooltip
 		local used = p.used
 		if not used then
 			used = {}
 			for j = 1, getn(p.consList or {}) do used[j] = { p.consList[j][1], p.consList[j][2], "Other" } end
 		end
-
-		local hasFlask = false
-		local bparts, tip = {}, {}
-		for j = 1, getn(cb) do
-			local b = cb[j]
-			if b[2] == "Flask" then hasFlask = true end
-			tinsert(bparts, "|cff" .. (BUFF_COL[b[2]] or "ffffff") .. b[1] .. "|r")
-			tinsert(tip, { "|cff" .. (BUFF_COL[b[2]] or "ffffff") .. b[1] .. "|r  |cff888888" .. b[2] .. "|r",
-				(b[3] and b[3] > 0) and ("gained at " .. FmtTime(b[3])) or "before the pull" })
-		end
-		local uparts, nUsed = {}, 0
-		if getn(used) > 0 then tinsert(tip, " ") end
+		local nUsed, tip = 0, {}
 		for j = 1, getn(used) do
 			local u = used[j]
 			nUsed = nUsed + u[2]
-			local txt = u[1] .. ((u[2] > 1) and (" x" .. u[2]) or "")
-			tinsert(uparts, "|cff" .. (USED_COL[u[3]] or "ffffff") .. txt .. "|r")
-			tinsert(tip, { "used |cff" .. (USED_COL[u[3]] or "ffffff") .. u[1] .. "|r", u[2] .. "x  |cff888888" .. u[3] .. "|r" })
+			usedTotals[u[3]] = (usedTotals[u[3]] or 0) + u[2]
+			tinsert(tip, { "used |cff" .. (USED_COL[u[3]] or "ffffff") .. u[1] .. "|r", u[2] .. "x" })
 		end
-		-- what their role should have brought (unknown when they were out of range)
-		local miss = W.Cons.Missing(p, rec.zone)
-		local missText
-		if not miss then
-			missText = C_DIM .. "? out of range at the pull|r"
+		if ctx.unread then
 			tinsert(tip, 1, C_DIM .. "Out of range at the pull - can't say what they had, so they're not counted as missing anything.|r")
-		elseif getn(miss) == 0 then
-			missText = C_GUILD .. "nothing|r"
+		elseif met < total then
+			tinsert(tip, 1, "|cffff7777Missing for a " .. ctx.roleText .. ": " .. table.concat(Cons.Missing(p, rec.zone), ", ") .. "|r")
 		else
-			missText = "|cffff7777" .. table.concat(miss, ", ") .. "|r"
-			tinsert(tip, 1, "|cffff7777Missing for a " .. string.lower(W.Cons.ROLE_TEXT[W.Cons.Role(p) or ""] or "raider") .. ": " .. table.concat(miss, ", ") .. "|r")
+			tinsert(tip, 1, "|cff33ff33Has everything a " .. ctx.roleText .. " needs.|r")
 		end
-		if p.wpn and type(p.wpn) == "string" then tinsert(tip, "Weapon: |cffcc99ff" .. p.wpn .. "|r") end
-		if getn(tip) == 0 then tip = { "No consumables seen." } end
 		tip = withLegend(tip, "consumes")
-		local click = playerClick("consumes")
 
-		local extra = { tip = tip, tipTitle = it.name .. " - consumables", name = it.name, click = click }
-		tinsert(rows, cells(CONS_SPEC,
-			{ W.CName(it.name, p.class),
-			  C_DIM .. (W.Cons.ROLE_TEXT[W.Cons.Role(p) or ""] or ROLE_TAG[p.role] or "") .. "|r",
-			  (p.read == false) and (C_DIM .. "?|r") or (hasFlask and "|cffcc99ffFlask|r" or "|cffff5555No flask|r"),
-			  C_TIME .. getn(cb) .. "|r" .. C_DIM .. " buffs|r",
-			  ((nUsed > 0) and (C_YOU .. nUsed .. "|r") or (C_DIM .. "0|r")) .. C_DIM .. " used|r",
-			  missText },
-			{ tip = tip, tipTitle = extra.tipTitle, name = it.name, click = click }))
-		tinsert(rows, cells(CONS_DETAIL,
-			{ C_DIM .. "Buffs|r", getn(bparts) > 0 and table.concat(bparts, ", ") or "|cffff5555none|r" }, extra))
-		tinsert(rows, cells(CONS_DETAIL,
-			{ C_DIM .. "Used|r", getn(uparts) > 0 and table.concat(uparts, ", ") or (C_DIM .. "nothing|r") },
-			{ tip = tip, tipTitle = extra.tipTitle, name = it.name, click = click }))
+		local ready
+		if ctx.unread then ready = C_DIM .. "--|r"
+		elseif total == 0 then ready = C_DIM .. "-|r"
+		else ready = ((met == total) and "|cff33ff33" or "|cffff5555") .. met .. "/" .. total .. "|r" end
+		local g = CONS_GROUPS[getn(CONS_GROUPS)]
+		for j = 1, getn(CONS_GROUPS) do if CONS_GROUPS[j][1] == role then g = CONS_GROUPS[j] end end
+		local grp = groups[g[1]]
+		if not grp then
+			grp = { n = 0, ready = 0, unread = 0, list = {} }
+			groups[g[1]] = grp
+		end
+		grp.n = grp.n + 1
+		if ctx.unread then grp.unread = grp.unread + 1 elseif met == total then grp.ready = grp.ready + 1 end
+		tinsert(grp.list, {
+			name = name, gaps = ctx.unread and -1 or (total - met),
+			d = {
+				cols = {
+					{ CG.NAME, 110, W.CName(name, p.class), "LEFT" },
+					{ CG.ROLE, 52, "|cff" .. g[3] .. string.upper(Cons.ROLE_TEXT[role] or "?") .. "|r", "CENTER" },
+					{ CG.READY, 44, ready, "CENTER" },
+					{ CG.USED, 54, (nUsed > 0) and (C_YOU .. nUsed .. "|r") or (C_DIM .. "0|r"), "CENTER" },
+				},
+				grid = grid, tip = tip, tipTitle = name .. " - consumables", name = name, click = playerClick("consumes"),
+			},
+		})
 	end
+	if nPlayers == 0 then
+		tinsert(rows, row("|cff888888No players recorded.|r"))
+		return rows
+	end
+
+	-- the slacker check (click to post) and items used
+	local slack, unknown = Cons.Slackers(rec)
+	local stip = { "Each role's must-haves: flask (big raids), food, the role's elixir and a weapon oil / stone",
+		"(shamans: Rockbiter on tanks, Windfury on melee) - the red X cells below." }
+	if getn(slack) > 0 then
+		tinsert(stip, " ")
+		local order, gr = Cons.ByNeed(slack)
+		for i = 1, getn(order) do tinsert(stip, "|cffff7777No " .. order[i] .. ":|r " .. table.concat(gr[order[i]], ", ")) end
+	end
+	if unknown > 0 then tinsert(stip, C_DIM .. unknown .. " out of range at the pull - not counted|r") end
+	tinsert(stip, "|cffffd100Click: post it (" .. W.Shout:ChannelLabel() .. ")|r")
+	tinsert(rows, row("|cffffd100Missing something:|r  "
+		.. ((getn(slack) == 0) and (C_GUILD .. "nobody|r") or ("|cffff7777" .. getn(slack) .. " of " .. nPlayers .. "|r"))
+		.. ((unknown > 0) and (C_DIM .. "  (" .. unknown .. " out of range)|r") or "") .. C_DIM .. "  - click to post|r",
+		"Used:  |cff" .. USED_COL.Mana .. usedTotals.Mana .. " mana|r   |cff" .. USED_COL.Health .. usedTotals.Health .. " health|r   |cff"
+		.. USED_COL.Protection .. usedTotals.Protection .. " prot|r   |cff" .. USED_COL.Other .. usedTotals.Other .. " other|r",
+		{ tipTitle = "Slacker check", tip = stip, click = function() W.Shout:Consumes(rec, "missing") end }))
+	if not anyBuffs then
+		tinsert(rows, row("|cff888888This fight was recorded by an older version - only items used are available.|r"))
+	end
+
+	-- role groups: gaps first, out of range last; click a group to fold it
+	for gi = 1, getn(CONS_GROUPS) do
+		local g = CONS_GROUPS[gi]
+		local grp = groups[g[1]]
+		if grp then
+			local readable = grp.n - grp.unread
+			local folded = UI.consFold[g[1]]
+			tinsert(rows, { head = true,
+				cols = { { CG.NAME, 600, (folded and "|cffaaaaaa+|r  " or "|cffaaaaaa-|r  ") .. "|cff" .. g[3] .. g[2] .. "|r   "
+					.. ((grp.ready == readable) and "|cff33ff33" or "|cffff7777") .. grp.ready .. "/" .. readable .. " ready|r"
+					.. ((grp.unread > 0) and (C_DIM .. "   - " .. grp.unread .. " out of range|r") or ""), "LEFT" } },
+				tipTitle = g[2], tip = { "Click to " .. (folded and "show" or "hide") .. " this group." },
+				click = function() UI.consFold[g[1]] = not UI.consFold[g[1]]; UI:Refresh() end })
+			if not folded then
+				table.sort(grp.list, function(a, b)
+					if a.gaps ~= b.gaps then return a.gaps > b.gaps end
+					return a.name < b.name
+				end)
+				for i = 1, getn(grp.list) do tinsert(rows, grp.list[i].d) end
+			end
+		end
+	end
+
+	-- how many were missing each slot
+	local foot = { { CG.NAME, 160, C_DIM .. "Missing per slot|r", "LEFT" } }
+	for c = 1, nCols do
+		local n = missCount[c] or 0
+		tinsert(foot, { CG.X + (c - 1) * CG.STEP, CG.STEP, (n > 0) and ("|cffff5555" .. n .. "|r") or (C_DIM .. "0|r"), "CENTER" })
+	end
+	tinsert(rows, { head = true, cols = foot, tipTitle = "Missing per slot", tip = { "How many players were missing their role's must-have in each column." } })
 	return rows
 end
 
@@ -3186,6 +3397,7 @@ end
 local lastTab
 function UI:Refresh()
 	if not f:IsVisible() then return end
+	UI.ShowGrid(false)   -- only the Consumes tab uses the grid
 	local db = WhoDidItDB
 
 	local e = W.env
@@ -3266,7 +3478,12 @@ function UI:Refresh()
 
 	local key = UI.tab .. (UI.tab == "meters" and UI.meter or "") .. tostring(UI.selIdx) .. tostring(UI.detail) .. tostring(UI.cause)
 		.. ((UI.tab == "timeline" and UI.tl) and (tostring(UI.tl.who) .. tostring(UI.tl.t)) or "")
-	mainList:SetData(rows, key == lastTab)
+	if UI.tab == "consumes" then
+		UI.ShowGrid(true)
+		consList:SetData(rows, key == lastTab)
+	else
+		mainList:SetData(rows, key == lastTab)
+	end
 	lastTab = key
 	-- a focused timeline: put the moment a few rows from the top
 	if UI.tlScrollTo then

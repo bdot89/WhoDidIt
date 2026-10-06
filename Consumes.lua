@@ -22,7 +22,7 @@ local getn, tinsert = table.getn, table.insert
 ------------------------------------------------------------------ reading a unit
 
 -- a buff's consumable name (or nil): by name, by spell ID, trimmed name
-function C.BuffName(id)
+local function nameOf(id)
 	local D = W.Data
 	local name = W.SpellName(id)
 	local only = D.consumeIdOnly[name]
@@ -32,6 +32,75 @@ function C.BuffName(id)
 	if byId then return byId end
 	local trimmed = string.gsub(name or "", "^%s*(.-)%s*$", "%1")
 	if D.consumeBuffs[trimmed] then return trimmed end
+end
+
+-- a spell's icon path (SuperWoW's SpellInfo, or ClassicAPI), or nil
+local function spellIcon(id)
+	local tex
+	if SpellInfo then
+		local ok, _, _, t = pcall(SpellInfo, id)
+		if ok then tex = t end
+	end
+	if type(tex) ~= "string" and C_Spell and C_Spell.GetSpellTexture then
+		local ok, t = pcall(C_Spell.GetSpellTexture, id)
+		if ok then tex = t end
+	end
+	if type(tex) ~= "string" or tex == "" then return nil end
+	if not string.find(tex, "\\", 1, true) then tex = "Interface\Icons\\" .. tex end
+	return tex
+end
+
+function C.BuffName(id)
+	local b = nameOf(id)
+	-- remember its icon by name (account-wide) for the Consumes grid
+	if b and WhoDidItDB then
+		local icons = WhoDidItDB.buffIcons
+		if not icons then icons = {}; WhoDidItDB.buffIcons = icons end
+		if icons[b] == nil then icons[b] = spellIcon(id) or false end
+	end
+	return b
+end
+
+-- icons for consumables we haven't seen a spell ID for yet (old fights, the demo)
+local I = "Interface\Icons\\"
+C.NAME_ICON = {
+	["Flask of the Titans"] = I .. "INV_Potion_62", ["Flask of Supreme Power"] = I .. "INV_Potion_41",
+	["Supreme Power"] = I .. "INV_Potion_41", ["Flask of Distilled Wisdom"] = I .. "INV_Potion_97",
+	["Distilled Wisdom"] = I .. "INV_Potion_97", ["Elixir of the Mongoose"] = I .. "INV_Potion_32",
+	["Greater Arcane Elixir"] = I .. "INV_Potion_25", ["Elixir of Giants"] = I .. "INV_Potion_61",
+	["Elixir of the Giants"] = I .. "INV_Potion_61", ["Winterfall Firewater"] = I .. "INV_Potion_92",
+	["Juju Power"] = I .. "INV_Misc_MonsterScales_11", ["Juju Might"] = I .. "INV_Misc_MonsterScales_07",
+	["Spirit of Zanza"] = I .. "INV_Potion_30", ["Mageblood Potion"] = I .. "INV_Potion_45",
+	["Shadow Power"] = I .. "INV_Potion_46", ["Elixir of Shadow Power"] = I .. "INV_Potion_46",
+	["Greater Firepower"] = I .. "INV_Potion_60", ["Elixir of Greater Firepower"] = I .. "INV_Potion_60",
+	["Elixir of Superior Defense"] = I .. "INV_Potion_66",
+}
+C.SLOT_ICON = {
+	FLASK = I .. "INV_Potion_62", FOOD = I .. "Spell_Misc_Food", ALC = I .. "Spell_Misc_Food",
+	AP = I .. "INV_Potion_92", STR = I .. "INV_Potion_61", AGI = I .. "INV_Potion_32", BL = I .. "INV_Potion_09",
+	ZANZA = I .. "INV_Potion_30", GAE = I .. "INV_Potion_25", SCHOOL = I .. "INV_Potion_60", DREAMT = I .. "INV_Potion_25",
+	SHARD = I .. "INV_Potion_25", MP5 = I .. "INV_Potion_45", ARM = I .. "INV_Potion_66", HPELX = I .. "INV_Potion_44",
+	PROT = I .. "INV_Potion_24",
+}
+
+-- the icon to show for a consumable buff
+function C.Icon(name)
+	local seen = WhoDidItDB and WhoDidItDB.buffIcons and WhoDidItDB.buffIcons[name]
+	if seen then return seen end
+	if C.NAME_ICON[name] then return C.NAME_ICON[name] end
+	local slot = W.Data.consumeSlot[name]
+	return (slot and C.SLOT_ICON[slot]) or (I .. "INV_Misc_QuestionMark")
+end
+
+-- the icon for what's on a main hand (a name, or true = something unnamed)
+function C.WeaponIcon(wpn)
+	if type(wpn) == "string" then
+		if string.find(wpn, "Rockbiter", 1, true) then return I .. "Spell_Nature_RockBiter" end
+		if string.find(wpn, "Windfury", 1, true) then return I .. "Spell_Nature_Cyclone" end
+		if string.find(wpn, "Flametongue", 1, true) then return I .. "Spell_Fire_FlameTounge" end
+		if string.find(wpn, "Frostbrand", 1, true) then return I .. "Spell_Frost_FrostBrand" end
+	end
+	return "Interface\Buttons\UI-CheckBox-Check"
 end
 
 -- main-hand oil / stone: a name or true = has one, false = has none,
@@ -130,9 +199,10 @@ end
 
 C.ROLE_TEXT = { tank = "Tank", healer = "Healer", melee = "Melee", ranged = "Ranged", caster = "Caster" }
 
--- what a player is missing for their role: list of labels, or nil when
--- they couldn't be read (unknown). cbuffs = { { name, cat, t }, ... }
-function C.Missing(p, zone)
+-- every need of a player's role and whether it's met:
+-- { { label, slots, met, extra }, ... } (slots: a list, "WPN" or "IMBUE");
+-- nil when they couldn't be read. Flasks outside the big raids are left out.
+function C.Needs(p, zone)
 	if not p or p.read == false then return nil end
 	local role = C.Role(p)
 	local byClass = W.Data.consumeNeedsClass[p.class or ""]
@@ -148,18 +218,29 @@ function C.Missing(p, zone)
 	local out = {}
 	for i = 1, getn(needs) do
 		local label, slots = needs[i][1], needs[i][2]
+		local met
 		if slots == "WPN" then
-			if p.wpn == false then tinsert(out, label) end
+			met = (p.wpn ~= false)
 		elseif slots == "IMBUE" then
 			-- none, or an oil / stone instead of the imbue (true = has one, name unknown)
-			if p.wpn == false or (type(p.wpn) == "string" and not C.IsImbue(p.wpn, needs[i][3])) then
-				tinsert(out, label)
-			end
+			met = not (p.wpn == false or (type(p.wpn) == "string" and not C.IsImbue(p.wpn, needs[i][3])))
 		elseif not (label == "flask" and zone and not W.Data.flaskZones[zone]) then
-			local ok = false
-			for j = 1, getn(slots) do if have[slots[j]] then ok = true end end
-			if not ok then tinsert(out, label) end
+			met = false
+			for j = 1, getn(slots) do if have[slots[j]] then met = true end end
 		end
+		if met ~= nil then tinsert(out, { label, slots, met, needs[i][3] }) end
+	end
+	return out
+end
+
+-- what a player is missing for their role: list of labels, or nil when
+-- they couldn't be read (unknown)
+function C.Missing(p, zone)
+	local needs = C.Needs(p, zone)
+	if not needs then return nil end
+	local out = {}
+	for i = 1, getn(needs) do
+		if not needs[i][3] then tinsert(out, needs[i][1]) end
 	end
 	return out
 end
