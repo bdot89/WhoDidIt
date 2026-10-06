@@ -6,7 +6,8 @@
 	were the fight's top hero (MVP) or most to blame, and the biggest single
 	plays and blunders. Kept in WhoDidItDB.career, so it lasts after the
 	fights themselves are pruned (only the last 25 are kept). Demo fights
-	don't count. Each fight is only ever counted once.
+	go into a separate test tally (WhoDidItDB.careerTest): shown marked
+	"(test)" and cleared with Clear test data. Each fight counts once.
 ----------------------------------------------------------------------]]
 
 local W = WhoDidIt
@@ -17,15 +18,20 @@ local getn, tinsert, tremove = table.getn, table.insert, table.remove
 local floor = math.floor
 local MAX_TOP = 40   -- biggest plays / blunders kept
 
-local function db()
-	local d = WhoDidItDB.career
+-- the real tally, or (test = true) the one demo fights go into
+local function db(test)
+	local key = test and "careerTest" or "career"
+	local d = WhoDidItDB[key]
 	if not d then
-		d = { since = date("%Y-%m-%d"), fights = 0, counted = {}, players = {}, moments = {}, blunders = {} }
-		WhoDidItDB.career = d
+		d = { since = date("%Y-%m-%d"), fights = 0, counted = {}, players = {}, moments = {}, blunders = {}, isTest = test and true or nil }
+		WhoDidItDB[key] = d
 	end
 	return d
 end
 C.DB = db
+
+local function hasTest() return WhoDidItDB.careerTest ~= nil and WhoDidItDB.careerTest.fights > 0 end
+C.HasTest = hasTest
 
 function C.Key(rec)
 	return (rec.date or "?") .. "|" .. (rec.enc or "?") .. "|" .. floor(rec.dur or 0)
@@ -44,7 +50,7 @@ local function player(d, name, class)
 	local p = d.players[name]
 	if not p then
 		p = { class = class, fights = 0, kills = 0, deaths = 0, hero = 0, saves = 0, mvp = 0,
-			blame = 0, mistakes = 0, worst = 0, hk = {}, mk = {}, last = "" }
+			blame = 0, mistakes = 0, worst = 0, hk = {}, mk = {}, last = "", test = d.isTest }
 		d.players[name] = p
 	end
 	if class then p.class = class end
@@ -70,8 +76,8 @@ end
 
 -- count a saved fight (once)
 function C:Add(rec)
-	if not rec or rec.demo or rec.result == "LIVE" or not rec.players then return end
-	local d = db()
+	if not rec or rec.result == "LIVE" or not rec.players then return end
+	local d = db(rec.demo)
 	local key = C.Key(rec)
 	if d.counted[key] then return end
 	d.counted[key] = true
@@ -93,7 +99,7 @@ function C:Add(rec)
 			p.blame = round1(p.blame + f.pts)
 			p.mistakes = p.mistakes + 1
 			bump(p.mk, f.cat or "Other", f.pts)
-			keepTop(d.blunders, { pts = round1(f.pts), who = f.who, class = rp.class, text = f.text, enc = rec.enc, when = when, kind = f.cat })
+			keepTop(d.blunders, { pts = round1(f.pts), who = f.who, class = rp.class, text = f.text, enc = rec.enc, when = when, kind = f.cat, test = d.isTest })
 		end
 	end
 	-- game-saving plays (hero points)
@@ -106,7 +112,7 @@ function C:Add(rec)
 			p.hero = round1(p.hero + s.pts)
 			p.saves = p.saves + 1
 			bump(p.hk, kind, s.pts)
-			keepTop(d.moments, { pts = round1(s.pts), who = s.who, class = rp.class, text = s.text, enc = rec.enc, when = when, kind = kind })
+			keepTop(d.moments, { pts = round1(s.pts), who = s.who, class = rp.class, text = s.text, enc = rec.enc, when = when, kind = kind, test = d.isTest })
 		end
 	end
 	-- the fight's top hero and most to blame
@@ -127,6 +133,29 @@ function C:Reset()
 	W.Print("Hall of Fame tally cleared. Fights from now on are counted.")
 end
 
+-- remove everything the demo fights added
+function C:ClearTest()
+	WhoDidItDB.careerTest = nil
+	W.Print("Hall of Fame test data (from demo fights) cleared.")
+end
+
+-- the real tally and the test one together, for showing and posting:
+-- { since, fights, testFights, players, moments, blunders }
+function C.View()
+	local real, test = db(), WhoDidItDB.careerTest
+	local v = { since = real.since, fights = real.fights, testFights = test and test.fights or 0, players = {}, moments = {}, blunders = {} }
+	for n, p in pairs(real.players) do v.players[n] = p end
+	for _, key in ipairs({ "moments", "blunders" }) do
+		for i = 1, getn(real[key]) do tinsert(v[key], real[key][i]) end
+		if test then for i = 1, getn(test[key]) do tinsert(v[key], test[key][i]) end end
+		table.sort(v[key], function(a, b) return a.pts > b.pts end)
+	end
+	if test then
+		for n, p in pairs(test.players) do if not v.players[n] then v.players[n] = p end end
+	end
+	return v
+end
+
 -- a player's biggest kind of play / mistake: "Heal x12"
 function C.TopKind(t)
 	local bk, bv
@@ -139,7 +168,7 @@ end
 -- the board: { { name, p, v }, ... } sorted. kind = "hero" or "blame";
 -- perFight = points per fight (players with fewer than minFights left out)
 function C:Board(kind, perFight, minFights)
-	local d = db()
+	local d = C.View()
 	local out = {}
 	for name, p in pairs(d.players) do
 		local pts = (kind == "hero") and p.hero or p.blame
@@ -159,16 +188,16 @@ end
 
 local function classes()
 	local m = {}
-	for name, p in pairs(db().players) do m[name] = p.class end
+	for name, p in pairs(C.View().players) do m[name] = p.class end
 	return m
 end
 C.Classes = classes
 
 function C:BoardLines(kind, perFight, n)
-	local d = db()
+	local d = C.View()
 	local list = C:Board(kind, perFight)
-	local title = (kind == "hero") and "ALL TIME HEROES" or "ALL TIME HALL OF SHAME"
-	local out = { "[WhoDidIt] " .. title .. ": since " .. d.since .. ", " .. d.fights .. " fights"
+	local title = (kind == "hero") and "HALL OF FAME HEROES" or "HALL OF SHAME"
+	local out = { "[WhoDidIt] " .. title .. ": since " .. d.since .. ", " .. d.fights .. " fights" .. ((d.testFights > 0) and (" + " .. d.testFights .. " test") or "")
 		.. (perFight and " (points per fight, 3+ fights)" or "") }
 	if getn(list) == 0 then
 		tinsert(out, "Nobody yet - fights are counted as they're saved.")
@@ -178,11 +207,12 @@ function C:BoardLines(kind, perFight, n)
 		local it = list[i]
 		local p = it.p
 		local top = C.TopKind(kind == "hero" and p.hk or p.mk)
+		local nm = it.name .. (p.test and " (test)" or "")
 		if kind == "hero" then
-			tinsert(out, i .. ". " .. it.name .. " " .. it.v .. " pts" .. (perFight and " a fight" or "") .. " - " .. p.saves .. " saves in "
+			tinsert(out, i .. ". " .. nm .. " " .. it.v .. " pts" .. (perFight and " a fight" or "") .. " - " .. p.saves .. " saves in "
 				.. p.fights .. " fights" .. (top and (", mostly " .. top) or "") .. ((p.mvp > 0) and (", MVP " .. p.mvp .. "x") or ""))
 		else
-			tinsert(out, i .. ". " .. it.name .. " " .. it.v .. " pts" .. (perFight and " a fight" or "") .. " - " .. p.mistakes .. " mistakes in "
+			tinsert(out, i .. ". " .. nm .. " " .. it.v .. " pts" .. (perFight and " a fight" or "") .. " - " .. p.mistakes .. " mistakes in "
 				.. p.fights .. " fights" .. (top and (", mostly " .. top) or "") .. ((p.worst > 0) and (", most to blame " .. p.worst .. "x") or ""))
 		end
 	end
@@ -190,27 +220,27 @@ function C:BoardLines(kind, perFight, n)
 end
 
 function C:PlayerLines(name)
-	local p = db().players[name]
+	local p = C.View().players[name]
 	if not p then return { "[WhoDidIt] " .. name .. " has no all-time record yet." } end
 	local hk, mk = C.TopKind(p.hk), C.TopKind(p.mk)
-	local out = { "[WhoDidIt] ALL TIME: " .. name .. " - " .. p.fights .. " fights, " .. p.kills .. " kills, " .. p.deaths .. " deaths" }
+	local out = { "[WhoDidIt] HALL OF FAME: " .. name .. (p.test and " (test)" or "") .. " - " .. p.fights .. " fights, " .. p.kills .. " kills, " .. p.deaths .. " deaths" }
 	tinsert(out, "Hero: " .. p.hero .. " pts from " .. p.saves .. " saves" .. (hk and (", mostly " .. hk) or "") .. ((p.mvp > 0) and (", MVP " .. p.mvp .. "x") or ""))
 	tinsert(out, "Shame: " .. p.blame .. " pts from " .. p.mistakes .. " mistakes" .. (mk and (", mostly " .. mk) or "") .. ((p.worst > 0) and (", most to blame " .. p.worst .. "x") or ""))
 	return out
 end
 
 function C:MomentLine(m, rank, blunder)
-	return "[WhoDidIt] " .. (blunder and "ALL TIME BLUNDER" or "ALL TIME PLAY") .. (rank and (" #" .. rank) or "") .. ": "
-		.. (m.text or "?") .. " (" .. (blunder and "-" or "+") .. m.pts .. " pts, " .. (m.enc or "?") .. ", " .. (m.when or "?") .. ")"
+	return "[WhoDidIt] " .. (blunder and "WORST BLUNDER" or "BEST PLAY") .. (rank and (" #" .. rank) or "") .. ": "
+		.. (m.text or "?") .. " (" .. (blunder and "-" or "+") .. m.pts .. " pts, " .. (m.enc or "?") .. ", " .. (m.when or "?") .. (m.test and ", test" or "") .. ")"
 end
 
 function C:MomentLines(blunder, n)
-	local d = db()
+	local d = C.View()
 	local list = blunder and d.blunders or d.moments
-	local out = { "[WhoDidIt] " .. (blunder and "ALL TIME WORST BLUNDERS" or "ALL TIME BEST PLAYS") .. ": since " .. d.since }
+	local out = { "[WhoDidIt] " .. (blunder and "HALL OF SHAME WORST BLUNDERS" or "HALL OF FAME BEST PLAYS") .. ": since " .. d.since }
 	for i = 1, math.min(n or 3, getn(list)) do
 		local m = list[i]
-		tinsert(out, i .. ". " .. (m.text or "?") .. " (" .. m.pts .. " pts, " .. (m.enc or "?") .. ", " .. (m.when or "?") .. ")")
+		tinsert(out, i .. ". " .. (m.text or "?") .. " (" .. m.pts .. " pts, " .. (m.enc or "?") .. ", " .. (m.when or "?") .. (m.test and ", test" or "") .. ")")
 	end
 	if getn(list) == 0 then tinsert(out, "Nothing yet.") end
 	return out

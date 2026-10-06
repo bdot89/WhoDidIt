@@ -11,7 +11,7 @@ local getn = table.getn
 local FmtTime = W.FmtTime
 local FmtNum = W.FmtNum
 
-local WIDTH, HEIGHT = 940, 540
+local WIDTH, HEIGHT = 940, 562
 local LEFTW = 230
 local ROWH, NROWS = 16, 21
 local FROWH, FROWS = 30, 10
@@ -352,7 +352,7 @@ end
 --  +-------------------------------------------------------------+
 
 local PAD, GAP = 10, 8
-local TOP = -36
+local TOP = -58   -- under the title bar's two rows
 local RX = PAD + LEFTW + GAP
 local RW = WIDTH - RX - PAD
 local HEADH = 78
@@ -392,6 +392,12 @@ titleBar:SetTexture(1, 1, 1, 0.06)
 titleBar:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)
 titleBar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -5, -5)
 titleBar:SetHeight(24)
+-- the second row: auto-loot and the add-on lights, on the right
+local statusBar = f:CreateTexture(nil, "ARTWORK")
+statusBar:SetTexture(1, 1, 1, 0.03)
+statusBar:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -2)
+statusBar:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, -2)
+statusBar:SetHeight(20)
 
 local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", f, "TOPLEFT", PAD + 4, -10)
@@ -402,7 +408,7 @@ version:SetPoint("BOTTOMLEFT", title, "BOTTOMRIGHT", 4, 1)
 version:SetText("v" .. W.version)
 
 local envText = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-envText:SetPoint("TOPRIGHT", f, "TOPRIGHT", -40, -12)
+envText:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -36)
 envText:SetJustifyH("RIGHT")
 
 local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
@@ -974,7 +980,7 @@ local MODES = {
 	{ id = "logs",     text = "Logging"       },
 	{ id = "marks",    text = "Auto Marker"   },
 	{ id = "loot",     text = "SR MasterLoot" },
-	{ id = "fame",     text = "All-Time" },
+	{ id = "fame",     text = "Hall of Fame" },
 }
 UI.modeButtons = {}
 for i = 1, getn(MODES) do
@@ -986,15 +992,29 @@ for i = 1, getn(MODES) do
 	local label = getglobal("WhoDidItMode" .. i .. "Text")
 	local tw = label and label:GetStringWidth() or 0
 	if not tw or tw < 10 then tw = string.len(m.text) * 7 end
-	b:SetWidth(math.max(60, floor(tw + 24)))
-	if i == 1 then
-		b:SetPoint("LEFT", version, "RIGHT", 16, 0)
-	else
-		b:SetPoint("LEFT", UI.modeButtons[i - 1], "RIGHT", 4, 0)
-	end
+	b.tw = tw
 	b.id = m.id
 	b:SetScript("OnClick", function() UI:SetMode(this.id) end)
 	UI.modeButtons[i] = b
+end
+-- all the same width; Hall of Fame on its own at the far right, by the close button
+do
+	local n, w = getn(UI.modeButtons), 60
+	for i = 1, n do w = math.max(w, floor(UI.modeButtons[i].tw + 24)) end
+	local startX = PAD + 4 + title:GetStringWidth() + 4 + version:GetStringWidth() + 16
+	local room = WIDTH - 36 - startX - 12 - (n - 1) * 4
+	w = math.min(w, floor(room / n))
+	for i = 1, n do
+		local b = UI.modeButtons[i]
+		b:SetWidth(w)
+		if b.id == "fame" then
+			b:SetPoint("RIGHT", close, "LEFT", -2, 0)
+		elseif i == 1 then
+			b:SetPoint("LEFT", version, "RIGHT", 16, 0)
+		else
+			b:SetPoint("LEFT", UI.modeButtons[i - 1], "RIGHT", 4, 0)
+		end
+	end
 end
 tooltip(UI.modeButtons[1], "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
 tooltip(UI.modeButtons[2], "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
@@ -1003,7 +1023,7 @@ tooltip(UI.modeButtons[4], "Auto Marker", { "Auto marking: every saved pack of m
 	"and quick save - mark mobs in game, click Save marks as pack." })
 tooltip(UI.modeButtons[5], "SR MasterLoot", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
 	"see who won what, and a step-by-step guide." })
-tooltip(UI.modeButtons[6], "All-Time (Hall of Fame)", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,",
+tooltip(UI.modeButtons[6], "Hall of Fame", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,",
 	"with every clutch play and every mistake, their points, and the best plays and worst blunders ever." })
 
 -- a row of buttons in the tab strip, used by Rankings and Logs
@@ -1145,7 +1165,7 @@ UI.lootButtons = stripButtons({
 	  function() return { "Tell the raid how to roll (/htr):", W.Loot:HowToRoll(), "|cff888888Change the numbers on the Settings page.|r" } end },
 })
 
--- All-Time (Hall of Fame): the running tally of every fight
+-- Hall of Fame: the running tally of every fight
 UI.fame = { view = "hero" }   -- view: hero / blame / plays / blunders; who = a player's page
 UI.fameButtons = stripButtons({
 	{ "|cff33ff33Heroes|r", function() UI.fame.view = "hero"; UI.fame.who = nil; UI:Refresh() end,
@@ -1251,10 +1271,14 @@ end)
 local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn }
 for i = 1, getn(rankOnly) do rankOnly[i]:Hide() end
 
--- All-Time: post what's on screen, points per fight, start over
+-- Hall of Fame: post what's on screen, points per fight, start over
 local famePostBtn  = gridButton("Post this board", 4, 1)
 local famePerBtn   = gridButton("Per fight: off", 4, 2)
 local fameResetBtn = gridButton("|cffff5555Reset tally|r", 1, 2)
+local fameTestBtn  = gridButton("Clear test data", 1, 1)
+fameTestBtn:SetScript("OnClick", function()
+	if W.Career and W.Career.HasTest() then W.Career:ClearTest(); UI:Refresh() end
+end)
 famePostBtn:SetScript("OnClick", function()
 	local C, v = W.Career, UI.fame.view
 	local ch = IsControlKeyDown() and "SELF" or nil
@@ -1266,7 +1290,7 @@ famePostBtn:SetScript("OnClick", function()
 end)
 famePerBtn:SetScript("OnClick", function() UI.fame.per = not UI.fame.per; UI:Refresh() end)
 fameResetBtn:SetScript("OnClick", function()
-	W:Prompt("Clear the whole Hall of Fame tally?\n|cff888888Every player's all-time points start again from zero. Type |cffffd100RESET|cff888888 to confirm.|r", "",
+	W:Prompt("Clear the whole Hall of Fame tally?\n|cff888888Every real player's points start again from zero. Type |cffffd100RESET|cff888888 to confirm.|r", "",
 		function(text) if string.upper(text or "") == "RESET" then W.Career:Reset(); UI:Refresh() end end)
 end)
 tooltip(famePostBtn, "Post this board", function()
@@ -1275,8 +1299,9 @@ tooltip(famePostBtn, "Post this board", function()
 end)
 tooltip(famePerBtn, "Per fight", { "Off: total points (rewards turning up).", "On: points per fight, so a raider with fewer fights can top it",
 	"(only players with 3 or more fights are listed)." })
-tooltip(fameResetBtn, "Reset tally", { "Clear every player's all-time points and start again.", "Asks first." })
-local fameOnly = { famePostBtn, famePerBtn, fameResetBtn }
+tooltip(fameResetBtn, "Reset tally", { "Clear every real player's Hall of Fame points and start again.", "Asks first. Test data is cleared separately." })
+tooltip(fameTestBtn, "Clear test data", { "Demo fights add to the Hall of Fame as test data, marked |cff33ccff(test)|r,", "so you can try it out. This removes all of it; real fights stay." })
+local fameOnly = { famePostBtn, famePerBtn, fameResetBtn, fameTestBtn }
 for i = 1, getn(fameOnly) do fameOnly[i]:Hide() end
 
 -- show the controls that belong to the current mode
@@ -3621,7 +3646,7 @@ function UI:RefreshMissing()
 	srSite:Hide()
 	for i = 1, getn(UI.lootButtons) do UI.lootButtons[i]:Hide() end
 	for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
-	local titles = { logs = "Logging", marks = "Auto Marker", loot = "SR MasterLoot", fame = "All-Time" }
+	local titles = { logs = "Logging", marks = "Auto Marker", loot = "SR MasterLoot", fame = "Hall of Fame" }
 	leftHead:SetText(titles[UI.mode] or "Rankings")
 	leftCount:SetText("")
 	fightList:SetData({})
@@ -3639,7 +3664,7 @@ function UI:RefreshMissing()
 	mainList:SetData(rows)
 end
 
------------------------------------------------------------------- All-Time (Hall of Fame)
+------------------------------------------------------------------ Hall of Fame
 
 -- # / player / points / plays or mistakes / fights / mostly / MVP or worst / last seen
 local FAME_SPEC = { { 22, "RIGHT" }, { 112, "LEFT" }, { 58, "RIGHT" }, { 50, "RIGHT" }, { 44, "RIGHT" }, { 140, "LEFT" }, { 52, "RIGHT" }, { 70, "RIGHT" } }
@@ -3673,7 +3698,7 @@ local function momentRows(rows, list, blunder, who)
 			shown = shown + 1
 			local col = blunder and "|cffff7777" or "|cff33ff33"
 			tinsert(rows, cells(MOMENT_SPEC,
-				{ C_DIM .. shown .. ".|r", col .. (blunder and "-" or "+") .. m.pts .. "|r", W.CName(m.who or "?", m.class),
+				{ C_DIM .. shown .. ".|r", col .. (blunder and "-" or "+") .. m.pts .. "|r", W.CName(m.who or "?", m.class) .. (m.test and " |cff33ccff(test)|r" or ""),
 				  momentText(m), "|cffffd100" .. (m.enc or "?") .. "|r " .. C_DIM .. (m.when or "") .. "|r" },
 				{ tipTitle = (blunder and "Blunder" or "Play") .. ": " .. (m.kind or ""), tip = { m.text or "", " ",
 					(m.enc or "?") .. ", " .. (m.when or "?"), "|cffffd100Click|r  post it   |cffffd100Ctrl-click|r  only you see it",
@@ -3690,13 +3715,13 @@ end
 
 function UI:FameBoardRows(kind)
 	local C = W.Career
-	local d = C.DB()
+	local d = C.View()
 	local rows = {}
 	local hero = (kind == "hero")
 	local list = C:Board(kind, UI.fame.per)
-	head(rows, (hero and "All-time heroes" or "All-time Hall of Shame") .. (UI.fame.per and "  (points per fight, 3+ fights)" or ""))
+	head(rows, (hero and "Hall of Fame - the biggest heroes" or "Hall of Shame - the biggest liabilities") .. (UI.fame.per and "  (points per fight, 3+ fights)" or ""))
 	if getn(list) == 0 then
-		tinsert(rows, row(C_DIM .. (d.fights == 0 and "Nothing counted yet. Every fight you save from now on adds to it (demo fights don't)."
+		tinsert(rows, row(C_DIM .. ((d.fights + d.testFights) == 0 and "Nothing counted yet. Every fight you save adds to it (demo fights too, marked test)."
 			or "Nobody has " .. (hero and "hero" or "blame") .. " points yet" .. (UI.fame.per and " with 3 or more fights" or "") .. ".") .. "|r"))
 		return rows
 	end
@@ -3721,12 +3746,12 @@ function UI:FameBoardRows(kind)
 		tinsert(tip, "|cffffd100Right-click|r  open their record")
 		local name = it.name
 		tinsert(rows, cells(FAME_SPEC,
-			{ C_DIM .. i .. ".|r", W.CName(name, p.class), pc .. it.v .. "|r",
+			{ C_DIM .. i .. ".|r", W.CName(name, p.class) .. (p.test and " |cff33ccff(test)|r" or ""), pc .. it.v .. "|r",
 			  C_TIME .. (hero and p.saves or p.mistakes) .. "|r", C_DIM .. p.fights .. "|r",
 			  top and ("|cffcccccc" .. top .. "|r") or (C_DIM .. "-|r"),
 			  ((hero and p.mvp or p.worst) > 0) and (C_YOU .. (hero and p.mvp or p.worst) .. "x|r") or (C_DIM .. "-|r"),
 			  C_DIM .. (p.last or "") .. "|r" },
-			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = name .. " - all time", name = name,
+			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = name .. (p.test and " (test - from a demo fight)" or "") .. " - Hall of Fame", name = name,
 			  click = function(dd, button)
 				if button == "RightButton" then UI.fame.who = name; UI:Refresh() return end
 				C:Post(C:PlayerLines(name), IsControlKeyDown() and "SELF" or nil)
@@ -3737,7 +3762,7 @@ end
 
 function UI:FamePlayerRows(name)
 	local C = W.Career
-	local d = C.DB()
+	local d = C.View()
 	local p = d.players[name]
 	local rows = {}
 	tinsert(rows, row("|cffffd100< Back to the board|r", nil, { click = function() UI.fame.who = nil; UI:Refresh() end }))
@@ -3746,7 +3771,7 @@ function UI:FamePlayerRows(name)
 		return rows
 	end
 	local function per(v) return floor(v / math.max(1, p.fights) * 10 + 0.5) / 10 end
-	head(rows, W.CName(name, p.class) .. "|cffffd100's record  -  " .. p.fights .. " fights, " .. p.kills .. " kills, " .. p.deaths .. " deaths|r")
+	head(rows, W.CName(name, p.class) .. (p.test and " |cff33ccff(test)|r" or "") .. "|cffffd100's record  -  " .. p.fights .. " fights, " .. p.kills .. " kills, " .. p.deaths .. " deaths|r")
 	tinsert(rows, row(C_GUILD .. "Hero|r   " .. p.hero .. " pts from " .. p.saves .. " plays" .. ((p.mvp > 0) and ("   - MVP of " .. p.mvp .. " fights") or ""),
 		C_DIM .. per(p.hero) .. " a fight|r", { tipTitle = "Hero", tip = { "Points for game-saving plays: clutch heals, shields, taunts,", "battle res, dispels, interrupts, surviving..." } }))
 	tinsert(rows, row("|cffff7777Shame|r   " .. p.blame .. " pts from " .. p.mistakes .. " mistakes" .. ((p.worst > 0) and ("   - most to blame in " .. p.worst .. " fights") or ""),
@@ -3770,7 +3795,7 @@ end
 
 function UI:RefreshFame()
 	local C = W.Career
-	local d = C.DB()
+	local d = C.View()
 	local v = UI.fame.view
 	-- left: everyone in the tally, click for their record
 	local names = {}
@@ -3781,7 +3806,7 @@ function UI:RefreshFame()
 	local left = {}
 	for i = 1, getn(names) do
 		local name, p = names[i], d.players[names[i]]
-		tinsert(left, { l = W.CName(name, p.class), r = C_GUILD .. p.hero .. "|r " .. C_DIM .. "/|r |cffff7777" .. p.blame .. "|r",
+		tinsert(left, { l = W.CName(name, p.class) .. (p.test and " |cff33ccff(test)|r" or ""), r = C_GUILD .. p.hero .. "|r " .. C_DIM .. "/|r |cffff7777" .. p.blame .. "|r",
 			sel = (UI.fame.who == name), tipTitle = name, tip = { "Hero " .. p.hero .. " pts  /  Shame " .. p.blame .. " pts", "Click: open their record" },
 			click = function() UI.fame.who = name; UI:Refresh() end })
 	end
@@ -3794,11 +3819,13 @@ function UI:RefreshFame()
 		if on then b:LockHighlight() else b:UnlockHighlight() end
 	end
 	famePerBtn:SetText("Per fight: " .. (UI.fame.per and "|cff33ff33on|r" or "off"))
+	fameTestBtn:SetText(C.HasTest() and "|cff33ccffClear test data|r" or "|cff777777No test data|r")
 
 	local titles = { hero = "|cff33ff33Heroes|r", blame = "|cffff5555Hall of Shame|r", plays = "Best plays", blunders = "Worst blunders" }
-	rTitle:SetText("All-Time  " .. (UI.fame.who and W.CName(UI.fame.who, d.players[UI.fame.who] and d.players[UI.fame.who].class) or titles[v]))
-	rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights counted   |   " .. getn(names) .. " raiders|r")
-	rVerdict:SetText("Every saved fight adds its hero and blame points here, for good - even after the fight itself is deleted.\n|cff888888Demo fights don't count. Post with the button bottom-left, or click any line.|r")
+	rTitle:SetText("Hall of Fame  " .. (UI.fame.who and W.CName(UI.fame.who, d.players[UI.fame.who] and d.players[UI.fame.who].class) or titles[v]))
+	rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights counted"
+		.. ((d.testFights > 0) and ("  |cff33ccff+ " .. d.testFights .. " test|cffaaaaaa") or "") .. "   |   " .. getn(names) .. " raiders|r")
+	rVerdict:SetText("Every saved fight adds its hero and blame points here, for good - even after the fight itself is deleted.\n|cff888888Demo fights count as |cff33ccfftest|cff888888 data - |cffffd100Clear test data|cff888888 (bottom left) removes them. Click any line to post it.|r")
 	hintText:SetText("Click a line to post it  -  Ctrl-click: only you see it  -  right-click a player for their record")
 	hintText:Show()
 
