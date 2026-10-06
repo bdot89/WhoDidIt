@@ -326,6 +326,29 @@ W:On("PLAYER_ENTERING_WORLD", function()
 	end
 end)
 
+-- the built-in extras tools\WhoDidIt-Sync.cmd downloads (they aren't on GitHub)
+function W.MissingExtras()
+	local miss = {}
+	if W.Board and not W.Board.chron then tinsert(miss, "every guild's raid times (Rankings)") end
+	if W.Marks and not W.Marks.dataInfo then tinsert(miss, "the Auto Marker's raid packs") end
+	if not WDI_CHRON_VERSION then tinsert(miss, "the Chronicle logger") end
+	if not WDI_ROLLFOR_VERSION then tinsert(miss, "RollFor") end
+	if not WDI_DOPING_VERSION then tinsert(miss, "DopingControl") end
+	return miss
+end
+W.SYNC_HOWTO = "double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r once (WoW can stay open)"
+
+-- first run: say what's missing and how to get it, once a session
+local extrasTold
+W:Every(12, function()
+	if extrasTold or not WhoDidItDB then return end
+	extrasTold = true
+	local miss = W.MissingExtras()
+	if getn(miss) == 0 then return end
+	W.Print("|cffff9933Not downloaded yet:|r " .. table.concat(miss, ", ") .. ". To get them, " .. W.SYNC_HOWTO
+		.. ", then " .. W.RESTART_HINT .. ". Leave its window open while you play to keep the raid times up to date.")
+end)
+
 W:On("RAID_ROSTER_UPDATE", function() W:UpdateRoster() end)
 W:On("PARTY_MEMBERS_CHANGED", function() W:UpdateRoster() end)
 W:On("UNIT_PET", function() W:UpdateRoster() end)

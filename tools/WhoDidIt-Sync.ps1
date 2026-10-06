@@ -73,9 +73,41 @@ $WowDir    = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
 $DataDir   = Join-Path $WowDir "CustomData"
 $OutFile   = Join-Path $DataDir "WhoDidIt_Chronicle.txt"
 $CacheFile = Join-Path $DataDir "WhoDidIt_ChronicleCache.json"
+# progress for the game's Rankings tab, and the game's "Sync now" request
+$StatusFile  = Join-Path $DataDir "WhoDidIt_SyncStatus.txt"
+$RequestFile = Join-Path $DataDir "WhoDidIt_SyncRequest.txt"
 if (-not (Test-Path $DataDir)) { New-Item -ItemType Directory -Path $DataDir | Out-Null }
 
 function Log($msg) { Write-Host ("[{0}] {1}" -f (Get-Date -Format "HH:mm:ss"), $msg) }
+
+# ------------------------------------------------------------------ progress for the game
+# CustomData\WhoDidIt_SyncStatus.txt, shown as a bar on the Rankings tab:
+#   WDISYNC|1|<now>|<state>|<step>|<steps>|<what>|<done>|<total>|<seconds left>|<next sync>
+# state: running / waiting / error / stopped. It's rewritten at least every
+# 30 seconds while this runs, so the game can tell when the helper is closed.
+$script:St = @{ state = "running"; step = 0; steps = 4; what = "Starting"; done = 0; total = 0; next = 0; since = (Get-Date); key = "" }
+$script:LastBeat = [datetime]::MinValue
+function Write-Status {
+    $s = $script:St
+    $eta = 0
+    if ($s.state -eq "running" -and $s.total -gt 0) {
+        $per = 1.1
+        if ($s.done -ge 3) { $per = ((Get-Date) - $s.since).TotalSeconds / $s.done }
+        $eta = [int]([math]::Max(0, $s.total - $s.done) * $per)
+    }
+    $what = ([string]$s.what) -replace '[\|\r\n]', ' '
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $line = "WDISYNC|1|$now|$($s.state)|$($s.step)|$($s.steps)|$what|$($s.done)|$($s.total)|$eta|$($s.next)"
+    try { [IO.File]::WriteAllText($StatusFile, $line + "`n", (New-Object Text.UTF8Encoding($false))) } catch { }
+    $script:LastBeat = Get-Date
+}
+# where a sync is up to; a new step restarts the time-left estimate
+function Set-Progress($step, $what, $done, $total) {
+    $s = $script:St
+    if ($s.key -ne "$step|$what") { $s.since = Get-Date; $s.key = "$step|$what" }
+    $s.state = "running"; $s.step = $step; $s.what = $what; $s.done = $done; $s.total = $total
+    Write-Status
+}
 
 # your characters: WTF\Account\<account>\<realm>\<character>
 $MyChars = @{}   # "realm|name(lowercase)" -> "Name"
@@ -95,6 +127,7 @@ if (Test-Path $wtf) {
 
 $script:lastCall = [datetime]::MinValue
 function Get-Api([string]$path) {
+    if (((Get-Date) - $script:LastBeat).TotalSeconds -gt 15) { Write-Status }   # still alive
     $wait = 1.05 - ((Get-Date) - $script:lastCall).TotalSeconds
     if ($wait -gt 0) { Start-Sleep -Milliseconds ([int]($wait * 1000)) }
     for ($try = 1; $try -le 5; $try++) {
@@ -305,7 +338,10 @@ function Sync {
     # 1) full clears: Chronicle's speedrun boards, best per realm / instance / guild
     $clears = @{}; $myClears = @{}
     $realmQs = ($realms | ForEach-Object { "realm_name=" + (Q $_.name) }) -join "&"
+    $ii = 0
     foreach ($inst in $Instances) {
+        Set-Progress 1 "Full clears: leaderboards" $ii $Instances.Count
+        $ii++
         for ($page = 1; $page -le 10; $page++) {
             $r = Get-Api ("/leaderboards/speedruns?instance_name={0}&timing=full&{1}&page_size=50&page={2}" -f (Q $inst), $realmQs, $page)
             $entries = @($r.entries)
@@ -331,6 +367,7 @@ function Sync {
             }
         }
         $n++
+        if ($n % 5 -eq 0) { Set-Progress 1 "Full clears: guild rosters" $n $clears.Count }
         if ($n % 50 -eq 0) { Log "Clear rosters: $n / $($clears.Count)"; Save-Cache $cache }
     }
     Save-Cache $cache
@@ -341,6 +378,7 @@ function Sync {
     $since = (Get-Date).ToUniversalTime().AddDays(-$Days).ToString("yyyy-MM-ddTHH:mm:ssZ")
     $newest = $cache.lastUpload
     $todo = New-Object System.Collections.Generic.List[object]
+    Set-Progress 2 "Raid logs: looking for new uploads" 0 0
     foreach ($realm in $realms) {
         for ($page = 1; $page -le 200; $page++) {
             $path = "/raidlogs/recent?realm_id={0}&after_date={1}&page_size=50&page={2}" -f $realm.id, (Q $since), $page
@@ -361,6 +399,7 @@ function Sync {
     $done = 0
     foreach ($a in $todo) {
         $done++
+        if ($done % 5 -eq 1) { Set-Progress 2 "Raid logs" ($done - 1) $todo.Count }
         $inst = Get-Api ("/raidlogs/instances/" + $a.id)
         if (-not $inst) { continue }
         $cache.logs[$a.id] = @{
@@ -390,6 +429,7 @@ function Sync {
     $n = 0
     foreach ($id in @($need.Keys)) {
         if ($n -ge $DetailsPerSync) { break }
+        if ($n % 5 -eq 0) { Set-Progress 3 "Raid details for the boards" $n ([math]::Min($DetailsPerSync, $left)) }
         $n++
         $inst = Get-Api ("/raidlogs/instances/" + $id)
         if (-not $inst) { continue }
@@ -411,8 +451,11 @@ function Sync {
     #    every run of every guild you've raided with
     $myGuilds = @{}
     foreach ($log in $cache.logs.Values) { if ($log.mine.Count -gt 0 -and $log.guildId) { $myGuilds[$log.guildId] = $log.guild } }
+    $gi = 0
     foreach ($gid in $myGuilds.Keys) {
         foreach ($inst in $Instances) {
+            Set-Progress 4 "Your own clears" $gi ($myGuilds.Count * $Instances.Count)
+            $gi++
             $r = Get-Api ("/leaderboards/speedruns?instance_name={0}&timing=full&guild_id={1}&page_size=50" -f (Q $inst), $gid)
             foreach ($e in @($r.entries)) {
                 if (-not $e.canonical) { continue }
@@ -471,8 +514,22 @@ while ($true) {
         }
     }
     $round++
-    try { Sync } catch { Log ("Sync failed: " + $_.Exception.Message) }
+    Remove-Item -LiteralPath $RequestFile -Force -ErrorAction SilentlyContinue   # this sync answers any request
+    $failed = $null
+    try { Sync } catch { $failed = $_.Exception.Message; Log ("Sync failed: " + $failed) }
+    $script:St.next = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + $IntervalMinutes * 60
+    if ($failed) { $script:St.state = "error"; $script:St.what = $failed }
+    else { $script:St.state = "waiting"; $script:St.what = "Up to date"; $script:St.done = 0; $script:St.total = 0 }
+    Write-Status
     if ($Once) { break }
-    Log "Next sync in $IntervalMinutes minutes (close this window to stop)"
-    Start-Sleep -Seconds ($IntervalMinutes * 60)
+    Log "Next sync in $IntervalMinutes minutes, or click Sync now on WhoDidIt's Rankings tab (close this window to stop)"
+    # wait, but start at once when the game asks (Sync now); keep telling the game we're here
+    $next = (Get-Date).AddMinutes($IntervalMinutes)
+    while ((Get-Date) -lt $next) {
+        if (Test-Path -LiteralPath $RequestFile) { Log "Sync requested from the game"; break }
+        if (((Get-Date) - $script:LastBeat).TotalSeconds -ge 30) { Write-Status }
+        Start-Sleep -Seconds 3
+    }
 }
+$script:St.state = "stopped"
+Write-Status

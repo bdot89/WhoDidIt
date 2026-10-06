@@ -95,7 +95,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. *Optional:* double-click `tools\WhoDidIt-Sync.cmd` once. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
+4. **Double-click `tools\WhoDidIt-Sync.cmd` once** (WoW can stay open). Rankings, the Auto Marker's raid packs, the logger, SR MasterLoot and Full check all need it, because none of them are stored on GitHub. It installs the built-in [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the [auto marker's packs](#auto-marker), and pulls every guild's times for [Rankings](#rankings). Then restart WoW.
 5. *Optional:* [ClassicAPI](#classicapi-optional) for a few extras - close WoW and double-click `tools\Install-ClassicAPI.cmd`.
 
 ### Requirements
@@ -254,6 +254,11 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
 
 - **First sync:** reads every raid log from the last 90 days once, about 45 minutes for OctoWoW. Data appears in game as it goes.
 - **Later syncs:** only fetch new uploads, plus the raids behind the times on the boards in full detail (150 per sync, so clicking a time shows the whole raid).
+- **Progress in game:** the Rankings tab has a bar (bottom left) showing what the helper is doing: the step, how far
+  it is and about how long is left, or "Up to date - next sync in 7 min". It also says if the helper isn't running,
+  or has never run on this PC.
+- **Sync now:** the button under the bar asks the helper to sync straight away (it checks every few seconds), so you
+  get the newest times right after a raid is uploaded. The helper has to be running.
 - **Rate limit:** the helper stays within Chronicle's limit (about one request a second) and caches what it has read in `CustomData\WhoDidIt_ChronicleCache.json`.
 - **Faction:** comes from the raiders' races. OctoWoW raids cross-faction, so many guilds show as **M** (mixed).
 

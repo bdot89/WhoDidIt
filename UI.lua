@@ -1273,7 +1273,116 @@ tooltip(postBoardBtn, "Post standings", function()
 		"|cff888888Uses the Realm button: your realm, or All realms to compare across " .. W.Board.ServerName() .. ".|r",
 		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
 end)
-local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn }
+-- Rankings: the sync helper's progress bar, and Sync now
+local syncBar = CreateFrame("Button", nil, left)
+syncBar:SetWidth(BW * 2 + 6)
+syncBar:SetHeight(28)
+syncBar:SetPoint("BOTTOMLEFT", left, "BOTTOMLEFT", 8, 8 + 5 * 24 + 2)
+do
+	local bg = syncBar:CreateTexture(nil, "BACKGROUND")
+	bg:SetAllPoints(syncBar)
+	bg:SetTexture(0, 0, 0, 0.5)
+	syncBar.fill = syncBar:CreateTexture(nil, "BORDER")
+	syncBar.fill:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+	syncBar.fill:SetPoint("TOPLEFT", syncBar, "TOPLEFT", 1, -1)
+	syncBar.fill:SetPoint("BOTTOMLEFT", syncBar, "BOTTOMLEFT", 1, 1)
+	syncBar.top = syncBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	syncBar.top:SetPoint("TOPLEFT", syncBar, "TOPLEFT", 5, -3)
+	syncBar.top:SetPoint("TOPRIGHT", syncBar, "TOPRIGHT", -5, -3)
+	syncBar.top:SetJustifyH("LEFT")
+	syncBar.bot = syncBar:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	syncBar.bot:SetPoint("BOTTOMLEFT", syncBar, "BOTTOMLEFT", 5, 3)
+	syncBar.bot:SetPoint("BOTTOMRIGHT", syncBar, "BOTTOMRIGHT", -5, 3)
+	syncBar.bot:SetJustifyH("LEFT")
+	local hl = syncBar:CreateTexture(nil, "HIGHLIGHT")
+	hl:SetAllPoints(syncBar)
+	hl:SetTexture(1, 1, 1, 0.08)
+end
+local syncBtn = gridButton("|cff33ff33Sync now|r", 1, 1)
+local function syncNow()
+	local B = W.Board
+	local st = B:SyncStatus()
+	if not (st and st.alive) then
+		W.Print("The sync helper isn't running. Double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r - it syncs straight away, then every 10 minutes while its window is open.")
+		return
+	end
+	if st.state == "running" then W.Print("A sync is already running - see the bar on the Rankings tab.") return end
+	if B:RequestSync() then
+		W.Print("Asked the sync helper to sync now. The bar on the Rankings tab shows how it's going.")
+	else
+		W.Print("Couldn't ask the sync helper (needs Nampower's file access).")
+	end
+	UI:UpdateSync()
+end
+syncBtn:SetScript("OnClick", syncNow)
+syncBar:SetScript("OnClick", syncNow)
+local function syncTip()
+	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
+		"WoW addons can't go online, so a small helper does it: |cffffd100tools\\WhoDidIt-Sync.cmd|r",
+		"in the WhoDidIt folder. Leave its window open while you play: it syncs every 10 minutes.",
+		" ",
+		"The first sync reads every raid on the server from the last 90 days (about 45 minutes);",
+		"times appear here as it goes. Later syncs only fetch new uploads (a minute or two).",
+		" ",
+		"|cffffd100Sync now|r asks the helper to sync straight away (it has to be running)." }
+	return l
+end
+tooltip(syncBtn, "Sync now", syncTip, "ANCHOR_TOP")
+tooltip(syncBar, "Chronicle sync", syncTip, "ANCHOR_TOP")
+
+-- fill the bar from the helper's status file
+function UI:UpdateSync()
+	local B = W.Board
+	if not B then return end
+	local st = B:SyncStatus()
+	local c = B.chron
+	local w = BW * 2 + 4
+	local function bar(frac, r, g, b) syncBar.fill:SetWidth(math.max(1, w * math.min(1, frac))); syncBar.fill:SetVertexColor(r, g, b, 0.55) end
+	local function ago(t) local m = floor((time() - t) / 60); return (m < 1) and "just now" or (m < 120 and (m .. " min ago") or (floor(m / 60) .. " h ago")) end
+	if not ReadCustomFile then
+		bar(1, 0.6, 0.15, 0.15)
+		syncBar.top:SetText("|cffff7777Needs Nampower|r")
+		syncBar.bot:SetText("to read the Chronicle times")
+	elseif not st then
+		bar(0, 0.6, 0.15, 0.15)
+		syncBar.top:SetText(c and ("|cffffd100Synced " .. ago(c.synced or 0) .. "|r") or "|cffff7777Never synced on this PC|r")
+		syncBar.bot:SetText("Run tools\\WhoDidIt-Sync.cmd")
+	elseif not st.alive then
+		bar(1, 0.35, 0.35, 0.35)
+		syncBar.top:SetText("|cffff9933Sync helper isn't running|r")
+		syncBar.bot:SetText((c and c.synced) and ("last sync " .. ago(c.synced) .. " - run WhoDidIt-Sync.cmd") or "run tools\\WhoDidIt-Sync.cmd")
+	elseif st.state == "running" then
+		local frac = (st.total > 0) and (st.done / st.total) or 0.05
+		bar(frac, 0.2, 0.55, 1)
+		syncBar.top:SetText("|cff66ccffSyncing|r " .. st.what .. ((st.total > 0) and (" " .. st.done .. "/" .. st.total) or ""))
+		local left = (st.eta > 90) and ("about " .. floor(st.eta / 60 + 0.5) .. " min left") or ((st.eta > 0) and "less than 2 min left" or "working...")
+		syncBar.bot:SetText("step " .. st.step .. " of " .. st.steps .. "  -  " .. left)
+	elseif st.state == "error" then
+		bar(1, 0.7, 0.15, 0.15)
+		syncBar.top:SetText("|cffff7777Last sync failed|r - retries by itself")
+		syncBar.bot:SetText(st.what)
+	else
+		bar(1, 0.15, 0.7, 0.2)
+		local asked = B.asked and (time() - B.asked) < 30
+		syncBar.top:SetText("|cff33ff33Up to date|r" .. ((c and c.synced) and (" - synced " .. ago(c.synced)) or ""))
+		local nxt = st.next - time()
+		syncBar.bot:SetText(asked and "starting a sync..." or ("next sync in " .. math.max(0, floor(nxt / 60 + 0.5)) .. " min - click to sync now"))
+	end
+	-- a sync just finished: load the new times now rather than within the minute
+	if UI.syncState == "running" and st and st.state ~= "running" then
+		B:LoadChronicle()
+		if B.CheckRivals then B:CheckRivals() end
+		UI.syncState = st.state
+		UI:Refresh()
+		return
+	end
+	UI.syncState = st and st.state
+end
+W:Every(3, function()
+	if UI.mode == "rankings" and f:IsVisible() and syncBar:IsVisible() then UI:UpdateSync() end
+end)
+
+local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn, syncBar, syncBtn }
 for i = 1, getn(rankOnly) do rankOnly[i]:Hide() end
 
 -- Hall of Fame: post what's on screen, points per fight, start over
@@ -2968,12 +3077,16 @@ function UI:RefreshRankings()
 
 	local c = B.chron
 	local chron
-	if c and c.synced then
+	local st = B.SyncStatus and B:SyncStatus()
+	if st and st.alive and st.state == "running" then
+		chron = "|cff66ccffChronicle syncing (see the bar, bottom left)|r"
+	elseif c and c.synced then
 		local mins = floor((time() - c.synced) / 60)
 		chron = "Chronicle " .. ((c.status ~= "ok") and ("|cffffd100" .. (c.status or "") .. "|r") or (mins < 2 and "just synced" or (mins .. " min ago")))
 	else
-		chron = "Chronicle not synced"
+		chron = "|cffff9933Chronicle not synced - run tools\\WhoDidIt-Sync.cmd|r"
 	end
+	UI:UpdateSync()
 	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. (UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
 	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. ng .. " guild(s)   |   " .. chron
 		.. "   |   sharing " .. (WhoDidItDB.opts.shareBoard and "on" or "off") .. "|r")
@@ -3263,7 +3376,7 @@ function UI:ZoneRows(zone)
 			C_TIME .. info.packs .. "|r packs, " .. C_TIME .. info.mobs .. "|r mobs  " .. C_DIM .. (info.date or "") .. "|r",
 			{ tipTitle = "Built-in packs", tip = { "tools\\WhoDidIt-Sync downloads them and checks for new ones every hour.", "Your own packs are saved separately and never overwritten." } }))
 	else
-		tinsert(rows, row("|cffff7777Not installed.|r Run |cffffd100tools\\WhoDidIt-Sync.cmd|r once, then /reload.  " .. C_DIM .. "Your own packs work without them.|r"))
+		tinsert(rows, row("|cffff7777Not installed.|r Double-click |cffffd100tools\\WhoDidIt-Sync.cmd|r (in the WhoDidIt folder) once, then " .. W.RESTART_HINT .. ".  " .. C_DIM .. "Your own packs work without them.|r"))
 	end
 	return rows
 end
@@ -4052,6 +4165,13 @@ function UI:EmptyRows()
 	local e = W.env
 	local function yn(v) return v and "|cff33ff33found|r" or "|cffff3333missing|r" end
 	tinsert(rows, row("Nampower: " .. yn(e.nampower) .. "     SuperWoW: " .. yn(e.superwow) .. "     TWThreat: " .. (e.twthreat and "|cff33ff33found|r" or "|cff888888not loaded (server queries used)|r")))
+	local miss = W.MissingExtras()
+	if getn(miss) > 0 then
+		tinsert(rows, row("|cffff9933Not downloaded yet:|r " .. table.concat(miss, ", ")))
+		tinsert(rows, row("   To get them, " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
+	else
+		tinsert(rows, row("Built-in extras (raid times, mob packs, logger, RollFor, DopingControl): |cff33ff33all installed|r"))
+	end
 	tinsert(rows, row("ClassicAPI: " .. (e.classicapi and "|cff33ff33found|r" or "|cff999999not installed - optional extra, /wdi classicapi shows what it adds and how to get it|r"),
 		nil, { click = function() W:ClassicApiInfo() end }))
 	tinsert(rows, row("|cff888888All commands: /wdi help|r"))

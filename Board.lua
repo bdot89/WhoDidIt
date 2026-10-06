@@ -239,6 +239,31 @@ function B:Realms()
 	return list
 end
 
+-- the sync helper's progress (CustomData\WhoDidIt_SyncStatus.txt, rewritten
+-- at least every 30 seconds while it runs):
+--   WDISYNC|1|<now>|<state>|<step>|<steps>|<what>|<done>|<total>|<seconds left>|<next sync>
+-- nil = it has never run here. alive = false: it was closed.
+local SYNC_FILE, SYNC_ASK = "WhoDidIt_SyncStatus.txt", "WhoDidIt_SyncRequest.txt"
+function B:SyncStatus()
+	if not ReadCustomFile then return nil end
+	local ok, s = pcall(ReadCustomFile, SYNC_FILE)
+	if not ok or type(s) ~= "string" or s == "" then return nil end
+	local p = splitBar((string.gsub(s, "[\r\n]", "")))
+	if p[1] ~= "WDISYNC" then return nil end
+	local st = { at = tonumber(p[3]) or 0, state = p[4] or "", step = tonumber(p[5]) or 0, steps = tonumber(p[6]) or 0,
+		what = p[7] or "", done = tonumber(p[8]) or 0, total = tonumber(p[9]) or 0, eta = tonumber(p[10]) or 0, next = tonumber(p[11]) or 0 }
+	st.alive = (st.state ~= "stopped") and (time() - st.at) < 120
+	return st
+end
+
+-- Sync now: ask the helper (it checks every few seconds while it waits)
+function B:RequestSync()
+	if not WriteCustomFile then return false end
+	local ok = pcall(WriteCustomFile, SYNC_ASK, tostring(time()), "w")
+	if ok then B.asked = time() end
+	return ok
+end
+
 -- re-read the sync file every minute; refresh the window when it changed
 W:Every(60, function()
 	if not WhoDidItDB then return end
