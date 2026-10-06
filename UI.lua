@@ -1124,6 +1124,34 @@ local mouseBtn  = gridButton("Mouseover", 3, 1)
 local smartBtn  = gridButton("Smart marks", 3, 2)
 local hiddenBtn = gridButton("Hidden", 2, 1)
 local findBtn   = gridButton("Find target", 2, 2)
+-- learn packs in game (MarkLearn.lua): note mobs while on, then make packs
+local learnBtn  = gridButton("Learn: off", 4, 1)
+local buildBtn  = gridButton("Make packs", 4, 2)
+learnBtn:SetScript("OnClick", function()
+	if not (W.Marks and W.Marks.Learn) then W.Print(W.RESTART_MSG) return end
+	W.Marks.Learn:Set(not W.Marks.Learn:On())
+	UI:Refresh()
+end)
+buildBtn:SetScript("OnClick", function()
+	if not (W.Marks and W.Marks.Learn) then W.Print(W.RESTART_MSG) return end
+	W.Marks.Learn:Build(UI.mk.zone or GetRealZoneText())
+	UI:Refresh()
+end)
+tooltip(learnBtn, "Learn packs", function()
+	local L = W.Marks and W.Marks.Learn
+	local zone = UI.mk.zone or GetRealZoneText()
+	return { "On: in a raid, every mob you see is noted with where it stands",
+		"(out of combat, so it's where it spawned). Walk through the raid once -",
+		"a normal clear does it - then click Make packs.",
+		" ",
+		"Noted in " .. zone .. ": |cffffffff" .. (L and L:Count(zone) or 0) .. "|r mobs",
+		"|cff888888Only WhoDidIt's own data: nothing from other addons.|r" }
+end, "ANCHOR_TOP")
+tooltip(buildBtn, "Make packs", { "Groups the mobs noted in this zone into packs: mobs within 12 yards of",
+	"each other are one pack. Marks: healers and casters first, then the toughest -",
+	"skull, cross, square, moon... Saved as your own packs (\"Learned 01 - ...\"),",
+	"replacing earlier learned ones. Change any mark by hand.",
+	"|cff888888/wdi marks build 15 uses a 15 yard gap. /wdi marks export writes them for the download.|r" })
 local hereBtn   = gridButton("This zone", 1, 1)
 local kindBtn   = gridButton("Mark same kind", 1, 2)
 mouseBtn:SetScript("OnClick", function()
@@ -1160,7 +1188,7 @@ tooltip(hiddenBtn, "Hidden packs", { "Show the built-in packs you've hidden, so 
 tooltip(findBtn, "Find target's pack", { "Open the pack your target belongs to." })
 tooltip(hereBtn, "This zone", { "Jump back to the zone you're in." })
 tooltip(kindBtn, "Mark same kind", { "Mark every mob nearby of the same kind as your target, closest first (/wdi marks type)." })
-local markOnly = { mouseBtn, smartBtn, hiddenBtn, findBtn, hereBtn, kindBtn }
+local markOnly = { mouseBtn, smartBtn, hiddenBtn, findBtn, hereBtn, kindBtn, learnBtn, buildBtn }
 for i = 1, getn(markOnly) do markOnly[i]:Hide() end
 
 UI.lt = { section = "guide" }   -- loot view state
@@ -3551,6 +3579,7 @@ function UI:RefreshMarks()
 	fightList:SetData(UI:MarkNavRows(), true)
 	UI.markButtons[5]:SetText("Auto marking: " .. (o.enabled and "|cff33ff33on|r" or "|cffff5555off|r"))
 	mouseBtn:SetText("Mouseover: " .. (o.mouseover and "|cff33ff33on|r" or "|cffff5555off|r"))
+	learnBtn:SetText("Learn: " .. (o.learn and "|cff33ff33on|r" or "off"))
 	smartBtn:SetText("Smart: " .. (o.smart and "|cff33ff33on|r" or "|cffff5555off|r"))
 	hiddenBtn:SetText("Hidden: " .. (UI.mk.showHidden and "shown" or "off"))
 

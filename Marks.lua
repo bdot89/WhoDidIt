@@ -86,25 +86,39 @@ end
 
 ------------------------------------------------------------------ built-in packs
 
+-- two sources, same format: WhoDidIt's own standard packs (DefaultPacks.lua,
+-- shipped with the addon) and AutoMarker's (Marks\packs.lua, downloaded by
+-- the sync helper when you run it). M.dataInfo is about AutoMarker's only.
 function M:LoadBuiltin()
 	M.builtin, M.order = {}, {}
-	M.dataInfo = nil
-	local data = WDI_MARKDATA
-	if type(data) ~= "table" or type(data.packs) ~= "table" then return end
-	M.dataInfo = { version = data.version, commit = data.commit, date = data.date, packs = getn(data.packs), mobs = 0 }
-	for i = 1, getn(data.packs) do
-		local p = data.packs[i]
-		local zone, name, flat = p[1], p[2], p[3]
-		M.builtin[zone] = M.builtin[zone] or {}
-		M.order[zone] = M.order[zone] or {}
-		if not M.builtin[zone][name] then tinsert(M.order[zone], name) end
-		local pack = { mobs = {}, names = {} }
-		for j = 1, getn(flat), 3 do
-			pack.mobs[flat[j]] = flat[j + 1]
-			if flat[j + 2] ~= "" then pack.names[flat[j]] = flat[j + 2] end
-			M.dataInfo.mobs = M.dataInfo.mobs + 1
+	M.dataInfo, M.stdInfo = nil, nil
+	local function add(data, info)
+		for i = 1, getn(data.packs) do
+			local p = data.packs[i]
+			local zone, name, flat = p[1], p[2], p[3]
+			if type(zone) == "string" and type(name) == "string" and type(flat) == "table" then
+				M.builtin[zone] = M.builtin[zone] or {}
+				M.order[zone] = M.order[zone] or {}
+				if not M.builtin[zone][name] then tinsert(M.order[zone], name) end
+				local pack = { mobs = {}, names = {} }
+				for j = 1, getn(flat), 3 do
+					pack.mobs[flat[j]] = flat[j + 1]
+					if flat[j + 2] ~= "" then pack.names[flat[j]] = flat[j + 2] end
+					info.mobs = info.mobs + 1
+				end
+				M.builtin[zone][name] = pack
+			end
 		end
-		M.builtin[zone][name] = pack
+	end
+	local std = WDI_STDPACKS
+	if type(std) == "table" and type(std.packs) == "table" and getn(std.packs) > 0 then
+		M.stdInfo = { date = std.date, packs = getn(std.packs), mobs = 0 }
+		add(std, M.stdInfo)
+	end
+	local data = WDI_MARKDATA
+	if type(data) == "table" and type(data.packs) == "table" then
+		M.dataInfo = { version = data.version, commit = data.commit, date = data.date, packs = getn(data.packs), mobs = 0 }
+		add(data, M.dataInfo)
 	end
 	M:Changed()
 end
@@ -1092,6 +1106,17 @@ function M:Slash(rest)
 	local zone = GetRealZoneText()
 	if cmd == "" then
 		W.UI:SetMode("marks")
+	elseif cmd == "learn" then
+		if not M.Learn then W.Print(W.RESTART_MSG) return end
+		M.Learn:Set(arg == "on" or (arg == "" and not M.Learn:On()))
+		if W.UI and W.UI.Refresh then W.UI:Refresh() end
+	elseif cmd == "build" then
+		if not M.Learn then W.Print(W.RESTART_MSG) return end
+		M.Learn:Build(zone, arg ~= "" and arg or nil)
+		if W.UI and W.UI.Refresh then W.UI:Refresh() end
+	elseif cmd == "export" then
+		if not M.Learn then W.Print(W.RESTART_MSG) return end
+		M.Learn:Export()
 	elseif cmd == "mark" or cmd == "pack" then
 		M:MarkGroup()
 	elseif cmd == "next" then

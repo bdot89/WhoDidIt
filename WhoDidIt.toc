@@ -2,7 +2,7 @@
 ## Title: |cffff5555Who|cffffd100DidIt|r
 ## Notes: Raid wipe & death analyser. Uses Nampower, SuperWoW and Turtle's threat API to find out who messed up. Includes the Chronicle logger, an auto marker, RollFor for master looting and DopingControl. /whodidit
 ## Author: bdot1
-## Version: 1.9.0
+## Version: 1.10.0
 ## SavedVariables: WhoDidItDB, ChronicleCompanionDB, RollForDb, DopingControlDB
 ## SavedVariablesPerCharacter: ChronicleCompanionCharDB, RollForCharDb
 ## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, AutoMasterLooter, DopingControl, TWThreat
@@ -173,7 +173,10 @@ Board.lua
 Logs.lua
 # auto marker: built-in packs (downloaded by tools\WhoDidIt-Sync), then the marker
 Marks\packs.lua
+# WhoDidIt's own standard packs (learned in game, shipped with the addon)
+DefaultPacks.lua
 Marks.lua
+MarkLearn.lua
 Loot.lua
 AutoML.lua
 UI.lua

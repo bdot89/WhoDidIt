@@ -82,7 +82,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 <table>
   <tr>
     <td width="50%"><img src="docs/logging.jpg" alt="Logging"><br><b>Logging.</b> The Chronicle combat logger, built in: start and stop logging, save, archive between lockouts, the automatic options (start in raids, save after every boss), and how to upload the log to chronicleclassic.com.</td>
-    <td width="50%"><img src="docs/marker.jpg" alt="Auto Marker"><br><b>Auto Marker.</b> Every saved pack in the zone with its marks, mob count and how many are in range. Hold Shift + Ctrl over a mob to mark its whole pack, or mark the next pack along the route. Mark mobs yourself and click <b>Save marks as pack</b> to keep them.</td>
+    <td width="50%"><img src="docs/marker.jpg" alt="Auto Marker"><br><b>Auto Marker.</b> Every saved pack in the zone (WhoDidIt's standard packs, AutoMarker's if you have them, and yours) with its marks, mob count and how many are in range. Hold Shift + Ctrl over a mob to mark its whole pack, or mark the next pack along the route. Mark mobs yourself and click <b>Save marks as pack</b> to keep them.</td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/masterloot.jpg" alt="SR MasterLoot"><br><b>SR MasterLoot.</b> RollFor for soft-res master looting, with a step-by-step guide (gold lines do that step), the imported soft-res sheet, loot given and every setting explained. <b>raidres.fly.dev</b> with a <b>Copy link</b> button at the top.</td>
@@ -400,6 +400,20 @@ marks.
 
 **Coming from AutoMarker?** If it's still installed, WhoDidIt stands by (AutoMarker keeps marking). Once WhoDidIt has
 its raid packs, it brings over any packs you saved with `/am add` and asks once whether to switch AutoMarker off.
+
+**Learn packs (WhoDidIt's own packs).** WhoDidIt can build raid packs from what you see in game, so it doesn't need
+anyone else's data:
+
+1. Click **Learn** (bottom left of the Auto Marker tab, or `/wdi marks learn on`) and walk through a raid. A normal
+   clear does it. Every mob that comes into view is noted with where it stands (read while it's out of combat, so
+   it's its spawn spot), its name, whether it uses mana and its health. Bosses and critters are skipped.
+2. Click **Make packs** (or `/wdi marks build [yards]`). Mobs within 12 yards of each other become one pack, in the
+   order you met them. Marks follow WhoDidIt's own priority: healers and casters first, then the toughest (skull,
+   cross, square, moon, triangle, diamond, circle, star). They're saved as your own packs ("Learned 01 - Molten
+   Giant x2"); change any mark by hand. What was noted is kept, so you can rebuild with another gap.
+3. **Standard for everyone (maintainer):** `/wdi marks export` writes your packs (learned and saved, never edited
+   AutoMarker packs) to `CustomData\WhoDidIt_StdPacks.lua`; `tools\Publish-Packs.cmd` ships them as
+   `DefaultPacks.lua`. Everyone who downloads WhoDidIt then gets them, with no helper.
 
 **Marks someone set by hand are left alone.** WhoDidIt remembers the marks it put up itself; a mob with a mark it
 didn't set keeps it, and it won't take an icon that's on another mob. Mouse-over marking (**Shift + Ctrl** over a mob)
