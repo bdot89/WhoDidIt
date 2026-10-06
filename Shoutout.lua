@@ -18,7 +18,7 @@ S.LABELS = {
 	OFFICER = "Officer", SAY = "Say", YELL = "Yell", SELF = "Only me",
 }
 
-local MAX_SHAME  = 6
+local MAX_SHAME  = 11   -- header, top 3, up to 7 awards
 local MAX_PRAISE = 8
 
 ------------------------------------------------------------------ channel handling
@@ -240,6 +240,8 @@ end
 function S.ClassMap(rec)
 	local m = {}
 	for name, p in pairs(rec and rec.players or {}) do m[name] = p.class end
+	-- the boss stands out from the players in every post about the fight
+	if rec and rec.enc and not m[rec.enc] then m[rec.enc] = "#ff9966" end
 	return m
 end
 
@@ -368,6 +370,27 @@ local function blameOf(rec, name)
 	end
 end
 
+-- "pulled aggro on Lucifron 2x, stood in Fire Nova (+1 more)": repeats grouped,
+-- "... from Jaker" dropped so the same mistake counts once
+local function groupedReasons(b, n)
+	local order, count = {}, {}
+	local prefix = b.name .. " "
+	for i = 1, getn(b.reasons) do
+		local r = b.reasons[i]
+		if string.sub(r, 1, string.len(prefix)) == prefix then r = string.sub(r, string.len(prefix) + 1) end
+		r = string.gsub(r, " from %S+$", "")
+		if not count[r] then count[r] = 0; tinsert(order, r) end
+		count[r] = count[r] + 1
+	end
+	local out = {}
+	for i = 1, math.min(n, getn(order)) do
+		local r = order[i]
+		tinsert(out, r .. ((count[r] > 1) and (" " .. count[r] .. "x") or ""))
+	end
+	local more = getn(order) - n
+	return table.concat(out, ", ") .. ((more > 0) and (" (+" .. more .. " more)") or "")
+end
+
 local function shortReasons(b, n)
 	local out = {}
 	for i = 1, math.min(n, getn(b.reasons)) do
@@ -428,47 +451,52 @@ function S:ShameLines(rec, who)
 
 	tinsert(out, header("NAME & SHAME", rec))
 
-	local b = rec.blame[1]
-	if b and b.pts >= 1 then
-		tinsert(out, "Most to blame: " .. b.name .. " with " .. b.pts .. " pts - " .. shortReasons(b, 2))
+	-- the top 3 of the blame board, each with their main reasons (repeats grouped)
+	local PODIUM = { "Most to blame", "Second place", "Third place" }
+	local shown = 0
+	for i = 1, getn(rec.blame) do
+		local b = rec.blame[i]
+		if shown >= 3 or b.pts < 1 then break end
+		shown = shown + 1
+		tinsert(out, PODIUM[shown] .. ": " .. b.name .. " - " .. b.pts .. " pts - " .. groupedReasons(b, 2))
 	end
 
 	local n, p, v = best(rec, function(p) return p.pulls end)
 	if n then
-		tinsert(out, "Threat Junkie: " .. n .. " ripped aggro off the tank " .. v .. "x")
+		tinsert(out, "Threat Junkie: " .. n .. " - ripped aggro off the tank " .. v .. "x")
 	else
 		local tn, tv
 		for name, t in pairs(rec.threat or {}) do
 			local tp = P[name]
 			if tp and tp.role ~= "tank" and t.perc >= 100 and (not tv or t.perc > tv) then tn, tv = name, t.perc end
 		end
-		if tn then tinsert(out, "Threat Junkie: " .. tn .. " hit " .. tv .. "% threat - living dangerously") end
+		if tn then tinsert(out, "Threat Junkie: " .. tn .. " - hit " .. tv .. "% threat, living dangerously") end
 	end
 
 	for i = 1, getn(rec.deaths) do
 		local d = rec.deaths[i]
 		if not d.late and d.kind ~= "mc" and d.kind ~= "expected" then
-			tinsert(out, "Floor Inspector: " .. d.name .. " died first at " .. FmtTime(d.t) .. " - " .. d.text)
+			tinsert(out, "Floor Inspector: " .. d.name .. " - first to die, at " .. FmtTime(d.t) .. " (" .. d.text .. ")")
 			break
 		end
 	end
 
 	n, p, v = best(rec, function(p) return p.avoidDmg end)
 	if n then
-		tinsert(out, "Fire Enthusiast: " .. n .. " soaked " .. FmtNum(v) .. " avoidable damage (" .. (p.worstSpell or "?") .. " x" .. (p.worstHits or p.avoidHits or 0) .. ")")
+		tinsert(out, "Fire Enthusiast: " .. n .. " - soaked " .. FmtNum(v) .. " avoidable damage (" .. (p.worstSpell or "?") .. " x" .. (p.worstHits or p.avoidHits or 0) .. ")")
 	end
 
 	n, p, v = best(rec, function(p) return p.splash end)
-	if n then tinsert(out, "Bomb Squad: " .. n .. " took " .. v .. " raider(s) with them") end
+	if n then tinsert(out, "Bomb Squad: " .. n .. " - took " .. v .. " raider(s) with them") end
 
 	n, p, v = best(rec, function(p)
 		if p.role ~= "tank" and p.act and p.act < 0.6 then return 1 - p.act end
 	end)
-	if n then tinsert(out, "AFK Award: " .. n .. " was only doing something " .. pct(p.act) .. " of the time") end
+	if n then tinsert(out, "AFK Award: " .. n .. " - only doing something " .. pct(p.act) .. " of the time") end
 
 	local slack = W.Cons and W.Cons.Slackers(rec)
 	if slack and slack[1] and getn(slack[1].missing) >= 2 then
-		tinsert(out, "Consume Slacker: " .. slack[1].name .. " turned up without " .. table.concat(slack[1].missing, ", "))
+		tinsert(out, "Consume Slacker: " .. slack[1].name .. " - turned up without " .. table.concat(slack[1].missing, ", "))
 	end
 
 	local med = medianDps(rec)

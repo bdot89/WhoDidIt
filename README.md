@@ -33,7 +33,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 - 📣 **Shout-outs.** *Name & Shame* and *Big Them Up* awards, reports and per-player posts, sent to any channel in colour.
 - 📊 **Meters & timeline.** Damage, healing, taken, activity and utility, plus a full timeline of the fight.
 - 💀 **Auto marking.** Marks whole packs in one go, with ~365 raid packs built in, smart marks for tricky fights, and quick save for your own packs.
-- 💰 **Master looting.** RollFor is built in, with a Loot tab: soft-res import and check, rolls, awards, loot given, and a step-by-step guide.
+- 💰 **Master looting.** RollFor is built in, with an **SR MasterLoot** tab: soft-res import and check, rolls, awards, loot given, and a step-by-step guide.
 - 🏆 **Rankings & Chronicle.** Kill and clear times against every guild on your realm, and the Chronicle combat logger built in.
 
 ## Screenshots
@@ -212,7 +212,7 @@ WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official a
   Chronicle settings carry across. You can then delete `Interface\AddOns\ChronicleCompanion`.
 - Chronicle's code isn't stored in this repository. It's always downloaded fresh from its source.
 
-The **Logs** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
+The **Logging** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
 
 - **Start logging / Stop & save**, **Save now**, **Archive log** (between lockouts) and **Delete log**
 - Chronicle's auto-logging settings (raids, dungeons, save after combat, one file per realm)
@@ -222,7 +222,7 @@ The **Logs** button (or `/wdi logs`) drives it from the WhoDidIt window. It show
 
 ## Auto marking
 
-The **Marks** button (or `/wdi marks`) is WhoDidIt's auto marker. It puts raid marks on a whole pack of mobs at once.
+The **Auto Marker** button (or `/wdi marks`) is WhoDidIt's auto marker. It puts raid marks on a whole pack of mobs at once.
 Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one gets.
 
 **Marking a pack**
@@ -238,7 +238,7 @@ Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one ge
 2. Click **Save marks as pack**. The window also lists what's marked right now; click that row.
 3. Type a name and press Enter. Using an existing pack's name updates that pack.
 
-**The Marks window**
+**The Auto Marker window**
 
 - **Zones** on the left: where you are first, then zones with your packs.
 - **Packs**: each pack's marks as icons, its mob count, how many of its mobs are in range right now, and whether it's
@@ -315,12 +315,14 @@ It replaces the AutoMasterLooter addon (by balake).
 
 ## Master looting (RollFor)
 
-The **Loot** button (or `/wdi loot`) is for master looting. WhoDidIt has [RollFor](https://github.com/sica42/roll-for-vanilla)
+The **SR MasterLoot** button (or `/wdi loot`) is for master looting. WhoDidIt has [RollFor](https://github.com/sica42/roll-for-vanilla)
 built in, the master-loot roller by Obszczymucha. It's sica42's 1.12 fork (v4.8.1), the newest version that still runs on
 the 1.12 client; the original RollFor has moved to TBC only. RollFor does the rolling itself: its loot window lists every
 item and who soft-reserved it, it runs the roll, handles ties, and gives the item to the winner when you click **Award**.
 
-**The Loot tab**
+**The SR MasterLoot tab**
+
+- **raidres.fly.dev** is shown at the top right, with a **Copy link** button (Ctrl+C in the box that opens), for anyone who doesn't know where soft-res sheets are made.
 
 - **How it works**: step by step, from making the soft-res sheet to awarding the last item, plus every command. Gold
   lines do that step when clicked (open the import window, post how to roll, and so on).
@@ -383,12 +385,13 @@ The bottom of the left column is laid out the same way on every tab. Hover any b
 
 **🔴 Name & Shame**
 
-- *Most to blame*: the top of the blame board
+- *Most to blame, Second place, Third place*: the top 3 of the blame board, each with their main mistakes (repeats grouped, e.g. "pulled aggro on Lucifron 2x")
 - *Threat Junkie*: the most aggro pulls
 - *Floor Inspector*: the first to die, and why
 - *Fire Enthusiast*: the most avoidable damage taken
 - *Bomb Squad*: whose bomb hit the most raiders
 - *AFK Award*: the lowest activity
+- *Consume Slacker*: missing the most consumables for their role
 - *Participation Trophy*: DPS under half the raid median
 
 </td>

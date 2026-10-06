@@ -11,7 +11,7 @@ local getn = table.getn
 local FmtTime = W.FmtTime
 local FmtNum = W.FmtNum
 
-local WIDTH, HEIGHT = 860, 540
+local WIDTH, HEIGHT = 940, 540
 local LEFTW = 230
 local ROWH, NROWS = 16, 21
 local FROWH, FROWS = 30, 10
@@ -557,6 +557,22 @@ rVerdict:SetHeight(28)
 rVerdict:SetJustifyH("LEFT")
 rVerdict:SetJustifyV("TOP")
 
+-- SR MasterLoot: where soft-res sheets are made, with a copy box for the link
+local SR_SITE = "https://raidres.fly.dev"
+local srCopy = button(header, "Copy link", 84, 20)
+srCopy:SetPoint("TOPRIGHT", header, "TOPRIGHT", -10, -10)
+srCopy:SetScript("OnClick", function()
+	W:Prompt("Soft-res sheets: |cffffd100raidres.fly.dev|r\n|cff888888Press Ctrl+C to copy the link, then Esc. Paste it in your browser or in chat.|r", SR_SITE, function() end)
+end)
+tooltip(srCopy, "raidres.fly.dev", { "The website where you make the soft-res sheet: raiders pick their items there,",
+	"then you use its RollFor export to import the sheet here.",
+	"Click: a box with the link selected - Ctrl+C copies it." }, "ANCHOR_LEFT")
+local srSite = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+srSite:SetPoint("RIGHT", srCopy, "LEFT", -8, 0)
+srSite:SetText("|cffaaaaaaSoft-res sheets:|r  |cffffd100raidres.fly.dev|r")
+srCopy:Hide()
+srSite:Hide()
+
 local function finishedRec()
 	local rec = UI:Current()
 	if not rec or rec.result == "LIVE" then W.Print("Pick a finished fight first.") return nil end
@@ -717,25 +733,36 @@ UI.rk = { view = "kills" }   -- rankings state: view, realm, faction, inst, boss
 local MODES = {
 	{ id = "fights",   text = "Fights"   },
 	{ id = "rankings", text = "Rankings" },
-	{ id = "logs",     text = "Logs"     },
-	{ id = "marks",    text = "Marks"    },
-	{ id = "loot",     text = "Loot"     },
+	{ id = "logs",     text = "Logging"       },
+	{ id = "marks",    text = "Auto Marker"   },
+	{ id = "loot",     text = "SR MasterLoot" },
 }
 UI.modeButtons = {}
 for i = 1, getn(MODES) do
 	local m = MODES[i]
-	local b = button(f, m.text, 78, 18)
-	b:SetPoint("LEFT", version, "RIGHT", 18 + (i - 1) * 82, 0)
+	-- sized to the label, one after another
+	local b = CreateFrame("Button", "WhoDidItMode" .. i, f, "UIPanelButtonTemplate")
+	b:SetHeight(18)
+	b:SetText(m.text)
+	local label = getglobal("WhoDidItMode" .. i .. "Text")
+	local tw = label and label:GetStringWidth() or 0
+	if not tw or tw < 10 then tw = string.len(m.text) * 7 end
+	b:SetWidth(math.max(60, floor(tw + 24)))
+	if i == 1 then
+		b:SetPoint("LEFT", version, "RIGHT", 16, 0)
+	else
+		b:SetPoint("LEFT", UI.modeButtons[i - 1], "RIGHT", 4, 0)
+	end
 	b.id = m.id
 	b:SetScript("OnClick", function() UI:SetMode(this.id) end)
 	UI.modeButtons[i] = b
 end
 tooltip(UI.modeButtons[1], "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
 tooltip(UI.modeButtons[2], "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
-tooltip(UI.modeButtons[3], "Logs", { "Chronicle combat logging: start, stop, save, archive and delete the log you upload to chronicleclassic.com." })
-tooltip(UI.modeButtons[4], "Marks", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
+tooltip(UI.modeButtons[3], "Logging", { "Chronicle combat logging (built in): start, stop, save, archive and delete", "the log you upload to chronicleclassic.com." })
+tooltip(UI.modeButtons[4], "Auto Marker", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
 	"and quick save - mark mobs in game, click Save marks as pack." })
-tooltip(UI.modeButtons[5], "Loot", { "Master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
+tooltip(UI.modeButtons[5], "SR MasterLoot", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
 	"see who won what, and a step-by-step guide." })
 
 -- a row of buttons in the tab strip, used by Rankings and Logs
@@ -987,6 +1014,8 @@ function UI:ApplyMode()
 	local loot = (UI.mode == "loot" and W.Loot ~= nil)
 	for i = 1, getn(UI.lootButtons) do vis(UI.lootButtons[i], loot) end
 	for i = 1, getn(lootOnly) do vis(lootOnly[i], loot) end
+	vis(srCopy, loot)
+	vis(srSite, loot)
 	local fightOnly = { shameBtn, praiseBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
 	for i = 1, getn(fightOnly) do vis(fightOnly[i], fights) end
 	for i = 1, getn(rankOnly) do vis(rankOnly[i], UI.mode == "rankings" and W.Board ~= nil) end
@@ -2281,10 +2310,10 @@ function UI:RefreshLogs()
 	fightList:SetData(UI:LogNavRows(), true)
 	UI.logButtons[1]:SetText(L:Enabled() and "|cffff5555Stop & save|r" or "|cff33ff33Start logging|r")
 	if L:Available() then
-		rTitle:SetText("Chronicle logs  " .. (L:Enabled() and "|cff33ff33LOGGING|r" or "|cffff5555OFF|r"))
+		rTitle:SetText("Logging  " .. (L:Enabled() and "|cff33ff33ON - logging|r" or "|cffff5555OFF|r"))
 		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. FmtNum(L:Unsaved()) .. " unsaved lines|r")
 	else
-		rTitle:SetText("Chronicle logs  |cffff5555not found|r")
+		rTitle:SetText("Logging  |cffff5555Chronicle logger not found|r")
 		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once to install the Chronicle logger|r")
 	end
 	rVerdict:SetText("Upload the log at |cffffd100chronicleclassic.com|r after your raid.\n|cff888888Addons can't reach the internet, so uploading happens on the website.|r")
@@ -2547,7 +2576,7 @@ function UI:RefreshMarks()
 	local names = M:PackNames(zone)
 	local yours = 0
 	for _ in pairs(WhoDidItDB.marks.packs[zone] or {}) do yours = yours + 1 end
-	rTitle:SetText("Marks  |cffffffff" .. zone .. "|r")
+	rTitle:SetText("Auto Marker  |cffffffff" .. zone .. "|r")
 	rInfo:SetText((MODE_TEXT[M:MarkMode()] or "") .. "   |cff888888|   " .. getn(names) .. " packs" .. (yours > 0 and (", " .. yours .. " yours") or "") .. "|r")
 	if M.standDown then
 		rVerdict:SetText("|cffff9933The separate AutoMarker addon is still loaded, so WhoDidIt is standing by.|r\n|cff888888It has been switched off - /reload and WhoDidIt takes over.|r")
@@ -2594,7 +2623,8 @@ function UI:LootGuideRows()
 	local rows = {}
 	head(rows, "Before the raid: soft-res")
 	step(rows, 1, { "Make a soft-res sheet at |cffffd100raidres.fly.dev|r and share the link.",
-		"Raiders pick the items they want." })
+		"Raiders pick the items they want." },
+		function() W:Prompt("Soft-res sheets: |cffffd100raidres.fly.dev|r\n|cff888888Press Ctrl+C to copy the link, then Esc.|r", "https://raidres.fly.dev", function() end) end, "copy link")
 	step(rows, 2, { "Lock the sheet, click |cffffd100RollFor export|r, then |cffffd100Copy RollFor data to clipboard|r." })
 	step(rows, 3, { "Click |cff33ff33Import soft-res|r, paste with Ctrl+V, click |cffffd100Import!|r" },
 		function() Lt:Key("softres_toggle") end, "open it")
@@ -2820,7 +2850,7 @@ local METHOD_TEXT = { freeforall = "Free for all", roundrobin = "Round robin", g
 
 function UI:RefreshLoot()
 	local Lt = W.Loot
-	leftHead:SetText("Loot")
+	leftHead:SetText("SR MasterLoot")
 	leftCount:SetText("")
 	fightList:SetData(UI:LootNavRows(), true)
 	mlBtn:SetText("Auto ML: " .. (Lt:Setting("auto_master_loot") ~= false and "|cff33ff33on|r" or "|cffff5555off|r"))
@@ -2828,12 +2858,12 @@ function UI:RefreshLoot()
 
 	local src = Lt:Source()
 	if not src then
-		rTitle:SetText("Loot  |cffff5555RollFor isn't installed yet|r")
+		rTitle:SetText("SR MasterLoot  |cffff5555RollFor isn't installed yet|r")
 		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once, then restart WoW|r")
 		rVerdict:SetText("RollFor is built in - the helper downloads it from its official source.\n"
 			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is downloaded: restart WoW (a /reload isn't enough).|r") or "|cff888888The guide below works without it.|r"))
 	else
-		rTitle:SetText("Loot  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
+		rTitle:SetText("SR MasterLoot  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
 			.. (src == "builtin" and "|cff33ff33built in|r" or "|cffffd100separate addon|r"))
 		local inGroup = GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0
 		local method, looter = Lt:LootMethod()
@@ -2886,9 +2916,11 @@ function UI:RefreshMissing()
 	for i = 1, getn(UI.logButtons) do UI.logButtons[i]:Hide() end
 	for i = 1, getn(UI.markButtons) do UI.markButtons[i]:Hide() end
 	for i = 1, getn(markOnly) do markOnly[i]:Hide() end
+	srCopy:Hide()
+	srSite:Hide()
 	for i = 1, getn(UI.lootButtons) do UI.lootButtons[i]:Hide() end
 	for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
-	local titles = { logs = "Logs", marks = "Marks", loot = "Loot" }
+	local titles = { logs = "Logging", marks = "Auto Marker", loot = "SR MasterLoot" }
 	leftHead:SetText(titles[UI.mode] or "Rankings")
 	leftCount:SetText("")
 	fightList:SetData({})
