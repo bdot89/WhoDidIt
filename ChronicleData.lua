@@ -1,7 +1,7 @@
 -- Every guild's raid times from Chronicle (chronicleclassic.com), fetched by
 -- tools\WhoDidIt-Sync.ps1 -CI. Generated - do not edit.
 WDI_CHRON_DATA = [[
-WDICHRON|2|1791298068|OctoWoW|90|ok
+WDICHRON|2|1791298528|OctoWoW|90|ok
 C|N'Zoth|Lower Tower of Karazhan|Repentance|Mixed|2417.9|1790969965|10|1ML2vlB5C1gVvP5g
 C|N'Zoth|Onyxia's Lair|BAD VIBES ONLY|Mixed|691.2|1787718033|31|pcdMuzIurso0ilAW
 C|Y'Shaarj|Onyxia's Lair|Sons of Mukla|Mixed|1569.4|1790884950|29|i-VzshwAoBoPFkCJ
@@ -218,7 +218,7 @@ K|C'Thun|Molten Core|Shazzrah|Hell Fire|Mixed|22.6|1790448538|27|yNaI9zSl01qmxJV
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Raid Therapy|Mixed|30.3|1790888280|18|cRsMKwIyTLD3eCQi
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Fury|Mixed|71.8|1789609528|10|a4WeStxSwtIDFJmu
 K|Y'Shaarj|Molten Core|Incindis|Crit Happens|Horde|67.6|1789587376|16|I_QbDUK4BpFvzu64
-K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Remnant|Mixed|56.6|1790915385|18|kUXysutu_4CmUobk
+K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Ost Ardent|Mixed|64.2|1790971409|35|aEy6XZvj14tDesFs
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Repentance|Mixed|22.7|1790975659|20|bMGJiIJ2CqpSdPXp
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Repentance|Mixed|46.1|1790969965|10|1ML2vlB5C1gVvP5g
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Ost Ardent|Mixed|37.6|1790970703|23|lTrVV39RZe-xiMQj
@@ -239,13 +239,13 @@ K|N'Zoth|Molten Core|Ragnaros|The Silver Crusade|Mixed|108.1|1791223035|37|d3-Ya
 K|N'Zoth|Molten Core|Incindis|Fika|Mixed|72.6|1791142745|28|GdWhy_-XcNVfQfPZ
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Cleave|Mixed|47.9|1790960633|18|eK40dQSPENKxz1Gt
 K|Y'Shaarj|Molten Core|Golemagg the Incinerator|Sons of Mukla|Mixed|56|1789317263|27|GHZcNUJq_rM__WoI
-K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Oktagon|Mixed|49|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Oktagon|Mixed|49|1788373356|34|YL6V27GWV2txU8Qg
+K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Oktagon|Mixed|25.2|1790879958|20|LPF6ZJtGW-HooheW
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Netherbane|Mixed|54.4|1790893583|15|rvcSEAiaIFlERi3v
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Sincerity First|Mixed|87.1|1786906117|10|fkWWwEGi8JVu9gi_
 K|N'Zoth|Molten Core|Ragnaros|Cold Embrace|Mixed|123.3|1790274549|36|Or5KoPpH1KaUqXhW
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|I Griefers Inc I|Mixed|56.1|1790874966|18|tD3gdnmKJI2YLRII
 K|N'Zoth|Onyxia's Lair|Onyxia|Die Gilde|Mixed|190.7|1789586681|26|BtqII3uvMiyKeFk8
-K|N'Zoth|Molten Core|Majordomo Executus|Hard Reserved|Mixed|83.1|1788618788|25|a_mWGJw7mwCqB4Lg
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|The Silver Crusade|Mixed|62.2|1790876462|20|6EMFJgOxrD72QG58
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Amnesia|Mixed|28.7|1789300896|31|kG4Yovuc2jQqyQph
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Skull Emoji|Mixed|35.2|1790972402|14|kYfMVapbHsNme9wM
@@ -269,7 +269,6 @@ K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Deja vu|Horde|76|1791149111|12|qD8ATim0GaP
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Cold Embrace|Mixed|57|1790274549|36|Or5KoPpH1KaUqXhW
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Ostatni Bastion|Mixed|57.6|1789232534|10|TLwZ6PrIPQKLAbPy
 K|Y'Shaarj|Molten Core|Majordomo Executus|ERROR|Horde|89.2|1789312120|33|8AH2fIAYdbjmgCcm
-K|Y'Shaarj|Zul'Gurub|High Priest Venoxis|Care Bears|Horde|47.2|1791145505|14|zGhTexo1Ua74vMqs
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|Sons of Mukla|Mixed|74.8|1790536484|28|58n2sasVgpfphQ5T
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Cold Embrace|Mixed|67.4|1790886835|10|9z5lNuSKpj48a9Tt
 K|Y'Shaarj|Zul'Gurub|Bloodlord Mandokir|Care Bears|Horde|84.6|1791145505|14|zGhTexo1Ua74vMqs
@@ -295,7 +294,7 @@ K|N'Zoth|Zul'Gurub|Gahz'ranka|The Ashen Banner|Mixed|41.4|1791138565|14|gpeAVkp8
 K|Y'Shaarj|Molten Core|Shazzrah|Sons of Mukla|Mixed|27.5|1790536484|28|58n2sasVgpfphQ5T
 K|Y'Shaarj|Molten Core|Baron Geddon|For The Horde|Alliance|41.8|1789149560|26|QRqlD85zZUr8Jr9p
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|INSANE|Mixed|76.2|1791226616|14|DstG88_PdvRA0UqR
-K|N'Zoth|Zul'Gurub|Gahz'ranka|strawberry fields|Mixed|33.3|1790990660|11|OpzRM_SgB_VAW2XZ
+K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Log Breaker Machine|Mixed|121.6|1788694328|23|pr7uyjsMS3Q2Uppm
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Cleave|Mixed|56.4|1789919598|10|K6c_IFB6bEWhkSOW
 K|N'Zoth|Molten Core|Majordomo Executus|Repentance|Mixed|80|1790456115|31|
 K|N'Zoth|Molten Core|Incindis|Schmetterlingsbrigade|Mixed|49.8|1790885317|26|3ZjGk_G_D-zPJsEa
@@ -310,6 +309,7 @@ K|N'Zoth|Molten Core|Golemagg the Incinerator|Ostatni Bastion|Mixed|45.3|1791053
 K|N'Zoth|Molten Core|Garr|Amnesia|Mixed|37|1789928607|28|cmu2egxxgQc-iG64
 K|N'Zoth|Molten Core|Baron Geddon|who pulled|Mixed|41.5|1790445679|26|mi5fTSsxWcRfytib
 K|N'Zoth|Molten Core|Majordomo Executus|Amnesia|Mixed|64.8|1788695099|30|Z1LvRjD7SRWIe6H2
+K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Fika|Mixed|75.1|1791226477|19|YyHUdGNU1FLFBg_x
 K|N'Zoth|Molten Core|Magmadar|Soulbound|Mixed|69.8|1787778314|28|uLW2k7EJDkI1DhfJ
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Schmetterlingsbrigade|Mixed|67.4|1790885317|26|3ZjGk_G_D-zPJsEa
 K|N'Zoth|Molten Core|Ragnaros|BAD VIBES ONLY|Mixed|120.5|1789530647|31|szND89OcSbPm6uxd
@@ -324,11 +324,10 @@ K|N'Zoth|Molten Core|Lucifron|Loot Goblins|Mixed|61.6|1791050326|30|SM21p7g1VnMq
 K|Y'Shaarj|Zul'Gurub|High Priest Thekal|Kor Kron Enforcers|Horde|19.4|1790878572|20|npu_oqDp8BCXDCMN
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|The Ashen Banner|Mixed|33.1|1791134910|18|VhPRldldQwIqD2kP
 K|N'Zoth|Molten Core|Majordomo Executus|Strawman Arguments|Mixed|75.1|1789285648|29|mbIZrkmgmBhQqWV0
-K|N'Zoth|Molten Core|Sulfuron Harbinger|Smokey Tokers|Mixed|45.5|1789585786|52|RW3oq_YdnDmGtb1g
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Eunoia|Mixed|50|1788376375|25|gjNz7_Rj60JnjRC-
 K|N'Zoth|Molten Core|Golemagg the Incinerator|BAD VIBES ONLY|Mixed|45.6|1789530647|31|szND89OcSbPm6uxd
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|ERROR|Horde|64.5|1790884508|31|u6eV4Khi0-4cVzL0
-K|N'Zoth|Molten Core|Garr|Ost Ardent|Mixed|41.8|1790539056|27|zwlmb46Mu4ZYry_5
+K|N'Zoth|Molten Core|Garr|Ost Ardent|Mixed|41.8|1790539056|27|tbc83LF-K-X7Ajl2
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Booty Bay Boys|Mixed|66.5|1790886387|19|rpff1F80Df0EQEP4
 K|Y'Shaarj|Molten Core|Majordomo Executus|I OKEAH I|Mixed|130.6|1789931030|31|82oNnn_ye7kXWA6t
 K|N'Zoth|Molten Core|Baron Geddon|Smokey Tokers|Mixed|38.3|1788375653|25|n2gRs5mAnV-92KgK
@@ -397,7 +396,6 @@ K|Y'Shaarj|Molten Core|Lucifron|For The Horde|Mixed|60.7|1790963553|26|zZAQ_HsZK
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|BAD VIBES ONLY|Mixed|39|1790913377|13|Ifq2W3-EYObOnuiO
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Cold Embrace|Mixed|68.8|1790886835|10|9z5lNuSKpj48a9Tt
 K|Y'Shaarj|Lower Tower of Karazhan|Brood Queen Araxxna|Sons of Mukla|Alliance|61.5|1786741320|10|2rCzf38H3oZemPeJ
-K|N'Zoth|Lower Tower of Karazhan|Moroes|Fika|Mixed|119.4|1790368964|15|
 K|Y'Shaarj|Molten Core|Garr|The Anvilguard|Alliance|123.4|1788899726|22|-mAvd7QTYSXMct72
 K|N'Zoth|Molten Core|Garr|Ostatni Bastion|Mixed|57.6|1788708556|22|VRKLdSAV_BnpKF9M
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Phoenix|Mixed|75.4|1790921945|10|ffEvSF9CdCc68jgA
@@ -411,9 +409,9 @@ K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Oktagon|Mixed|62.1|1788204313
 K|N'Zoth|Onyxia's Lair|Onyxia|Remnant|Mixed|193.7|1784255229|32|yxLmMVO4o6qIOUuc
 K|N'Zoth|Molten Core|Baron Geddon|The Crackshot Cartel|Mixed|45.3|1790447510|30|KrpPIWIAoE6nzMSK
 K|N'Zoth|Molten Core|Baron Geddon|Thud and Blunder|Mixed|48.6|1785549861|30|QNniodanPrx4Prdy
-K|N'Zoth|Zul'Gurub|High Priest Venoxis|Cleave|Mixed|23.4|1790960633|18|eK40dQSPENKxz1Gt
+K|N'Zoth|Molten Core|Majordomo Executus|Hard Reserved|Mixed|83.1|1788618788|25|a_mWGJw7mwCqB4Lg
 K|N'Zoth|Molten Core|Golemagg the Incinerator|ThunderClan Warriors|Mixed|47|1789239696|35|4D-DJpOpLLE5ia74
-K|N'Zoth|Molten Core|Golemagg the Incinerator|Cleave|Mixed|30|1789308371|29|RH19OngzjSRprptW
+K|N'Zoth|Molten Core|Golemagg the Incinerator|Cleave|Mixed|30|1789308356|29|WNkvyKyhXu5mzUqL
 K|C'Thun|Molten Core|Basalthar & Smoldaris|Warhammer|Mixed|89.1|1789887016|35|nC68y2P-7uP6c7DU
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Phoenix|Mixed|51|1788227552|33|_bCJQ2CJsXjSDw1O
 K|N'Zoth|Molten Core|Magmadar|Repentance|Mixed|51.9|1790456115|31|
@@ -421,6 +419,7 @@ K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Skill Issue|Mixed|71.4|1791230467|14|i2oiA
 K|N'Zoth|Zul'Gurub|Hakkar|Skull Emoji|Mixed|64.4|1790972402|14|kYfMVapbHsNme9wM
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Amnesia|Mixed|42.1|1785352282|10|-gxErZ1a3NyTS_fO
 K|N'Zoth|Molten Core|Ragnaros|Chlopaki z Barrensow|Mixed|189.9|1790103238|33|Q39stqhVNrMDcGPd
+K|Y'Shaarj|Molten Core|Baron Geddon|ERROR|Horde|41.6|1790884508|31|u6eV4Khi0-4cVzL0
 K|N'Zoth|Molten Core|Ragnaros|I Griefers Inc I|Mixed|98.2|1791222362|29|FMhliMSX7w-RAs9d
 K|N'Zoth|Molten Core|Majordomo Executus|Smokey Tokers|Mixed|80.8|1790273920|34|_NC7jL3rDy5--yqr
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Mushroom Vendor|Mixed|40.2|1790884983|10|rkBhrm-lLicoWmGj
@@ -438,6 +437,7 @@ K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|The Ashen Banner|Mixed|45.1
 K|N'Zoth|Molten Core|Sulfuron Harbinger|MEGAPANZAS|Mixed|42.6|1791157002|23|KDU2-I_2W7nF4Y_6
 K|N'Zoth|Molten Core|Garr|Soulbound|Mixed|101.6|1787778314|28|uLW2k7EJDkI1DhfJ
 K|N'Zoth|Molten Core|Incindis|We go again|Mixed|51.4|1790964546|29|bDAj5s9YwD4GbNzQ
+K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Bastion de Guerra|Mixed|75.2|1790377725|11|mA51sYJdtd3NfXH0
 K|Y'Shaarj|Onyxia's Lair|Broodcommander Axelus|ERROR|Horde|69.2|1790273872|32|
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Deja vu|Mixed|67.7|1789939340|11|JxeN7js5rE9uxrOg
 K|N'Zoth|Molten Core|Lucifron|The ScarIet Crusade|Mixed|126.8|1788104522|30|KUcUBeaLv9kAWsS1
@@ -460,15 +460,15 @@ K|N'Zoth|Zul'Gurub|High Priest Venoxis|MEGAPANZAS|Mixed|30.2|1790985667|16|_dqlh
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Skull Emoji|Mixed|59.7|1791141818|27|ZCV_J4G1NTprvi8I
 K|N'Zoth|Onyxia's Lair|Onyxia|Thud and Blunder|Mixed|226.5|1786042331|33|Y1D2LQvKtVgrHETz
 K|Y'Shaarj|Zul'Gurub|High Priestess Mar'li|ERROR|Horde|45.9|1791141000|17|60GTMC_N5I4TiIbR
-K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Loot Goblins|Mixed|41|1790880843|19|ntaGqBDzY7Q0HW0s
+K|C'Thun|Zul'Gurub|High Priest Thekal|Warhammer|Mixed|98.6|1790990504|12|yYN3zeqP3-C4VNAc
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|I OKEAH I|Mixed|79.9|1788550312|39|ENjtkHMKTOq-qHib
 K|N'Zoth|Molten Core|Shazzrah|Soulbound|Mixed|36.4|1787778314|28|uLW2k7EJDkI1DhfJ
 K|Y'Shaarj|Molten Core|Majordomo Executus|The Anvilguard|Alliance|193.9|1789675271|20|l5KYlE3OkEG_PU6D
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Skull Emoji|Mixed|36|1790971544|17|Idyss739gFSdev9f
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Booty Bay Boys|Mixed|53.1|1790797539|25|-asVrb25m-N1quQ5
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Ost Ardent|Mixed|58.7|1788292592|17|5QknGzkW0gJ52HbU
-K|N'Zoth|Lower Tower of Karazhan|Moroes|Raid Therapy|Mixed|53.4|1789680623|10|nwjSEicYbwNYFBfI
-K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Cleave|Mixed|24.6|1791213693|15|SZAY4sPcm5QweCjC
+K|N'Zoth|Lower Tower of Karazhan|Moroes|Raid Therapy|Mixed|53.4|1789680622|10|XVFpQibE5V6eO1la
+K|N'Zoth|Molten Core|Sulfuron Harbinger|Skull Emoji|Mixed|32.5|1789308929|28|LQ9MzsC7CeZ0_uBr
 K|N'Zoth|Onyxia's Lair|Onyxia|I Griefers Inc I|Mixed|191|1791224993|27|EsFQy0mGGJJtX8i6
 K|N'Zoth|Molten Core|Garr|Remnant|Mixed|43.7|1786068733|29|nUm7Ca5qM9yNy-MZ
 K|C'Thun|Zul'Gurub|High Priestess Mar'li|Hell Fire|Mixed|31.7|1791225683|20|qPUH7n7-mGkKeKnh
@@ -511,7 +511,7 @@ K|N'Zoth|Molten Core|Incindis|Phoenix|Mixed|43|1790646105|32|nV-11yJQ0FezFaSt
 K|Y'Shaarj|Onyxia's Lair|Onyxia|The Anvilguard|Alliance|425.5|1789589182|24|f7NM6LXHBRxbRte3
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|GTD|Mixed|46.8|1788707772|10|iI5AcRec1MVRTcBG
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|ThunderClan Warriors|Mixed|44.1|1791296714|20|mrlY7cnHy7GH3lMd
-K|Y'Shaarj|Molten Core|Majordomo Executus|Zug Zug|Horde|143|1786307234|26|o0yx_WKtfaDB-_SL
+K|N'Zoth|Lower Tower of Karazhan|Moroes|Fika|Mixed|119.4|1790368964|15|
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Bastion de Guerra|Mixed|98.1|1790899230|23|FZhVqLijzuVmm7Lv
 K|N'Zoth|Molten Core|Incindis|I Griefers Inc I|Mixed|36.8|1791222362|29|FMhliMSX7w-RAs9d
 K|N'Zoth|Molten Core|Baron Geddon|One Blood|Mixed|46.5|1790275061|20|V53mDh4q1v0YjVU6
@@ -537,25 +537,26 @@ K|N'Zoth|Molten Core|Sulfuron Harbinger|Perikato|Mixed|51.7|1789661411|23|TIl8zQ
 K|N'Zoth|Onyxia's Lair|Onyxia|Fury|Mixed|233.1|1790880539|34|UZLHZL_48eD0w1zc
 K|N'Zoth|Molten Core|Sulfuron Harbinger|The Ashen Banner|Mixed|47.5|1790992350|35|VJHHUSK9WNRzdCUp
 K|C'Thun|Zul'Gurub|High Priestess Arlokk|Hell Fire|Mixed|19.3|1790879692|19|uttsDpAPfiajxHhp
-K|N'Zoth|Molten Core|Basalthar & Smoldaris|Remnant|Mixed|37.7|1786671721|40|2uzBXVRFkkWhFwL2
+K|N'Zoth|Zul'Gurub|Gahz'ranka|strawberry fields|Mixed|33.3|1790990660|11|OpzRM_SgB_VAW2XZ
 K|Y'Shaarj|Molten Core|Baron Geddon|Kor Kron Enforcers|Horde|77.5|1791057980|22|JqIAJmezFAAlrg-8
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Loot Goblins|Mixed|64.7|1791226586|18|dxsNEJhOGjIxeZXT
 K|Y'Shaarj|Molten Core|Magmadar|Kor Kron Enforcers|Horde|63.7|1791057980|22|JqIAJmezFAAlrg-8
+K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Cleave|Mixed|26.9|1791213691|15|UlmbXP2ILCZaQLJL
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|INSANE|Mixed|67.4|1791226616|14|DstG88_PdvRA0UqR
 K|Y'Shaarj|Molten Core|Baron Geddon|Zug Zug|Horde|78|1789243841|21|d__ascEIx6MoaBDH
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|nope|Mixed|47.4|1787276527|31|NrpystHRxvLanVAL
-K|N'Zoth|Molten Core|Magmadar|Skill Issue|Mixed|58.8|1791116177|24|RxxlDTkGLUQ6uyUr
+K|N'Zoth|Molten Core|Ragnaros|Ninja Turtles|Mixed|133.7|1790277395|25|bDN6uXFZ19mtQT36
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Bastion de Guerra|Mixed|119.3|1791071117|11|ld9ZDDM51j3nOAIT
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Eunoia|Mixed|53.6|1786902411|10|Axpq3PljGgZF37LU
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Celestial Order|Mixed|68.8|1788706733|10|U6RXxX02K-yugFx5
-K|N'Zoth|Molten Core|Sulfuron Harbinger|Ost Ardent|Mixed|45.6|1790539056|27|zwlmb46Mu4ZYry_5
+K|N'Zoth|Molten Core|Sulfuron Harbinger|Ost Ardent|Mixed|45.6|1790539056|27|tbc83LF-K-X7Ajl2
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Cold Embrace|Mixed|57.9|1790879381|33|MaJWUMAWe3mlbrv9
 K|N'Zoth|Molten Core|Majordomo Executus|Raven|Mixed|211.7|1788294479|23|bdClYBH0rs2G_3Ji
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|MEGAPANZAS|Mixed|54.3|1791244273|10|TOzfYikMh5pXYEAc
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Deja vu|Mixed|49.2|1789591753|10|ScWieE6rXMYVjcj3
 K|N'Zoth|Molten Core|Lucifron|Schmetterlingsbrigade|Mixed|68.5|1790885317|26|3ZjGk_G_D-zPJsEa
 K|N'Zoth|Molten Core|Sulfuron Harbinger|nope|Mixed|41.5|1789438355|27|vUpAPorDpUnX2z-d
-K|N'Zoth|Molten Core|Incindis|Oktagon|Mixed|29.4|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Incindis|Oktagon|Mixed|29.4|1788373356|34|YL6V27GWV2txU8Qg
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Skull Emoji|Mixed|63|1788187183|10|XrFC8vT-mQ8CByl4
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Bastion de Guerra|Mixed|107|1790899230|23|FZhVqLijzuVmm7Lv
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Smokey Tokers|Mixed|22.2|1790881897|18|NrUOA_OcjbE0xbyT
@@ -563,7 +564,7 @@ K|N'Zoth|Molten Core|Majordomo Executus|The Crackshot Cartel|Mixed|91.2|17898376
 K|N'Zoth|Molten Core|Ragnaros|Soulbound|Mixed|168.2|1787778314|28|uLW2k7EJDkI1DhfJ
 K|N'Zoth|Molten Core|Ragnaros|Bastion de Guerra|Mixed|304.4|1790899230|23|FZhVqLijzuVmm7Lv
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|INSANE|Mixed|102.3|1791226616|14|DstG88_PdvRA0UqR
-K|Y'Shaarj|Lower Tower of Karazhan|Brood Queen Araxxna|ERROR|Horde|48.8|1788536145|10|uhyFUYInOhDJm8PQ
+K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Aura|Mixed|121.7|1787881229|10|AsPHbq9GIUsRH7Hc
 K|N'Zoth|Onyxia's Lair|Onyxia|Booty Bay Boys|Mixed|375.9|1790620757|24|ZecVKnGXKnyfjzi3
 K|Y'Shaarj|Zul'Gurub|Bloodlord Mandokir|Kor Kron Enforcers|Horde|70.9|1790878572|20|npu_oqDp8BCXDCMN
 K|N'Zoth|Onyxia's Lair|Onyxia|nope|Mixed|176.6|1787882327|35|ROIQC4ihKcy-YKU1
@@ -582,7 +583,6 @@ K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Branded|Horde|99.4|1789861236
 K|Y'Shaarj|Molten Core|Basalthar & Smoldaris|I OKEAH I|Mixed|74.6|1790795307|30|U70ln6q24A92WGWj
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Strawman Arguments|Mixed|46.2|1784574865|10|nNNcfuxl0Hm-4vg6
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Ninja Turtles|Mixed|52.8|1790277395|25|bDN6uXFZ19mtQT36
-K|N'Zoth|Molten Core|Sulfuron Harbinger|Skull Emoji|Mixed|32.5|1789308930|28|OAnEZidPoiclv1pQ
 K|N'Zoth|Molten Core|Magmadar|One Blood|Mixed|50.4|1789672470|38|WUwPe0lqASZBJVRw
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Oktagon|Mixed|21.4|1790879958|20|LPF6ZJtGW-HooheW
 K|Y'Shaarj|Molten Core|Magmadar|The Anvilguard|Alliance|71.3|1789675271|20|l5KYlE3OkEG_PU6D
@@ -591,6 +591,7 @@ K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|who pulled|Mixed|67|1790883320|16|VCTtLbbX
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Raid Therapy|Mixed|38.2|1790968435|12|XXmvtBCawHVyAES8
 K|Y'Shaarj|Molten Core|Baron Geddon|Crit Happens|Horde|153.6|1788806330|18|tdwZKhDuKFOXBDpk
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Booty Bay Boys|Mixed|56.4|1788811073|22|jKEaZoB0yLlp0Vt7
+K|N'Zoth|Zul'Gurub|High Priest Thekal|Netherbane|Mixed|126.2|1790893583|15|rvcSEAiaIFlERi3v
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|ThunderClan Warriors|Mixed|56.2|1788291706|10|jZLWP29mBLimAtDD
 K|N'Zoth|Molten Core|Ragnaros|Phoenix|Mixed|150.3|1788227552|33|_bCJQ2CJsXjSDw1O
 K|N'Zoth|Molten Core|Incindis|Booty Bay Boys|Mixed|47.1|1787688057|24|r2LEBhYmT0LOKtU3
@@ -598,10 +599,11 @@ K|N'Zoth|Molten Core|Majordomo Executus|Raid Therapy|Mixed|79.6|1790882819|28|tS
 K|N'Zoth|Molten Core|Baron Geddon|Schmetterlingsbrigade|Mixed|51.1|1790885317|26|3ZjGk_G_D-zPJsEa
 K|N'Zoth|Molten Core|Lucifron|Cold Embrace|Mixed|63.8|1790879381|33|MaJWUMAWe3mlbrv9
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Bastion de Guerra|Mixed|85.9|1790899230|23|FZhVqLijzuVmm7Lv
+K|N'Zoth|Molten Core|Shazzrah|Deja vu|Mixed|21.2|1789934051|27|2SDvaQm2m7-vY0yI
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Deja vu|Mixed|48.2|1790538614|31|f8htkmhC2SOPn0vt
 K|N'Zoth|Zul'Gurub|Hakkar|Skill Issue|Mixed|69.5|1791230467|14|i2oiAW2xjs-LrpBE
 K|N'Zoth|Onyxia's Lair|Onyxia|Perikato|Mixed|280.6|1789317643|20|DwPed8DdW4uzbQqc
-K|N'Zoth|Molten Core|Basalthar & Smoldaris|Ost Ardent|Mixed|46.9|1790539056|27|zwlmb46Mu4ZYry_5
+K|N'Zoth|Molten Core|Basalthar & Smoldaris|Ost Ardent|Mixed|46.9|1790539056|27|tbc83LF-K-X7Ajl2
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|Netherbane|Mixed|49.2|1790893583|15|rvcSEAiaIFlERi3v
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|The ScarIet Crusade|Mixed|71.9|1788706292|38|UX454bg6TEUSPmj3
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Loot Goblins|Mixed|53.4|1789822248|22|8zoXU5DUFcTe-DNV
@@ -610,7 +612,6 @@ K|N'Zoth|Molten Core|Shazzrah|Ostatni Bastion|Mixed|26.2|1791053719|25|vUswrZhap
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Pyramid Scheme|Mixed|75.2|1785617715|10|Tddx-rBaWxyA1gpE
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|Deja vu|Mixed|34.3|1790883701|12|dJOjKxLd2qw_eUok
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Fury|Mixed|53.7|1789669849|29|RG1XlrdgWCW7YKCC
-K|N'Zoth|Molten Core|Lucifron|Chlopaki z Barrensow|Mixed|73.5|1790103238|33|Q39stqhVNrMDcGPd
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Amnesia|Mixed|40.5|1783879613|33|vF8vOPMzw3Y7SbXC
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Mushroom Vendor|Mixed|44.1|1789325611|33|CuERabfXcde_tz0u
 K|N'Zoth|Zul'Gurub|Hakkar|Ninja Turtles|Mixed|93.6|1791141378|19|2Ii4VYxjHvnf3Icp
@@ -625,7 +626,7 @@ K|Y'Shaarj|Molten Core|Baron Geddon|Sons of Mukla|Mixed|46.5|1790882375|32|Pl8sN
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|The Cult|Mixed|33.1|1791089112|12|JLA8An-Eh2p-Zx9Z
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Chlopaki z Barrensow|Mixed|75.9|1790103238|33|Q39stqhVNrMDcGPd
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Oktagon|Mixed|34.9|1788204313|10|IT7Exa9GptXBoOuN
-K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Skill Issue|Mixed|66.9|1790884118|10|APQUs-u1UDRaCAC6
+K|N'Zoth|Molten Core|Lucifron|Chlopaki z Barrensow|Mixed|73.5|1790103238|33|Q39stqhVNrMDcGPd
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|who pulled|Mixed|24.2|1790883320|16|VCTtLbbXzDTtBnnK
 K|N'Zoth|Zul'Gurub|High Priest Thekal|The Ashen Banner|Mixed|58.3|1791134910|18|VhPRldldQwIqD2kP
 K|N'Zoth|Molten Core|Incindis|GTD|Mixed|51.8|1789310103|23|oxDClE8z8NvS3zVy
@@ -637,9 +638,9 @@ K|Y'Shaarj|Zul'Gurub|High Priest Thekal|The Anvilguard|Mixed|107.2|1790968583|12
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|Zug Zug|Horde|82.4|1789243841|21|d__ascEIx6MoaBDH
 K|N'Zoth|Molten Core|Baron Geddon|Eunoia|Mixed|48.7|1787166515|23|yV8Tm4NbEvasAsvu
 K|Y'Shaarj|Onyxia's Lair|Broodcommander Axelus|The Anvilguard|Alliance|233.2|1789589182|24|f7NM6LXHBRxbRte3
-K|N'Zoth|Molten Core|Basalthar & Smoldaris|who pulled|Mixed|52.5|1791051124|22|oqNUEhwG11aoiyXC
+K|N'Zoth|Lower Tower of Karazhan|Moroes|Deja vu|Mixed|72.2|1789591753|10|ScWieE6rXMYVjcj3
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Skull Emoji|Mixed|36.9|1788187183|10|XrFC8vT-mQ8CByl4
-K|N'Zoth|Molten Core|Ragnaros|Oktagon|Mixed|103.4|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Ragnaros|Oktagon|Mixed|103.4|1788373356|34|YL6V27GWV2txU8Qg
 K|N'Zoth|Molten Core|Ragnaros|The ScarIet Crusade|Mixed|205.3|1788706292|38|UX454bg6TEUSPmj3
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|ThunderClan Warriors|Mixed|59.6|1788291706|10|jZLWP29mBLimAtDD
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Smokey Tokers|Mixed|70.2|1788098246|11|COvxOmRxqmED8hca
@@ -651,10 +652,11 @@ K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Bastion de Guerra|Mixed|57.
 K|N'Zoth|Molten Core|Ragnaros|strawberry fields|Mixed|99.4|1790521460|20|3d_hfMnz1y-OmLCZ
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Netherbane|Mixed|56.6|1790893583|15|rvcSEAiaIFlERi3v
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|ThunderClan Warriors|Mixed|50.9|1791296714|20|mrlY7cnHy7GH3lMd
-K|N'Zoth|Molten Core|Golemagg the Incinerator|I Griefers Inc I|Mixed|36.5|1788804761|34|yoM7lnyRvYEKKZn5
+K|N'Zoth|Molten Core|Golemagg the Incinerator|I Griefers Inc I|Mixed|36.5|1788804761|34|NeOfkWnhlGcdwQ25
 K|N'Zoth|Molten Core|Garr|Eunoia|Mixed|57.8|1787166515|23|yV8Tm4NbEvasAsvu
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Eunoia|Mixed|80.1|1786902411|10|Axpq3PljGgZF37LU
 K|Y'Shaarj|Molten Core|Garr|ERROR|Horde|76|1788709012|42|gE42Kpx46SZJtWqU
+K|N'Zoth|Zul'Gurub|High Priestess Arlokk|nope|Mixed|22.2|1790912398|17|vKh6kJZpHCkAmfus
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Ostatni Bastion|Mixed|39.5|1789232534|10|TLwZ6PrIPQKLAbPy
 K|N'Zoth|Molten Core|Shazzrah|strawberry fields|Mixed|17.8|1789311100|27|2TE9j6QUYN-jtMVr
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Ostatni Bastion|Mixed|22.4|1790880935|19|FkPCwtMrp-IYDkAR
@@ -671,9 +673,9 @@ K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Ninja Turtles|Mixed|64.6|1785
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Tolerable Company|Mixed|64.7|1787688935|27|AmPu2jNJ6b0X9Uq4
 K|Y'Shaarj|Onyxia's Lair|Onyxia|Care Bears|Horde|360.6|1789762922|31|h36a5_eJIYa80Nic
 K|N'Zoth|Molten Core|Majordomo Executus|I Griefers Inc I|Mixed|74.1|1790014116|29|7B0Fh69WgoaUDKFb
-K|N'Zoth|Onyxia's Lair|Onyxia|The Non Profit|Mixed|367.5|1787427134|23|Ix1LODPxbaT33-uM
+K|N'Zoth|Onyxia's Lair|Onyxia|The Non Profit|Mixed|367.5|1787427134|23|Nrcad6hpv2WROdOT
 K|N'Zoth|Molten Core|Magmadar|Booty Bay Boys|Mixed|55.5|1789588327|23|18RhkDK2LkFxxg2d
-K|Y'Shaarj|Molten Core|Baron Geddon|ERROR|Horde|41.6|1790884508|31|u6eV4Khi0-4cVzL0
+K|N'Zoth|Molten Core|Basalthar & Smoldaris|Remnant|Mixed|37.7|1786671721|40|2uzBXVRFkkWhFwL2
 K|N'Zoth|Zul'Gurub|Hakkar|Raid Therapy|Mixed|59.4|1791140720|15|1G7a4lkQk2XLa6xo
 K|N'Zoth|Molten Core|Majordomo Executus|The ScarIet Crusade|Mixed|151.8|1788706292|38|UX454bg6TEUSPmj3
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Aura|Mixed|107.1|1787881229|10|AsPHbq9GIUsRH7Hc
@@ -684,8 +686,9 @@ K|N'Zoth|Molten Core|Garr|Perikato|Mixed|79.7|1789661411|23|TIl8zQhQT6T1SirF
 K|Y'Shaarj|Molten Core|Golemagg the Incinerator|Kor Kron Enforcers|Horde|86.4|1791057980|22|JqIAJmezFAAlrg-8
 K|N'Zoth|Molten Core|Shazzrah|Chlopaki z Barrensow|Mixed|34.4|1790103238|33|Q39stqhVNrMDcGPd
 K|N'Zoth|Molten Core|Lucifron|Ninja Turtles|Mixed|64.9|1790277395|25|bDN6uXFZ19mtQT36
+K|N'Zoth|Zul'Gurub|High Priest Venoxis|Cleave|Mixed|23.4|1790960633|18|eK40dQSPENKxz1Gt
 K|N'Zoth|Molten Core|Garr|Schmetterlingsbrigade|Mixed|147.8|1790885317|26|3ZjGk_G_D-zPJsEa
-K|N'Zoth|Zul'Gurub|High Priestess Mar'li|We go again|Mixed|35.5|1790970132|12|lvbbXzYbLMeOrNz2
+K|N'Zoth|Molten Core|Sulfuron Harbinger|Smokey Tokers|Mixed|45.5|1789585786|52|RW3oq_YdnDmGtb1g
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|MEGAPANZAS|Mixed|58.6|1791159116|24|Yo_M1O9ApGHvgiCi
 K|N'Zoth|Molten Core|Incindis|Thud and Blunder|Mixed|44.8|1787250640|36|QloAYrAFvu2Gc3DM
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Booty Bay Boys|Mixed|37.7|1790886387|19|rpff1F80Df0EQEP4
@@ -697,7 +700,7 @@ K|C'Thun|Molten Core|Magmadar|Hell Fire|Mixed|51.6|1791039572|25|em5gHDbW51NHADC
 K|N'Zoth|Onyxia's Lair|Onyxia|The Crackshot Cartel|Mixed|308.1|1789234716|19|V682_zeh7DVrYTWv
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Fury|Mixed|33.9|1790885361|16|AVCPr7aGVD1ZIQhA
 K|N'Zoth|Zul'Gurub|Hakkar|The Cult|Mixed|104.9|1791089112|12|JLA8An-Eh2p-Zx9Z
-K|N'Zoth|Zul'Gurub|High Priest Thekal|Raid Therapy|Mixed|60.8|1790968435|12|XXmvtBCawHVyAES8
+K|Y'Shaarj|Molten Core|Ragnaros|Sons of Mukla|Mixed|142.5|1790882375|32|Pl8sNau8XGr-WXtS
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Ostatni Bastion|Mixed|61.6|1789232534|10|TLwZ6PrIPQKLAbPy
 K|N'Zoth|Molten Core|Lucifron|Strawman Arguments|Mixed|40.4|1788291135|27|KJC_nHlsjPCAFS2d
 K|N'Zoth|Molten Core|Sulfuron Harbinger|I Griefers Inc I|Mixed|38.3|1790014116|29|7B0Fh69WgoaUDKFb
@@ -718,7 +721,7 @@ K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Remnant|Mixed|28.4|1790915385|18|kUXysu
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Fury|Mixed|48|1789609528|10|a4WeStxSwtIDFJmu
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Bastion de Guerra|Mixed|62.4|1790377725|11|mA51sYJdtd3NfXH0
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Tolerable Company|Mixed|70.5|1790102973|11|ydmfTNyxBUsQpVMB
-K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Aura|Mixed|121.7|1787881229|10|AsPHbq9GIUsRH7Hc
+K|N'Zoth|Molten Core|Majordomo Executus|Netherbane|Mixed|121.6|1790635247|26|h6oRWkQhax6G1Dvy
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Cleave|Mixed|38.5|1791121388|32|3AugNayucrjSN_zY
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|Care Bears|Horde|87|1786218309|38|4MzjYoKTJyKLY5AN
 K|N'Zoth|Molten Core|Majordomo Executus|Booty Bay Surf Club|Mixed|131|1788209209|22|uskxUd-vkxToWRYl
@@ -743,7 +746,7 @@ K|N'Zoth|Zul'Gurub|High Priestess Arlokk|I Griefers Inc I|Mixed|22.6|1790874966|
 K|N'Zoth|Molten Core|Ragnaros|The Crackshot Cartel|Mixed|147.7|1789837642|26|qZ35Q8D5iTUDa1W7
 K|Y'Shaarj|Lower Tower of Karazhan|Moroes|ERROR|Horde|77.2|1788536145|10|uhyFUYInOhDJm8PQ
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Remnant|Mixed|27.1|1791251715|18|0nA1lvpcpLeZzZ9m
-K|N'Zoth|Zul'Gurub|Hakkar|strawberry fields|Mixed|54.3|1791215522|20|exWMB9a-PYp4A-oC
+K|N'Zoth|Molten Core|Basalthar & Smoldaris|Smokey Tokers|Mixed|54|1789585786|52|RW3oq_YdnDmGtb1g
 K|N'Zoth|Molten Core|Lucifron|One Blood|Mixed|64.6|1789672470|38|WUwPe0lqASZBJVRw
 K|N'Zoth|Molten Core|Magmadar|We go again|Mixed|62.1|1790964546|29|bDAj5s9YwD4GbNzQ
 K|N'Zoth|Molten Core|Ragnaros|Booty Bay Surf Club|Mixed|214.8|1786390114|28|OAOPp6fdJLfs79X7
@@ -757,7 +760,7 @@ K|N'Zoth|Lower Tower of Karazhan|Moroes|Bastion de Guerra|Mixed|95.8|1791243100|
 K|Y'Shaarj|Lower Tower of Karazhan|Grizikil|Care Bears|Horde|64.8|1789155455|11|FGr5JB_Lv9BOAWVL
 K|Y'Shaarj|Lower Tower of Karazhan|Grizikil|The Anvilguard|Alliance|74.2|1789757574|10|sYIeak338mV8x0YY
 K|N'Zoth|Molten Core|Incindis|One Blood|Mixed|46.2|1789672470|38|WUwPe0lqASZBJVRw
-K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Ost Ardent|Mixed|64.2|1790971409|35|aEy6XZvj14tDesFs
+K|Y'Shaarj|Zul'Gurub|Jin'do the Hexxer|ERROR|Horde|36.3|1791141000|17|60GTMC_N5I4TiIbR
 K|N'Zoth|Molten Core|Magmadar|Tolerable Company|Mixed|70.1|1789676428|30|_1_uV8jwI6X8s8m3
 K|N'Zoth|Molten Core|Baron Geddon|Booty Bay Surf Club|Mixed|79.5|1786390114|28|OAOPp6fdJLfs79X7
 K|N'Zoth|Molten Core|Majordomo Executus|Skull Emoji|Mixed|48.1|1791139913|26|UsNpz4ih3BOBRcWn
@@ -776,10 +779,9 @@ K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Strawman Arguments|Mixed|40|17882
 K|Y'Shaarj|Molten Core|Sulfuron Harbinger|Sons of Mukla|Mixed|59.7|1790882375|32|Pl8sNau8XGr-WXtS
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Die Gilde|Mixed|45.7|1787770707|32|64BoM0TyRBb55uf5
 K|Y'Shaarj|Onyxia's Lair|Onyxia|Sons of Mukla|Mixed|263.8|1789929926|21|Mv1oKmMaD-C3FskM
-K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Cleave|Mixed|41.6|1791128352|10|SjgTbhdimKe2ndEz
+K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Die Gilde|Mixed|43.7|1787776304|10|HoZlUHeHs0DMQe-A
 K|N'Zoth|Onyxia's Lair|Onyxia|BAD VIBES ONLY|Mixed|238.7|1787718033|31|pcdMuzIurso0ilAW
 K|N'Zoth|Molten Core|Sulfuron Harbinger|who pulled|Mixed|55.9|1791051124|22|oqNUEhwG11aoiyXC
-K|N'Zoth|Molten Core|Sulfuron Harbinger|DROPA NUNCA|Mixed|73.4|1788227907|23|XIfnn-GZSMmKUt0R
 K|N'Zoth|Molten Core|Ragnaros|DROPA NUNCA|Mixed|149.7|1787361398|27|Kn5zbiGO-ZFWoBRE
 K|N'Zoth|Molten Core|Garr|who pulled|Mixed|77.8|1790445679|26|mi5fTSsxWcRfytib
 K|N'Zoth|Molten Core|Magmadar|Remnant|Mixed|32.9|1786068733|29|nUm7Ca5qM9yNy-MZ
@@ -796,6 +798,7 @@ K|N'Zoth|Molten Core|Lucifron|Skull Emoji|Mixed|44|1788201839|28|KR8-fnV3fRoPLEZ
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|The Cult|Mixed|110.9|1791089112|12|JLA8An-Eh2p-Zx9Z
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Skull Emoji|Mixed|34.7|1790972402|14|kYfMVapbHsNme9wM
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|We go again|Mixed|40.7|1790970132|12|lvbbXzYbLMeOrNz2
+K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Skill Issue|Mixed|66.9|1790884118|10|APQUs-u1UDRaCAC6
 K|Y'Shaarj|Zul'Gurub|Hakkar|The Anvilguard|Mixed|115.4|1790968583|12|bBtCdTLNm0bWTEvZ
 K|N'Zoth|Molten Core|Baron Geddon|Soulbound|Mixed|61.5|1787778314|28|uLW2k7EJDkI1DhfJ
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|BAD VIBES ONLY|Mixed|46.9|1790913377|13|Ifq2W3-EYObOnuiO
@@ -811,15 +814,14 @@ K|Y'Shaarj|Molten Core|Shazzrah|Care Bears|Horde|34.9|1788706871|29|t8naHLr42S6k
 K|N'Zoth|Molten Core|Incindis|Remnant|Mixed|28.2|1786068733|29|nUm7Ca5qM9yNy-MZ
 K|N'Zoth|Molten Core|Baron Geddon|Tolerable Company|Mixed|61|1790280316|31|wnGXfx57WIZV9UMH
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Fika|Mixed|128.1|1791142745|28|GdWhy_-XcNVfQfPZ
-K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Die Gilde|Mixed|43.7|1787776304|10|HoZlUHeHs0DMQe-A
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Fika|Mixed|89.9|1790368964|15|
 K|N'Zoth|Zul'Gurub|High Priest Thekal|INSANE|Mixed|121.4|1791226616|14|DstG88_PdvRA0UqR
 K|N'Zoth|Molten Core|Lucifron|Repentance|Mixed|60.7|1791057483|28|05eYSS-8jLzIxQUf
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Skull Emoji|Mixed|40.6|1788187183|10|XrFC8vT-mQ8CByl4
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|OnyFans|Mixed|87.8|1790744320|10|U7xunl6Ekdv3jW-o
-K|N'Zoth|Onyxia's Lair|Onyxia|Log Breaker Machine|Mixed|255.7|1788694328|23|pr7uyjsMS3Q2Uppm
+K|N'Zoth|Lower Tower of Karazhan|Moroes|BAD VIBES ONLY|Mixed|68.5|1789617510|10|aDI9lXYBVLDJz40_
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Remnant|Mixed|42.1|1788830628|10|KCe00OFJ529AdiVJ
-K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|strawberry fields|Mixed|59.6|1789920790|10|
+K|N'Zoth|Molten Core|Garr|I Griefers Inc I|Mixed|40.1|1790014116|29|7B0Fh69WgoaUDKFb
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Eunoia|Mixed|58.3|1788376375|25|gjNz7_Rj60JnjRC-
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Chlopaki z Barrensow|Mixed|63.3|1790103238|33|Q39stqhVNrMDcGPd
 K|Y'Shaarj|Lower Tower of Karazhan|Brood Queen Araxxna|Care Bears|Horde|57.8|1789758105|10|JoZpaGSDRcl6Kr_r
@@ -845,14 +847,14 @@ K|N'Zoth|Molten Core|Lucifron|We go again|Mixed|115.3|1790964546|29|bDAj5s9YwD4G
 K|Y'Shaarj|Lower Tower of Karazhan|Lord Blackwald II|Care Bears|Horde|71.7|1789758105|10|JoZpaGSDRcl6Kr_r
 K|Y'Shaarj|Molten Core|Lucifron|Care Bears|Horde|77.7|1787431499|28|E9gScK-bosD4MI_o
 K|N'Zoth|Molten Core|Garr|BAD VIBES ONLY|Mixed|61.1|1790134541|26|Hg_fboyGtxENOEhG
+K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Cleave|Mixed|41.6|1791128352|10|SjgTbhdimKe2ndEz
 K|Y'Shaarj|Lower Tower of Karazhan|Grizikil|Sons of Mukla|Alliance|66.4|1786130338|10|caEr3hlAjNtQrQtQ
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Aura|Mixed|86.4|1791078565|15|pnSqZzEov_Y7W9oy
 K|Y'Shaarj|Lower Tower of Karazhan|Clawlord Howlfang|ERROR|Horde|68.8|1786729756|10|Hx_WJSIqKUrF-sK5
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Repentance|Mixed|107.7|1791060129|27|jpCXDnfpXwg5bW99
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|strawberry fields|Mixed|27.7|1790990660|11|OpzRM_SgB_VAW2XZ
-K|N'Zoth|Lower Tower of Karazhan|Grizikil|Raid Therapy|Mixed|31.5|1789680623|10|nwjSEicYbwNYFBfI
+K|N'Zoth|Lower Tower of Karazhan|Grizikil|Raid Therapy|Mixed|31.5|1789680622|10|XVFpQibE5V6eO1la
 K|N'Zoth|Onyxia's Lair|Onyxia|Strawman Arguments|Mixed|189.7|1788286889|27|amUh_fghMTI3ZdZw
-K|C'Thun|Zul'Gurub|High Priest Thekal|Warhammer|Mixed|98.6|1790990504|12|yYN3zeqP3-C4VNAc
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Smokey Tokers|Mixed|31.1|1790881897|18|NrUOA_OcjbE0xbyT
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Mushroom Vendor|Mixed|45.1|1791060973|16|Uq3_NSyPqWIPaZS3
 K|Y'Shaarj|Molten Core|Garr|I OKEAH I|Mixed|93.8|1789931030|31|82oNnn_ye7kXWA6t
@@ -864,7 +866,6 @@ K|N'Zoth|Lower Tower of Karazhan|Moroes|Branded|Horde|103.3|1789861236|10|zDj2aT
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|Ost Ardent|Mixed|30.6|1791126031|18|aMtil9bmyVMCUPzo
 K|N'Zoth|Zul'Gurub|Gahz'ranka|The Silver Crusade|Mixed|38.3|1790876462|20|6EMFJgOxrD72QG58
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|The ScarIet Crusade|Alliance|77.3|1788021138|10|KEnv9CXPlTOF2N0e
-K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Nebula|Mixed|107.3|1781275431|10|1IiyhnLo9bDBMYVM
 K|Y'Shaarj|Molten Core|Magmadar|Sons of Mukla|Mixed|54.9|1790536484|28|58n2sasVgpfphQ5T
 K|N'Zoth|Molten Core|Majordomo Executus|Booty Bay Boys|Mixed|130.5|1786996984|25|SKOsAWm10rKrEX9E
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Redridge Ultras|Mixed|60|1790792431|29|4gOOvR_x15z1vpvp
@@ -884,11 +885,11 @@ K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Schmetterlingsbrigade|Mixed|40.1|179097
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|The Silver Crusade|Mixed|51.7|1786905001|10|5Qurf6-EOfTuvmof
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Phoenix|Mixed|81.5|1790921945|10|ffEvSF9CdCc68jgA
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|MEGAPANZAS|Mixed|29.1|1791249640|14|3bfdKxJWPPTxbwa1
-K|Y'Shaarj|Zul'Gurub|Jin'do the Hexxer|ERROR|Horde|36.3|1791141000|17|60GTMC_N5I4TiIbR
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|One Blood|Mixed|24.9|1791142271|19|O2KRKUOS_ruIyC2M
 K|N'Zoth|Molten Core|Magmadar|Schmetterlingsbrigade|Mixed|61.6|1790885317|26|3ZjGk_G_D-zPJsEa
 K|N'Zoth|Molten Core|Ragnaros|Thud and Blunder|Mixed|129.2|1786645605|35|3NjGAkN2wfTm8qYi
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|strawberry fields|Mixed|16.9|1791215522|20|exWMB9a-PYp4A-oC
+K|Y'Shaarj|Molten Core|Majordomo Executus|Zug Zug|Horde|143|1786307234|26|o0yx_WKtfaDB-_SL
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|We go again|Mixed|29.3|1790970132|12|lvbbXzYbLMeOrNz2
 K|N'Zoth|Molten Core|Shazzrah|who pulled|Mixed|23.9|1791051124|22|oqNUEhwG11aoiyXC
 K|N'Zoth|Molten Core|Ragnaros|Raven|Mixed|204.6|1788294478|23|4GnQnUlJA52eOTtV
@@ -901,7 +902,7 @@ K|N'Zoth|Molten Core|Baron Geddon|Cleave|Mixed|24.9|1788702448|25|K0fXJqYpcpy313
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Oktagon|Mixed|43.5|1788373356|34|YL6V27GWV2txU8Qg
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Smokey Tokers|Mixed|42.2|1788375653|25|n2gRs5mAnV-92KgK
 K|N'Zoth|Onyxia's Lair|Onyxia|Amnesia|Mixed|175.5|1785348586|20|fKerGfVK4SPbQy3e
-K|N'Zoth|Molten Core|Lucifron|Booty Bay Surf Club|Mixed|79.7|1787692955|22|HkprDh0D5HytgKw-
+K|N'Zoth|Molten Core|Lucifron|Booty Bay Surf Club|Mixed|79.7|1787692955|22|fX9TYlKB7oqBym4X
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|Kor Kron Enforcers|Horde|97.1|1791057980|22|JqIAJmezFAAlrg-8
 K|N'Zoth|Molten Core|Ragnaros|Hard Reserved|Mixed|112.1|1788618788|25|a_mWGJw7mwCqB4Lg
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Bastion de Guerra|Mixed|158.2|1791071117|11|ld9ZDDM51j3nOAIT
@@ -913,14 +914,13 @@ K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Chlopaki z Barrensow|Mixed|146.5|17
 K|C'Thun|Molten Core|Ragnaros|Warhammer|Mixed|161.8|1789887016|35|nC68y2P-7uP6c7DU
 K|N'Zoth|Molten Core|Magmadar|Fury|Mixed|40.3|1790274870|33|DORhxQAKWrVowd2r
 K|N'Zoth|Zul'Gurub|Hakkar|Netherbane|Mixed|209.6|1790893583|15|rvcSEAiaIFlERi3v
-K|N'Zoth|Molten Core|Magmadar|Oktagon|Mixed|39.5|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Magmadar|Oktagon|Mixed|39.5|1788373356|34|YL6V27GWV2txU8Qg
 K|N'Zoth|Molten Core|Ragnaros|Fury|Mixed|119.6|1790386803|30|JfiR3teO0Q9ApBNc
 K|N'Zoth|Zul'Gurub|Gri'lek|Loot Goblins|Mixed|42.3|1791226586|18|dxsNEJhOGjIxeZXT
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|The Ashen Banner|Mixed|27.8|1791134910|18|VhPRldldQwIqD2kP
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Raid Therapy|Mixed|47.2|1790888280|18|cRsMKwIyTLD3eCQi
 K|Y'Shaarj|Molten Core|Garr|Sons of Mukla|Mixed|59.4|1790536484|28|58n2sasVgpfphQ5T
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Aura|Mixed|54.7|1791078565|15|pnSqZzEov_Y7W9oy
-K|N'Zoth|Lower Tower of Karazhan|Moroes|BAD VIBES ONLY|Mixed|68.5|1789617510|10|aDI9lXYBVLDJz40_
 K|Y'Shaarj|Zul'Gurub|High Priestess Jeklik|Care Bears|Horde|47.1|1790891571|15|A3UqxKViTXXLAPVc
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Fury|Mixed|41.6|1791257086|11|-RES1Qo4gYK7QXzN
 K|Y'Shaarj|Molten Core|Sulfuron Harbinger|For The Horde|Alliance|56.2|1789149560|26|QRqlD85zZUr8Jr9p
@@ -936,17 +936,18 @@ K|N'Zoth|Molten Core|Basalthar & Smoldaris|Cold Embrace|Mixed|61|1790879381|33|M
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Skill Issue|Mixed|29.9|1790971037|16|lQNe_Zqb55XOb6tp
 K|N'Zoth|Molten Core|Incindis|MEGAPANZAS|Mixed|37.9|1790551583|24|UwBHJdUFC_mriHn4
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|ThunderClan Warriors|Mixed|72.9|1789744003|10|QFKW08ai3E_jE4dN
+K|N'Zoth|Molten Core|Garr|Die Gilde|Mixed|41.7|1789325778|26|6iSdKmOndeu7-v4E
 K|N'Zoth|Molten Core|Magmadar|Skull Emoji|Mixed|35.3|1787683293|27|bn6DlDD595smknX2
 K|Y'Shaarj|Zul'Gurub|High Priest Venoxis|The Anvilguard|Mixed|46.4|1790968583|12|bBtCdTLNm0bWTEvZ
-K|N'Zoth|Molten Core|Shazzrah|Smokey Tokers|Mixed|22.1|1789585786|52|RW3oq_YdnDmGtb1g
+K|N'Zoth|Molten Core|Shazzrah|Smokey Tokers|Mixed|22.1|1789209780|32|9ISBBsiRMpYIR2DR
 K|N'Zoth|Molten Core|Incindis|Smokey Tokers|Mixed|40.2|1788375653|25|n2gRs5mAnV-92KgK
 K|N'Zoth|Molten Core|Golemagg the Incinerator|nope|Mixed|40.2|1790904599|34|rI75mO48n0_kyJZz
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Aura|Mixed|114.8|1791078565|15|pnSqZzEov_Y7W9oy
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Cleave|Mixed|37.2|1790516869|26|gB8lVzABAD73D16t
-K|N'Zoth|Zul'Gurub|High Priestess Arlokk|nope|Mixed|22.2|1790912398|17|vKh6kJZpHCkAmfus
+K|N'Zoth|Onyxia's Lair|Onyxia|BRUTAL|Mixed|236.2|1790447391|29|u0Q4tLJDaRJa_74k
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Die Gilde|Mixed|49.5|1787776304|10|HoZlUHeHs0DMQe-A
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Deja vu|Mixed|50.4|1786910748|30|14QtWHePlEta_LKY
-K|N'Zoth|Molten Core|Sulfuron Harbinger|Redridge Ultras|Mixed|54.4|1790792431|29|4gOOvR_x15z1vpvp
+K|N'Zoth|Molten Core|Sulfuron Harbinger|Redridge Ultras|Mixed|54.4|1790792431|29|0fbvu5_XpBLV-XA_
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Repentance|Mixed|34.3|1790975659|20|bMGJiIJ2CqpSdPXp
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Skull Emoji|Mixed|31.2|1791139913|26|UsNpz4ih3BOBRcWn
 K|N'Zoth|Molten Core|Majordomo Executus|The Ashen Banner|Mixed|82.1|1790388226|35|QwUaMfBgaUD0fosu
@@ -954,7 +955,6 @@ K|N'Zoth|Molten Core|Ragnaros|The Iron Hammers|Mixed|223.4|1791062364|22|lXevLAo
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Oktagon|Mixed|25.6|1790879958|20|LPF6ZJtGW-HooheW
 K|N'Zoth|Molten Core|Garr|BRUTAL|Mixed|85.9|1789236518|28|U8T2Poqgz0lzllrT
 K|N'Zoth|Zul'Gurub|Hakkar|ThunderClan Warriors|Mixed|81.6|1791296714|20|mrlY7cnHy7GH3lMd
-K|Y'Shaarj|Zul'Gurub|High Priest Thekal|ERROR|Horde|88.6|1791141000|17|60GTMC_N5I4TiIbR
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Smokey Tokers|Mixed|32.4|1791054986|20|sxW8vLT7hFOS_jgW
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Deja vu|Mixed|89.5|1790883701|12|dJOjKxLd2qw_eUok
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|The Silver Crusade|Mixed|58.9|1786905001|10|5Qurf6-EOfTuvmof
@@ -969,6 +969,7 @@ K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Loot Goblins|Mixed|30.7|1790880843|19|ntaGq
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Oktagon|Mixed|50.2|1786905358|10|EdCcVkCtZ2qvr6sT
 K|N'Zoth|Molten Core|Magmadar|Chlopaki z Barrensow|Mixed|69.5|1790103238|33|Q39stqhVNrMDcGPd
 K|N'Zoth|Molten Core|Majordomo Executus|Schmetterlingsbrigade|Mixed|113.3|1790885317|26|3ZjGk_G_D-zPJsEa
+K|N'Zoth|Zul'Gurub|High Priest Thekal|Raid Therapy|Mixed|60.8|1790968435|12|XXmvtBCawHVyAES8
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Soulbound|Mixed|66.4|1787670696|10|de_FcBoSyDcqZO72
 K|Y'Shaarj|Onyxia's Lair|Broodcommander Axelus|For The Horde|Alliance|70.3|1789150696|25|CMqv6QN06zRJizHJ
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Deja vu|Mixed|36.3|1790883701|12|dJOjKxLd2qw_eUok
@@ -988,7 +989,7 @@ K|N'Zoth|Molten Core|Majordomo Executus|DROPA NUNCA|Mixed|139.3|1787361398|27|Kn
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Celestial Order|Mixed|78.7|1788706733|10|U6RXxX02K-yugFx5
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Phoenix|Mixed|55.6|1790921945|10|ffEvSF9CdCc68jgA
 K|N'Zoth|Molten Core|Lucifron|Tolerable Company|Mixed|71.5|1787688935|27|AmPu2jNJ6b0X9Uq4
-K|N'Zoth|Molten Core|Shazzrah|Ost Ardent|Mixed|21.2|1790539056|27|zwlmb46Mu4ZYry_5
+K|N'Zoth|Molten Core|Shazzrah|Ost Ardent|Mixed|21.2|1790539056|27|tbc83LF-K-X7Ajl2
 K|Y'Shaarj|Zul'Gurub|Gri'lek|Care Bears|Horde|66.9|1791145505|14|zGhTexo1Ua74vMqs
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|Crit Happens|Horde|97.8|1789587376|16|I_QbDUK4BpFvzu64
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Repentance|Mixed|34.1|1790975659|20|bMGJiIJ2CqpSdPXp
@@ -1038,11 +1039,11 @@ K|N'Zoth|Lower Tower of Karazhan|Moroes|strawberry fields|Mixed|65.8|1787623798|
 K|Y'Shaarj|Molten Core|Incindis|I OKEAH I|Mixed|65.2|1789931030|31|82oNnn_ye7kXWA6t
 K|N'Zoth|Molten Core|Magmadar|The ScarIet Crusade|Mixed|95.3|1789834353|27|QYDigCzY49D_bUBr
 K|Y'Shaarj|Molten Core|Ragnaros|ERROR|Horde|130|1789312120|33|8AH2fIAYdbjmgCcm
-K|N'Zoth|Molten Core|Garr|Die Gilde|Mixed|41.7|1789325778|26|6iSdKmOndeu7-v4E
+K|Y'Shaarj|Zul'Gurub|High Priest Thekal|ERROR|Horde|88.6|1791141000|17|60GTMC_N5I4TiIbR
 K|N'Zoth|Molten Core|Ragnaros|Skull Emoji|Mixed|89|1788201839|28|KR8-fnV3fRoPLEZ1
 K|C'Thun|Zul'Gurub|High Priest Venoxis|Hell Fire|Mixed|41|1791225683|20|qPUH7n7-mGkKeKnh
 K|Y'Shaarj|Molten Core|Golemagg the Incinerator|For The Horde|Alliance|42.1|1788544236|26|xPFF3uQcz4ygkQ9f
-K|Y'Shaarj|Onyxia's Lair|Onyxia|ERROR|Horde|218.8|1789313623|33|
+K|N'Zoth|Onyxia's Lair|Onyxia|Log Breaker Machine|Mixed|255.7|1788694328|23|pr7uyjsMS3Q2Uppm
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|I Griefers Inc I|Mixed|68.9|1790620445|31|8TxYKlXFJ1UG2Mh1
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Ostatni Bastion|Mixed|60.1|1790018528|21|FGBVqwaRufl2AHCx
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|GTD|Mixed|61|1788096130|35|FnW7t9MmL9m3kPNy
@@ -1051,9 +1052,9 @@ K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|GTD|Mixed|69.9|1788707772|10|
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Celestial Order|Mixed|81.2|1788706733|10|U6RXxX02K-yugFx5
 K|N'Zoth|Molten Core|Magmadar|Eunoia|Mixed|47.6|1788376375|25|gjNz7_Rj60JnjRC-
 K|N'Zoth|Molten Core|Incindis|Skull Emoji|Mixed|27.2|1788201839|28|KR8-fnV3fRoPLEZ1
-K|N'Zoth|Molten Core|Baron Geddon|strawberry fields|Mixed|33.4|1788706011|23|QdU4Yb2feyimzsYu
+K|N'Zoth|Molten Core|Baron Geddon|strawberry fields|Mixed|33.4|1788706004|23|nOXbsXQa4AYbnUUw
 K|Y'Shaarj|Onyxia's Lair|Broodcommander Axelus|Zug Zug|Horde|198.2|1789157030|23|kWGXPuvPhs5MI_6V
-K|N'Zoth|Molten Core|Lucifron|BAD VIBES ONLY|Mixed|66.9|1790739368|27|3asLk07lN-8Z6-Y-
+K|N'Zoth|Molten Core|Lucifron|BAD VIBES ONLY|Mixed|66.9|1790739368|27|KT9wxnyr67Cr5CYW
 K|Y'Shaarj|Molten Core|Sulfuron Harbinger|Zug Zug|Horde|83.1|1789243841|21|d__ascEIx6MoaBDH
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Fury|Mixed|58.5|1787770314|10|OMWFTdP2QG9wyPGu
 K|N'Zoth|Molten Core|Ragnaros|Amnesia|Mixed|94.8|1788695099|30|Z1LvRjD7SRWIe6H2
@@ -1088,7 +1089,7 @@ K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Remnant|Mixed|40|1786671721|40|2u
 K|Y'Shaarj|Lower Tower of Karazhan|Clawlord Howlfang|Care Bears|Horde|85.2|1790968362|10|YToN-2p-IXQ4223G
 K|N'Zoth|Molten Core|Incindis|Booty Bay Surf Club|Mixed|49.9|1788814694|18|TdJhBGlJieXG5rGI
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|MEGAPANZAS|Mixed|61.8|1791244273|10|TOzfYikMh5pXYEAc
-K|N'Zoth|Lower Tower of Karazhan|Moroes|Deja vu|Mixed|72.2|1789591753|10|ScWieE6rXMYVjcj3
+K|N'Zoth|Molten Core|Sulfuron Harbinger|DROPA NUNCA|Mixed|73.4|1788227907|23|XIfnn-GZSMmKUt0R
 K|N'Zoth|Molten Core|Majordomo Executus|Deja vu|Mixed|87.9|1791143802|28|0ovbu8f0vkXgjYTa
 K|N'Zoth|Molten Core|Shazzrah|Redridge Ultras|Mixed|23.3|1789304540|17|3jZz3cGseZ-ih3yc
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|nope|Mixed|43.6|1787793109|10|MurNlqH9jhn1ry4D
@@ -1097,7 +1098,6 @@ K|Y'Shaarj|Zul'Gurub|Hakkar|Kor Kron Enforcers|Horde|77.2|1790878572|20|npu_oqDp
 K|N'Zoth|Molten Core|Garr|Netherbane|Mixed|134.6|1790635247|26|h6oRWkQhax6G1Dvy
 K|Y'Shaarj|Molten Core|Majordomo Executus|Kor Kron Enforcers|Horde|121.4|1791057980|22|JqIAJmezFAAlrg-8
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|The Silver Crusade|Mixed|36.6|1790876462|20|6EMFJgOxrD72QG58
-K|N'Zoth|Molten Core|Shazzrah|Fika|Mixed|42.5|1791142745|28|GdWhy_-XcNVfQfPZ
 K|N'Zoth|Molten Core|Garr|Chlopaki z Barrensow|Mixed|207.5|1785440122|31|SAMPQVRYBnoR9OdJ
 K|Y'Shaarj|Lower Tower of Karazhan|Lord Blackwald II|Sons of Mukla|Alliance|96.8|1786741320|10|2rCzf38H3oZemPeJ
 K|C'Thun|Lower Tower of Karazhan|Moroes|Warhammer|Mixed|80.1|1789584886|10|c-OuPsyPZZeN2oHO
@@ -1108,9 +1108,10 @@ K|N'Zoth|Molten Core|Magmadar|who pulled|Mixed|59.9|1790445679|26|mi5fTSsxWcRfyt
 K|N'Zoth|Molten Core|Baron Geddon|Skill Issue|Mixed|43.8|1791116177|24|RxxlDTkGLUQ6uyUr
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Fika|Mixed|110.4|1790368964|15|
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|The Silver Crusade|Mixed|35.1|1790876462|20|6EMFJgOxrD72QG58
-K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Raid Therapy|Mixed|53|1789680623|10|nwjSEicYbwNYFBfI
+K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Raid Therapy|Mixed|53|1789680622|10|XVFpQibE5V6eO1la
 K|N'Zoth|Molten Core|Incindis|Cleave|Mixed|28.8|1790516869|26|gB8lVzABAD73D16t
 K|N'Zoth|Molten Core|Magmadar|Bastion de Guerra|Mixed|102.2|1790899230|23|FZhVqLijzuVmm7Lv
+K|N'Zoth|Molten Core|Magmadar|Skill Issue|Mixed|58.8|1791116177|24|RxxlDTkGLUQ6uyUr
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|BAD VIBES ONLY|Mixed|110.7|1789532638|28|znePBm_AySWI5I8A
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Ostatni Bastion|Mixed|16.6|1790880935|19|FkPCwtMrp-IYDkAR
 K|Y'Shaarj|Molten Core|Lucifron|The Anvilguard|Alliance|90.6|1789334018|19|Jo9zHsKaa2kvIlMT
@@ -1143,7 +1144,7 @@ K|N'Zoth|Lower Tower of Karazhan|Grizikil|Skill Issue|Mixed|46.5|1790884118|10|A
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Hard Reserved|Mixed|41.8|1787421900|30|wnyf4XGo7cbY_30A
 K|Y'Shaarj|Onyxia's Lair|Onyxia|I OKEAH I|Mixed|324.9|1786739636|29|bhxQep8bOxSQzfx3
 K|N'Zoth|Onyxia's Lair|Onyxia|GTD|Mixed|327.8|1787338676|31|SHfVeVlPYONfvsS0
-K|N'Zoth|Molten Core|Majordomo Executus|Ost Ardent|Mixed|85.7|1790539056|27|zwlmb46Mu4ZYry_5
+K|N'Zoth|Molten Core|Majordomo Executus|Ost Ardent|Mixed|85.7|1790539056|27|tbc83LF-K-X7Ajl2
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Skill Issue|Mixed|55.7|1790971033|16|-yuT2sV1uOSivxea
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Raid Therapy|Mixed|33.4|1790105570|24|z36PEQIYWmAcyAoU
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Repentance|Mixed|58.7|1790969965|10|1ML2vlB5C1gVvP5g
@@ -1159,7 +1160,7 @@ K|N'Zoth|Molten Core|Lucifron|DROPA NUNCA|Mixed|92|1787361398|27|Kn5zbiGO-ZFWoBR
 K|N'Zoth|Molten Core|Ragnaros|We go again|Mixed|159.1|1790964546|29|bDAj5s9YwD4GbNzQ
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Soulbound|Mixed|73.4|1787778314|28|uLW2k7EJDkI1DhfJ
 K|Y'Shaarj|Molten Core|Majordomo Executus|Care Bears|Horde|117.9|1786218309|38|4MzjYoKTJyKLY5AN
-K|N'Zoth|Molten Core|Garr|Skull Emoji|Mixed|31.1|1789308930|28|OAnEZidPoiclv1pQ
+K|N'Zoth|Molten Core|Garr|Skull Emoji|Mixed|31.1|1789308929|28|LQ9MzsC7CeZ0_uBr
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Redridge Ultras|Mixed|69.8|1791222885|10|WlxbE1KAXX1Vv8H-
 K|Y'Shaarj|Molten Core|Sulfuron Harbinger|Kor Kron Enforcers|Horde|72.7|1791057980|22|JqIAJmezFAAlrg-8
 K|Y'Shaarj|Zul'Gurub|High Priestess Arlokk|ERROR|Horde|23.6|1791141000|17|60GTMC_N5I4TiIbR
@@ -1175,9 +1176,9 @@ K|N'Zoth|Molten Core|Lucifron|Mushroom Vendor|Mixed|52.7|1789325615|33|Xby7m5BYF
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|One Blood|Mixed|66.2|1789914203|10|WP6hLxoT_QSa6ST9
 K|Y'Shaarj|Molten Core|Incindis|Kor Kron Enforcers|Horde|56.7|1791057980|22|JqIAJmezFAAlrg-8
 K|N'Zoth|Molten Core|Shazzrah|Loot Goblins|Mixed|23.2|1789822248|22|8zoXU5DUFcTe-DNV
-K|N'Zoth|Molten Core|Lucifron|Oktagon|Mixed|46|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Lucifron|Oktagon|Mixed|46|1788373356|34|YL6V27GWV2txU8Qg
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Cold Embrace|Mixed|107.8|1791138500|12|WC8AzUqQT362SpYb
-K|N'Zoth|Zul'Gurub|High Priest Thekal|Netherbane|Mixed|126.2|1790893583|15|rvcSEAiaIFlERi3v
+K|N'Zoth|Molten Core|Baron Geddon|Hard Reserved|Mixed|39.8|1788618788|25|a_mWGJw7mwCqB4Lg
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|BAD VIBES ONLY|Mixed|83.1|1790913377|13|Ifq2W3-EYObOnuiO
 K|Y'Shaarj|Zul'Gurub|High Priest Thekal|Care Bears|Horde|103.2|1790889494|14|CUeNEar1l97shVV5
 K|N'Zoth|Molten Core|Incindis|BAD VIBES ONLY|Mixed|40|1789530647|31|szND89OcSbPm6uxd
@@ -1187,14 +1188,14 @@ K|N'Zoth|Lower Tower of Karazhan|Moroes|Nebula|Mixed|138.2|1781275431|10|1IiyhnL
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|who pulled|Mixed|47.2|1791225880|10|8wmjI3cOlMg1MoMo
 K|N'Zoth|Molten Core|Ragnaros|Remnant|Mixed|89.2|1786671721|40|2uzBXVRFkkWhFwL2
 K|Y'Shaarj|Molten Core|Incindis|Care Bears|Horde|60.6|1787431499|28|E9gScK-bosD4MI_o
-K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Fika|Mixed|75.1|1791226477|19|YyHUdGNU1FLFBg_x
+K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Nebula|Mixed|107.3|1781275431|10|1IiyhnLo9bDBMYVM
 K|N'Zoth|Molten Core|Shazzrah|Raid Therapy|Mixed|17.5|1790882819|28|tSiX8YOT57d8pKcV
 K|N'Zoth|Molten Core|Shazzrah|Repentance|Mixed|25.3|1791057483|28|05eYSS-8jLzIxQUf
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Mushroom Vendor|Mixed|44.1|1789934969|10|b2fGZk4lGOdfDz7V
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Netherbane|Mixed|89.7|1790893583|15|rvcSEAiaIFlERi3v
 K|N'Zoth|Molten Core|Shazzrah|Schmetterlingsbrigade|Mixed|30.3|1790885317|26|3ZjGk_G_D-zPJsEa
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Loot Goblins|Mixed|36.4|1791226586|18|dxsNEJhOGjIxeZXT
-K|N'Zoth|Molten Core|Sulfuron Harbinger|Oktagon|Mixed|39.1|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Sulfuron Harbinger|Oktagon|Mixed|39.1|1788373357|34|_i5g4WBVOhDgmvNv
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|The Ashen Banner|Mixed|30.2|1791134910|18|VhPRldldQwIqD2kP
 K|Y'Shaarj|Molten Core|Majordomo Executus|For The Horde|Alliance|81|1789149560|26|QRqlD85zZUr8Jr9p
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Ost Ardent|Mixed|54.3|1786306602|33|L2bu3VfSEAqS3thv
@@ -1242,7 +1243,7 @@ K|N'Zoth|Zul'Gurub|Hakkar|Schmetterlingsbrigade|Mixed|71.5|1790970733|14|jamNIZW
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Die Gilde|Mixed|39|1788375306|33|Sg-3d_IXecn0jrXP
 K|N'Zoth|Molten Core|Baron Geddon|Perikato|Mixed|39.9|1789661411|23|TIl8zQhQT6T1SirF
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Booty Bay Boys|Mixed|66.5|1788811073|22|jKEaZoB0yLlp0Vt7
-K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Raid Therapy|Mixed|29.5|1789680623|10|nwjSEicYbwNYFBfI
+K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Raid Therapy|Mixed|29.5|1789680622|10|XVFpQibE5V6eO1la
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Booty Bay Boys|Mixed|65.5|1787336738|10|dGGdykCBLgD5u43r
 K|N'Zoth|Molten Core|Shazzrah|Netherbane|Mixed|34.3|1790635247|26|h6oRWkQhax6G1Dvy
 K|N'Zoth|Molten Core|Ragnaros|ThunderClan Warriors|Mixed|148|1788573054|28|qPO9lFKKX5Vx87Vd
@@ -1255,7 +1256,7 @@ K|N'Zoth|Molten Core|Majordomo Executus|Perikato|Mixed|115.3|1789316256|21|pKTrr
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Redridge Ultras|Mixed|50.9|1791222885|10|WlxbE1KAXX1Vv8H-
 K|N'Zoth|Molten Core|Sulfuron Harbinger|One Blood|Mixed|50.9|1789672470|38|WUwPe0lqASZBJVRw
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Perikato|Mixed|56.4|1789661411|23|TIl8zQhQT6T1SirF
-K|N'Zoth|Molten Core|Basalthar & Smoldaris|One Blood|Mixed|61.6|1790881568|23|rgQXUC_YLDeVF0qo
+K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Loot Goblins|Mixed|41|1790880843|19|ntaGqBDzY7Q0HW0s
 K|N'Zoth|Molten Core|Magmadar|Cleave|Mixed|31|1791121218|32|7l8aMWt6LW9WT16O
 K|N'Zoth|Molten Core|Baron Geddon|Cold Embrace|Mixed|46.4|1790879381|33|MaJWUMAWe3mlbrv9
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Strawman Arguments|Mixed|58.3|1789152555|10|qI0kMgOqSxgk2srC
@@ -1265,6 +1266,7 @@ K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Cold Embrace|Mixed|111.5|1790883030
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Deja vu|Mixed|60.9|1789330967|27|KSTCWbOChdIqcm6U
 K|N'Zoth|Molten Core|Garr|Bastion de Guerra|Mixed|123|1788647153|23|wodkdQuxSbiTpIBn
 K|N'Zoth|Molten Core|Golemagg the Incinerator|The Silver Crusade|Mixed|40|1791223035|37|d3-YavZjBcj2QHMB
+K|N'Zoth|Zul'Gurub|Hakkar|strawberry fields|Mixed|54.3|1791215522|20|exWMB9a-PYp4A-oC
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Fika|Mixed|58.2|1791142745|28|GdWhy_-XcNVfQfPZ
 K|N'Zoth|Molten Core|Garr|nope|Mixed|74.1|1789438355|27|vUpAPorDpUnX2z-d
 K|N'Zoth|Lower Tower of Karazhan|Moroes|ThunderClan Warriors|Mixed|82.4|1788291706|10|jZLWP29mBLimAtDD
@@ -1278,16 +1280,18 @@ K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Oktagon|Mixed|19.5|1790879958|20|LPF6ZJ
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Eunoia|Mixed|53|1786902411|10|Axpq3PljGgZF37LU
 K|N'Zoth|Onyxia's Lair|Onyxia|Repentance|Mixed|253.7|1791060129|27|jpCXDnfpXwg5bW99
 K|Y'Shaarj|Molten Core|Lucifron|ERROR|Horde|82.7|1789312120|33|8AH2fIAYdbjmgCcm
+K|N'Zoth|Molten Core|Basalthar & Smoldaris|who pulled|Mixed|52.5|1791051124|22|oqNUEhwG11aoiyXC
 K|N'Zoth|Molten Core|Lucifron|Raid Therapy|Mixed|46.3|1790105570|24|z36PEQIYWmAcyAoU
 K|N'Zoth|Molten Core|Lucifron|Remnant|Mixed|39.2|1786671721|40|2uzBXVRFkkWhFwL2
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Skull Emoji|Mixed|66.8|1788187183|10|XrFC8vT-mQ8CByl4
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Ninja Turtles|Mixed|37.5|1791141378|19|2Ii4VYxjHvnf3Icp
+K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Remnant|Mixed|56.6|1790915385|18|kUXysutu_4CmUobk
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Netherbane|Mixed|87.5|1790028415|10|xUl4keU-H02StxXX
 K|Y'Shaarj|Zul'Gurub|High Priestess Arlokk|Kor Kron Enforcers|Horde|26|1791231629|18|et4pgz5YhhkNQgaj
 K|N'Zoth|Molten Core|Shazzrah|Cold Embrace|Mixed|27.3|1790879382|33|QnrstwflogzysPPj
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Soulbound|Mixed|48.8|1787778314|28|uLW2k7EJDkI1DhfJ
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|nope|Mixed|31.3|1790912398|17|vKh6kJZpHCkAmfus
-K|N'Zoth|Molten Core|Shazzrah|Deja vu|Mixed|21.2|1789934051|27|2SDvaQm2m7-vY0yI
+K|N'Zoth|Molten Core|Basalthar & Smoldaris|One Blood|Mixed|61.6|1790881568|23|rgQXUC_YLDeVF0qo
 K|N'Zoth|Molten Core|Garr|Fika|Mixed|199.8|1791142745|28|GdWhy_-XcNVfQfPZ
 K|Y'Shaarj|Molten Core|Lucifron|Zug Zug|Horde|102.2|1789243841|21|d__ascEIx6MoaBDH
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Ostatni Bastion|Mixed|55.2|1791053719|25|vUswrZhapP55F8fO
@@ -1298,27 +1302,27 @@ K|N'Zoth|Zul'Gurub|High Priest Thekal|MEGAPANZAS|Mixed|58.4|1790985667|16|_dqlhK
 K|N'Zoth|Molten Core|Baron Geddon|Redridge Ultras|Mixed|43.7|1787769236|23|hfxq8uJAOrMTg2zW
 K|Y'Shaarj|Molten Core|Ragnaros|The Anvilguard|Alliance|217.7|1789334018|19|Jo9zHsKaa2kvIlMT
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Raid Therapy|Mixed|32.7|1790888280|18|cRsMKwIyTLD3eCQi
-K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|Bastion de Guerra|Mixed|75.2|1790377725|11|mA51sYJdtd3NfXH0
+K|N'Zoth|Molten Core|Shazzrah|Fika|Mixed|42.5|1791142745|28|GdWhy_-XcNVfQfPZ
 K|N'Zoth|Molten Core|Baron Geddon|Bastion de Guerra|Mixed|91.4|1790899230|23|FZhVqLijzuVmm7Lv
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|The Crackshot Cartel|Mixed|56.2|1789837642|26|qZ35Q8D5iTUDa1W7
 K|N'Zoth|Onyxia's Lair|Onyxia|Skull Emoji|Mixed|156.9|1791141818|27|ZCV_J4G1NTprvi8I
-K|Y'Shaarj|Molten Core|Ragnaros|Sons of Mukla|Mixed|142.5|1790882375|32|Pl8sNau8XGr-WXtS
 K|C'Thun|Molten Core|Lucifron|Hell Fire|Mixed|54.8|1791039572|25|em5gHDbW51NHADCB
 K|Y'Shaarj|Molten Core|Basalthar & Smoldaris|Kor Kron Enforcers|Horde|109|1791057980|22|JqIAJmezFAAlrg-8
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Nebula|Mixed|123.9|1781275431|10|1IiyhnLo9bDBMYVM
-K|N'Zoth|Molten Core|Majordomo Executus|Oktagon|Mixed|74.9|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Majordomo Executus|Oktagon|Mixed|74.9|1788373356|34|YL6V27GWV2txU8Qg
 K|N'Zoth|Zul'Gurub|Gri'lek|Mushroom Vendor|Mixed|76.9|1791060973|16|Uq3_NSyPqWIPaZS3
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|One Blood|Mixed|31.8|1791142271|19|O2KRKUOS_ruIyC2M
 K|N'Zoth|Molten Core|Incindis|Raid Therapy|Mixed|31.5|1790709591|28|rYrauH_lPP16PoxT
 K|N'Zoth|Zul'Gurub|Gri'lek|Redridge Ultras|Mixed|32.8|1790969219|18|PgJsFnYkHASufeXU
 K|N'Zoth|Molten Core|Baron Geddon|Repentance|Mixed|41.9|1791057481|28|wxRIlJ9Rd4j8dp4d
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Bastion de Guerra|Mixed|87.7|1790899230|23|FZhVqLijzuVmm7Lv
-K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Amnesia|Mixed|65.6|1786296012|21|kqUjOy6mci8BEMx1
+K|Y'Shaarj|Zul'Gurub|Hakkar|ERROR|Horde|70.8|1791141000|17|60GTMC_N5I4TiIbR
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Ost Ardent|Mixed|66|1789930156|34|nGu8DDyvKuv-IiaL
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Fika|Mixed|18.4|1790881599|19|O5eh8uLkrZ_88pDw
 K|N'Zoth|Molten Core|Magmadar|Redridge Ultras|Mixed|55.4|1789586045|17|z3YgNNaNqtGikMA6
 K|N'Zoth|Zul'Gurub|Hakkar|One Blood|Mixed|73.8|1791142271|19|O2KRKUOS_ruIyC2M
 K|N'Zoth|Molten Core|Incindis|The ScarIet Crusade|Mixed|65.7|1788104522|30|KUcUBeaLv9kAWsS1
+K|N'Zoth|Molten Core|Baron Geddon|BRUTAL|Mixed|45.4|1790445348|31|Qx5FvY3r5q09hYpf
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Launen des Schicksals|Mixed|63.5|1786043961|10|VFdz56joeA_HSQsx
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Ninja Turtles|Mixed|37.8|1791141378|19|2Ii4VYxjHvnf3Icp
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Fika|Mixed|39.8|1790881599|19|O5eh8uLkrZ_88pDw
@@ -1347,7 +1351,6 @@ K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Booty Bay Boys|Mixed|38.6|1790886387|19
 K|N'Zoth|Molten Core|Incindis|BRUTAL|Mixed|44.1|1790445348|31|Qx5FvY3r5q09hYpf
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|MEGAPANZAS|Mixed|30.7|1791249640|14|3bfdKxJWPPTxbwa1
 K|N'Zoth|Molten Core|Lucifron|Fika|Mixed|113.8|1791142745|28|GdWhy_-XcNVfQfPZ
-K|N'Zoth|Onyxia's Lair|Onyxia|BRUTAL|Mixed|236.2|1790447391|29|u0Q4tLJDaRJa_74k
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Skill Issue|Mixed|65.5|1791116177|24|RxxlDTkGLUQ6uyUr
 K|N'Zoth|Molten Core|Ragnaros|BRUTAL|Mixed|123|1790445348|31|Qx5FvY3r5q09hYpf
 K|N'Zoth|Zul'Gurub|Hakkar|Ostatni Bastion|Mixed|53.5|1791060035|20|Eb0v3-aGZUoPRUnG
@@ -1384,7 +1387,7 @@ K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Redridge Ultras|Mixed|27.6|1790969219|1
 K|Y'Shaarj|Lower Tower of Karazhan|Clawlord Howlfang|The Anvilguard|Alliance|95.9|1789757574|10|sYIeak338mV8x0YY
 K|Y'Shaarj|Molten Core|Sorcerer-Thane Thaurissan|The Anvilguard|Alliance|99.7|1789675271|20|l5KYlE3OkEG_PU6D
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|who pulled|Mixed|58.7|1790445679|26|mi5fTSsxWcRfytib
-K|N'Zoth|Molten Core|Shazzrah|Booty Bay Surf Club|Mixed|30.4|1787692955|22|HkprDh0D5HytgKw-
+K|N'Zoth|Molten Core|Shazzrah|Booty Bay Surf Club|Mixed|30.4|1787692955|22|fX9TYlKB7oqBym4X
 K|C'Thun|Lower Tower of Karazhan|Grizikil|Warhammer|Mixed|60.1|1787772069|10|pLHnXlsHMrqG12mR
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Loot Goblins|Mixed|82.4|1790880843|19|ntaGqBDzY7Q0HW0s
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Skill Issue|Mixed|91.8|1790971037|16|lQNe_Zqb55XOb6tp
@@ -1393,7 +1396,6 @@ K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Tolerable Company|Mixed|36.9|1791062571|18|
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|strawberry fields|Mixed|51.1|1789920790|10|
 K|N'Zoth|Molten Core|Magmadar|Die Gilde|Mixed|40.8|1787770707|32|64BoM0TyRBb55uf5
 K|N'Zoth|Molten Core|Incindis|Redridge Ultras|Mixed|47.1|1787769236|23|hfxq8uJAOrMTg2zW
-K|Y'Shaarj|Zul'Gurub|Hakkar|ERROR|Horde|70.8|1791141000|17|60GTMC_N5I4TiIbR
 K|N'Zoth|Molten Core|Incindis|Deja vu|Mixed|44.5|1789934051|27|2SDvaQm2m7-vY0yI
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Ninja Turtles|Mixed|27.7|1791141378|19|2Ii4VYxjHvnf3Icp
 K|Y'Shaarj|Molten Core|Magmadar|ERROR|Horde|51.6|1790884508|31|u6eV4Khi0-4cVzL0
@@ -1404,20 +1406,18 @@ K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Schmetterlingsbrigade|Mixed|33.3|1790970733
 K|N'Zoth|Zul'Gurub|High Priest Thekal|We go again|Mixed|17.8|1790970132|12|lvbbXzYbLMeOrNz2
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Bastion de Guerra|Mixed|104.4|1791071117|11|ld9ZDDM51j3nOAIT
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Phoenix|Mixed|33.4|1790916112|14|Qam4kwJ6OIEqZ7pM
-K|N'Zoth|Molten Core|Golemagg the Incinerator|Oktagon|Mixed|35.3|1788373357|34|MojS03oCgy8tz2UZ
+K|N'Zoth|Molten Core|Golemagg the Incinerator|Oktagon|Mixed|35.3|1788373356|34|YL6V27GWV2txU8Qg
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|The Ashen Banner|Mixed|49.3|1788402962|10|ielRsJJoWrmsGIkr
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|Skull Emoji|Mixed|32.6|1790972402|14|kYfMVapbHsNme9wM
-K|Y'Shaarj|Molten Core|Golemagg the Incinerator|The Anvilguard|Alliance|72.6|1789675271|20|l5KYlE3OkEG_PU6D
 K|N'Zoth|Molten Core|Garr|Booty Bay Boys|Mixed|119.6|1790281181|19|TGUVlQ86kNmEoXGM
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Log Breaker Machine|Mixed|40.6|1789669564|25|HsBXOZMX6gccGMbl
 K|N'Zoth|Zul'Gurub|High Priest Thekal|The Silver Crusade|Mixed|79.4|1790876462|20|6EMFJgOxrD72QG58
-K|N'Zoth|Molten Core|Baron Geddon|Ostatni Bastion|Mixed|44.1|1790622140|24|aZHHYqjVCO1iwhD5
+K|N'Zoth|Molten Core|Baron Geddon|Ostatni Bastion|Mixed|44.1|1790621685|23|NLmfjXjTGB-nYQsO
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Schmetterlingsbrigade|Mixed|95.3|1790970733|14|jamNIZWPYp25cB8r
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|One Blood|Mixed|65.9|1789672470|38|WUwPe0lqASZBJVRw
 K|Y'Shaarj|Molten Core|Shazzrah|The Anvilguard|Alliance|35.7|1789334018|19|Jo9zHsKaa2kvIlMT
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Strawman Arguments|Mixed|47|1789152555|10|qI0kMgOqSxgk2srC
 K|N'Zoth|Zul'Gurub|Hakkar|Die Gilde|Mixed|86.5|1790968641|20|PKtHDzjhUrQfC6IX
-K|N'Zoth|Molten Core|Majordomo Executus|Netherbane|Mixed|121.6|1790635247|26|h6oRWkQhax6G1Dvy
 K|Y'Shaarj|Molten Core|Shazzrah|Crit Happens|Horde|65.8|1788806330|18|tdwZKhDuKFOXBDpk
 K|N'Zoth|Zul'Gurub|Gahz'ranka|One Blood|Mixed|38|1791142271|19|O2KRKUOS_ruIyC2M
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|who pulled|Mixed|39.7|1790883320|16|VCTtLbbXzDTtBnnK
@@ -1471,7 +1471,7 @@ K|N'Zoth|Molten Core|Ragnaros|Log Breaker Machine|Mixed|130|1789296445|27|BwYQM8
 K|N'Zoth|Molten Core|Incindis|Ostatni Bastion|Mixed|46.7|1788708556|22|VRKLdSAV_BnpKF9M
 K|N'Zoth|Onyxia's Lair|Onyxia|Ninja Turtles|Mixed|235.1|1789329503|25|vQlIwcyFsVN2fP_t
 K|N'Zoth|Molten Core|Lucifron|Fury|Mixed|47.4|1790274870|33|DORhxQAKWrVowd2r
-K|N'Zoth|Molten Core|Baron Geddon|BRUTAL|Mixed|45.4|1790445348|31|Qx5FvY3r5q09hYpf
+K|Y'Shaarj|Zul'Gurub|High Priest Venoxis|Care Bears|Horde|47.2|1791145505|14|zGhTexo1Ua74vMqs
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|INSANE|Mixed|49.9|1791226616|14|DstG88_PdvRA0UqR
 K|N'Zoth|Onyxia's Lair|Onyxia|Loot Goblins|Mixed|240|1791051744|26|ZWTFzvAumHkl0j60
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Soulbound|Mixed|66.6|1787670696|10|de_FcBoSyDcqZO72
@@ -1489,15 +1489,16 @@ K|N'Zoth|Zul'Gurub|High Priestess Jeklik|I Griefers Inc I|Mixed|29.9|1791054271|
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Ostatni Bastion|Mixed|30.2|1791060035|20|Eb0v3-aGZUoPRUnG
 K|Y'Shaarj|Molten Core|Incindis|Zug Zug|Horde|50.1|1786827478|25|5TKt8f0YtQbf89tX
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|One Blood|Mixed|60.4|1789914203|10|WP6hLxoT_QSa6ST9
+K|N'Zoth|Zul'Gurub|High Priestess Mar'li|We go again|Mixed|35.5|1790970132|12|lvbbXzYbLMeOrNz2
 K|Y'Shaarj|Lower Tower of Karazhan|Grizikil|Zug Zug|Horde|77.6|1789162052|10|HMx0MFaY22RqTSWg
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Redridge Ultras|Mixed|33.4|1790969219|18|PgJsFnYkHASufeXU
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Oktagon|Mixed|31.6|1790879958|20|LPF6ZJtGW-HooheW
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Skull Emoji|Mixed|34.7|1788201839|28|KR8-fnV3fRoPLEZ1
-K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|ThunderClan Warriors|Mixed|117.4|1789662112|31|GIY6ol13d53a7gLa
+K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|ThunderClan Warriors|Mixed|117.4|1789662112|31|JRDP_v57HE7RhnvO
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Mushroom Vendor|Mixed|51.6|1789325615|33|Xby7m5BYFTIuhovm
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Netherbane|Mixed|74.7|1790635247|26|h6oRWkQhax6G1Dvy
 K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Phoenix|Mixed|53.1|1790916112|14|Qam4kwJ6OIEqZ7pM
-K|N'Zoth|Onyxia's Lair|Onyxia|ThunderClan Warriors|Mixed|321|1789662112|31|GIY6ol13d53a7gLa
+K|N'Zoth|Onyxia's Lair|Onyxia|ThunderClan Warriors|Mixed|321|1789662112|31|JRDP_v57HE7RhnvO
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Raid Therapy|Mixed|49.7|1790366415|10|bXs889eRMHb-gi6T
 K|N'Zoth|Molten Core|Magmadar|Raid Therapy|Mixed|32.7|1790105570|24|z36PEQIYWmAcyAoU
 K|N'Zoth|Molten Core|Magmadar|Loot Goblins|Mixed|50.7|1789822248|22|8zoXU5DUFcTe-DNV
@@ -1514,6 +1515,7 @@ K|N'Zoth|Molten Core|Majordomo Executus|ThunderClan Warriors|Mixed|97.5|17874998
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Branded|Horde|61.9|1789861236|10|zDj2aT5Jo1lLLBQn
 K|Y'Shaarj|Zul'Gurub|Gahz'ranka|Kor Kron Enforcers|Horde|41.2|1790878572|20|npu_oqDp8BCXDCMN
 K|N'Zoth|Lower Tower of Karazhan|Grizikil|Smokey Tokers|Mixed|40.3|1788098246|11|COvxOmRxqmED8hca
+K|Y'Shaarj|Onyxia's Lair|Onyxia|ERROR|Horde|218.8|1789313622|30|OLZsdjmMwp8wc1M1
 K|N'Zoth|Molten Core|Garr|Booty Bay Surf Club|Mixed|107.6|1788209209|22|uskxUd-vkxToWRYl
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Aura|Mixed|202.3|1787881229|10|AsPHbq9GIUsRH7Hc
 K|Y'Shaarj|Molten Core|Baron Geddon|I OKEAH I|Mixed|66|1788550312|39|ENjtkHMKTOq-qHib
@@ -1525,6 +1527,7 @@ K|N'Zoth|Molten Core|Shazzrah|The ScarIet Crusade|Mixed|42.9|1788104522|30|KUcUB
 K|Y'Shaarj|Molten Core|Garr|Care Bears|Horde|138.2|1790459963|24|zGahAY6_rpYF506T
 K|C'Thun|Lower Tower of Karazhan|Lord Blackwald II|Warhammer|Mixed|69|1790983000|10|Qn9oSEijyfduiJRN
 K|N'Zoth|Onyxia's Lair|Onyxia|Ostatni Bastion|Mixed|265.3|1791055306|24|c5UktqLMORHALpLr
+K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Amnesia|Mixed|65.6|1786296012|21|kqUjOy6mci8BEMx1
 K|N'Zoth|Zul'Gurub|Gahz'ranka|Schmetterlingsbrigade|Mixed|41.4|1790970733|14|jamNIZWPYp25cB8r
 K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Eunoia|Mixed|63.7|1788376375|25|gjNz7_Rj60JnjRC-
 K|Y'Shaarj|Onyxia's Lair|Onyxia|For The Horde|Alliance|211.7|1789150696|25|CMqv6QN06zRJizHJ
@@ -1550,6 +1553,7 @@ K|C'Thun|Molten Core|Golemagg the Incinerator|Warhammer|Mixed|96.3|1789887016|35
 K|N'Zoth|Zul'Gurub|Gahz'ranka|I Griefers Inc I|Mixed|53.6|1790966569|12|GRU4Y9HwMsH-kMeX
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Tolerable Company|Mixed|38.3|1791062571|18|g1mymaQFE9lN3uIS
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Oktagon|Mixed|78.7|1790879958|20|LPF6ZJtGW-HooheW
+K|Y'Shaarj|Lower Tower of Karazhan|Brood Queen Araxxna|ERROR|Horde|48.8|1788536145|10|uhyFUYInOhDJm8PQ
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|I Griefers Inc I|Mixed|45.6|1789927969|10|dYfItdScMNJRhCna
 K|N'Zoth|Molten Core|Magmadar|GTD|Mixed|64.8|1786162562|36|Os7ecWPbRGRe-lIL
 K|N'Zoth|Molten Core|Shazzrah|We go again|Mixed|27.6|1790964546|29|bDAj5s9YwD4GbNzQ
@@ -1592,30 +1596,29 @@ K|N'Zoth|Molten Core|Shazzrah|Skill Issue|Mixed|26.7|1791116177|24|RxxlDTkGLUQ6u
 K|Y'Shaarj|Molten Core|Ragnaros|For The Horde|Mixed|116.9|1790963553|26|zZAQ_HsZKU55TNdq
 K|N'Zoth|Molten Core|Shazzrah|I Griefers Inc I|Mixed|19.2|1791222362|29|FMhliMSX7w-RAs9d
 K|Y'Shaarj|Molten Core|Sulfuron Harbinger|The Anvilguard|Alliance|86.4|1789675271|20|l5KYlE3OkEG_PU6D
+K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Cleave|Mixed|24.6|1791213693|15|SZAY4sPcm5QweCjC
 K|N'Zoth|Molten Core|Garr|One Blood|Mixed|87.8|1790275061|20|V53mDh4q1v0YjVU6
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Loot Goblins|Mixed|42.7|1789822248|22|8zoXU5DUFcTe-DNV
 K|N'Zoth|Zul'Gurub|Hakkar|nope|Mixed|78.9|1790912398|17|vKh6kJZpHCkAmfus
 K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|Hard Reserved|Mixed|78.5|1785692067|10|sX2qc5nr4ginYqCI
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Loot Goblins|Mixed|40.6|1789822248|22|8zoXU5DUFcTe-DNV
-K|N'Zoth|Molten Core|Shazzrah|Cleave|Mixed|16.7|1789308371|29|RH19OngzjSRprptW
+K|N'Zoth|Molten Core|Shazzrah|Cleave|Mixed|16.7|1789308356|29|WNkvyKyhXu5mzUqL
 K|N'Zoth|Molten Core|Shazzrah|The Crackshot Cartel|Mixed|22.3|1790447510|30|KrpPIWIAoE6nzMSK
-K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Log Breaker Machine|Mixed|121.6|1788694328|23|pr7uyjsMS3Q2Uppm
 K|Y'Shaarj|Molten Core|Garr|Zug Zug|Horde|86.2|1789243841|21|d__ascEIx6MoaBDH
 K|N'Zoth|Zul'Gurub|High Priestess Arlokk|Cleave|Mixed|18.7|1791213691|15|UlmbXP2ILCZaQLJL
 K|N'Zoth|Zul'Gurub|Hakkar|Bastion de Guerra|Mixed|261.6|1791071117|11|ld9ZDDM51j3nOAIT
-K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|The Crackshot Cartel|Mixed|116.7|1790449775|26|2hDgOgyTIlygTQSU
+K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|The Crackshot Cartel|Mixed|116.7|1790449739|26|w6INcYZxMmEYSftB
 K|N'Zoth|Molten Core|Baron Geddon|Netherbane|Mixed|62.2|1790635247|26|h6oRWkQhax6G1Dvy
 K|N'Zoth|Molten Core|Golemagg the Incinerator|MEGAPANZAS|Mixed|41.3|1789342855|31|nsQIS7fiW1ylBZtt
 K|N'Zoth|Molten Core|Majordomo Executus|Mushroom Vendor|Mixed|66.1|1789930472|30|A6UEqQ3scWrZQFOi
-K|N'Zoth|Molten Core|Garr|MEGAPANZAS|Mixed|82.5|1789947722|27|-cXbewfrZtPwxupa
+K|N'Zoth|Molten Core|Garr|MEGAPANZAS|Mixed|82.5|1789947721|27|bHqoxfREmDTIMkai
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Ninja Turtles|Mixed|71.8|1789411887|10|G2OSGmqk5H5ZCmPd
 K|N'Zoth|Molten Core|Ragnaros|nope|Mixed|102.7|1790299495|31|kztAsvfvVvL-NW1P
 K|Y'Shaarj|Zul'Gurub|High Priestess Mar'li|Kor Kron Enforcers|Horde|39.9|1790878572|20|npu_oqDp8BCXDCMN
 K|N'Zoth|Molten Core|Majordomo Executus|GTD|Mixed|96.9|1788546023|38|aKVrasL4doDGAxQG
-K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Redridge Ultras|Mixed|62.3|1790792431|29|4gOOvR_x15z1vpvp
-K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|The Non Profit|Mixed|111.9|1787427134|23|Ix1LODPxbaT33-uM
+K|N'Zoth|Molten Core|Sorcerer-Thane Thaurissan|Redridge Ultras|Mixed|62.3|1790792431|29|0fbvu5_XpBLV-XA_
+K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|The Non Profit|Mixed|111.9|1787427134|23|Nrcad6hpv2WROdOT
 K|Y'Shaarj|Lower Tower of Karazhan|Moroes|Zug Zug|Horde|94.8|1789162052|10|HMx0MFaY22RqTSWg
-K|N'Zoth|Molten Core|Ragnaros|Ninja Turtles|Mixed|133.7|1790277395|25|bDN6uXFZ19mtQT36
 K|N'Zoth|Molten Core|Majordomo Executus|Cleave|Mixed|60.2|1790516869|26|gB8lVzABAD73D16t
 K|N'Zoth|Molten Core|Baron Geddon|BAD VIBES ONLY|Mixed|41.7|1789530647|31|szND89OcSbPm6uxd
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|Oktagon|Mixed|72.9|1787770494|39|_izeQB7DllTr8_iF
@@ -1655,7 +1658,7 @@ K|N'Zoth|Molten Core|Ragnaros|The Non Profit|Mixed|154.1|1788637273|19|9ysZGVkbD
 K|N'Zoth|Onyxia's Lair|Onyxia|Mushroom Vendor|Mixed|217.3|1789931753|29|QgY_svYZ-ZWYkgtn
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|MEGAPANZAS|Mixed|63.7|1791244273|10|TOzfYikMh5pXYEAc
 K|N'Zoth|Lower Tower of Karazhan|Lord Blackwald II|who pulled|Mixed|62.9|1790789930|10|qg1onIF9038DP-gn
-K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Cleave|Mixed|26.9|1791213691|15|UlmbXP2ILCZaQLJL
+K|N'Zoth|Lower Tower of Karazhan|Clawlord Howlfang|strawberry fields|Mixed|59.6|1789920790|10|
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|Schmetterlingsbrigade|Mixed|66.5|1790885317|26|3ZjGk_G_D-zPJsEa
 K|N'Zoth|Molten Core|Garr|The ScarIet Crusade|Mixed|143.2|1789834353|27|QYDigCzY49D_bUBr
 K|Y'Shaarj|Zul'Gurub|Bloodlord Mandokir|ERROR|Horde|63.6|1791141000|17|60GTMC_N5I4TiIbR
@@ -1666,7 +1669,7 @@ K|N'Zoth|Molten Core|Majordomo Executus|Remnant|Mixed|71.4|1784487205|40|R6CAvZc
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Eunoia|Mixed|58.5|1787166515|23|yV8Tm4NbEvasAsvu
 K|N'Zoth|Molten Core|Incindis|Ninja Turtles|Mixed|47.3|1789328008|26|H-azRChrJvceXv2p
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|Aura|Mixed|45|1791078565|15|pnSqZzEov_Y7W9oy
-K|N'Zoth|Molten Core|Shazzrah|The Silver Crusade|Mixed|23.6|1790618082|40|
+K|N'Zoth|Molten Core|Shazzrah|The Silver Crusade|Mixed|23.6|1790618081|40|qhLq_IB1Tx20F-Cr
 K|N'Zoth|Zul'Gurub|Hakkar|Ost Ardent|Mixed|70.3|1791126031|18|aMtil9bmyVMCUPzo
 K|N'Zoth|Onyxia's Lair|Broodcommander Axelus|nope|Mixed|75.5|1787882327|35|ROIQC4ihKcy-YKU1
 K|N'Zoth|Molten Core|Basalthar & Smoldaris|BAD VIBES ONLY|Mixed|54.4|1789530647|31|szND89OcSbPm6uxd
@@ -1682,13 +1685,12 @@ K|N'Zoth|Lower Tower of Karazhan|Moroes|who pulled|Mixed|77.7|1791225880|10|8wmj
 K|N'Zoth|Zul'Gurub|High Priest Thekal|Booty Bay Boys|Mixed|69.2|1790886387|19|rpff1F80Df0EQEP4
 K|N'Zoth|Molten Core|Shazzrah|Remnant|Mixed|17.2|1784857347|30|L5X_1lZVVyvQqSfz
 K|N'Zoth|Molten Core|Golemagg the Incinerator|We go again|Mixed|54.6|1790964546|29|bDAj5s9YwD4GbNzQ
-K|N'Zoth|Molten Core|Garr|I Griefers Inc I|Mixed|40.1|1790014116|29|7B0Fh69WgoaUDKFb
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|Tolerable Company|Mixed|44.8|1791062571|18|g1mymaQFE9lN3uIS
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Ninja Turtles|Mixed|46.7|1785178407|10|YEvB-2tz1LAsgMvW
 K|Y'Shaarj|Molten Core|Shazzrah|I OKEAH I|Mixed|42|1789931030|31|82oNnn_ye7kXWA6t
 K|N'Zoth|Zul'Gurub|Jin'do the Hexxer|strawberry fields|Mixed|29.9|1790990660|11|OpzRM_SgB_VAW2XZ
 K|N'Zoth|Molten Core|Magmadar|Ninja Turtles|Mixed|51.5|1789328008|26|H-azRChrJvceXv2p
-K|N'Zoth|Molten Core|Baron Geddon|I Griefers Inc I|Mixed|34.8|1789409794|28|mMbKSeORu7UMz-C0
+K|N'Zoth|Molten Core|Baron Geddon|I Griefers Inc I|Mixed|34.8|1789409961|28|hNB6tlajm7Unf7Wc
 K|N'Zoth|Molten Core|Ragnaros|Ostatni Bastion|Mixed|160.1|1786822075|23|_jaIuAN9zx66Ryqj
 K|N'Zoth|Molten Core|Garr|The Crackshot Cartel|Mixed|58|1790447510|30|KrpPIWIAoE6nzMSK
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Repentance|Mixed|69.1|1790969965|10|1ML2vlB5C1gVvP5g
@@ -1699,7 +1701,6 @@ K|N'Zoth|Molten Core|Sulfuron Harbinger|Schmetterlingsbrigade|Mixed|69.2|1790885
 K|N'Zoth|Lower Tower of Karazhan|Moroes|Skill Issue|Mixed|64|1790884118|10|APQUs-u1UDRaCAC6
 K|N'Zoth|Molten Core|Golemagg the Incinerator|Tolerable Company|Mixed|59.6|1789676429|30|nAXvr0HNhw2Yiaxf
 K|N'Zoth|Lower Tower of Karazhan|Brood Queen Araxxna|Booty Bay Boys|Mixed|61.1|1787336738|10|dGGdykCBLgD5u43r
-K|N'Zoth|Molten Core|Basalthar & Smoldaris|Smokey Tokers|Mixed|54|1789585786|52|RW3oq_YdnDmGtb1g
 K|N'Zoth|Molten Core|Lucifron|Skill Issue|Mixed|60.2|1790510430|26|
 K|N'Zoth|Molten Core|Shazzrah|Hard Reserved|Mixed|19.7|1789225911|21|g_9oBumGrerT2fid
 K|N'Zoth|Zul'Gurub|Bloodlord Mandokir|Oktagon|Mixed|106.2|1790879958|20|LPF6ZJtGW-HooheW
@@ -1745,8 +1746,7 @@ K|N'Zoth|Zul'Gurub|Hakkar|Tolerable Company|Mixed|103.4|1791062571|18|g1mymaQFE9
 K|Y'Shaarj|Lower Tower of Karazhan|Moroes|Sons of Mukla|Mixed|82.5|1790363335|10|yPlZ6FzboZ5AyhcP
 K|N'Zoth|Molten Core|Baron Geddon|Fury|Mixed|37.3|1790878667|36|bm-fS8wXgzo2UdWR
 K|N'Zoth|Zul'Gurub|High Priestess Mar'li|Redridge Ultras|Mixed|28.5|1790969219|18|PgJsFnYkHASufeXU
-K|N'Zoth|Molten Core|Baron Geddon|Hard Reserved|Mixed|39.8|1788618788|25|a_mWGJw7mwCqB4Lg
-K|N'Zoth|Zul'Gurub|High Priestess Jeklik|Oktagon|Mixed|25.2|1790879958|20|LPF6ZJtGW-HooheW
+K|Y'Shaarj|Molten Core|Golemagg the Incinerator|The Anvilguard|Alliance|72.6|1789675271|20|l5KYlE3OkEG_PU6D
 K|N'Zoth|Molten Core|Ragnaros|Mushroom Vendor|Mixed|111.5|1789325611|33|CuERabfXcde_tz0u
 K|N'Zoth|Zul'Gurub|High Priest Venoxis|Raid Therapy|Mixed|22.2|1791140720|15|1G7a4lkQk2XLa6xo
 K|N'Zoth|Molten Core|Sulfuron Harbinger|Raid Therapy|Mixed|37|1790882819|28|tSiX8YOT57d8pKcV
@@ -1802,7 +1802,7 @@ L|xLENLtD4ICDFsR1y|N'Zoth|Onyxia's Lair|One Blood|Mixed|1789292156|27|Onyxia=316
 L|wxRIlJ9Rd4j8dp4d|N'Zoth|Molten Core|Repentance|Mixed|1791057481|28|Incindis=45.7=178=0;Garr=128.3=641=0;Baron Geddon=41.9=969=0;Shazzrah=25.4=1090=0;Sulfuron Harbinger=50.4=1522=0;Golemagg the Incinerator=44=1734=0;Basalthar & Smoldaris=68.7=1897=0;Sorcerer-Thane Thaurissan=58.3=2238=0;Lucifron=60.8=2596=0;Magmadar=54.7=2728=0;Majordomo Executus=81.5=3031=0;Ragnaros=124.7=3558=0
 L|uttsDpAPfiajxHhp|C'Thun|Zul'Gurub|Hell Fire|Mixed|1790879692|19|High Priestess Jeklik=27.7=738=0;High Priest Venoxis=43.4=1219=0;High Priestess Mar'li=33.6=1971=0;Bloodlord Mandokir=74.9=2603=0;High Priest Thekal=62.1=3306=0;High Priestess Arlokk=19.3=3843=0;Jin'do the Hexxer=25.9=4642=0;Hakkar=84.5=5227=0;Gahz'ranka=31.2=5795=0
 L|swFAjR6bc0HN2-dh|N'Zoth|Molten Core|I Griefers Inc I|Mixed|1790618161|32|Incindis=58.3=396=0;Garr=76.1=573=0;Baron Geddon=59.5=725=0;Shazzrah=19.7=886=0;Sulfuron Harbinger=38.4=1143=0;Lucifron=56.2=1405=0;Magmadar=38=1586=0;Basalthar & Smoldaris=44.8=1716=0;Sorcerer-Thane Thaurissan=55.3=2034=0;Golemagg the Incinerator=44=2227=0;Majordomo Executus=93.1=2493=0;Ragnaros=103.1=2852=0
-L|JoZpaGSDRcl6Kr_r|Y'Shaarj|Lower Tower of Karazhan|Care Bears|Horde|1789758105|10|Lord Blackwald II=71.7=639=0;Grizikil=77.5=1824=0;Clawlord Howlfang=93.4=2135=0;Brood Queen Araxxna=57.8=2670=0;Moroes=93=3356=0
+L|1ML2vlB5C1gVvP5g|N'Zoth|Lower Tower of Karazhan|Repentance|Mixed|1790969965|10|Lord Blackwald II=58.7=417=0;Clawlord Howlfang=65.2=944=0;Brood Queen Araxxna=50=1389=0;Grizikil=46.1=1852=0;Moroes=69.1=2418=0
 L|IS4J5jSK4vLd7ffR|Y'Shaarj|Lower Tower of Karazhan|ERROR|Horde|1788014585|10|Lord Blackwald II=67.3=563=0;Clawlord Howlfang=76.8=1021=0;Grizikil=52.1=1652=0;Brood Queen Araxxna=51.5=2072=0;Moroes=77.5=2626=0
 L|3QwYO2d9OtQyKWQR|N'Zoth|Molten Core|ThunderClan Warriors|Mixed|1790018600|23|Incindis=64.2=379=0;Garr=85=1183=0;Baron Geddon=97.4=1550=0;Shazzrah=46=1950=0;Sulfuron Harbinger=88=2890=0;Golemagg the Incinerator=73.1=3340=0;Lucifron=83.1=3734=0;Magmadar=79.2=177778=0;Basalthar & Smoldaris=100=178136=0;Sorcerer-Thane Thaurissan=127=178847=0;Majordomo Executus=204.2=180267=0;Ragnaros=202.6=181329=0
 L|C2sXDKWueUAbEOlp|N'Zoth|Molten Core|The Ashen Banner|Mixed|1790992349|35|Incindis=37.9=148=0;Garr=76.6=656=0;Baron Geddon=35.1=891=0;Shazzrah=24.2=1009=0;Sulfuron Harbinger=49.6=1386=0;Golemagg the Incinerator=38.8=1566=0;Lucifron=46.5=1755=0;Magmadar=42.5=1883=0;Basalthar & Smoldaris=60.3=2055=0;Sorcerer-Thane Thaurissan=49.8=2377=0;Majordomo Executus=86.3=2688=0;Ragnaros=106.5=3125=0
@@ -1824,11 +1824,10 @@ L|lvbbXzYbLMeOrNz2|N'Zoth|Zul'Gurub|We go again|Mixed|1790970132|12|Jin'do the H
 L|Y1D2LQvKtVgrHETz|N'Zoth|Onyxia's Lair|Thud and Blunder|Mixed|1786042331|33|Broodcommander Axelus=101=101=0;Onyxia=226.5=650=0
 L|QRqlD85zZUr8Jr9p|Y'Shaarj|Molten Core|For The Horde|Alliance|1789149560|26|Incindis=49.5=156=0;Lucifron=61=537=0;Magmadar=57.4=674=0;Basalthar & Smoldaris=61=799=0;Sorcerer-Thane Thaurissan=68.7=1112=0;Garr=76.3=2030=0;Baron Geddon=41.8=2311=0;Shazzrah=33.6=2464=0;Sulfuron Harbinger=56.2=2794=0;Golemagg the Incinerator=42.4=3060=0;Majordomo Executus=81=3266=0;Ragnaros=129.6=3697=0
 L|8AH2fIAYdbjmgCcm|Y'Shaarj|Molten Core|ERROR|Horde|1789312120|33|Incindis=52.9=227=0;Lucifron=82.7=631=0;Magmadar=51.6=818=0;Basalthar & Smoldaris=55=1318=1;Sorcerer-Thane Thaurissan=69.5=1741=0;Garr=101.9=2390=0;Baron Geddon=52.7=2690=0;Shazzrah=23.9=2850=0;Sulfuron Harbinger=56.9=3257=0;Golemagg the Incinerator=49.5=3470=0;Majordomo Executus=89.2=3773=0;Ragnaros=130=4192=0
-L|y4zeKWmx5-HxD3op|N'Zoth|Molten Core|Phoenix|Mixed|1790041023|30|Incindis=44=214=0;Garr=80.7=823=0;Baron Geddon=60.7=1177=0;Shazzrah=21=1377=0;Sulfuron Harbinger=56.7=1792=0;Golemagg the Incinerator=47.6=2012=0;Lucifron=57.8=2273=0;Magmadar=49.7=2456=0;Basalthar & Smoldaris=51.3=2675=0;Sorcerer-Thane Thaurissan=61.3=3080=0;Majordomo Executus=91.8=3424=0;Ragnaros=166.7=3928=0
 L|4JTYkwxMQ3gcG4DC|N'Zoth|Onyxia's Lair|I Griefers Inc I|Mixed|1791132597|24|Onyxia=229.9=230=0;Broodcommander Axelus=90.7=542=0
-L|ZmO8B7Gtv9tJX3rk|C'Thun|Molten Core|Warhammer|Mixed|1790488372|40|Incindis=45.1=285=0;Lucifron=59.8=853=0;Basalthar & Smoldaris=91.5=1137=0;Magmadar=51.9=2778=0;Garr=200.2=3961=0;Baron Geddon=55.4=40893=0;Shazzrah=23.1=41329=0
+L|fX9TYlKB7oqBym4X|N'Zoth|Molten Core|Booty Bay Surf Club|Mixed|1787692955|22|Incindis=60.5=421=0;Lucifron=79.7=892=0;Magmadar=72.2=1121=0;Garr=161.1=2403=1;Baron Geddon=129.8=2967=0;Shazzrah=30.4=3288=0;Sulfuron Harbinger=78.2=4703=0;Golemagg the Incinerator=67.8=5167=0;Basalthar & Smoldaris=95=5405=0;Sorcerer-Thane Thaurissan=102.3=6333=0;Majordomo Executus=135.2=7506=1;Ragnaros=296.5=10148=2
 L|Fckx4eJOVKWw-TMD|N'Zoth|Molten Core|Ost Ardent|Mixed|1789935116|33|Incindis=39.3=282=0;Garr=102=1085=0;Baron Geddon=41=1486=0;Shazzrah=28.1=1620=0;Sulfuron Harbinger=50.5=2125=0;Golemagg the Incinerator=39=2420=0;Lucifron=49.6=2611=0;Magmadar=41.8=2793=0;Basalthar & Smoldaris=52.4=2986=0;Sorcerer-Thane Thaurissan=62.8=3389=0;Majordomo Executus=99.3=3834=0;Ragnaros=123.7=4306=0
-L|4gOOvR_x15z1vpvp|N'Zoth|Molten Core|Redridge Ultras|Mixed|1790792431|29|Incindis=50.3=438=0;Lucifron=87.9=791=0;Magmadar=56.7=970=0;Garr=93.5=1695=0;Baron Geddon=48.3=2127=0;Shazzrah=28.7=2258=0;Sulfuron Harbinger=54.4=2937=0;Golemagg the Incinerator=43.9=3260=0;Basalthar & Smoldaris=60=3421=0;Sorcerer-Thane Thaurissan=62.3=3801=0;Majordomo Executus=93.3=4145=0;Ragnaros=142.8=4602=0
+L|Tk5JXK-SK8qge6Au|N'Zoth|Molten Core|Ost Ardent|Mixed|1789331688|37|Incindis=73.3=261=0;Garr=187.2=1029=0;Baron Geddon=56.1=2837=1;Shazzrah=26.6=3113=0;Sulfuron Harbinger=51.5=3615=0;Golemagg the Incinerator=38.4=3951=0;Lucifron=65.9=4103=0;Magmadar=48.2=4324=0;Basalthar & Smoldaris=53.2=4530=0;Sorcerer-Thane Thaurissan=58.8=4934=0;Majordomo Executus=110.1=5328=0;Ragnaros=122.9=5810=0
 L|0c-cLpJC3PfU_7aG|N'Zoth|Lower Tower of Karazhan|Phoenix|Mixed|1789878168|10|Clawlord Howlfang=85.6=574=0;Lord Blackwald II=96.8=1355=0;Brood Queen Araxxna=80.3=1976=0;Grizikil=76.7=2620=0;Moroes=151.2=3279=0
 L|cwfUAHyiGZbxfrEf|N'Zoth|Molten Core|Ninja Turtles|Mixed|1786649034|22|Incindis=58.2=306=0;Garr=105.4=989=0;Baron Geddon=58.7=1567=1;Shazzrah=30.3=1731=0;Sulfuron Harbinger=61.2=2213=0;Golemagg the Incinerator=56.3=2590=0;Basalthar & Smoldaris=73.8=2849=0;Sorcerer-Thane Thaurissan=68.7=3261=0;Lucifron=69.8=3566=0;Magmadar=60.2=3780=0;Majordomo Executus=107.9=4353=0;Ragnaros=160.4=4952=0
 L|TLwZ6PrIPQKLAbPy|N'Zoth|Lower Tower of Karazhan|Ostatni Bastion|Mixed|1789232534|10|Lord Blackwald II=52.2=514=0;Clawlord Howlfang=57.6=864=0;Brood Queen Araxxna=39.5=1269=0;Grizikil=44.9=1648=0;Moroes=61.6=2081=0
@@ -1839,8 +1838,6 @@ L|fhV3ciJmnp8dKa3t|N'Zoth|Lower Tower of Karazhan|Smokey Tokers|Mixed|1786991830
 L|7gzcn4L9sQHrAWaC|N'Zoth|Lower Tower of Karazhan|Thud and Blunder|Mixed|1786992964|10|Lord Blackwald II=68.9=935=0;Clawlord Howlfang=75.8=1566=1;Brood Queen Araxxna=63.2=2222=0;Grizikil=53.4=2730=0;Moroes=71=3362=0
 L|A6UEqQ3scWrZQFOi|N'Zoth|Molten Core|Mushroom Vendor|Mixed|1789930472|30|Incindis=38.6=143=0;Garr=62.5=969=0;Baron Geddon=40.1=1084=0;Shazzrah=20.5=1164=0;Sulfuron Harbinger=46=1463=0;Golemagg the Incinerator=47=1659=0;Lucifron=53.2=1869=0;Magmadar=44.3=1980=0;Basalthar & Smoldaris=53.8=2086=0;Sorcerer-Thane Thaurissan=52.1=2382=0;Majordomo Executus=66.1=2723=0;Ragnaros=114.4=3124=0
 L|t8naHLr42S6kdZa3|Y'Shaarj|Molten Core|Care Bears|Horde|1788706871|29|Incindis=63.8=729=0;Lucifron=82.1=1190=0;Magmadar=71.6=1427=0;Basalthar & Smoldaris=77=1654=0;Sorcerer-Thane Thaurissan=89.9=2297=0;Garr=139.5=3522=0;Baron Geddon=102.6=3993=0;Shazzrah=34.9=4245=0;Sulfuron Harbinger=79.5=5047=0;Golemagg the Incinerator=60.3=5417=0;Majordomo Executus=157=5825=0;Ragnaros=168.8=6455=0
-L|Nrcad6hpv2WROdOT|N'Zoth|Onyxia's Lair|The Non Profit|Mixed|1787427134|23|Onyxia=367.5==;Broodcommander Axelus=111.9==
-L|HoZlUHeHs0DMQe-A|N'Zoth|Lower Tower of Karazhan|Die Gilde|Mixed|1787776304|10|Lord Blackwald II=43.7=215=0;Clawlord Howlfang=49.5=433=0;Grizikil=33.4=763=0;Brood Queen Araxxna=34.6=973=0;Moroes=51.7=1456=0
 L|nMP42qu8e1ORYcN5|N'Zoth|Molten Core|Repentance|Mixed|1789852437|26|Incindis=48.5=169=0;Garr=104.5=612=0;Baron Geddon=45.6=889=0;Shazzrah=28=1031=0;Sulfuron Harbinger=53.1=1321=0;Golemagg the Incinerator=52.3=1519=0;Basalthar & Smoldaris=55.2=1662=0;Sorcerer-Thane Thaurissan=64.4=2029=0;Lucifron=64=2301=0;Magmadar=57.1=2482=0;Majordomo Executus=84.2=2784=0;Ragnaros=150.2=3299=0
 L|y6Q06IfbfEbuos-C|N'Zoth|Molten Core|I Griefers Inc I|Mixed|1791222343|29|Incindis=36.8=208=0;Garr=62.1=424=0;Baron Geddon=35.2=627=0;Shazzrah=19.2=739=0;Sulfuron Harbinger=42.8=952=0;Lucifron=47.1=1158=0;Magmadar=37.7=1271=0;Basalthar & Smoldaris=45.9=1397=0;Sorcerer-Thane Thaurissan=44.4=1672=0;Golemagg the Incinerator=37.7=1840=0;Majordomo Executus=81.5=2035=0;Ragnaros=98.2=2494=0
 L|-mAvd7QTYSXMct72|Y'Shaarj|Molten Core|The Anvilguard|Alliance|1788899726|22|Incindis=75.9=2099=1;Basalthar & Smoldaris=98.1=4234=0;Lucifron=116.6=5149=0;Lucifron=154.6=6620=0;Magmadar=136.8=7760=0;Sulfuron Harbinger=106.4=8813=0;Garr=123.4=176768=1;Baron Geddon=90.6=177886=1;Shazzrah=50.5=178182=0;Golemagg the Incinerator=1231=180918=0
@@ -1852,14 +1849,13 @@ L|jjYh_zcR8Xa7abIL|N'Zoth|Molten Core|Ninja Turtles|Mixed|1789672623|27|Incindis
 L|UrztUTbprcvaocfc|N'Zoth|Molten Core|The Crackshot Cartel|Mixed|1787425547|23|Incindis=62.4=432=0;Lucifron=112.1=825=0;Magmadar=59.8=1112=0;Basalthar & Smoldaris=68.3=1399=0;Sorcerer-Thane Thaurissan=80.7=2154=0;Garr=72=2998=0;Baron Geddon=51.3=3479=0;Shazzrah=29.7=3791=0;Sulfuron Harbinger=61.1=4341=0;Golemagg the Incinerator=56.1=4814=0;Majordomo Executus=130.1=6462=2;Ragnaros=164.5=7190=0
 L|a4WeStxSwtIDFJmu|N'Zoth|Lower Tower of Karazhan|Fury|Mixed|1789609528|10|Lord Blackwald II=69.9=657=0;Clawlord Howlfang=71.8=1384=1;Brood Queen Araxxna=48=1987=0;Grizikil=55.9=2515=0;Moroes=72.9=3114=0
 L|PKtHDzjhUrQfC6IX|N'Zoth|Zul'Gurub|Die Gilde|Mixed|1790968641|20|High Priestess Jeklik=35=508=0;High Priest Venoxis=28.3=693=0;Bloodlord Mandokir=84.3=1130=0;High Priestess Mar'li=38.8=1514=0;High Priest Thekal=197.6=2013=0;Gahz'ranka=34.7=2280=0;High Priestess Arlokk=24.1=2592=0;Jin'do the Hexxer=43.8=2958=0;Hakkar=86.5=3327=0
-L|HkprDh0D5HytgKw-|N'Zoth|Molten Core|Booty Bay Surf Club|Mixed|1787692955|22|Incindis=60.5=421=0;Lucifron=79.7=892=0;Magmadar=72.2=1121=0;Garr=161.1=2403=1;Baron Geddon=129.8=2967=0;Shazzrah=30.4=3288=0;Sulfuron Harbinger=78.2=4703=0;Golemagg the Incinerator=67.8=5167=0;Basalthar & Smoldaris=95=5405=0;Sorcerer-Thane Thaurissan=102.3=6333=0;Majordomo Executus=135.2=7506=1;Ragnaros=296.5=10148=2
+L|rgQXUC_YLDeVF0qo|N'Zoth|Molten Core|One Blood|Mixed|1790881568|23|Incindis=48.9=286=0;Lucifron=66.1=785=0;Magmadar=62.6=1093=0;Garr=160.6=2277=1;Baron Geddon=63.2=2766=0;Shazzrah=31.9=3083=0;Sulfuron Harbinger=99.4=4119=0;Golemagg the Incinerator=47.5=4583=0;Basalthar & Smoldaris=61.6=4813=0;Sorcerer-Thane Thaurissan=82.2=5329=0;Majordomo Executus=126.1=6012=0;Ragnaros=173.9=6684=0
 L|Q39stqhVNrMDcGPd|N'Zoth|Molten Core|Chlopaki z Barrensow|Mixed|1790103238|33|Incindis=55.4=505=0;Garr=245.9=1504=0;Baron Geddon=69.2=1871=0;Shazzrah=34.4=2130=0;Sulfuron Harbinger=72.1=2628=0;Golemagg the Incinerator=63.3=3046=0;Lucifron=73.5=3276=0;Magmadar=69.5=3518=0;Majordomo Executus=131.8=4712=0;Basalthar & Smoldaris=75.9=5039=0;Sorcerer-Thane Thaurissan=81.7=5747=0;Ragnaros=189.9=6532=0
 L|fUCK4hJqrS000YWN|N'Zoth|Molten Core|Remnant|Mixed|1786068732|29|Incindis=28.2=28=0;Garr=43.8=637=1;Baron Geddon=26.6=874=0;Shazzrah=20.5=957=0;Sulfuron Harbinger=36.2=1198=0;Golemagg the Incinerator=34=1370=0;Basalthar & Smoldaris=40.2=1555=0;Sorcerer-Thane Thaurissan=40.7=1820=0;Lucifron=42.2=2024=0;Magmadar=32.9=2151=0;Majordomo Executus=75.6=2476=0;Ragnaros=97.9=2857=0
 L|KR8-fnV3fRoPLEZ1|N'Zoth|Molten Core|Skull Emoji|Mixed|1788201839|28|Incindis=27.2=125=0;Garr=32.7=423=0;Baron Geddon=27.9=602=0;Shazzrah=17.2=697=0;Sulfuron Harbinger=32.5=928=0;Golemagg the Incinerator=32.9=1078=0;Lucifron=44=1232=0;Magmadar=43.9=1334=0;Basalthar & Smoldaris=34.7=1506=0;Sorcerer-Thane Thaurissan=44=1805=0;Majordomo Executus=71.5=2104=0;Ragnaros=89=2452=0
 L|pNgSrZsVc1uEm7uL|N'Zoth|Onyxia's Lair|Cold Embrace|Mixed|1790883030|32|Onyxia=302.7=2718=3;Broodcommander Axelus=111.5=3076=0
 L|sX2qc5nr4ginYqCI|N'Zoth|Lower Tower of Karazhan|Hard Reserved|Mixed|1785692067|10|Lord Blackwald II=93.2=875=0;Clawlord Howlfang=78.5=1490=0;Grizikil=53.4=2085=0;Brood Queen Araxxna=54.5=2524=0;Moroes=97.2=2994=0
 L|cRsMKwIyTLD3eCQi|N'Zoth|Zul'Gurub|Raid Therapy|Mixed|1790888280|18|High Priestess Jeklik=32.7=40199=0;High Priest Venoxis=23.2=40415=0;High Priestess Mar'li=30.3=40917=0;Bloodlord Mandokir=47.2=41351=0;High Priest Thekal=75.4=41733=0;Gahz'ranka=76.5=41943=0;High Priestess Arlokk=23.7=42236=0;Jin'do the Hexxer=25.9=42695=0;Hakkar=60.5=43144=0
-L|u7CToHtwMOpe2m9S|N'Zoth|Onyxia's Lair|Loot Goblins|Mixed|1789823558|20|Onyxia=314=524=0;Broodcommander Axelus=105.8=848=0
 L|0ZlwZWWmwdkEYJES|Y'Shaarj|Lower Tower of Karazhan|ERROR|Horde|1789820233|10|Lord Blackwald II=101.2==;Clawlord Howlfang=82.2==;Grizikil=60.3==;Brood Queen Araxxna=57.4==;Moroes=112.2==
 L|-gxErZ1a3NyTS_fO|N'Zoth|Lower Tower of Karazhan|Amnesia|Mixed|1785352282|10|Lord Blackwald II=37.9=238=0;Clawlord Howlfang=42.1=478=0;Brood Queen Araxxna=27.2=759=0;Grizikil=28.3=1075=0;Moroes=52.1=1369=0
 L|JStP8meEd2HHndhG|N'Zoth|Lower Tower of Karazhan|ThunderClan Warriors|Mixed|1788291706|10|Clawlord Howlfang=82.2=691=0;Lord Blackwald II=74.2=1311=0;Brood Queen Araxxna=56.2=1825=0;Grizikil=59.6=2360=0;Moroes=82.4=2970=0
@@ -1877,19 +1873,19 @@ L|V53mDh4q1v0YjVU6|N'Zoth|Molten Core|One Blood|Mixed|1790275061|20|Incindis=63.
 L|q1jo7qWZqffrmu_u|N'Zoth|Onyxia's Lair|Skull Emoji|Mixed|1789930712|28|Onyxia=203=346=0;Broodcommander Axelus=69.9=519=0
 L|zZAQ_HsZKU55TNdq|Y'Shaarj|Molten Core|For The Horde|Mixed|1790963553|26|Incindis=47.6=169=0;Lucifron=60.7=528=0;Magmadar=57.4=644=0;Basalthar & Smoldaris=54.2=780=0;Sorcerer-Thane Thaurissan=59.4=1083=0;Garr=131.7=1578=0;Baron Geddon=42.8=1850=0;Shazzrah=39.2=1961=0;Sulfuron Harbinger=56.6=2264=0;Golemagg the Incinerator=81.2=2542=0;Majordomo Executus=98.1=2783=0;Ragnaros=116.9=3169=0
 L|yYN3zeqP3-C4VNAc|C'Thun|Zul'Gurub|Warhammer|Mixed|1790990504|12|High Priestess Arlokk=78.4=1465=0;High Priest Thekal=98.6=2191=0;High Priest Venoxis=77.4=3065=0;Bloodlord Mandokir=125.2=4243=0;High Priestess Jeklik=53.3=6267=0
-L|Tk5JXK-SK8qge6Au|N'Zoth|Molten Core|Ost Ardent|Mixed|1789331688|37|Incindis=73.3=261=0;Garr=187.2=1029=0;Baron Geddon=56.1=2837=1;Shazzrah=26.6=3113=0;Sulfuron Harbinger=51.5=3615=0;Golemagg the Incinerator=38.4=3951=0;Lucifron=65.9=4103=0;Magmadar=48.2=4324=0;Basalthar & Smoldaris=53.2=4530=0;Sorcerer-Thane Thaurissan=58.8=4934=0;Majordomo Executus=110.1=5328=0;Ragnaros=122.9=5810=0
+L|XVFpQibE5V6eO1la|N'Zoth|Lower Tower of Karazhan|Raid Therapy|Mixed|1789680622|10|Lord Blackwald II=53=380=0;Brood Queen Araxxna=29.5=937=0;Grizikil=31.5=1389=0;Clawlord Howlfang=58.7=1834=0;Moroes=53.4=2369=0
 L|ic5P2UltruO3gbFm|N'Zoth|Onyxia's Lair|Thud and Blunder|Mixed|1787251940|32|Broodcommander Axelus=95=137=0;Onyxia=315.5=635=0
 L|OzLerl0LEINZZvZe|N'Zoth|Lower Tower of Karazhan|Cleave|Mixed|1788791592|10|Lord Blackwald II=42.1=240=0;Clawlord Howlfang=55=445=0;Brood Queen Araxxna=27.5=746=0;Grizikil=30.2=993=0;Moroes=115.5=1198=0
 L|lTrVV39RZe-xiMQj|N'Zoth|Zul'Gurub|Ost Ardent|Mixed|1790970703|23|Jin'do the Hexxer=37.6=99047=0;High Priestess Arlokk=24.4=99395=0;High Priest Thekal=76=99745=0;Bloodlord Mandokir=75.9=100416=0;High Priestess Mar'li=47.2=101475=0;High Priest Venoxis=41.8=101794=0;High Priestess Jeklik=36.8=102238=0;Hakkar=118.7=102761=0
-L|dgsfdhLWiO-bWvII|N'Zoth|Onyxia's Lair|Skill Issue|Mixed|1789306826|25|Onyxia=499.5=1327=1;Broodcommander Axelus=116.7=1788=0
+L|4gOOvR_x15z1vpvp|N'Zoth|Molten Core|Redridge Ultras|Mixed|1790792431|29|Incindis=50.3=438=0;Lucifron=87.9=791=0;Magmadar=56.7=970=0;Garr=93.5=1695=0;Baron Geddon=48.3=2127=0;Shazzrah=28.7=2258=0;Sulfuron Harbinger=54.4=2937=0;Golemagg the Incinerator=43.9=3260=0;Basalthar & Smoldaris=60=3421=0;Sorcerer-Thane Thaurissan=62.3=3801=0;Majordomo Executus=93.3=4145=0;Ragnaros=142.8=4602=0
 L|YToN-2p-IXQ4223G|Y'Shaarj|Lower Tower of Karazhan|Care Bears|Horde|1790968362|10|Lord Blackwald II=102.8=848=0;Clawlord Howlfang=85.2=1394=0;Grizikil=65.2=2105=0;Brood Queen Araxxna=58.4=2531=0;Moroes=89.9=3221=0
-L|dfnOYT9JV-YZ_H0q|N'Zoth|Onyxia's Lair|Eunoia|Mixed|1787774714|20|Onyxia=324.4=653=0;Broodcommander Axelus=138.1=2792=3
+L|NeOfkWnhlGcdwQ25|N'Zoth|Molten Core|I Griefers Inc I|Mixed|1788804761|34|Incindis=163.5=400=1;Garr=76.4=838=0;Baron Geddon=41.1=1081=0;Shazzrah=23.5=1211=0;Sulfuron Harbinger=46.3=1439=0;Lucifron=52.5=1734=0;Magmadar=45=1909=0;Basalthar & Smoldaris=45.2=2052=0;Sorcerer-Thane Thaurissan=57.9=2387=0;Golemagg the Incinerator=36.5=3446=0;Majordomo Executus=81.2=3693=0;Ragnaros=114.3=4106=0
 L|fkWWwEGi8JVu9gi_|N'Zoth|Lower Tower of Karazhan|Sincerity First|Mixed|1786906117|10|Lord Blackwald II=76.6=334=0;Grizikil=85.2=1275=0;Brood Queen Araxxna=68.9=1763=0;Clawlord Howlfang=162.6=2393=1;Moroes=87.1=3118=0
 L|2uzBXVRFkkWhFwL2|N'Zoth|Molten Core|Remnant|Mixed|1786671721|40|Incindis=28.7=308=0;Garr=50.9=718=0;Baron Geddon=23.1=1042=0;Shazzrah=18.7=1346=0;Sulfuron Harbinger=32.9=1691=0;Golemagg the Incinerator=37.2=2023=0;Basalthar & Smoldaris=37.7=2385=0;Sorcerer-Thane Thaurissan=40=2826=0;Lucifron=39.2=3152=0;Magmadar=34.1=3319=0;Majordomo Executus=71.5=3791=0;Ragnaros=89.2=4324=0
 L|DJhDK30IoOxjqoEp|N'Zoth|Molten Core|Strawman Arguments|Mixed|1788291137|27|Incindis=30.2=152=0;Garr=76.4=637=0;Baron Geddon=25.3=940=0;Shazzrah=15.2=1060=0;Sulfuron Harbinger=38.2=1384=0;Golemagg the Incinerator=33.4=1582=0;Basalthar & Smoldaris=36=1754=0;Sorcerer-Thane Thaurissan=40=2088=0;Lucifron=40.4=2392=0;Magmadar=36.1=2530=0;Majordomo Executus=76.9=3144=0;Ragnaros=101.6=3697=0
 L|SAMPQVRYBnoR9OdJ|N'Zoth|Molten Core|Chlopaki z Barrensow|Mixed|1785440122|31|Incindis=66.6=236=0;Lucifron=81.7=842=0;Magmadar=91=1153=0;Basalthar & Smoldaris=91.9=1550=0;Sorcerer-Thane Thaurissan=144.6=2154=0;Garr=207.5=3664=0;Baron Geddon=85.1=4141=0;Shazzrah=39.1=4440=0;Sulfuron Harbinger=79.7=5238=0;Golemagg the Incinerator=68.6=5796=0;Majordomo Executus=141.3=7263=0;Ragnaros=218.9=8802=1
 L|seDaX7kLFEmnA2Zc|C'Thun|Molten Core|Warhammer|Mixed|1789243357|30|Incindis=48.5=493=0;Lucifron=67.7=863=0;Basalthar & Smoldaris=113.9=1117=0;Magmadar=64.8=1475=0;Garr=168.2=2635=0;Baron Geddon=56.6=3800=0;Shazzrah=20.5=4117=0;Sulfuron Harbinger=74=4697=0;Golemagg the Incinerator=106.8=5244=0;Majordomo Executus=128.3=5663=0;Ragnaros=181=6370=0
-L|1ML2vlB5C1gVvP5g|N'Zoth|Lower Tower of Karazhan|Repentance|Mixed|1790969965|10|Lord Blackwald II=58.7=417=0;Clawlord Howlfang=65.2=944=0;Brood Queen Araxxna=50=1389=0;Grizikil=46.1=1852=0;Moroes=69.1=2418=0
+L|TdJhBGlJieXG5rGI|N'Zoth|Molten Core|Booty Bay Surf Club|Mixed|1788814694|18|Incindis=49.9=280=0;Lucifron=105.7=720=0;Magmadar=69.9=965=0;Basalthar & Smoldaris=387.7=1465=0;Basalthar & Smoldaris=79=2178=0;Sorcerer-Thane Thaurissan=81.7=2586=0;Garr=149.4=3380=0;Baron Geddon=141.3=3905=0;Shazzrah=41.9=4181=0;Sulfuron Harbinger=80.1=5959=1;Golemagg the Incinerator=61.3=6269=0;Majordomo Executus=169.4=7556=0
 L|hQ21KJAhJuX6we4s|N'Zoth|Molten Core|BRUTAL|Mixed|1786818278|36|Incindis=50.6=51=0;Garr=143.3=941=1;Baron Geddon=60.8=1291=0;Shazzrah=30.7=1556=0;Sulfuron Harbinger=61.6=1874=0;Golemagg the Incinerator=48.4=2108=0;Lucifron=67.6=2401=0;Magmadar=66=2585=0;Basalthar & Smoldaris=56.4=2786=0;Sorcerer-Thane Thaurissan=72.7=3303=0;Majordomo Executus=107.7=4037=0;Ragnaros=150.5=4657=0
 L|OAOPp6fdJLfs79X7|N'Zoth|Molten Core|Booty Bay Surf Club|Mixed|1786390114|28|Incindis=65=342=0;Lucifron=133=799=0;Magmadar=72.1=1021=0;Garr=109.7=1742=0;Baron Geddon=79.5=2108=0;Shazzrah=36.7=2275=0;Sulfuron Harbinger=77.5=2747=0;Golemagg the Incinerator=68.3=3159=0;Basalthar & Smoldaris=95=3433=0;Sorcerer-Thane Thaurissan=105.7=3947=0;Majordomo Executus=156.4=4559=0;Ragnaros=214.8=5147=0
 L|3ZjGk_G_D-zPJsEa|N'Zoth|Molten Core|Schmetterlingsbrigade|Mixed|1790885317|26|Incindis=49.8=218=0;Garr=147.8=1426=1;Lucifron=68.5=2588=0;Magmadar=61.6=2764=0;Basalthar & Smoldaris=66.5=2933=0;Sorcerer-Thane Thaurissan=67.4=3322=0;Baron Geddon=51.1=3735=1;Shazzrah=30.3=3920=0;Sulfuron Harbinger=69.2=4358=0;Golemagg the Incinerator=46.3=4646=0;Majordomo Executus=113.3=5080=0;Ragnaros=175.3=5706=0
@@ -1899,7 +1895,7 @@ L|pZ2d-ARCV-azpcMk|Y'Shaarj|Molten Core|Crit Happens|Horde|1788457952|22|Incindi
 L|qZ35Q8D5iTUDa1W7|N'Zoth|Molten Core|The Crackshot Cartel|Mixed|1789837642|26|Incindis=47.7=278=0;Lucifron=104=704=0;Magmadar=65.9=1227=0;Basalthar & Smoldaris=56.2=1493=0;Sorcerer-Thane Thaurissan=82.7=1968=0;Garr=61.4=2683=0;Baron Geddon=80.3=3132=0;Shazzrah=34.2=3550=0;Sulfuron Harbinger=76.8=3979=0;Golemagg the Incinerator=66.5=4706=0;Majordomo Executus=91.2=5350=0;Ragnaros=147.7=6100=0
 L|OoSy8IsNEtUmewVE|N'Zoth|Onyxia's Lair|Cleave|Mixed|1791123399|30|Broodcommander Axelus=57.2=57=0;Onyxia=192.6=347=0
 L|ChbFSkHxx-EhNh-G|N'Zoth|Molten Core|ThunderClan Warriors|Mixed|1791128539|40|Incindis=55.8=304=0;Garr=198.9=1013=0;Baron Geddon=104.9=1411=0;Shazzrah=31.7=1800=0;Sulfuron Harbinger=64.9=2251=0;Golemagg the Incinerator=55.6=2557=0;Lucifron=73.6=2792=0;Magmadar=68.2=3084=0;Basalthar & Smoldaris=65=3367=0;Sorcerer-Thane Thaurissan=101.4=3850=0;Majordomo Executus=136.1=5451=1;Ragnaros=195.1=6145=0
-L|OAnEZidPoiclv1pQ|N'Zoth|Molten Core|Skull Emoji|Mixed|1789308930|28|Incindis=27.8=163=0;Garr=31.1=459=0;Baron Geddon=28.6=650=0;Shazzrah=17.4=741=0;Sulfuron Harbinger=32.5=948=0;Lucifron=50=2248=0;Magmadar=42.5=2336=0;Golemagg the Incinerator=37.6=2487=0;Basalthar & Smoldaris=40.4=2701=0;Sorcerer-Thane Thaurissan=48.2=2968=0;Majordomo Executus=61.5=3392=0;Ragnaros=107.8=3792=0
+L|u7CToHtwMOpe2m9S|N'Zoth|Onyxia's Lair|Loot Goblins|Mixed|1789823558|20|Onyxia=314=524=0;Broodcommander Axelus=105.8=848=0
 L|KJC_nHlsjPCAFS2d|N'Zoth|Molten Core|Strawman Arguments|Mixed|1788291135|27|Incindis=30.1=152=0;Garr=76.4=637=0;Baron Geddon=25.3=940=0;Shazzrah=15.2=1060=0;Sulfuron Harbinger=38.2=1384=0;Golemagg the Incinerator=33.4=1582=0;Basalthar & Smoldaris=35.9=1754=0;Sorcerer-Thane Thaurissan=40=2088=0;Lucifron=40.4=2392=0;Magmadar=36.2=2530=0;Majordomo Executus=76.9=3144=0;Ragnaros=101.8=3697=0
 L|V43XB3XxBTfCX0eX|Y'Shaarj|Onyxia's Lair|Sons of Mukla|Mixed|1787258401|38|Broodcommander Axelus=90.5=229=0;Onyxia=401.2=2594=2
 L|COvxOmRxqmED8hca|N'Zoth|Lower Tower of Karazhan|Smokey Tokers|Mixed|1788098246|11|Lord Blackwald II=56.5=505=0;Clawlord Howlfang=60.3=853=0;Brood Queen Araxxna=39.5=1239=0;Grizikil=40.3=1645=0;Moroes=70.2=2261=0
@@ -1908,20 +1904,21 @@ L|cI-HAWj3wvFGZM5i|N'Zoth|Onyxia's Lair|The Ashen Banner|Mixed|1789607692|26|Bro
 L|npu_oqDp8BCXDCMN|Y'Shaarj|Zul'Gurub|Kor Kron Enforcers|Horde|1790878572|20|Jin'do the Hexxer=42.8=4103=0;High Priestess Jeklik=31.7=4951=0;High Priest Venoxis=35.8=5255=0;Bloodlord Mandokir=70.9=5854=0;High Priestess Mar'li=39.9=6603=0;High Priest Thekal=99.5=7374=0;High Priest Thekal=19.4=7409=0;Gahz'ranka=41.2=7733=0;High Priestess Arlokk=27.5=8086=0;Hakkar=77.2=8764=0
 L|EdCcVkCtZ2qvr6sT|N'Zoth|Lower Tower of Karazhan|Oktagon|Mixed|1786905358|10|Lord Blackwald II=50.2=515=0;Grizikil=36.7=1074=0;Brood Queen Araxxna=42=1384=0;Clawlord Howlfang=80.5=1660=0;Moroes=62.9=2163=0
 L|LQ87VbeSlugfVxZ8|N'Zoth|Molten Core|Redridge Ultras|Mixed|1788374056|24|Incindis=51.6=245=0;Lucifron=94.9=635=0;Magmadar=63.1=887=0;Garr=56.4=1472=0;Baron Geddon=48.1=1816=0;Shazzrah=30.8=2007=0;Sulfuron Harbinger=61.3=2667=0;Golemagg the Incinerator=64.2=3098=0;Basalthar & Smoldaris=93.4=3320=0;Sorcerer-Thane Thaurissan=126.5=3848=0;Majordomo Executus=104.3=4961=0;Ragnaros=131.9=5508=0
+L|JRDP_v57HE7RhnvO|N'Zoth|Onyxia's Lair|ThunderClan Warriors|Mixed|1789662112|31|Broodcommander Axelus=117.4=832=0;Onyxia=321=1880=0
 L|HsBXOZMX6gccGMbl|N'Zoth|Molten Core|Log Breaker Machine|Mixed|1789669564|25|Incindis=41=187=0;Lucifron=116.7=594=0;Magmadar=51.7=893=0;Basalthar & Smoldaris=53.1=1066=0;Sorcerer-Thane Thaurissan=56.6=1395=0;Garr=45.9=1997=0;Baron Geddon=39.9=2286=0;Shazzrah=22.1=2429=0;Sulfuron Harbinger=49.5=2866=0;Golemagg the Incinerator=40.6=3054=0;Majordomo Executus=81.3=3915=1;Ragnaros=131.4=4429=0
-L|MBFCra737TlF_8ev|N'Zoth|Onyxia's Lair|Hard Reserved|Mixed|1788620261|22|Onyxia=278.4=401=0;Broodcommander Axelus=100.1=755=0
+L|dfnOYT9JV-YZ_H0q|N'Zoth|Onyxia's Lair|Eunoia|Mixed|1787774714|20|Onyxia=324.4=653=0;Broodcommander Axelus=138.1=2792=3
 L|YL6V27GWV2txU8Qg|N'Zoth|Molten Core|Oktagon|Mixed|1788373356|34|Incindis=29.4=147=0;Garr=54.5=520=0;Baron Geddon=39.1=724=0;Shazzrah=18.9=843=0;Sulfuron Harbinger=39.2=1438=0;Golemagg the Incinerator=35.3=1618=0;Lucifron=46=1843=0;Magmadar=39.5=1975=0;Basalthar & Smoldaris=43.5=2118=0;Sorcerer-Thane Thaurissan=49=2381=0;Majordomo Executus=74.9=2684=0;Ragnaros=103.4=3170=0
 L|3zZQN-LPcqA0L0gX|N'Zoth|Onyxia's Lair|strawberry fields|Mixed|1786897280|25|Onyxia=237.9=418=0;Broodcommander Axelus=78.5=678=0
 L|lyQFl3FzhW5mY0u5|N'Zoth|Onyxia's Lair|who pulled|Mixed|1790449579|24|Broodcommander Axelus=126.1=275=0;Onyxia=282.4=2904=3
 L|3eciq9Gz3PfR6P7E|N'Zoth|Onyxia's Lair|Cleave|Mixed|1789310122|26|Onyxia=169.6=643=0;Broodcommander Axelus=70.5=1016=0
 L|BBau4pWeffn9o55H|N'Zoth|Molten Core|Die Gilde|Mixed|1790535495|25|Garr=45.4=610=0;Baron Geddon=95.8=900=0;Shazzrah=22.4=1086=0;Sulfuron Harbinger=43.8=1419=0;Golemagg the Incinerator=43.1=1634=0;Lucifron=54.8=1794=0;Magmadar=42.6=1938=0;Basalthar & Smoldaris=54.1=2094=0;Sorcerer-Thane Thaurissan=51=2440=0;Majordomo Executus=74.8=2824=0;Ragnaros=131.4=3274=0
 L|3bfdKxJWPPTxbwa1|N'Zoth|Zul'Gurub|MEGAPANZAS|Mixed|1791249640|14|Jin'do the Hexxer=30.7=378=0;High Priestess Arlokk=29.1=755=0;High Priest Thekal=74.1=1172=0;Bloodlord Mandokir=58.6=1852=0;High Priestess Mar'li=44.9=2649=0;High Priest Venoxis=32=2889=0;High Priestess Jeklik=37.8=3267=0;Hakkar=60=4146=0
-L|2hDgOgyTIlygTQSU|N'Zoth|Onyxia's Lair|The Crackshot Cartel|Mixed|1790449775|26|Broodcommander Axelus=116.7=255=0;Onyxia=375.8=1186=0
 L|6dQ-aWKHXxzyCxYL|N'Zoth|Molten Core|Ost Ardent|Mixed|1788705595|28|Incindis=40.6=232=0;Garr=79.2=861=0;Baron Geddon=38.9=1292=0;Shazzrah=36.2=1459=0;Sulfuron Harbinger=50.9=1985=0;Golemagg the Incinerator=39.4=2298=0;Lucifron=61=2478=0;Magmadar=39.8=2665=0;Basalthar & Smoldaris=48.6=2871=0;Sorcerer-Thane Thaurissan=55.8=3575=1;Majordomo Executus=93.2=3988=0;Ragnaros=113.1=4494=0
 L|SZAY4sPcm5QweCjC|N'Zoth|Zul'Gurub|Cleave|Mixed|1791213693|15|High Priestess Mar'li=27.7=28=0;High Priest Venoxis=24.3=172=0;High Priestess Jeklik=24.6=507=0;Hakkar=52.4=977=0;Gahz'ranka=27.3=1239=0
 L|Os7ecWPbRGRe-lIL|N'Zoth|Molten Core|GTD|Mixed|1786162562|36|Incindis=57=222=0;Lucifron=64=584=0;Magmadar=64.8=787=0;Garr=199.1=1475=0;Baron Geddon=133=1806=0;Shazzrah=39.7=2064=0;Sulfuron Harbinger=82=2500=0;Golemagg the Incinerator=58.2=2844=0;Basalthar & Smoldaris=76.2=3028=0;Sorcerer-Thane Thaurissan=82.7=3405=0;Majordomo Executus=129.3=3830=0;Ragnaros=211.6=4463=0
+L|hNB6tlajm7Unf7Wc|N'Zoth|Molten Core|I Griefers Inc I|Mixed|1789409961|28|Incindis=103.9=191=0;Incindis=47.2=241=0;Garr=41.3=458=0;Baron Geddon=34.8=672=0;Shazzrah=25.1=813=0;Sulfuron Harbinger=59.2=1085=0;Lucifron=52.8=1368=0;Magmadar=47.1=1491=0;Basalthar & Smoldaris=49.6=1632=0;Sorcerer-Thane Thaurissan=69.9=2054=0;Golemagg the Incinerator=43.8=2587=0;Majordomo Executus=95=2880=0;Ragnaros=116.2=3317=0
 L|w6INcYZxMmEYSftB|N'Zoth|Onyxia's Lair|The Crackshot Cartel|Mixed|1790449739|26|Broodcommander Axelus=116.7=255=0;Onyxia=337.3=1147=0
-L|exWMB9a-PYp4A-oC|N'Zoth|Zul'Gurub|strawberry fields|Mixed|1791215522|20|High Priestess Jeklik=24.8=168206=0;High Priest Venoxis=22.9=168341=0;Bloodlord Mandokir=45.4=168644=0;High Priest Thekal=54=168992=0;Gahz'ranka=83.7=169200=0;High Priestess Arlokk=16.9=169350=0;Jin'do the Hexxer=30.4=169644=0;Hakkar=54.3=169897=0;Gri'lek=24.9=170313=0;High Priestess Mar'li=34.7=170905=0
+L|AmPu2jNJ6b0X9Uq4|N'Zoth|Molten Core|Tolerable Company|Mixed|1787688935|27|Garr=128.2=593=0;Baron Geddon=79.2=1052=0;Shazzrah=31.6=1484=0;Sulfuron Harbinger=64.7=1951=0;Golemagg the Incinerator=60.5=2995=1;Lucifron=71.5=3364=0;Magmadar=70.3=3562=0;Basalthar & Smoldaris=67.2=3794=0;Sorcerer-Thane Thaurissan=122=4378=0;Majordomo Executus=135.4=5084=0;Ragnaros=175.6=5896=0
 L|loiRtHmoErp9OZIU|N'Zoth|Lower Tower of Karazhan|Booty Bay Boys|Mixed|1787336738|10|Lord Blackwald II=57.2=616=0;Clawlord Howlfang=89.9=1092=0;Brood Queen Araxxna=61.1=1775=0;Grizikil=65.5=2341=0;Moroes=87.8=2875=0
 L|JxeN7js5rE9uxrOg|N'Zoth|Lower Tower of Karazhan|Deja vu|Mixed|1789939340|11|Lord Blackwald II=70.8=562=0;Clawlord Howlfang=67.7=1132=0;Grizikil=51=1600=0;Brood Queen Araxxna=45.3=1973=0;Moroes=74=2450=0
 L|-asVrb25m-N1quQ5|N'Zoth|Molten Core|Booty Bay Boys|Mixed|1790797539|25|Incindis=57.6=428=0;Lucifron=70.4=984=0;Magmadar=62.4=1242=0;Garr=123.8=2596=1;Baron Geddon=48=3014=0;Shazzrah=31.3=3273=0;Sulfuron Harbinger=65.3=3838=0;Golemagg the Incinerator=53.1=4358=0;Basalthar & Smoldaris=66.2=4576=0;Sorcerer-Thane Thaurissan=71=5050=0;Majordomo Executus=139.5=5612=0;Ragnaros=136.5=6220=0
@@ -1952,15 +1949,15 @@ L|Hg_fboyGtxENOEhG|N'Zoth|Molten Core|BAD VIBES ONLY|Mixed|1790134541|26|Incindi
 L|xk2UA7KDNar4I56G|N'Zoth|Lower Tower of Karazhan|Soulbound|Mixed|1789226291|11|Lord Blackwald II=73.1=877=0;Clawlord Howlfang=96.2=1427=0;Brood Queen Araxxna=88.5=3547=0;Grizikil=116.5=4507=0;Moroes=107.7=5466=0
 L|zDj2aT5Jo1lLLBQn|N'Zoth|Lower Tower of Karazhan|Branded|Horde|1789861236|10|Clawlord Howlfang=99.4=1302=1;Lord Blackwald II=77.7=1796=0;Brood Queen Araxxna=56.4=2352=0;Grizikil=61.9=2876=0;Moroes=103.3=3566=0
 L|em5gHDbW51NHADCB|C'Thun|Molten Core|Hell Fire|Mixed|1791039572|25|Incindis=50.5=440=0;Basalthar & Smoldaris=89.3=936=0;Lucifron=54.8=1197=0;Magmadar=51.6=1573=0;Baron Geddon=40.7=2441=0
+L|OsSkFtsDVCgvweDy|N'Zoth|Onyxia's Lair|Amnesia|Mixed|1786900171|24|Onyxia=188.6=317=0;Broodcommander Axelus=69.1=531=0
 L|ZWTFzvAumHkl0j60|N'Zoth|Onyxia's Lair|Loot Goblins|Mixed|1791051744|26|Onyxia=240=430=0;Broodcommander Axelus=113.7=752=0
 L|xuxq8sQ-PyzhEe34|N'Zoth|Molten Core|Fury|Mixed|1787860578|31|Incindis=34.8=152=0;Garr=72.8=644=0;Baron Geddon=40.5=927=0;Shazzrah=21.3=1106=0;Sulfuron Harbinger=46.7=1361=0
-L|nUm7Ca5qM9yNy-MZ|N'Zoth|Molten Core|Remnant|Mixed|1786068733|29|Incindis=28.2=28=0;Garr=43.7=637=1;Baron Geddon=26.7=874=0;Shazzrah=20.5=957=0;Sulfuron Harbinger=36.2=1198=0;Golemagg the Incinerator=34=1370=0;Basalthar & Smoldaris=40.2=1555=0;Sorcerer-Thane Thaurissan=40.7=1820=0;Lucifron=42.2=2024=0;Magmadar=32.9=2151=0;Majordomo Executus=75.6=2476=0;Ragnaros=97.9=2858=0
+L|vF8vOPMzw3Y7SbXC|N'Zoth|Molten Core|Amnesia|Mixed|1783879613|33|Incindis=33=141=0;Garr=64.4=497=0;Baron Geddon=35.3=790=0;Shazzrah=20.7=888=0;Sulfuron Harbinger=46.3=1178=0;Golemagg the Incinerator=34.7=1367=0;Basalthar & Smoldaris=40.5=1514=0;Sorcerer-Thane Thaurissan=44.6=1802=0;Lucifron=55.3=1985=0;Magmadar=38.9=2109=0;Majordomo Executus=74.2=2371=0;Ragnaros=113.1=2767=0
 L|4WbFDdysC3Or8xOz|N'Zoth|Molten Core|Strawman Arguments|Mixed|1785440068|27|Incindis=34.2=191=0;Garr=53.1=605=0;Baron Geddon=44.5=863=0;Shazzrah=21.4=1008=0;Sulfuron Harbinger=49.5=1306=0;Golemagg the Incinerator=36.5=1633=0;Basalthar & Smoldaris=41.2=1849=0;Sorcerer-Thane Thaurissan=68.9=2281=0;Lucifron=57.2=2495=0;Magmadar=40.3=2701=0;Majordomo Executus=95.7=3575=1;Ragnaros=130.7=4028=0
 L|xi_vuNtwRybSYCZE|N'Zoth|Molten Core|ThunderClan Warriors|Mixed|1787499879|35|Incindis=63.2=265=0;Garr=182.3=1425=0;Baron Geddon=91=2399=0;Shazzrah=36.4=2668=0;Sulfuron Harbinger=72.6=3210=0;Golemagg the Incinerator=60=3623=0;Lucifron=119.5=3985=0;Magmadar=83.3=4223=0;Basalthar & Smoldaris=96.5=4442=0;Sorcerer-Thane Thaurissan=95.3=5016=0;Majordomo Executus=97.5=5569=0;Ragnaros=171.8=6266=0
 L|6Qo4p7ZGWUIIAvgP|N'Zoth|Onyxia's Lair|Deja vu|Mixed|1790794819|23|Onyxia=215.9=415=0;Broodcommander Axelus=104.5=725=0
 L|bn0oJPnjCMgUPstQ|N'Zoth|Molten Core|Skill Issue|Mixed|1789303543|24|Incindis=50.6=501=0;Lucifron=66.6=840=0;Magmadar=85.5=1052=0;Garr=103.5=2081=0;Baron Geddon=51.4=2323=0;Shazzrah=32.3=2538=0;Sulfuron Harbinger=66.1=3624=0;Golemagg the Incinerator=54.3=3836=0;Basalthar & Smoldaris=67.6=4078=0;Sorcerer-Thane Thaurissan=76.1=4482=0;Majordomo Executus=108.2=5604=1;Ragnaros=171.6=6163=0
-L|MojS03oCgy8tz2UZ|N'Zoth|Molten Core|Oktagon|Mixed|1788373357|34|Incindis=29.4=147=0;Garr=54.5=520=0;Baron Geddon=39.1=724=0;Shazzrah=19=843=0;Sulfuron Harbinger=39.1=1438=0;Golemagg the Incinerator=35.3=1618=0;Lucifron=46=1843=0;Magmadar=39.5=1975=0;Basalthar & Smoldaris=43.6=2118=0;Sorcerer-Thane Thaurissan=49=2381=0;Majordomo Executus=74.9=2684=0;Ragnaros=103.4=3170=0
-L|QdU4Yb2feyimzsYu|N'Zoth|Molten Core|strawberry fields|Mixed|1788706011|23|Incindis=37.8==;Garr=68.1==;Baron Geddon=33.4==;Shazzrah=23.8==;Sulfuron Harbinger=38.6==;Golemagg the Incinerator=40.7==;Lucifron=47.5==;Magmadar=44.6==;Basalthar & Smoldaris=43.9==;Sorcerer-Thane Thaurissan=52.9==;Majordomo Executus=80.5==;Ragnaros=104.9==
+L|MBFCra737TlF_8ev|N'Zoth|Onyxia's Lair|Hard Reserved|Mixed|1788620261|22|Onyxia=278.4=401=0;Broodcommander Axelus=100.1=755=0
 L|tdwZKhDuKFOXBDpk|Y'Shaarj|Molten Core|Crit Happens|Horde|1788806330|18|Baron Geddon=153.6=1703=0;Shazzrah=65.8=2255=0;Sulfuron Harbinger=139.2=4166=1
 L|znwUJYmkW843yCZ2|C'Thun|Lower Tower of Karazhan|Hell Fire|Mixed|1789755471|10|Brood Queen Araxxna=42.9=498=0;Grizikil=55.5=1378=0;Clawlord Howlfang=94.9=2199=0;Lord Blackwald II=61.7=2848=0;Moroes=75.2=3814=0
 L|N_vsTRR_OrZJ_bMF|N'Zoth|Molten Core|BAD VIBES ONLY|Mixed|1787110840|34|Incindis=49.6=248=0;Lucifron=85.2=832=0;Magmadar=61.6=1049=0;Basalthar & Smoldaris=57.2=1249=0;Sorcerer-Thane Thaurissan=61.2=1706=0;Garr=125.8=2863=1;Baron Geddon=57.4=3248=0;Shazzrah=32.3=3463=0;Sulfuron Harbinger=49.7=4242=0;Golemagg the Incinerator=50.2=4571=1;Majordomo Executus=111.9=5013=0;Ragnaros=178.5=5751=0
@@ -1970,10 +1967,8 @@ L|TGUVlQ86kNmEoXGM|N'Zoth|Molten Core|Booty Bay Boys|Mixed|1790281181|19|Lucifro
 L|gB8lVzABAD73D16t|N'Zoth|Molten Core|Cleave|Mixed|1790516869|26|Incindis=28.8=186=0;Garr=41.6=592=0;Baron Geddon=25.6=835=0;Shazzrah=17.5=1046=0;Sulfuron Harbinger=34.2=1308=0;Golemagg the Incinerator=30.7=1556=0;Lucifron=38.9=1677=0;Magmadar=34.2=1808=0;Basalthar & Smoldaris=41.5=1940=0;Sorcerer-Thane Thaurissan=37.2=2215=0;Majordomo Executus=60.2=2529=0;Ragnaros=86.3=2852=0
 L|3jZz3cGseZ-ih3yc|N'Zoth|Molten Core|Redridge Ultras|Mixed|1789304540|17|Incindis=53.2=302=0;Lucifron=131=740=0;Magmadar=60=1083=0;Magmadar=66.2=1192=0;Garr=54.2=2556=1;Baron Geddon=57.7=2894=0;Shazzrah=23.3=3053=0;Sulfuron Harbinger=65.7=3549=0;Golemagg the Incinerator=52.4=3864=0;Basalthar & Smoldaris=60.6=4079=0;Sorcerer-Thane Thaurissan=78.5=4515=0;Majordomo Executus=108.1=4921=0;Ragnaros=169.6=5406=0
 L|UZLHZL_48eD0w1zc|N'Zoth|Onyxia's Lair|Fury|Mixed|1790880539|34|Broodcommander Axelus=84.8=119=0;Onyxia=233.1=541=0
-L|GIY6ol13d53a7gLa|N'Zoth|Onyxia's Lair|ThunderClan Warriors|Mixed|1789662112|31|Broodcommander Axelus=117.4==;Onyxia=321==
 L|SFeUOFxerCERHY9S|Y'Shaarj|Molten Core|Care Bears|Horde|1791063320|22|Incindis=65.5=380=0;Lucifron=92.8=824=0;Magmadar=69.5=1126=0;Basalthar & Smoldaris=90=1479=0;Garr=233.4=4624=2;Baron Geddon=112.4=5293=0;Shazzrah=36.6=5584=0;Sulfuron Harbinger=137.9=6408=0;Golemagg the Incinerator=77.7=6937=0;Sorcerer-Thane Thaurissan=103.5=7434=1;Majordomo Executus=169.8=8126=0;Ragnaros=226.9=8984=0
 L|vz6LvVAzrzTnSBt8|N'Zoth|Lower Tower of Karazhan|One Blood|Mixed|1790795662|10|Lord Blackwald II=74.2=852=0;Clawlord Howlfang=73.3=1326=0;Brood Queen Araxxna=71.4=1847=0;Grizikil=62.8=2409=0;Moroes=104.4=3036=0
-L|3asLk07lN-8Z6-Y-|N'Zoth|Molten Core|BAD VIBES ONLY|Mixed|1790739368|27|Incindis=45=262=0;Lucifron=66.9=807=0;Magmadar=56.5=1220=0;Basalthar & Smoldaris=59.7=1411=0;Sorcerer-Thane Thaurissan=62.2=1873=0;Baron Geddon=43.4=2640=0;Garr=115.1=3029=0;Shazzrah=23.3=3280=0;Sulfuron Harbinger=56.5=3703=0;Golemagg the Incinerator=57.4=3950=0;Majordomo Executus=138.3=4788=1;Ragnaros=140.8=5424=0
 L|9fBGLegNPaSWEh5g|N'Zoth|Molten Core|Oktagon|Mixed|1788200445|32|Incindis=34.5=153=0;Garr=101.6=580=0;Baron Geddon=38.8=793=0;Shazzrah=17.2=928=0;Sulfuron Harbinger=45.6=1180=0;Golemagg the Incinerator=35.9=1397=0;Lucifron=48.3=1630=0;Magmadar=46=1756=0;Basalthar & Smoldaris=45.7=1902=0;Sorcerer-Thane Thaurissan=49.8=2199=0;Ragnaros=116.3=3080=0
 L|CY5t0fs0tEN8_2vt|N'Zoth|Lower Tower of Karazhan|BAD VIBES ONLY|Mixed|1790746813|10|Clawlord Howlfang=84.3=829=1;Lord Blackwald II=66.1=1480=0;Brood Queen Araxxna=53.1=2140=0;Grizikil=56.4=2750=0;Moroes=78.1=3408=0
 L|Sg-3d_IXecn0jrXP|N'Zoth|Molten Core|Die Gilde|Mixed|1788375306|33|Incindis=64=176=0;Garr=78.8=600=0;Baron Geddon=52.2=888=0;Shazzrah=21.2=1107=0;Sulfuron Harbinger=41.2=1390=0;Golemagg the Incinerator=39=1637=0;Lucifron=56.8=1830=0;Magmadar=45.5=1972=0;Basalthar & Smoldaris=54=2146=0;Sorcerer-Thane Thaurissan=55.5=2528=0;Majordomo Executus=80.1=2927=0;Ragnaros=122.9=3328=0
@@ -1989,39 +1984,38 @@ L|wRzB2B5tDpJN7efu|Y'Shaarj|Lower Tower of Karazhan|I OKEAH I|Alliance|178681968
 L|7Cp4gNAfi3VZTUKF|N'Zoth|Molten Core|The Silver Crusade|Mixed|1786386046|29|Incindis=53.4=178=0;Lucifron=66=575=0;Magmadar=61.5=788=0;Garr=95.4=1636=1;Baron Geddon=56.3=1915=0;Shazzrah=30.3=2112=0;Sulfuron Harbinger=53=2454=0;Golemagg the Incinerator=48=2769=0;Basalthar & Smoldaris=60.7=2930=0;Sorcerer-Thane Thaurissan=67.9=3316=0;Majordomo Executus=128.4=4277=1;Ragnaros=155.4=4849=0
 L|bdClYBH0rs2G_3Ji|N'Zoth|Molten Core|Raven|Mixed|1788294479|23|Garr=113.7=942=1;Baron Geddon=65.7=1367=0;Shazzrah=37=1673=0;Sulfuron Harbinger=80.6=2131=0;Golemagg the Incinerator=71=2549=0;Basalthar & Smoldaris=84.9=3358=1;Sorcerer-Thane Thaurissan=90=3987=0;Majordomo Executus=211.7=4705=0;Ragnaros=204.7=5448=0
 L|_1_uV8jwI6X8s8m3|N'Zoth|Molten Core|Tolerable Company|Mixed|1789676428|30|Incindis=58.5=300=0;Garr=101=1518=1;Baron Geddon=80.9=2041=0;Shazzrah=41=2303=0;Sulfuron Harbinger=76.2=2874=0;Golemagg the Incinerator=59.7=3297=0;Lucifron=101.2=3704=0;Magmadar=70.1=4043=0;Basalthar & Smoldaris=69.7=4278=0;Sorcerer-Thane Thaurissan=94.1=4929=0;Majordomo Executus=150.3=5670=0;Ragnaros=203.5=6435=0
-L|nNNcfuxl0Hm-4vg6|N'Zoth|Lower Tower of Karazhan|Strawman Arguments|Mixed|1784574865|10|Lord Blackwald II=62.7=539=0;Clawlord Howlfang=55.5=926=0;Brood Queen Araxxna=46.2=1369=0;Grizikil=54.4=1796=0;Moroes=155.5=2549=0
+L|N7uPxp8fHdK5vaWw|N'Zoth|Onyxia's Lair|Remnant|Mixed|1782439394|30|Broodcommander Axelus=88.2=143=0;Onyxia=241.2=703=0
 L|ZecVKnGXKnyfjzi3|N'Zoth|Onyxia's Lair|Booty Bay Boys|Mixed|1790620757|24|Onyxia=375.9=1881=1;Broodcommander Axelus=128.5=2332=0
 L|z36PEQIYWmAcyAoU|N'Zoth|Molten Core|Raid Therapy|Mixed|1790105570|24|Incindis=33.8=149=0;Garr=37.5=550=0;Baron Geddon=27.8=805=0;Shazzrah=17.7=926=0;Sulfuron Harbinger=42.7=1222=0;Golemagg the Incinerator=33.4=1423=0;Basalthar & Smoldaris=37.3=1598=0;Sorcerer-Thane Thaurissan=44.5=1962=0;Lucifron=46.3=2224=0;Magmadar=32.7=2407=0;Majordomo Executus=91.6=2853=0;Ragnaros=104.2=3447=0
 L|qPO9lFKKX5Vx87Vd|N'Zoth|Molten Core|ThunderClan Warriors|Mixed|1788573054|28|Incindis=53.5=331=0;Lucifron=67.8=992=0;Magmadar=65.1=1241=0;Basalthar & Smoldaris=77.5=1547=0;Sorcerer-Thane Thaurissan=77.9=2078=0;Golemagg the Incinerator=56.3=2612=0;Sulfuron Harbinger=71.7=3005=0;Baron Geddon=73.1=3473=0;Shazzrah=31.2=4116=0;Garr=145.5=4652=0;Majordomo Executus=116.6=5228=0;Ragnaros=148=5855=0
 L|mYnTZ0BpGV87fZGW|N'Zoth|Molten Core|The Ashen Banner|Mixed|1790992290|35|Incindis=37.2=148=0;Garr=76.7=657=0;Baron Geddon=35.5=892=0;Shazzrah=24.1=1008=0;Sulfuron Harbinger=47.6=1385=0;Golemagg the Incinerator=38.8=1566=0;Lucifron=46.2=1755=0;Magmadar=42.2=1884=0;Basalthar & Smoldaris=49.7=2045=0;Sorcerer-Thane Thaurissan=48.9=2377=0;Majordomo Executus=86.3=2689=0;Ragnaros=106.3=3125=0
 L|WwabFtKd0Xzr6Q1_|N'Zoth|Zul'Gurub|Cleave|Mixed|1791213751|15|Jin'do the Hexxer=26.9=254=0;High Priestess Arlokk=18.7=627=0;High Priest Thekal=90.6=897=0;Bloodlord Mandokir=81.6=1609=0;High Priestess Mar'li=27.7=2103=0;High Priest Venoxis=24.4=2247=0;High Priestess Jeklik=24.6=2582=0;Hakkar=52.5=3052=0;Gahz'ranka=27.4=3314=0
-L|fKerGfVK4SPbQy3e|N'Zoth|Onyxia's Lair|Amnesia|Mixed|1785348586|20|Onyxia=175.5=320=0;Broodcommander Axelus=87.2=581=0
 L|ADsd6exakAwIE0hV|N'Zoth|Molten Core|BAD VIBES ONLY|Mixed|1788320672|30|Incindis=47.3=233=0;Lucifron=94.8=1027=0;Magmadar=57.7=1277=0;Basalthar & Smoldaris=59=1472=0;Sorcerer-Thane Thaurissan=63.4=1870=0;Garr=91.6=3199=1;Baron Geddon=66=3576=0;Shazzrah=26=3915=0;Sulfuron Harbinger=65.4=4404=0;Golemagg the Incinerator=53=4732=0;Majordomo Executus=91.3=5253=0;Ragnaros=134.7=5959=0
 L|cmu2egxxgQc-iG64|N'Zoth|Molten Core|Amnesia|Mixed|1789928607|28|Incindis=30.4=173=0;Garr=37=494=0;Baron Geddon=36.4=695=0;Shazzrah=17.1=788=0;Sulfuron Harbinger=43.1=1143=0;Golemagg the Incinerator=35.1=1374=0;Lucifron=47.2=1609=0;Magmadar=39.3=1772=0;Basalthar & Smoldaris=62.5=1934=0;Sorcerer-Thane Thaurissan=43.8=2296=0;Majordomo Executus=74.8=2634=0;Ragnaros=101.6=3045=0
 L|BtqII3uvMiyKeFk8|N'Zoth|Onyxia's Lair|Die Gilde|Mixed|1789586681|26|Broodcommander Axelus=88.5=154=0;Onyxia=190.7=638=0
-L|qhLq_IB1Tx20F-Cr|N'Zoth|Molten Core|The Silver Crusade|Mixed|1790618081|40|Incindis=41=166=0;Lucifron=78.2=430=0;Magmadar=51.4=593=0;Garr=125.5=1070=0;Baron Geddon=50.7=1333=0;Shazzrah=23.6=1456=0;Sulfuron Harbinger=48.4=1735=0;Golemagg the Incinerator=48.1=1996=0;Basalthar & Smoldaris=54.6=2204=0;Sorcerer-Thane Thaurissan=56.2=2469=0;Majordomo Executus=111.4=2852=0;Ragnaros=126.4=3280=0
 L|OpzRM_SgB_VAW2XZ|N'Zoth|Zul'Gurub|strawberry fields|Mixed|1790990660|11|High Priestess Jeklik=27.2=334=0;High Priest Venoxis=22.9=480=0;Bloodlord Mandokir=45.8=852=0;High Priestess Mar'li=27.7=1862=2;Gri'lek=27.6=2311=0;High Priest Thekal=59.4=2588=0;High Priestess Arlokk=23.4=2887=0;Jin'do the Hexxer=29.9=3235=0;Hakkar=73.4=3544=0;Gahz'ranka=33.3=3699=0
 L|9z5lNuSKpj48a9Tt|N'Zoth|Lower Tower of Karazhan|Cold Embrace|Mixed|1790886835|10|Lord Blackwald II=68.8=467=0;Clawlord Howlfang=77.8=873=0;Brood Queen Araxxna=59.7=1273=0;Grizikil=44.4=1727=0;Moroes=67.4=2259=0
 L|KO08BvC24zVCoHyS|N'Zoth|Zul'Gurub|Oktagon|Mixed|1790879956|20|Jin'do the Hexxer=21.4=222=0;High Priestess Arlokk=19.5=466=0;Gahz'ranka=31.6=689=0;High Priest Thekal=78.7=868=0;Bloodlord Mandokir=106.2=1381=0;High Priestess Mar'li=25.6=1691=0;High Priest Venoxis=25.6=1868=0;High Priestess Jeklik=25.2=2125=0;Hakkar=48.1=2464=0
 L|XrFC8vT-mQ8CByl4|N'Zoth|Lower Tower of Karazhan|Skull Emoji|Mixed|1788187183|10|Lord Blackwald II=50.1=247=0;Clawlord Howlfang=63=509=0;Brood Queen Araxxna=40.6=799=0;Grizikil=36.9=1058=0;Moroes=66.8=1356=0
-L|D3gbOSffM5833kNh|N'Zoth|Lower Tower of Karazhan|Smokey Tokers|Mixed|1785177332|10|Lord Blackwald II=65.4=453=0;Clawlord Howlfang=70.2=817=0;Brood Queen Araxxna=62.6=1211=0;Grizikil=56.7=1646=0;Moroes=77.4=2182=0
+L|KT9wxnyr67Cr5CYW|N'Zoth|Molten Core|BAD VIBES ONLY|Mixed|1790739368|27|Incindis=45=195=0;Lucifron=66.9=739=0;Magmadar=56.5=1153=0;Basalthar & Smoldaris=59.7=1344=0;Sorcerer-Thane Thaurissan=62.2=1806=0;Baron Geddon=43.4=2573=0;Garr=115.1=2961=0;Shazzrah=23.2=3212=0;Sulfuron Harbinger=56.5=3636=0;Golemagg the Incinerator=57.4=3883=0;Majordomo Executus=138.3=4720=1;Ragnaros=140.8=5356=0
 L|kUXysutu_4CmUobk|N'Zoth|Zul'Gurub|Remnant|Mixed|1790915385|18|Jin'do the Hexxer=32.7=423=0;High Priestess Arlokk=21.8=953=0;High Priest Thekal=64.4=1413=0;Bloodlord Mandokir=56.6=2070=0;High Priestess Mar'li=28.4=2534=0;High Priest Venoxis=29.7=2825=0;High Priestess Jeklik=31.9=3386=0;Hakkar=59.2=3779=0;Gahz'ranka=80.1=3945=0;Gri'lek=36.9=4664=0
 L|g1mymaQFE9lN3uIS|N'Zoth|Zul'Gurub|Tolerable Company|Mixed|1791062571|18|Jin'do the Hexxer=36.9=855=0;High Priestess Arlokk=29.2=1534=0;Gahz'ranka=42.8=1863=0;High Priest Thekal=118.6=2360=0;High Priestess Mar'li=38.3=3189=0;Bloodlord Mandokir=85.7=4084=0;High Priest Venoxis=44.8=4581=0;High Priestess Jeklik=41.6=5197=0;Hakkar=103.4=6423=0
 L|KUcUBeaLv9kAWsS1|N'Zoth|Molten Core|The ScarIet Crusade|Mixed|1788104522|30|Incindis=65.7=357=0;Lucifron=126.8=921=0;Magmadar=97.2=1225=0;Garr=205.2=2283=0;Baron Geddon=77.9=2829=0;Shazzrah=42.9=3181=0;Sulfuron Harbinger=95.3=3902=0
+L|bHqoxfREmDTIMkai|N'Zoth|Molten Core|MEGAPANZAS|Mixed|1789947721|27|Incindis=39.5=188=0;Lucifron=53.7=535=0;Magmadar=57.2=1124=0;Basalthar & Smoldaris=52.9=1293=0;Sorcerer-Thane Thaurissan=50.1=1603=0;Baron Geddon=38.9=2334=0;Shazzrah=44.3=2469=0;Garr=82.5=3001=0;Sulfuron Harbinger=48.2=3394=0;Golemagg the Incinerator=41.6=3694=0;Majordomo Executus=98.4=4131=0;Ragnaros=142=4687=0
 L|Nmax9x0ASxY_J7dH|C'Thun|Lower Tower of Karazhan|Hell Fire|Mixed|1790627094|11|Brood Queen Araxxna=51.9=1014=0;Grizikil=53.2=2071=0;Clawlord Howlfang=77.8=2642=0;Lord Blackwald II=63.2=3301=0;Moroes=68.8=4163=0
 L|NrUOA_OcjbE0xbyT|N'Zoth|Zul'Gurub|Smokey Tokers|Mixed|1790881897|18|Jin'do the Hexxer=33.4=458=0;High Priestess Arlokk=22.2=856=0;Gahz'ranka=34.5=1051=0;High Priest Thekal=63.4=1283=0;Bloodlord Mandokir=60.4=2297=0;High Priestess Mar'li=37.6=2753=0;High Priest Venoxis=30=3003=0;High Priestess Jeklik=31.1=3362=0;Hakkar=66.1=3912=0
 L|8fj5rbU21SDy11nY|C'Thun|Molten Core|Warhammer|Mixed|1788680036|29|Incindis=54.9=409=0;Lucifron=62.5=934=0;Basalthar & Smoldaris=112.4=1205=0;Magmadar=62.8=1798=0;Garr=160.5=2993=0;Baron Geddon=58.6=4408=0;Shazzrah=21.1=4747=0;Sulfuron Harbinger=62.6=5335=0;Golemagg the Incinerator=113=6112=0;Majordomo Executus=125.6=6734=0;Ragnaros=180.6=8143=0
 L|Ifq2W3-EYObOnuiO|N'Zoth|Zul'Gurub|BAD VIBES ONLY|Mixed|1790913377|13|Jin'do the Hexxer=46.9=544=0;High Priestess Arlokk=25.5=960=0;High Priest Thekal=102.8=1478=0;Bloodlord Mandokir=83.1=2234=0;High Priestess Mar'li=49.6=3236=0;High Priest Venoxis=37.9=3453=0;High Priestess Jeklik=39=4214=0;Hakkar=116.4=5011=0
 L|Qn9oSEijyfduiJRN|C'Thun|Lower Tower of Karazhan|Warhammer|Mixed|1790983000|10|Lord Blackwald II=69=754=0;Brood Queen Araxxna=51.4=1436=0;Grizikil=69.7=2288=0;Clawlord Howlfang=101.3=2894=0;Moroes=84.4=3862=0
-L|Ix1LODPxbaT33-uM|N'Zoth|Onyxia's Lair|The Non Profit|Mixed|1787427134|23|Onyxia=367.5=1543=1;Broodcommander Axelus=111.9=2027=0
+L|nUm7Ca5qM9yNy-MZ|N'Zoth|Molten Core|Remnant|Mixed|1786068733|29|Incindis=28.2=28=0;Garr=43.7=637=1;Baron Geddon=26.7=874=0;Shazzrah=20.5=957=0;Sulfuron Harbinger=36.2=1198=0;Golemagg the Incinerator=34=1370=0;Basalthar & Smoldaris=40.2=1555=0;Sorcerer-Thane Thaurissan=40.7=1820=0;Lucifron=42.2=2024=0;Magmadar=32.9=2151=0;Majordomo Executus=75.6=2476=0;Ragnaros=97.9=2858=0
 L|tbc83LF-K-X7Ajl2|N'Zoth|Molten Core|Ost Ardent|Mixed|1790539056|27|Incindis=42.9=224=0;Garr=41.8=691=0;Baron Geddon=40.4=1031=0;Shazzrah=21.2=1173=0;Sulfuron Harbinger=45.6=1544=0;Golemagg the Incinerator=39.9=1806=0;Lucifron=56.9=2046=0;Magmadar=45.4=2226=0;Basalthar & Smoldaris=46.9=2422=0;Sorcerer-Thane Thaurissan=59.7=2781=0;Majordomo Executus=85.7=3179=0;Ragnaros=121.9=3665=0
 L|i-VzshwAoBoPFkCJ|Y'Shaarj|Onyxia's Lair|Sons of Mukla|Mixed|1790884960|29|Broodcommander Axelus=146.7=147=0;Onyxia=327.7=1569=1
-L|XIfnn-GZSMmKUt0R|N'Zoth|Molten Core|DROPA NUNCA|Mixed|1788227907|23|Incindis=48.8=256=0;Garr=185=1016=0;Baron Geddon=47.3=1643=0;Shazzrah=29.1=1942=0;Sulfuron Harbinger=73.4=2744=0;Golemagg the Incinerator=54=3204=0;Lucifron=113.8=3577=0;Magmadar=67.1=3816=0;Basalthar & Smoldaris=75.5=4031=0;Sorcerer-Thane Thaurissan=63.2=4804=0;Majordomo Executus=153.4=6309=0;Ragnaros=161.4=7063=0
+L|qI0kMgOqSxgk2srC|N'Zoth|Lower Tower of Karazhan|Strawman Arguments|Mixed|1789152555|10|Lord Blackwald II=55.9=748=0;Clawlord Howlfang=47=1113=0;Brood Queen Araxxna=49.7=1711=0;Grizikil=39.8=2360=0;Moroes=58.3=2817=0
 L|qg1onIF9038DP-gn|N'Zoth|Lower Tower of Karazhan|who pulled|Mixed|1790789930|10|Lord Blackwald II=62.9=586=0;Clawlord Howlfang=75.4=959=0;Brood Queen Araxxna=51.5=1437=0;Grizikil=49=1888=0;Moroes=86.4=2328=0
 L|aEy6XZvj14tDesFs|N'Zoth|Zul'Gurub|Ost Ardent|Mixed|1790971409|35|Jin'do the Hexxer=48.2=102532=0;High Priestess Arlokk=25.9=102860=0;High Priest Thekal=80.9=103272=0;Gri'lek=34.7=104169=0;Bloodlord Mandokir=64.2=104625=0;High Priestess Mar'li=43.4=105178=0;High Priest Venoxis=38.4=105419=0;High Priestess Jeklik=36.7=105867=0;Hakkar=109.1=106881=0
 L|H-azRChrJvceXv2p|N'Zoth|Molten Core|Ninja Turtles|Mixed|1789328008|26|Incindis=47.3=263=0;Garr=106.9=884=0;Baron Geddon=57=1228=0;Shazzrah=31.1=1417=0;Sulfuron Harbinger=57=1745=0;Golemagg the Incinerator=54.4=2737=1;Basalthar & Smoldaris=48.4=2888=0;Sorcerer-Thane Thaurissan=71.1=3321=0;Lucifron=68.5=3745=0;Magmadar=51.5=3914=0;Majordomo Executus=108.9=4465=0;Ragnaros=136.6=5910=0
 L|vKh6kJZpHCkAmfus|N'Zoth|Zul'Gurub|nope|Mixed|1790912398|17|Jin'do the Hexxer=31.3=431=0;High Priestess Arlokk=22.2=786=0;High Priest Thekal=83.7=1395=0;High Priestess Mar'li=31=1936=0;Bloodlord Mandokir=60.8=2325=0;High Priest Venoxis=30.8=2621=0;High Priestess Jeklik=37.8=3033=0;Hakkar=78.9=3960=0;Gahz'ranka=48.7=4374=0
-L|O5eh8uLkrZ_88pDw|N'Zoth|Zul'Gurub|Fika|Mixed|1790881599|19|Jin'do the Hexxer=32.1=536=0;High Priestess Jeklik=38.6=1152=0;High Priest Venoxis=37.8=1371=0;High Priestess Mar'li=39.8=1839=0;Bloodlord Mandokir=77.3=2350=0;High Priest Thekal=60.1=2694=0;High Priest Thekal=18.4=2730=0;High Priestess Arlokk=24.7=3061=0;Hakkar=119.1=3667=0
+L|nNNcfuxl0Hm-4vg6|N'Zoth|Lower Tower of Karazhan|Strawman Arguments|Mixed|1784574865|10|Lord Blackwald II=62.7=539=0;Clawlord Howlfang=55.5=926=0;Brood Queen Araxxna=46.2=1369=0;Grizikil=54.4=1796=0;Moroes=155.5=2549=0
 L|CUeNEar1l97shVV5|Y'Shaarj|Zul'Gurub|Care Bears|Horde|1790889494|14|Jin'do the Hexxer=50.4=1096=0;High Priestess Arlokk=32.5=1793=0;Gahz'ranka=71.4=2406=0;High Priest Thekal=103.2=2823=0;Bloodlord Mandokir=97.7=3644=0;High Priestess Mar'li=53.6=4563=0;High Priest Venoxis=52.5=5117=0;Gri'lek=76.5=5726=0;High Priestess Jeklik=51.8=6531=0;Hakkar=111.1=7784=0
 L|yPlZ6FzboZ5AyhcP|Y'Shaarj|Lower Tower of Karazhan|Sons of Mukla|Mixed|1790363335|10|Lord Blackwald II=102=646=0;Clawlord Howlfang=83.2=2804=0;Grizikil=72.7=2988=0;Brood Queen Araxxna=71=3155=0;Moroes=82.5=3405=0
 L|cdZ80MpfntA9RPwb|Y'Shaarj|Lower Tower of Karazhan|Kor Kron Enforcers|Horde|1790116081|10|Lord Blackwald II=79.5=846=0;Clawlord Howlfang=75.1=1654=1;Clawlord Howlfang=192.4=2042=1;Brood Queen Araxxna=81.6=2810=0;Grizikil=87.9=3902=0;Moroes=91.1=4677=0
@@ -2029,14 +2023,15 @@ L|jamNIZWPYp25cB8r|N'Zoth|Zul'Gurub|Schmetterlingsbrigade|Mixed|1790970733|14|Ji
 L|DaYG3TjHkxXheyTc|N'Zoth|Molten Core|Log Breaker Machine|Mixed|1788692677|24|Garr=81=396=0;Baron Geddon=44.8=1330=1;Shazzrah=22.9=1525=0;Sulfuron Harbinger=52.1=1909=0;Golemagg the Incinerator=42.4=2081=0;Basalthar & Smoldaris=53.2=2407=0;Sorcerer-Thane Thaurissan=58.3=2744=0;Majordomo Executus=80.4=3254=0;Ragnaros=155.3=3816=0
 L|7DR0FbPzXV4hR3HM|N'Zoth|Onyxia's Lair|Ninja Turtles|Mixed|1789329503|25|Onyxia=235.2=458=0;Broodcommander Axelus=142.2=910=0
 L|kZUxaPIh5uei-T9E|N'Zoth|Molten Core|Deja vu|Mixed|1789934046|27|Incindis=44.5=233=0;Lucifron=81.9=651=0;Magmadar=55.8=838=0;Basalthar & Smoldaris=67.4=1032=0;Sorcerer-Thane Thaurissan=70.5=1473=0;Golemagg the Incinerator=53.1=1901=0;Sulfuron Harbinger=55.7=2237=0;Baron Geddon=58.4=2541=0;Shazzrah=21.3=2934=0;Garr=75.4=3293=0;Majordomo Executus=181.1=4037=0;Ragnaros=140.5=4686=0
+L|bGRDTAHXtWA85AF1|N'Zoth|Molten Core|Repentance|Mixed|1788642695|28|Incindis=70.2=250=0;Garr=91.7=1513=0;Baron Geddon=61.1=2115=1;Shazzrah=35.5=2307=0;Sulfuron Harbinger=64.8=2661=0;Golemagg the Incinerator=658.8=3485=0;Golemagg the Incinerator=80.7=4089=0;Lucifron=84.7=4795=0;Magmadar=88.2=5045=0;Basalthar & Smoldaris=69.8=5261=0;Sorcerer-Thane Thaurissan=91.7=5772=0;Majordomo Executus=107=7029=0;Ragnaros=186.4=7710=0
 L|W9MV8589MYjn0U2_|Y'Shaarj|Onyxia's Lair|Care Bears|Horde|1789158683|28|Broodcommander Axelus=127.7=361=0;Onyxia=372.2=1186=0
 L|RxxlDTkGLUQ6uyUr|N'Zoth|Molten Core|Skill Issue|Mixed|1791116177|24|Incindis=47.3=425=0;Garr=110=950=0;Baron Geddon=43.8=1272=0;Shazzrah=26.7=1429=0;Sulfuron Harbinger=60.8=2042=0;Lucifron=64.2=2455=0;Magmadar=58.8=2675=0;Basalthar & Smoldaris=57.8=2813=0;Sorcerer-Thane Thaurissan=65.5=3212=0;Golemagg the Incinerator=48.5=3504=0;Majordomo Executus=162.9=3947=0;Ragnaros=135.9=4460=0
-L|N7uPxp8fHdK5vaWw|N'Zoth|Onyxia's Lair|Remnant|Mixed|1782439394|30|Broodcommander Axelus=88.2=143=0;Onyxia=241.2=703=0
 L|2nNEhCvab2gHMw31|N'Zoth|Onyxia's Lair|The ScarIet Crusade|Mixed|1788618003|35|Onyxia=374.6=2216=1;Broodcommander Axelus=200.9=2978=0
 L|iaMRcjdtd2mBC8h_|N'Zoth|Molten Core|Cleave|Mixed|1791121210|32|Incindis=75.5=196=0;Garr=101.1=441=0;Baron Geddon=25.6=622=0;Shazzrah=16.9=666=0;Sulfuron Harbinger=32.8=866=0;Golemagg the Incinerator=30.3=1028=0;Lucifron=52.9=1181=0;Magmadar=33.3=1234=0;Basalthar & Smoldaris=38.5=1346=0;Sorcerer-Thane Thaurissan=38.5=1562=0;Majordomo Executus=63=1764=0;Ragnaros=91=2054=0
 L|2TE9j6QUYN-jtMVr|N'Zoth|Molten Core|strawberry fields|Mixed|1789311100|27|Incindis=31.5=171=0;Garr=70.8=540=0;Baron Geddon=39.2=699=0;Shazzrah=17.8=882=0;Sulfuron Harbinger=36.5=1140=0;Golemagg the Incinerator=33.9=1404=0;Lucifron=47.2=1556=0;Magmadar=39.1=1695=0;Basalthar & Smoldaris=56.3=1939=0;Sorcerer-Thane Thaurissan=46.1=2230=0;Majordomo Executus=78.9=2635=0;Ragnaros=120.3=3065=0
 L|PfxpQZVlClIEPEm4|Y'Shaarj|Molten Core|Zug Zug|Horde|1789243840|21|Incindis=55.4=424=0;Lucifron=102.2=1019=0;Magmadar=95.7=1243=0;Garr=86.2=2122=0;Baron Geddon=78.1=2639=0;Shazzrah=33.2=3119=0;Sulfuron Harbinger=83.1=3853=0;Golemagg the Incinerator=85.9=4288=0;Basalthar & Smoldaris=108.4=4753=0;Sorcerer-Thane Thaurissan=82.4=5449=0;Majordomo Executus=171=6106=0;Ragnaros=203.8=7569=1
 L|XLWwpqjo4rrXju5W|N'Zoth|Lower Tower of Karazhan|Thud and Blunder|Mixed|1787022384|10|Lord Blackwald II=69.2=816=0;Clawlord Howlfang=104.1=1244=0;Brood Queen Araxxna=58.8=1941=0;Grizikil=72.1=2532=0;Moroes=88.6=3228=0
+L|0fbvu5_XpBLV-XA_|N'Zoth|Molten Core|Redridge Ultras|Mixed|1790792431|29|Incindis=50.3=438=0;Lucifron=87.8=791=0;Magmadar=56.7=970=0;Garr=93.5=1695=0;Baron Geddon=48.4=2127=0;Shazzrah=28.7=2258=0;Sulfuron Harbinger=54.4=2937=0;Golemagg the Incinerator=44=3260=0;Basalthar & Smoldaris=60.1=3421=0;Sorcerer-Thane Thaurissan=62.3=3801=0;Majordomo Executus=93.3=4146=0;Ragnaros=142.8=4602=0
 L|_dqlhKOb87mcI30W|N'Zoth|Zul'Gurub|MEGAPANZAS|Mixed|1790985667|16|Jin'do the Hexxer=38.5=84634=0;High Priestess Arlokk=30.4=84960=0;High Priest Thekal=58.4=85296=0;Gri'lek=35.1=85837=0;Bloodlord Mandokir=68.2=86342=0;High Priest Venoxis=30.2=86602=0;High Priestess Jeklik=39=87062=0;Hakkar=71.1=87566=0
 L|2JT9Ffagfnw3fG3A|Y'Shaarj|Molten Core|I OKEAH I|Mixed|1788101684|39|Incindis=66.7=1030=0;Lucifron=114.9=1996=1;Magmadar=86.7=69443=1;Basalthar & Smoldaris=85.3=69676=0;Sorcerer-Thane Thaurissan=102.2=70302=0;Garr=202.3=71436=1;Baron Geddon=86.7=72187=0;Shazzrah=54.7=72615=0;Sulfuron Harbinger=84=73227=0;Golemagg the Incinerator=63.4=73613=0;Majordomo Executus=144.2=74187=0;Ragnaros=208.2=75031=0
 L|Or5KoPpH1KaUqXhW|N'Zoth|Molten Core|Cold Embrace|Mixed|1790274549|36|Incindis=46.8=195=0;Garr=69.3=650=0;Baron Geddon=49=905=0;Shazzrah=32.6=1035=0;Sulfuron Harbinger=57=1324=0;Golemagg the Incinerator=48.9=1720=0;Lucifron=65.5=1994=0;Magmadar=58.2=2139=0;Basalthar & Smoldaris=66.8=2322=0;Sorcerer-Thane Thaurissan=62.1=2729=0;Majordomo Executus=112.6=3122=0;Ragnaros=123.3=3566=0
@@ -2051,7 +2046,6 @@ L|8lVdCNnRcsAbqySB|N'Zoth|Zul'Gurub|Schmetterlingsbrigade|Mixed|1791228540|14|Ji
 L|ydmfTNyxBUsQpVMB|N'Zoth|Lower Tower of Karazhan|Tolerable Company|Mixed|1790102973|11|Clawlord Howlfang=70.5=340=0;Lord Blackwald II=68.8=970=0;Brood Queen Araxxna=48.2=1547=0;Grizikil=60.1=2292=0;Moroes=64.1=2849=0
 L|fY_BzCdHjg8cXDh8|N'Zoth|Molten Core|Skill Issue|Mixed|1789907610|20|Incindis=56.9=248=0;Garr=98.9=798=0;Baron Geddon=58.4=1136=0;Shazzrah=34.6=1304=0;Sulfuron Harbinger=72.6=1669=0;Golemagg the Incinerator=56.4=2030=0;Lucifron=83.6=2318=0;Magmadar=130.6=2577=0;Basalthar & Smoldaris=68.4=2852=0;Sorcerer-Thane Thaurissan=105.1=3273=0;Majordomo Executus=117.5=3797=0;Ragnaros=175.9=4440=0
 L|14WIXJa1iZm9NGdk|N'Zoth|Onyxia's Lair|Cleave|Mixed|1791123443|30|Broodcommander Axelus=57.2=252=0;Onyxia=236.9=586=0
-L|mMbKSeORu7UMz-C0|N'Zoth|Molten Core|I Griefers Inc I|Mixed|1789409794|28|Incindis=47.2==;Garr=41.3==;Baron Geddon=34.8==;Shazzrah=25.2==;Sulfuron Harbinger=59.2==;Lucifron=52.8==;Magmadar=47.1==;Basalthar & Smoldaris=49.6==;Sorcerer-Thane Thaurissan=69.9==;Golemagg the Incinerator=43.8==;Majordomo Executus=95==;Ragnaros=116.2==
 L|tEDgt7AnqsawAO_a|N'Zoth|Lower Tower of Karazhan|Tolerable Company|Mixed|1791217371|10|Clawlord Howlfang=102.6=103=0;Lord Blackwald II=78.1=838=0;Brood Queen Araxxna=75.9=1482=0;Grizikil=68.8=2090=0;Moroes=83.7=2708=0
 L|YGNCzolSeqmMulQw|N'Zoth|Onyxia's Lair|Oktagon|Mixed|1787681807|27|Broodcommander Axelus=90.9=183=0;Onyxia=217.6=800=0
 L|AsPHbq9GIUsRH7Hc|N'Zoth|Lower Tower of Karazhan|Aura|Mixed|1787881229|10|Lord Blackwald II=107.1=809=0;Clawlord Howlfang=121.7=2120=2;Brood Queen Araxxna=106.2=2942=0;Grizikil=114.4=4171=0;Moroes=202.3=5354=0
@@ -2061,10 +2055,11 @@ L|8wmjI3cOlMg1MoMo|N'Zoth|Lower Tower of Karazhan|who pulled|Mixed|1791225880|10
 L|NPdGGMemAjFlmuTz|N'Zoth|Molten Core|Skull Emoji|Mixed|1790534800|28|Incindis=102.2=226=0;Garr=107.1=495=0;Baron Geddon=30.8=704=0;Shazzrah=18.6=789=0;Sulfuron Harbinger=35.4=973=0;Golemagg the Incinerator=37.2=1119=0;Lucifron=52.9=1255=0;Magmadar=38.2=1359=0;Basalthar & Smoldaris=42.5=1457=0;Sorcerer-Thane Thaurissan=42.5=1688=0;Majordomo Executus=57.6=1916=0;Ragnaros=94.6=2241=0
 L|FGBVqwaRufl2AHCx|N'Zoth|Molten Core|Ostatni Bastion|Mixed|1790018528|21|Incindis=53.4=214=0;Lucifron=70.3=732=0;Magmadar=60.8=951=0;Basalthar & Smoldaris=60.1=1133=0;Sorcerer-Thane Thaurissan=73.2=1489=0;Garr=144.4=2183=0;Baron Geddon=58.4=2676=0;Shazzrah=27.3=2828=0;Sulfuron Harbinger=72.2=3212=0;Golemagg the Incinerator=60.4=3619=0;Majordomo Executus=120.9=4007=0;Ragnaros=181.9=4597=0
 L|yV8Tm4NbEvasAsvu|N'Zoth|Molten Core|Eunoia|Mixed|1787166515|23|Incindis=52.4=220=0;Lucifron=69.3=608=0;Magmadar=57.6=796=0;Basalthar & Smoldaris=61.6=970=0;Sorcerer-Thane Thaurissan=73.4=1389=0;Garr=57.8=2032=0;Baron Geddon=48.7=2368=0;Shazzrah=29.3=2546=0;Sulfuron Harbinger=58.5=2953=0;Golemagg the Incinerator=54.9=3192=0;Majordomo Executus=124=3558=0;Ragnaros=168.9=4154=0
+L|ZmO8B7Gtv9tJX3rk|C'Thun|Molten Core|Warhammer|Mixed|1790488372|40|Incindis=45.1=285=0;Lucifron=59.8=853=0;Basalthar & Smoldaris=91.5=1137=0;Magmadar=51.9=2778=0;Garr=200.2=3961=0;Baron Geddon=55.4=40893=0;Shazzrah=23.1=41329=0
 L|uoIum0ejoJ8GXm0J|N'Zoth|Lower Tower of Karazhan|The Ashen Banner|Mixed|1787449613|10|Lord Blackwald II=72.9=580=0;Clawlord Howlfang=74.2=994=0;Brood Queen Araxxna=50=1473=0;Grizikil=56.1=2003=0;Moroes=66.8=2582=0
 L|Xby7m5BYFTIuhovm|N'Zoth|Molten Core|Mushroom Vendor|Mixed|1789325615|33|Incindis=40.3=166=0;Garr=72=543=0;Baron Geddon=40.6=750=0;Shazzrah=26.4=841=0;Sulfuron Harbinger=49.4=1176=0;Golemagg the Incinerator=44.2=1382=0;Lucifron=52.7=1644=0;Magmadar=68.8=1824=0;Basalthar & Smoldaris=51.6=2048=0;Sorcerer-Thane Thaurissan=64.6=2345=0;Majordomo Executus=91.4=2721=0;Ragnaros=111.6=3213=0
-L|Ec90F6GnxPM4UHuR|N'Zoth|Lower Tower of Karazhan|nope|Mixed|1788833758|11|Lord Blackwald II=57.8=659=0;Clawlord Howlfang=78.7=1083=0;Grizikil=44.8=1643=0;Brood Queen Araxxna=51.9=1993=0;Moroes=70.7=2538=0
-L|wjjp7sTM1-TtYM-d|N'Zoth|Molten Core|BRUTAL|Mixed|1788016551|32|Incindis=58.5=225=0;Garr=163.8=871=0;Baron Geddon=52.8=1551=0;Shazzrah=39.1=1705=0;Sulfuron Harbinger=50.1=2177=0;Golemagg the Incinerator=45.3=2393=0;Lucifron=62.9=2583=0;Magmadar=62.6=2739=0;Basalthar & Smoldaris=61.4=2977=0;Sorcerer-Thane Thaurissan=63.1=3409=0;Majordomo Executus=123.8=3932=0;Ragnaros=124.8=4463=0
+L|fKerGfVK4SPbQy3e|N'Zoth|Onyxia's Lair|Amnesia|Mixed|1785348586|20|Onyxia=175.5=320=0;Broodcommander Axelus=87.2=581=0
+L|9ISBBsiRMpYIR2DR|N'Zoth|Molten Core|Smokey Tokers|Mixed|1789209780|32|Lucifron=59.1=656=0;Magmadar=56.3=881=0;Basalthar & Smoldaris=54.2=1153=0;Sorcerer-Thane Thaurissan=58=2125=0;Garr=113.4=2867=0;Baron Geddon=50.9=3178=0;Shazzrah=22.1=3431=0;Sulfuron Harbinger=53.7=3887=0;Golemagg the Incinerator=50.1=4739=2;Majordomo Executus=87.9=5115=0;Ragnaros=137.3=5616=0
 L|PgJsFnYkHASufeXU|N'Zoth|Zul'Gurub|Redridge Ultras|Mixed|1790969219|18|Jin'do the Hexxer=25.3=346=0;High Priestess Arlokk=27.6=950=0;Gahz'ranka=33.4=1285=0;High Priest Thekal=62.9=1553=0;Gri'lek=32.8=2087=0;High Priestess Mar'li=28.5=2652=0;Bloodlord Mandokir=52.8=3120=0;High Priest Venoxis=29.3=3448=0;High Priestess Jeklik=34.7=3874=0;Hakkar=76.3=4422=0
 L|lxrVV8Wmmzck8SmX|N'Zoth|Zul'Gurub|nope|Mixed|1790913575|17|Jin'do the Hexxer=37=430=0;High Priestess Arlokk=25.1=782=0;Gahz'ranka=37.2=1505=0;High Priest Thekal=94.6=1753=0;Gri'lek=32.1=2216=0;Bloodlord Mandokir=63=2600=0;High Priestess Mar'li=39.4=3017=0;High Priest Venoxis=66.2=3289=0;High Priestess Jeklik=36.2=3766=0;Hakkar=185.4=5187=0
 L|xC-NgI-DmW8z1P0-|N'Zoth|Molten Core|Phoenix|Mixed|1785808763|30|Incindis=54.9=209=0;Garr=76.1=887=0;Baron Geddon=62.7=1310=0;Shazzrah=28.3=1508=0;Sulfuron Harbinger=61.4=2053=0;Golemagg the Incinerator=59.6=2461=0;Lucifron=66.4=2832=0;Magmadar=59=3039=0;Basalthar & Smoldaris=59.7=3274=0;Sorcerer-Thane Thaurissan=71.4=3716=0;Majordomo Executus=139.2=4401=0;Ragnaros=165.3=5052=0
@@ -2072,28 +2067,29 @@ L|xgn0AnygXiTPl-V4|Y'Shaarj|Molten Core|Care Bears|Horde|1788706868|29|Incindis=
 L|iFC_DqHzEsWFSnJT|N'Zoth|Onyxia's Lair|Die Gilde|Mixed|1790796445|30|Broodcommander Axelus=79.4=205=0;Onyxia=198.3=694=0
 L|kYfMVapbHsNme9wM|N'Zoth|Zul'Gurub|Skull Emoji|Mixed|1790972402|14|Jin'do the Hexxer=34.7=317=0;High Priestess Arlokk=20.9=675=0;Gahz'ranka=30.4=892=0;High Priest Thekal=96.3=1167=0;Bloodlord Mandokir=65.1=1777=0;High Priestess Mar'li=44.3=2178=0;High Priest Venoxis=32.6=2408=0;Gri'lek=43.3=2767=0;High Priestess Jeklik=35.2=3224=0;Hakkar=64.4=3641=0
 L|6EMFJgOxrD72QG58|N'Zoth|Zul'Gurub|The Silver Crusade|Mixed|1790876462|20|Jin'do the Hexxer=30.8=268=0;High Priestess Arlokk=25.3=536=0;Gahz'ranka=38.3=726=0;High Priest Thekal=79.4=925=0;Bloodlord Mandokir=62.2=1332=0;High Priestess Mar'li=35.1=1710=0;High Priest Venoxis=36.5=1885=0;High Priestess Jeklik=36.6=2258=0;Hakkar=73.4=2628=0
+L|XIfnn-GZSMmKUt0R|N'Zoth|Molten Core|DROPA NUNCA|Mixed|1788227907|23|Incindis=48.8=256=0;Garr=185=1016=0;Baron Geddon=47.3=1643=0;Shazzrah=29.1=1942=0;Sulfuron Harbinger=73.4=2744=0;Golemagg the Incinerator=54=3204=0;Lucifron=113.8=3577=0;Magmadar=67.1=3816=0;Basalthar & Smoldaris=75.5=4031=0;Sorcerer-Thane Thaurissan=63.2=4804=0;Majordomo Executus=153.4=6309=0;Ragnaros=161.4=7063=0
 L|xUl4keU-H02StxXX|N'Zoth|Lower Tower of Karazhan|Netherbane|Mixed|1790028415|10|Lord Blackwald II=94.5=695=0;Clawlord Howlfang=105=1377=1;Brood Queen Araxxna=100.1=2020=0;Grizikil=87.5=2783=0;Moroes=112=3943=0
-L|rgQXUC_YLDeVF0qo|N'Zoth|Molten Core|One Blood|Mixed|1790881568|23|Incindis=48.9=286=0;Lucifron=66.1=785=0;Magmadar=62.6=1093=0;Garr=160.6=2277=1;Baron Geddon=63.2=2766=0;Shazzrah=31.9=3083=0;Sulfuron Harbinger=99.4=4119=0;Golemagg the Incinerator=47.5=4583=0;Basalthar & Smoldaris=61.6=4813=0;Sorcerer-Thane Thaurissan=82.2=5329=0;Majordomo Executus=126.1=6012=0;Ragnaros=173.9=6684=0
+L|exWMB9a-PYp4A-oC|N'Zoth|Zul'Gurub|strawberry fields|Mixed|1791215522|20|High Priestess Jeklik=24.8=168206=0;High Priest Venoxis=22.9=168341=0;Bloodlord Mandokir=45.4=168644=0;High Priest Thekal=54=168992=0;Gahz'ranka=83.7=169200=0;High Priestess Arlokk=16.9=169350=0;Jin'do the Hexxer=30.4=169644=0;Hakkar=54.3=169897=0;Gri'lek=24.9=170313=0;High Priestess Mar'li=34.7=170905=0
 L|eakmgzUHj-1j7hxv|N'Zoth|Molten Core|Phoenix|Mixed|1791252295|26|Incindis=46.3=810=0;Garr=156.9=1439=0;Baron Geddon=59=1846=0;Shazzrah=20.6=2030=0;Sulfuron Harbinger=50.3=2805=0;Golemagg the Incinerator=46.3=3013=1;Lucifron=63.3=3351=0;Magmadar=61.1=3539=0;Basalthar & Smoldaris=53.7=3781=0;Sorcerer-Thane Thaurissan=60.1=4329=0;Majordomo Executus=119.2=4873=0;Ragnaros=153.4=5428=0
 L|wnyf4XGo7cbY_30A|N'Zoth|Molten Core|Hard Reserved|Mixed|1787421900|30|Incindis=37=210=0;Garr=61.7=660=0;Baron Geddon=45.4=958=0;Shazzrah=23.6=1177=0;Sulfuron Harbinger=46.6=1577=0;Golemagg the Incinerator=41.8=1831=0;Lucifron=49.9=2054=0;Magmadar=47.9=2257=0;Basalthar & Smoldaris=52.1=2445=0;Sorcerer-Thane Thaurissan=51.8=2802=0;Majordomo Executus=101.6=3285=0;Ragnaros=122.5=3846=0
 L|CE3VHXJ-8Fg4zXDw|N'Zoth|Onyxia's Lair|Ninja Turtles|Mixed|1789329503|25|Broodcommander Axelus=142.2=910=0
 L|pLHnXlsHMrqG12mR|C'Thun|Lower Tower of Karazhan|Warhammer|Mixed|1787772069|10|Lord Blackwald II=88.8=805=0;Brood Queen Araxxna=58.7=1655=0;Grizikil=60.1=2498=0;Clawlord Howlfang=305.7=3237=0;Clawlord Howlfang=298.2=3574=0;Clawlord Howlfang=191.7=3776=0;Moroes=101.6=4596=0
 L|moILA9XmSaHT83f6|C'Thun|Lower Tower of Karazhan|Hell Fire|Mixed|1790021232|10|Brood Queen Araxxna=48=540=0;Grizikil=52.3=1577=0;Lord Blackwald II=67.8=2527=0;Clawlord Howlfang=107.1=2907=0;Moroes=71.5=3773=0
 L|z3YgNNaNqtGikMA6|N'Zoth|Molten Core|Redridge Ultras|Mixed|1789586045|17|Incindis=51.6=616=0;Lucifron=98.5=1016=0;Magmadar=55.4=1215=0;Garr=51.1=1857=0;Baron Geddon=51.7=2349=1;Shazzrah=36.4=2574=0;Sulfuron Harbinger=71.7=3240=0;Golemagg the Incinerator=52.3=3613=0;Basalthar & Smoldaris=65.3=3832=0;Sorcerer-Thane Thaurissan=72.2=4363=0;Majordomo Executus=113.8=4778=0;Ragnaros=146.6=5242=0
-L|zwlmb46Mu4ZYry_5|N'Zoth|Molten Core|Ost Ardent|Mixed|1790539056|27|Incindis=42.9==;Garr=41.8==;Baron Geddon=40.4==;Shazzrah=21.2==;Sulfuron Harbinger=45.6==;Golemagg the Incinerator=39.9==;Lucifron=56.9==;Magmadar=45.4==;Basalthar & Smoldaris=46.9==;Sorcerer-Thane Thaurissan=59.7==;Majordomo Executus=85.7==;Ragnaros=121.9==
 L|ROIQC4ihKcy-YKU1|N'Zoth|Onyxia's Lair|nope|Mixed|1787882327|35|Onyxia=176.6=352=0;Broodcommander Axelus=75.5=602=0
+L|JoZpaGSDRcl6Kr_r|Y'Shaarj|Lower Tower of Karazhan|Care Bears|Horde|1789758105|10|Lord Blackwald II=71.7=639=0;Grizikil=77.5=1824=0;Clawlord Howlfang=93.4=2135=0;Brood Queen Araxxna=57.8=2670=0;Moroes=93=3356=0
 L|aIXiFvwE4sLsMXLc|N'Zoth|Lower Tower of Karazhan|BRUTAL|Mixed|1788545909|10|Lord Blackwald II=63.1=648=0;Clawlord Howlfang=61.8=1008=0;Brood Queen Araxxna=48=1634=0;Grizikil=47.6=2166=0;Moroes=80.5=2724=0
 L|ld9ZDDM51j3nOAIT|N'Zoth|Zul'Gurub|Bastion de Guerra|Mixed|1791071117|11|Jin'do the Hexxer=84.9=1094=0;High Priestess Arlokk=103.5=1660=0;High Priest Thekal=158.2=2239=0;Bloodlord Mandokir=108.3=3137=0;High Priestess Mar'li=104.4=3729=0;High Priest Venoxis=59.2=4086=0;High Priestess Jeklik=119.3=4895=0;Hakkar=261.6=5953=0
 L|TO5BLpmjX5DcTEgn|N'Zoth|Molten Core|Skill Issue|Mixed|1791116178|24|Incindis=47.4=425=0;Garr=110=950=0;Baron Geddon=43.9=1272=0;Shazzrah=26.7=1429=0;Sulfuron Harbinger=60.8=2042=0;Lucifron=64.2=2455=0;Magmadar=58.8=2675=0;Basalthar & Smoldaris=57.3=2813=0;Sorcerer-Thane Thaurissan=65.5=3212=0;Golemagg the Incinerator=48.5=3504=0;Majordomo Executus=162.8=3947=0;Ragnaros=135.9=4460=0
 L|6iSdKmOndeu7-v4E|N'Zoth|Molten Core|Die Gilde|Mixed|1789325778|26|Garr=41.7=402=0;Baron Geddon=40.2=738=0;Shazzrah=20.9=860=0;Sulfuron Harbinger=42.1=1131=0;Golemagg the Incinerator=42.9=1367=0;Lucifron=62.2=1612=0;Magmadar=41.2=1767=0;Basalthar & Smoldaris=57.7=1993=0;Sorcerer-Thane Thaurissan=55.1=2403=0;Majordomo Executus=126.6=2814=0;Ragnaros=125.9=3418=0
 L|JqIAJmezFAAlrg-8|Y'Shaarj|Molten Core|Kor Kron Enforcers|Horde|1791057980|22|Incindis=56.7=533=0;Lucifron=150=1112=0;Magmadar=63.7=1442=0;Basalthar & Smoldaris=109=1806=0;Sorcerer-Thane Thaurissan=97.1=2595=0;Garr=224.2=4146=0;Baron Geddon=77.5=5181=0;Shazzrah=35.2=5545=0;Sulfuron Harbinger=72.7=6649=0;Golemagg the Incinerator=86.4=7170=0;Majordomo Executus=121.4=9441=2;Ragnaros=158.5=11050=1
 L|YyHUdGNU1FLFBg_x|N'Zoth|Zul'Gurub|Fika|Mixed|1791226477|19|Jin'do the Hexxer=52.9=431=0;High Priestess Arlokk=26.5=698=0;High Priest Thekal=72.6=1085=0;High Priest Thekal=22.7=1123=0;Bloodlord Mandokir=75.1=1687=0;High Priestess Mar'li=40.6=2248=0;High Priest Venoxis=39.4=2439=0;High Priestess Jeklik=44.9=2820=0;Hakkar=117.7=3317=0
-L|aZHHYqjVCO1iwhD5|N'Zoth|Molten Core|Ostatni Bastion|Mixed|1790622140|24|Lucifron=64.9=172373=0;Magmadar=57.1=172569=0;Basalthar & Smoldaris=63.3=172758=0;Sorcerer-Thane Thaurissan=61.3=173090=0;Garr=105.3=173655=0;Baron Geddon=44.1=173923=0;Shazzrah=34.7=174079=0;Sulfuron Harbinger=57.3=174377=0;Golemagg the Incinerator=47.4=174657=0;Majordomo Executus=110.2=174980=0;Ragnaros=175.1=175609=0
+L|3TFRcdJ6jkKrRr-d|N'Zoth|Onyxia's Lair|The Silver Crusade|Mixed|1789753815|32|Onyxia=324.3=579=0;Broodcommander Axelus=120.6=952=0
 L|c5UktqLMORHALpLr|N'Zoth|Onyxia's Lair|Ostatni Bastion|Mixed|1791055306|24|Onyxia=265.3=512=0;Broodcommander Axelus=108.2=885=0
 L|bMG9LbobIn8PNHoi|N'Zoth|Onyxia's Lair|Bastion de Guerra|Mixed|1791077800|25|Onyxia=542.1=2783=2;Broodcommander Axelus=210.7=4015=1
 L|2Ii4VYxjHvnf3Icp|N'Zoth|Zul'Gurub|Ninja Turtles|Mixed|1791141378|19|Jin'do the Hexxer=37.5=400=0;High Priestess Arlokk=27.7=669=0;Gahz'ranka=59.5=866=0;High Priest Thekal=86=1097=0;Gri'lek=135.4=2044=0;High Priestess Mar'li=37.2=2573=0;Bloodlord Mandokir=75.5=2896=0;High Priest Venoxis=29=3160=0;High Priestess Jeklik=37.8=3596=0;Hakkar=93.6=3992=0
 L|5cE_JxVWhVggbBgh|Y'Shaarj|Molten Core|ERROR|Horde|1789675859|36|Incindis=52.6==;Lucifron=92.8==;Magmadar=63.3==;Basalthar & Smoldaris=63.8==;Sorcerer-Thane Thaurissan=80.7==;Golemagg the Incinerator=58.1==;Sulfuron Harbinger=63.9==;Baron Geddon=170.1==;Shazzrah=26.5==;Garr=140.8==;Majordomo Executus=105.2==;Ragnaros=143.1==
-L|OsSkFtsDVCgvweDy|N'Zoth|Onyxia's Lair|Amnesia|Mixed|1786900171|24|Onyxia=188.6=317=0;Broodcommander Axelus=69.1=531=0
+L|64BoM0TyRBb55uf5|N'Zoth|Molten Core|Die Gilde|Mixed|1787770707|32|Incindis=39.1=181=0;Garr=198.5=696=0;Baron Geddon=42.5=1151=0;Shazzrah=18.3=1298=0;Sulfuron Harbinger=41=1545=0;Golemagg the Incinerator=39.3=1783=0;Lucifron=46=2002=0;Magmadar=40.8=2121=0;Basalthar & Smoldaris=45.7=2313=0;Sorcerer-Thane Thaurissan=50.5=2664=0;Majordomo Executus=78=3033=0;Ragnaros=116.6=3440=0
 L|2Vzkf_-nc4zQKsxr|N'Zoth|Lower Tower of Karazhan|Hard Reserved|Mixed|1786297702|10|Brood Queen Araxxna=62.2=350=0;Grizikil=50.3=1064=0;Clawlord Howlfang=79.1=1391=0;Lord Blackwald II=78=1837=0;Moroes=89.8=2622=0
 L|jM_mMjVEfFQ1723Q|Y'Shaarj|Molten Core|Kor Kron Enforcers|Horde|1789937348|22|Incindis=81.5=452=0;Lucifron=154.1=1208=0;Magmadar=93.7=1593=0;Garr=135.9=87926=3;Baron Geddon=116.1=89073=1;Shazzrah=69.7=89608=0;Sulfuron Harbinger=142.1=91585=2;Golemagg the Incinerator=110.5=92147=0;Basalthar & Smoldaris=137.4=92881=0
 L|8zoXU5DUFcTe-DNV|N'Zoth|Molten Core|Loot Goblins|Mixed|1789822248|22|Incindis=40=154=0;Garr=38.7=506=0;Baron Geddon=41.7=697=0;Shazzrah=23.2=769=0;Sulfuron Harbinger=42.7=1009=0;Golemagg the Incinerator=40.6=1209=0;Lucifron=64.6=1352=0;Magmadar=50.7=1516=0;Basalthar & Smoldaris=56.2=1675=0;Sorcerer-Thane Thaurissan=53.4=1940=0;Majordomo Executus=78.5=2277=0;Ragnaros=104.9=2644=0
@@ -2105,10 +2101,9 @@ L|bXs889eRMHb-gi6T|N'Zoth|Lower Tower of Karazhan|Raid Therapy|Mixed|1790366415|
 L|boejg_L16ga84lC-|N'Zoth|Lower Tower of Karazhan|ThunderClan Warriors|Mixed|1790614146|10|Clawlord Howlfang=80.3=691=0;Lord Blackwald II=78.6=1393=0;Brood Queen Araxxna=68.3=2116=0;Grizikil=76.1=2724=0;Moroes=106.1=3605=0
 L|Ze5oFgJC5Xtp24mP|N'Zoth|Molten Core|Phoenix|Mixed|1787623582|36|Incindis=45.2=272=0;Garr=141.4=1039=0;Baron Geddon=55.2=1455=0;Shazzrah=66.6=1657=0;Sulfuron Harbinger=58=2319=0;Golemagg the Incinerator=51.7=3395=1;Lucifron=60=3701=0;Magmadar=53.5=3926=0;Basalthar & Smoldaris=54.4=4146=0;Sorcerer-Thane Thaurissan=75.7=4610=0;Majordomo Executus=91.8=5083=0;Ragnaros=156.5=5629=0
 L|Idyss739gFSdev9f|N'Zoth|Zul'Gurub|Skull Emoji|Mixed|1790971544|17|Jin'do the Hexxer=35.2=263=0;High Priestess Arlokk=27=487=0;Gahz'ranka=44.3=711=0;High Priest Thekal=87=938=0;Gri'lek=32.9=1227=0;Bloodlord Mandokir=62.4=1676=0;High Priestess Mar'li=36=2086=0;High Priest Venoxis=62.6=2287=0;High Priestess Jeklik=44=2671=0;Hakkar=66.8=3002=0
-L|vF8vOPMzw3Y7SbXC|N'Zoth|Molten Core|Amnesia|Mixed|1783879613|33|Incindis=33=141=0;Garr=64.4=497=0;Baron Geddon=35.3=790=0;Shazzrah=20.7=888=0;Sulfuron Harbinger=46.3=1178=0;Golemagg the Incinerator=34.7=1367=0;Basalthar & Smoldaris=40.5=1514=0;Sorcerer-Thane Thaurissan=44.6=1802=0;Lucifron=55.3=1985=0;Magmadar=38.9=2109=0;Majordomo Executus=74.2=2371=0;Ragnaros=113.1=2767=0
 L|4D-DJpOpLLE5ia74|N'Zoth|Molten Core|ThunderClan Warriors|Mixed|1789239696|35|Incindis=46.8=276=0;Lucifron=75.4=983=0;Magmadar=68.2=1224=0;Basalthar & Smoldaris=102=1503=0;Sorcerer-Thane Thaurissan=62.6=2371=0;Golemagg the Incinerator=47=2894=0;Sulfuron Harbinger=74.5=3294=0;Baron Geddon=74.4=3724=0;Shazzrah=29.9=4240=0;Garr=197.7=5467=1;Majordomo Executus=124.5=6369=0;Ragnaros=151.4=6992=0
 L|pnSqZzEov_Y7W9oy|N'Zoth|Zul'Gurub|Aura|Mixed|1791078565|15|Jin'do the Hexxer=45=586=0;High Priestess Arlokk=86.4=1294=0;High Priest Thekal=114.8=1846=0;Bloodlord Mandokir=83.7=2792=0;High Priestess Mar'li=54.7=3730=1;High Priest Venoxis=39.8=3991=0;High Priestess Jeklik=42.2=4599=0;Hakkar=109.9=5664=0
-L|CMqv6QN06zRJizHJ|Y'Shaarj|Onyxia's Lair|For The Horde|Alliance|1789150696|25|Onyxia=211.7=346=0;Broodcommander Axelus=70.3=653=0
+L|dJOjKxLd2qw_eUok|N'Zoth|Zul'Gurub|Deja vu|Mixed|1790883701|12|High Priestess Jeklik=36.3=510=0;High Priest Venoxis=34.3=742=0;High Priestess Mar'li=49.2=1269=0;Bloodlord Mandokir=91.6=1797=0;High Priest Thekal=89.5=2442=0;High Priestess Arlokk=24.3=2811=0;Jin'do the Hexxer=37.4=3195=0;Hakkar=78.9=4142=0
 L|68wkhSHqcGjVZxKQ|N'Zoth|Molten Core|Cold Embrace|Mixed|1790274568|36|Incindis=46.7=47=0;Garr=69.4=502=0;Baron Geddon=49.1=756=0;Shazzrah=32.7=886=0;Sulfuron Harbinger=57.1=1176=0;Golemagg the Incinerator=48.9=1571=0;Lucifron=65.5=1845=0;Magmadar=58.2=1991=0;Basalthar & Smoldaris=66.8=2173=0;Sorcerer-Thane Thaurissan=62.1=2581=0;Majordomo Executus=112.5=2974=0;Ragnaros=123.3=3418=0
 L|KrpPIWIAoE6nzMSK|N'Zoth|Molten Core|The Crackshot Cartel|Mixed|1790447510|30|Incindis=48=240=0;Lucifron=91.4=630=0;Magmadar=59.4=1074=0;Basalthar & Smoldaris=68.7=1325=0;Sorcerer-Thane Thaurissan=63=1819=0;Garr=58=2422=0;Baron Geddon=45.3=2746=0;Shazzrah=22.3=3094=0;Sulfuron Harbinger=67.3=3486=0;Golemagg the Incinerator=57.4=3955=0;Majordomo Executus=106.5=4725=0;Ragnaros=149.1=5315=0
 L|ENjtkHMKTOq-qHib|Y'Shaarj|Molten Core|I OKEAH I|Mixed|1788550312|39|Incindis=65.5=372=0;Lucifron=129.9=844=0;Magmadar=78.8=1068=0;Basalthar & Smoldaris=75.2=1255=0;Sorcerer-Thane Thaurissan=79.9=1680=0;Garr=232.4=2567=0;Baron Geddon=66=3344=0;Shazzrah=46=3685=0;Golemagg the Incinerator=60.7=5122=0;Majordomo Executus=160.1=5547=0;Ragnaros=201.8=6187=0
@@ -2119,7 +2114,7 @@ L|xPFF3uQcz4ygkQ9f|Y'Shaarj|Molten Core|For The Horde|Alliance|1788544236|26|Inc
 L|LMjW5Ayk7W0O_Pdn|N'Zoth|Molten Core|The Silver Crusade|Mixed|1790013316|40|Incindis=45.3=178=0;Lucifron=53.1=536=0;Magmadar=51.4=655=0;Garr=127.2=1139=0;Baron Geddon=58.6=1433=0;Shazzrah=25.9=1576=0;Sulfuron Harbinger=51.3=1854=0;Golemagg the Incinerator=40.6=2137=0;Basalthar & Smoldaris=51.2=2298=0;Sorcerer-Thane Thaurissan=56.3=2582=0;Majordomo Executus=96.3=2934=0;Ragnaros=124.9=3499=0
 L|TIl8zQhQT6T1SirF|N'Zoth|Molten Core|Perikato|Mixed|1789661411|23|Incindis=40.4=546=0;Garr=79.7=1037=0;Baron Geddon=39.9=1360=0;Shazzrah=22=1493=0;Sulfuron Harbinger=51.7=1826=0;Golemagg the Incinerator=55.4=2069=0;Lucifron=81.7=2363=0;Magmadar=55.4=2556=0;Basalthar & Smoldaris=56.4=2737=0;Sorcerer-Thane Thaurissan=53.3=3101=0;Majordomo Executus=148.3=3825=0;Ragnaros=132.9=4339=0
 L|82oNnn_ye7kXWA6t|Y'Shaarj|Molten Core|I OKEAH I|Mixed|1789931030|31|Incindis=65.2=323=0;Lucifron=117.6=821=0;Magmadar=74.7=1003=0;Basalthar & Smoldaris=75.9=1223=0;Sorcerer-Thane Thaurissan=123.9=1741=0;Garr=93.8=2636=0;Baron Geddon=94.9=3069=0;Shazzrah=42=3407=0;Sulfuron Harbinger=71.7=3883=0;Golemagg the Incinerator=59.3=4178=0;Majordomo Executus=130.6=4516=0;Ragnaros=214.2=5069=0
-L|TdJhBGlJieXG5rGI|N'Zoth|Molten Core|Booty Bay Surf Club|Mixed|1788814694|18|Incindis=49.9=280=0;Lucifron=105.7=720=0;Magmadar=69.9=965=0;Basalthar & Smoldaris=387.7=1465=0;Basalthar & Smoldaris=79=2178=0;Sorcerer-Thane Thaurissan=81.7=2586=0;Garr=149.4=3380=0;Baron Geddon=141.3=3905=0;Shazzrah=41.9=4181=0;Sulfuron Harbinger=80.1=5959=1;Golemagg the Incinerator=61.3=6269=0;Majordomo Executus=169.4=7556=0
+L|SKOsAWm10rKrEX9E|N'Zoth|Molten Core|Booty Bay Boys|Mixed|1786996984|25|Incindis=47.8=363=0;Lucifron=75.4=1241=0;Magmadar=74.7=1515=0;Garr=142.2=2444=0;Baron Geddon=61=2960=0;Shazzrah=58.7=3244=0;Sulfuron Harbinger=63.6=4032=0;Golemagg the Incinerator=67.8=4394=0;Basalthar & Smoldaris=79.5=5094=1;Sorcerer-Thane Thaurissan=100.7=5670=0;Majordomo Executus=130.5=6400=0;Ragnaros=154=7088=0
 L|BwYQM877QleolEzA|N'Zoth|Molten Core|Log Breaker Machine|Mixed|1789296445|27|Lucifron=55.8=612=0;Magmadar=69=893=0;Basalthar & Smoldaris=94.8=1204=0;Sorcerer-Thane Thaurissan=61.2=2008=0;Garr=57.1=2836=0;Baron Geddon=56.8=3125=0;Shazzrah=22.8=3326=0;Sulfuron Harbinger=50.9=4010=0;Golemagg the Incinerator=101.7=4239=0;Majordomo Executus=87.8=4547=0;Ragnaros=130=5177=0
 L|uhyFUYInOhDJm8PQ|Y'Shaarj|Lower Tower of Karazhan|ERROR|Horde|1788536145|10|Lord Blackwald II=99.9=560=0;Clawlord Howlfang=86.2=1066=0;Grizikil=58.2=1653=0;Brood Queen Araxxna=48.8=2048=0;Moroes=77.2=2618=0
 L|SjgTbhdimKe2ndEz|N'Zoth|Lower Tower of Karazhan|Cleave|Mixed|1791128352|10|Lord Blackwald II=41.6=212=0;Clawlord Howlfang=43.3=437=0;Grizikil=26=774=0;Brood Queen Araxxna=29.9=982=0;Moroes=88.4=2092=0
@@ -2129,7 +2124,7 @@ L|9LU3kQOhC2ymzij9|N'Zoth|Onyxia's Lair|Hard Reserved|Mixed|1787423617|28|Onyxia
 L|A3UqxKViTXXLAPVc|Y'Shaarj|Zul'Gurub|Care Bears|Horde|1790891571|15|Jin'do the Hexxer=45.9=715=0;High Priestess Arlokk=85.5=1464=0;Gahz'ranka=82.2=1843=0;High Priest Thekal=122.7=2450=0;Bloodlord Mandokir=105.3=3531=0;High Priestess Mar'li=69.8=4484=0;High Priest Venoxis=73.4=5011=0;High Priestess Jeklik=47.1=5959=0;Hakkar=122=6871=0;Gri'lek=102.9=7900=0
 L|CeIuQan2aOb7Y-oY|N'Zoth|Onyxia's Lair|Remnant|Mixed|1785463523|35|Broodcommander Axelus=63.3=208=0;Onyxia=197.3=750=0
 L|DstG88_PdvRA0UqR|N'Zoth|Zul'Gurub|INSANE|Mixed|1791226616|14|Jin'do the Hexxer=67.4=494=0;High Priestess Arlokk=93.8=1138=0;High Priest Thekal=121.4=1650=0;Bloodlord Mandokir=102.3=2377=0;High Priestess Mar'li=62.5=3459=0;High Priest Venoxis=49.9=4014=0;High Priestess Jeklik=76.2=4714=0;Gahz'ranka=69.7=5822=0;Hakkar=158.3=6241=0
-L|bm-fS8wXgzo2UdWR|N'Zoth|Molten Core|Fury|Mixed|1790878667|36|Incindis=38.1=135=0;Garr=61.4=448=0;Baron Geddon=37.3=652=0;Shazzrah=21.8=735=0;Sulfuron Harbinger=49.6=968=0;Golemagg the Incinerator=41.7=1164=0;Lucifron=49.2=1346=0;Magmadar=45.9=1478=0;Basalthar & Smoldaris=54.2=1584=0;Sorcerer-Thane Thaurissan=55.5=1865=0;Majordomo Executus=89.2=2147=0;Ragnaros=135.6=2532=0
+L|y4zeKWmx5-HxD3op|N'Zoth|Molten Core|Phoenix|Mixed|1790041023|30|Incindis=44=214=0;Garr=80.7=823=0;Baron Geddon=60.7=1177=0;Shazzrah=21=1377=0;Sulfuron Harbinger=56.7=1792=0;Golemagg the Incinerator=47.6=2012=0;Lucifron=57.8=2273=0;Magmadar=49.7=2456=0;Basalthar & Smoldaris=51.3=2675=0;Sorcerer-Thane Thaurissan=61.3=3080=0;Majordomo Executus=91.8=3424=0;Ragnaros=166.7=3928=0
 L|9QN9VyWSRHykdsgE|N'Zoth|Molten Core|The Ashen Banner|Mixed|1789781530|31|Incindis=42.3=179=0;Garr=74.1=693=0;Baron Geddon=38.6=1495=1;Shazzrah=23.2=1622=0;Sulfuron Harbinger=79.4=2017=0;Golemagg the Incinerator=41.4=2379=0;Lucifron=48.8=2720=0;Magmadar=40.3=2902=0;Basalthar & Smoldaris=53.4=3120=0;Sorcerer-Thane Thaurissan=52.7=3496=0;Majordomo Executus=112.2=4060=0;Ragnaros=121.1=4593=0
 L|qD8ATim0GaPcLa1E|N'Zoth|Zul'Gurub|Deja vu|Horde|1791149111|12|Jin'do the Hexxer=46.9=375=0;High Priestess Arlokk=28.7=689=0;High Priest Thekal=164.6=1135=0;Bloodlord Mandokir=76=1848=0;High Priestess Jeklik=44=3188=0;High Priest Venoxis=35.6=3536=0;High Priestess Mar'li=43.8=3874=0;Hakkar=128.8=4494=0
 L|zJ07p2LhLWx1F8hv|N'Zoth|Molten Core|The Ashen Banner|Mixed|1789178714|29|Incindis=44.7=204=0;Garr=109.9=690=0;Baron Geddon=36.4=1021=0;Shazzrah=22.5=1161=0;Sulfuron Harbinger=68.4=1502=0;Golemagg the Incinerator=47.5=1774=0;Lucifron=61.6=2071=0;Magmadar=59.2=2230=0;Basalthar & Smoldaris=52.2=2399=0;Sorcerer-Thane Thaurissan=53.5=2931=0;Majordomo Executus=105.9=3276=0;Ragnaros=128.5=3837=0
@@ -2137,20 +2132,19 @@ L|Qam4kwJ6OIEqZ7pM|N'Zoth|Zul'Gurub|Phoenix|Mixed|1790916112|14|Jin'do the Hexxe
 L|i2oiAW2xjs-LrpBE|N'Zoth|Zul'Gurub|Skill Issue|Mixed|1791230467|14|Jin'do the Hexxer=54.9=86=0;High Priestess Arlokk=30.9=487=0;Gahz'ranka=95.9=719=0;High Priest Thekal=108.6=989=0;Bloodlord Mandokir=71.4=1628=0;High Priestess Mar'li=44.9=2016=0;High Priest Venoxis=31.1=2195=0;High Priestess Jeklik=44.4=2615=0;Hakkar=69.5=3236=0
 L|SHfVeVlPYONfvsS0|N'Zoth|Onyxia's Lair|GTD|Mixed|1787338676|31|Broodcommander Axelus=124.2=199=0;Onyxia=327.8=2229=2
 L|h6oRWkQhax6G1Dvy|N'Zoth|Molten Core|Netherbane|Mixed|1790635247|26|Incindis=65.2=371=0;Lucifron=85.4=799=0;Magmadar=76=1028=0;Garr=134.6=2045=1;Baron Geddon=62.2=2554=0;Shazzrah=34.3=2902=0;Sulfuron Harbinger=74.7=3452=0;Golemagg the Incinerator=68.3=3932=0;Basalthar & Smoldaris=75.9=4335=0;Sorcerer-Thane Thaurissan=102.6=4926=0;Majordomo Executus=121.6=6163=1;Ragnaros=202.5=7461=1
-L|V682_zeh7DVrYTWv|N'Zoth|Onyxia's Lair|The Crackshot Cartel|Mixed|1789234716|19|Broodcommander Axelus=144.3=324=0;Onyxia=308.1=2263=1
+L|bvuo5-rZK7nAHgMG|N'Zoth|Onyxia's Lair|Oktagon|Mixed|1790793756|30|Broodcommander Axelus=90.7=146=0;Onyxia=224.6=640=0
 L|bDAj5s9YwD4GbNzQ|N'Zoth|Molten Core|We go again|Mixed|1790964546|29|Incindis=51.4=313=0;Lucifron=115.3=740=0;Magmadar=62.1=943=0;Garr=177.1=2240=1;Baron Geddon=51.3=2953=1;Shazzrah=27.6=3167=0;Sulfuron Harbinger=71.5=3569=0;Golemagg the Incinerator=54.6=4032=0;Basalthar & Smoldaris=74.6=4236=0;Sorcerer-Thane Thaurissan=91.7=4709=0;Majordomo Executus=113.7=5229=0;Ragnaros=159.1=5849=0
 L|KSTCWbOChdIqcm6U|N'Zoth|Molten Core|Deja vu|Mixed|1789330967|27|Incindis=57.3=483=0;Lucifron=112.6=911=0;Magmadar=58.5=1217=0;Basalthar & Smoldaris=60.9=1396=0;Sorcerer-Thane Thaurissan=79.1=1843=0;Golemagg the Incinerator=53.1=3148=1;Sulfuron Harbinger=56.8=3967=1;Baron Geddon=56.3=4185=0;Shazzrah=29.2=4624=0;Garr=79.2=5012=0;Majordomo Executus=144.8=5698=0;Ragnaros=152.1=6364=0
 L|QgY_svYZ-ZWYkgtn|N'Zoth|Onyxia's Lair|Mushroom Vendor|Mixed|1789931753|29|Onyxia=217.3=502=0;Broodcommander Axelus=92.4=819=0
-L|qI0kMgOqSxgk2srC|N'Zoth|Lower Tower of Karazhan|Strawman Arguments|Mixed|1789152555|10|Lord Blackwald II=55.9=748=0;Clawlord Howlfang=47=1113=0;Brood Queen Araxxna=49.7=1711=0;Grizikil=39.8=2360=0;Moroes=58.3=2817=0
 L|NkfezORoMwLqO1G7|N'Zoth|Zul'Gurub|Phoenix|Horde|1791004744|3|Bloodlord Mandokir=102.4=5530=3;Bloodlord Mandokir=131.1=5894=3;Bloodlord Mandokir=136.7=6941=3;Gahz'ranka=78=9078=1
 L|iI5AcRec1MVRTcBG|N'Zoth|Lower Tower of Karazhan|GTD|Mixed|1788707772|10|Lord Blackwald II=57.1=564=0;Brood Queen Araxxna=46.8=1159=0;Grizikil=46.8=1554=0;Clawlord Howlfang=69.9=1828=0;Moroes=74.8=2348=0
-L|HS_9VfOLC0aFvGxS|N'Zoth|Molten Core|Oktagon|Mixed|1789582820|26|Incindis=38.6=152=0;Garr=43.1=533=0;Baron Geddon=41.4=738=0;Shazzrah=21.5=861=0;Sulfuron Harbinger=54=1172=0;Golemagg the Incinerator=38.3=1391=0;Lucifron=53.5=1575=0;Magmadar=41.7=1705=0;Basalthar & Smoldaris=54.3=1841=0;Sorcerer-Thane Thaurissan=58.4=2179=0;Majordomo Executus=76.8=2511=0;Ragnaros=142.8=2988=0
+L|nGu8DDyvKuv-IiaL|N'Zoth|Onyxia's Lair|Ost Ardent|Mixed|1789930156|34|Onyxia=296.2=822=0;Broodcommander Axelus=66=1330=0
 L|8Brg1dHiDx9RmcoQ|N'Zoth|Onyxia's Lair|GTD|Mixed|1788549429|36|Broodcommander Axelus=116.3=298=0;Onyxia=435.8=2740=2
 L|ERePkbzlU91fTfXL|N'Zoth|Onyxia's Lair|nope|Mixed|1791247287|29|Onyxia=240.3=240=0;Broodcommander Axelus=95.7=503=0
 L|8-EludgkZRmbpyu-|N'Zoth|Molten Core|Amnesia|Mixed|1789300896|31|Incindis=25.8=172=0;Garr=41.3=772=0;Baron Geddon=31.4=1020=0;Shazzrah=16.9=1124=0;Sulfuron Harbinger=40.4=1426=0;Golemagg the Incinerator=28.8=1635=0;Lucifron=43.6=1838=0;Magmadar=31.8=2075=0;Basalthar & Smoldaris=42=2227=0;Sorcerer-Thane Thaurissan=36.6=2534=0;Majordomo Executus=85.5=3048=0;Ragnaros=101=3470=0
 L|El1HQN0xmhYFld1L|N'Zoth|Molten Core|Ninja Turtles|Mixed|1786044293|24|Incindis=53.2=297=0;Garr=83.7=1032=0;Baron Geddon=83.3=1363=0;Shazzrah=35.6=1650=0;Sulfuron Harbinger=52.8=2192=0;Golemagg the Incinerator=60.6=2628=0;Basalthar & Smoldaris=66.4=2883=0;Sorcerer-Thane Thaurissan=83.8=3330=0;Lucifron=91.4=3597=0;Magmadar=62.3=3847=0;Majordomo Executus=119.1=4413=0;Ragnaros=156.4=5101=0
 L|znePBm_AySWI5I8A|N'Zoth|Onyxia's Lair|BAD VIBES ONLY|Mixed|1789532638|28|Onyxia=263.2=755=0;Broodcommander Axelus=110.7=1288=0
-L|nGu8DDyvKuv-IiaL|N'Zoth|Onyxia's Lair|Ost Ardent|Mixed|1789930156|34|Onyxia=296.2=822=0;Broodcommander Axelus=66=1330=0
+L|WNkvyKyhXu5mzUqL|N'Zoth|Molten Core|Cleave|Mixed|1789308356|29|Incindis=66=183=0;Garr=40.5=566=0;Baron Geddon=25.5=838=0;Shazzrah=16.7=943=0;Sulfuron Harbinger=34=1159=0;Golemagg the Incinerator=30=1355=0;Lucifron=41.5=1523=0;Magmadar=33.8=2212=0;Basalthar & Smoldaris=43.7=2341=0;Sorcerer-Thane Thaurissan=46.6=2711=0;Majordomo Executus=75.6=3363=1;Ragnaros=94.4=3791=0
 L|Uq3_NSyPqWIPaZS3|N'Zoth|Zul'Gurub|Mushroom Vendor|Mixed|1791060973|16|Jin'do the Hexxer=29.4=351=0;High Priestess Arlokk=19.4=624=0;Gahz'ranka=37.8=775=0;High Priest Thekal=81.2=989=0;Gri'lek=76.9=1336=0;Bloodlord Mandokir=97.8=1798=0;High Priestess Mar'li=45.1=2208=0;High Priest Venoxis=39.2=2382=0;High Priestess Jeklik=49.5=2760=0;Hakkar=65.1=3094=0
 L|9ysZGVkbDVlzAcRu|N'Zoth|Molten Core|The Non Profit|Mixed|1788637273|19|Ragnaros=154.1=1038=1
 L|mi5fTSsxWcRfytib|N'Zoth|Molten Core|who pulled|Mixed|1790445679|26|Incindis=50.2=107=0;Lucifron=82.9=478=0;Magmadar=59.9=682=0;Garr=77.8=1233=0;Baron Geddon=41.5=1524=0;Shazzrah=28.8=1670=0;Sulfuron Harbinger=58.2=2090=0;Golemagg the Incinerator=53.1=2427=0;Basalthar & Smoldaris=65.5=2584=0;Sorcerer-Thane Thaurissan=58.7=2987=0;Majordomo Executus=95.7=3369=0;Ragnaros=149.4=3858=0
@@ -2163,18 +2157,19 @@ L|y7OFJNAah654db_s|N'Zoth|Lower Tower of Karazhan|The Ashen Banner|Mixed|1789611
 L|H5k9feEgwUyy5yoD|N'Zoth|Lower Tower of Karazhan|Remnant|Mixed|1786680134|10|Lord Blackwald II=64=819=0;Clawlord Howlfang=61.6=1255=0;Grizikil=55=1845=0;Brood Queen Araxxna=61=2366=0;Moroes=91=3039=0
 L|IPBAcVIZXgAEU9yg|N'Zoth|Onyxia's Lair|MEGAPANZAS|Mixed|1789949196|20|Broodcommander Axelus=60.2=192=0;Onyxia=180.1=700=0
 L|7l8aMWt6LW9WT16O|N'Zoth|Molten Core|Cleave|Mixed|1791121218|32|Incindis=80.2=196=0;Garr=113.9=450=0;Baron Geddon=25.5=618=0;Shazzrah=16.9=662=0;Sulfuron Harbinger=32.8=862=0;Golemagg the Incinerator=30.2=1024=0;Lucifron=3.9=1195=0;Magmadar=31=1230=0;Basalthar & Smoldaris=38.5=1341=0;Sorcerer-Thane Thaurissan=51.4=1570=0;Majordomo Executus=65.8=1763=0;Ragnaros=98.6=2057=0
+L|CMqv6QN06zRJizHJ|Y'Shaarj|Onyxia's Lair|For The Horde|Alliance|1789150696|25|Onyxia=211.7=346=0;Broodcommander Axelus=70.3=653=0
 L|60OHtmrt9WNpUKw2|N'Zoth|Lower Tower of Karazhan|Schmetterlingsbrigade|Mixed|1790799525|9|Lord Blackwald II=90.7=723=0;Clawlord Howlfang=100=1673=2;Brood Queen Araxxna=71.3=2238=0;Grizikil=57.3=2877=0;Moroes=92.3=3454=0
 L|dYfItdScMNJRhCna|N'Zoth|Lower Tower of Karazhan|I Griefers Inc I|Mixed|1789927969|10|Lord Blackwald II=56.5=497=0;Clawlord Howlfang=71.9=1063=0;Brood Queen Araxxna=45.6=1542=0;Grizikil=43.5=1977=0;Moroes=73.5=2491=0
 L|z2dzqPP3PSpzwicD|N'Zoth|Lower Tower of Karazhan|Remnant|Mixed|1784596948|10|Lord Blackwald II=62.2=652=0;Clawlord Howlfang=63.5=1024=0;Grizikil=52.7=1574=0;Brood Queen Araxxna=47.6=1958=0;Moroes=64.8=2490=0
 L|wzPVSxvUVTqM5pqq|N'Zoth|Lower Tower of Karazhan|One Blood|Mixed|1789501686|10|Lord Blackwald II=71.7=593=0;Clawlord Howlfang=73.5=1220=1;Brood Queen Araxxna=49.5=1848=0;Grizikil=71.9=2477=0;Moroes=91.2=3289=0
-L|rYrauH_lPP16PoxT|N'Zoth|Molten Core|Raid Therapy|Mixed|1790709591|28|Incindis=31.5=186=0;Garr=73.3=673=0;Baron Geddon=34=904=0;Shazzrah=20.6=1069=0;Sulfuron Harbinger=45.2=1341=0;Golemagg the Incinerator=36.7=1548=0;Basalthar & Smoldaris=42.6=1724=0;Sorcerer-Thane Thaurissan=46.9=2059=0;Lucifron=49.8=2321=0;Magmadar=39.4=2479=0;Majordomo Executus=94.5=2925=0;Ragnaros=104.6=3373=0
+L|Nrcad6hpv2WROdOT|N'Zoth|Onyxia's Lair|The Non Profit|Mixed|1787427134|23|Onyxia=367.5=1543=1;Broodcommander Axelus=111.9=2027=0
 L|K6c_IFB6bEWhkSOW|N'Zoth|Lower Tower of Karazhan|Cleave|Mixed|1789919598|10|Lord Blackwald II=51.3=389=0;Clawlord Howlfang=62.9=678=0;Brood Queen Araxxna=40.9=1059=0;Grizikil=38.3=1380=0;Moroes=56.4=1785=0
 L|ohrpi_2L4ZfH4PxD|N'Zoth|Molten Core|Raid Therapy|Mixed|1790709591|28|Incindis=31.5=186=0;Garr=73.3=673=0;Baron Geddon=34=904=0;Shazzrah=20.6=1069=0;Sulfuron Harbinger=45.2=1341=0;Golemagg the Incinerator=36.7=1548=0;Basalthar & Smoldaris=42.6=1724=0;Sorcerer-Thane Thaurissan=46.9=2059=0;Lucifron=49.8=2321=0;Magmadar=39.4=2479=0;Majordomo Executus=94.5=2925=0;Ragnaros=104.6=3373=0
 L|jPE7v5MEXSqlE9f9|N'Zoth|Lower Tower of Karazhan|Deja vu|Horde|1790799477|10|Lord Blackwald II=62.9=617=0;Brood Queen Araxxna=46.5=1284=0;Grizikil=51.2=1786=0;Clawlord Howlfang=94.4=2081=0;Moroes=83.7=2733=0
 L|uSt8Mbxq-dgEBUhd|Y'Shaarj|Molten Core|I OKEAH I|Mixed|1790364598|28|Incindis=70.4=419=0;Lucifron=127.8=993=0;Magmadar=88.8=1291=0;Basalthar & Smoldaris=81.5=1516=0;Sorcerer-Thane Thaurissan=93.6=2213=0;Garr=124.9=3043=0;Baron Geddon=79.9=3493=0;Shazzrah=43.7=3719=0;Sulfuron Harbinger=86=4417=0;Golemagg the Incinerator=58.4=4697=0;Majordomo Executus=135=5198=0;Ragnaros=182.2=5747=0
 L|LPF6ZJtGW-HooheW|N'Zoth|Zul'Gurub|Oktagon|Mixed|1790879958|20|Jin'do the Hexxer=21.4=222=0;High Priestess Arlokk=19.5=466=0;Gahz'ranka=31.6=689=0;High Priest Thekal=78.7=868=0;Bloodlord Mandokir=106.2=1381=0;High Priestess Mar'li=25.6=1691=0;High Priest Venoxis=25.7=1868=0;High Priestess Jeklik=25.2=2125=0;Hakkar=48.1=2464=0
-L|Rskf2XOUpukQXubD|N'Zoth|Molten Core|Loot Goblins|Mixed|1789822248|22|Incindis=40==;Garr=38.7==;Baron Geddon=41.7==;Shazzrah=23.2==;Sulfuron Harbinger=42.7==;Golemagg the Incinerator=40.6==;Lucifron=64.6==;Magmadar=50.7==;Basalthar & Smoldaris=56.2==;Sorcerer-Thane Thaurissan=53.4==;Majordomo Executus=78.5==;Ragnaros=104.9==
-L|EsFQy0mGGJJtX8i6|N'Zoth|Onyxia's Lair|I Griefers Inc I|Mixed|1791224993|27|Onyxia=191=337=0;Broodcommander Axelus=75.5=655=0
+L|Rskf2XOUpukQXubD|N'Zoth|Molten Core|Loot Goblins|Mixed|1789822248|22|Incindis=40=154=0;Garr=38.7=506=0;Baron Geddon=41.7=697=0;Shazzrah=23.2=769=0;Sulfuron Harbinger=42.7=1009=0;Golemagg the Incinerator=40.6=1209=0;Lucifron=64.6=1352=0;Magmadar=50.7=1516=0;Basalthar & Smoldaris=56.2=1675=0;Sorcerer-Thane Thaurissan=53.4=1940=0;Majordomo Executus=78.5=2277=0;Ragnaros=104.9=2644=0
+L|HoZlUHeHs0DMQe-A|N'Zoth|Lower Tower of Karazhan|Die Gilde|Mixed|1787776304|10|Lord Blackwald II=43.7=215=0;Clawlord Howlfang=49.5=433=0;Grizikil=33.4=763=0;Brood Queen Araxxna=34.6=973=0;Moroes=51.7=1456=0
 L|ZCV_J4G1NTprvi8I|N'Zoth|Onyxia's Lair|Skull Emoji|Mixed|1791141818|27|Onyxia=156.9=906=1;Broodcommander Axelus=59.7=1203=0
 L|de_FcBoSyDcqZO72|N'Zoth|Lower Tower of Karazhan|Soulbound|Mixed|1787670696|10|Lord Blackwald II=73.3=686=0;Clawlord Howlfang=94.4=1874=1;Brood Queen Araxxna=66.6=2510=0;Grizikil=66.4=3185=0;Moroes=87=3969=0
 L|YEvB-2tz1LAsgMvW|N'Zoth|Lower Tower of Karazhan|Ninja Turtles|Mixed|1785178407|10|Lord Blackwald II=65.6=728=0;Grizikil=51.5=1525=0;Brood Queen Araxxna=46.7=1933=0;Clawlord Howlfang=64.6=2316=0;Moroes=75.9=3102=0
@@ -2186,6 +2181,7 @@ L|CE-3UxIn6C8qKt0G|N'Zoth|Molten Core|GTD|Mixed|1788546021|38|Incindis=52.5=301=
 L|fcD6DRpGqTibIrHt|N'Zoth|Onyxia's Lair|Cold Embrace|Mixed|1788708581|31|Onyxia=350.7=540=0;Broodcommander Axelus=134.9=902=0
 L|ntaGqBDzY7Q0HW0s|N'Zoth|Zul'Gurub|Loot Goblins|Mixed|1790880843|19|Jin'do the Hexxer=30.7=3744=0;High Priestess Arlokk=25=4166=0;High Priest Thekal=82.4=4578=0;Gri'lek=47.6=4891=0;Bloodlord Mandokir=67.6=5272=0;High Priestess Mar'li=34.5=5650=0;High Priest Venoxis=33=5847=0;High Priestess Jeklik=41=6203=0;Hakkar=62.4=6563=0
 L|p1syMwpvuoJBE-IO|N'Zoth|Molten Core|Ninja Turtles|Mixed|1787861374|25|Incindis=55.5=254=0;Garr=98.2=920=0;Baron Geddon=62.3=1264=0;Shazzrah=30=1475=0;Sulfuron Harbinger=67.1=1891=0;Golemagg the Incinerator=56.2=2231=0;Basalthar & Smoldaris=68.9=2453=0;Sorcerer-Thane Thaurissan=89.9=2847=0;Lucifron=81.6=3937=0
+L|D3gbOSffM5833kNh|N'Zoth|Lower Tower of Karazhan|Smokey Tokers|Mixed|1785177332|10|Lord Blackwald II=65.4=453=0;Clawlord Howlfang=70.2=817=0;Brood Queen Araxxna=62.6=1211=0;Grizikil=56.7=1646=0;Moroes=77.4=2182=0
 L|VFdz56joeA_HSQsx|N'Zoth|Lower Tower of Karazhan|Launen des Schicksals|Mixed|1786043961|10|Clawlord Howlfang=107.2=916=0;Lord Blackwald II=86.7=1764=0;Brood Queen Araxxna=59.2=2365=0;Grizikil=63.5=3056=0;Moroes=105.7=3791=0
 L|f8mXjp35bPb0Gr16|N'Zoth|Molten Core|GTD|Mixed|1786731603|39|Incindis=62.4=212=0;Lucifron=50.4=615=0;Magmadar=73.2=827=0;Garr=153.3=1603=0;Baron Geddon=61=1911=0;Shazzrah=27.8=2147=0;Sulfuron Harbinger=78.3=2550=0;Golemagg the Incinerator=59.2=2904=0;Basalthar & Smoldaris=69.7=3074=0;Sorcerer-Thane Thaurissan=79=3539=0;Majordomo Executus=115.7=4007=0;Ragnaros=172.7=4521=0
 L|14QtWHePlEta_LKY|N'Zoth|Molten Core|Deja vu|Mixed|1786910748|30|Incindis=51.5=267=0;Lucifron=89=731=0;Magmadar=61.5=984=0;Basalthar & Smoldaris=100.3=1291=0;Sorcerer-Thane Thaurissan=67.5=1788=0;Golemagg the Incinerator=50.5=2266=0;Sulfuron Harbinger=50.4=2654=0;Baron Geddon=56.1=2935=0;Shazzrah=37.6=3357=0;Garr=130.5=3963=0;Majordomo Executus=113.1=4600=0;Ragnaros=144.6=5151=0
@@ -2194,6 +2190,7 @@ L|LcgsWN3EKp-jhaAo|N'Zoth|Onyxia's Lair|Thud and Blunder|Mixed|1786647243|33|Bro
 L|pr7uyjsMS3Q2Uppm|N'Zoth|Onyxia's Lair|Log Breaker Machine|Mixed|1788694328|23|Broodcommander Axelus=121.6=224=0;Onyxia=255.7=795=0
 L|O2KRKUOS_ruIyC2M|N'Zoth|Zul'Gurub|One Blood|Mixed|1791142271|19|High Priestess Arlokk=24.9=856=0;Jin'do the Hexxer=31.8=1048=0;High Priest Thekal=60.2=1361=0;High Priest Thekal=90.7=2203=1;Gahz'ranka=38=2409=0;Bloodlord Mandokir=58.1=2977=0;High Priestess Mar'li=41.1=3404=0;High Priest Venoxis=35.4=3651=0;High Priestess Jeklik=38.2=4126=0;Hakkar=73.8=4788=0
 L|RG1XlrdgWCW7YKCC|N'Zoth|Molten Core|Fury|Mixed|1789669849|29|Incindis=41.6=154=0;Garr=57.6=524=0;Baron Geddon=41.2=847=0;Shazzrah=22.3=951=0;Sulfuron Harbinger=49.6=1315=0;Golemagg the Incinerator=43.2=1565=0;Lucifron=51.2=1764=0;Magmadar=46=1928=0;Basalthar & Smoldaris=53.7=2097=0;Sorcerer-Thane Thaurissan=57.6=2465=0;Majordomo Executus=78.9=2845=0;Ragnaros=137.1=3318=0
+L|_i5g4WBVOhDgmvNv|N'Zoth|Molten Core|Oktagon|Mixed|1788373357|34|Incindis=29.4=147=0;Garr=54.5=520=0;Baron Geddon=39.1=724=0;Shazzrah=19=843=0;Sulfuron Harbinger=39.1=1438=0;Golemagg the Incinerator=35.3=1618=0;Lucifron=46=1843=0;Magmadar=39.5=1975=0;Basalthar & Smoldaris=43.6=2118=0;Sorcerer-Thane Thaurissan=49=2381=0;Majordomo Executus=74.9=2684=0;Ragnaros=103.4=3170=0
 L|h36a5_eJIYa80Nic|Y'Shaarj|Onyxia's Lair|Care Bears|Horde|1789762922|31|Broodcommander Axelus=135.4=346=0;Onyxia=360.6=1172=0
 L|ACZ5Y5t3qv1mpr8R|N'Zoth|Onyxia's Lair|strawberry fields|Mixed|1788708283|22|Onyxia=214.8=1194=1;Broodcommander Axelus=89.1=1593=0
 L|caEr3hlAjNtQrQtQ|Y'Shaarj|Lower Tower of Karazhan|Sons of Mukla|Alliance|1786130338|10|Lord Blackwald II=115=1013=0;Clawlord Howlfang=119.6=1684=0;Grizikil=66.4=2740=0;Brood Queen Araxxna=79.2=3331=0;Moroes=110.9=4067=0
@@ -2202,7 +2199,7 @@ L|bczWlu0ramZVp9rL|N'Zoth|Zul'Gurub|Smokey Tokers|Mixed|1790882106|18|Jin'do the
 L|gE42Kpx46SZJtWqU|Y'Shaarj|Molten Core|ERROR|Horde|1788709012|42|Incindis=53.8=243195=0;Garr=76=244000=1;Baron Geddon=104.2=244456=0;Shazzrah=26.7=244694=0;Sulfuron Harbinger=70.4=245146=0;Golemagg the Incinerator=63.9=245507=0;Basalthar & Smoldaris=73.3=245764=0;Sorcerer-Thane Thaurissan=77.1=246197=0;Lucifron=107.8=246543=0;Magmadar=61.9=246716=0;Majordomo Executus=109.9=247859=2;Ragnaros=147.5=248375=0
 L|WC8AzUqQT362SpYb|N'Zoth|Zul'Gurub|Cold Embrace|Mixed|1791138500|12|Jin'do the Hexxer=65.6=318=0;High Priestess Arlokk=28.7=670=0;High Priest Thekal=107.8=1039=0;Bloodlord Mandokir=76.4=1681=0;High Priest Venoxis=47.8=1904=0;High Priestess Jeklik=47.3=2396=0;Hakkar=104.5=2893=0
 L|NQpsYzH3ReNYXLNZ|N'Zoth|Zul'Gurub|Fury|Mixed|1790911343|15|Jin'do the Hexxer=40=313=0;High Priestess Arlokk=20.4=857=0;High Priest Thekal=86.3=1349=0;Bloodlord Mandokir=60.8=1868=0;High Priestess Mar'li=40.4=2480=0;High Priest Venoxis=32.7=2751=0;High Priestess Jeklik=36.8=3511=0;Hakkar=135.9=4378=0;Gahz'ranka=42.2=4756=0
-L|64BoM0TyRBb55uf5|N'Zoth|Molten Core|Die Gilde|Mixed|1787770707|32|Incindis=39.1=181=0;Garr=198.5=696=0;Baron Geddon=42.5=1151=0;Shazzrah=18.3=1298=0;Sulfuron Harbinger=41=1545=0;Golemagg the Incinerator=39.3=1783=0;Lucifron=46=2002=0;Magmadar=40.8=2121=0;Basalthar & Smoldaris=45.7=2313=0;Sorcerer-Thane Thaurissan=50.5=2664=0;Majordomo Executus=78=3033=0;Ragnaros=116.6=3440=0
+L|Ec90F6GnxPM4UHuR|N'Zoth|Lower Tower of Karazhan|nope|Mixed|1788833758|11|Lord Blackwald II=57.8=659=0;Clawlord Howlfang=78.7=1083=0;Grizikil=44.8=1643=0;Brood Queen Araxxna=51.9=1993=0;Moroes=70.7=2538=0
 L|7kb1hG6ZtaPEZ1eE|N'Zoth|Lower Tower of Karazhan|Ost Ardent|Mixed|1786132189|10|Clawlord Howlfang=95.7=1351=2;Lord Blackwald II=71.8=2164=0;Grizikil=54.4=2992=0;Brood Queen Araxxna=50=3477=0;Moroes=80.3=4526=0
 L|bDN6uXFZ19mtQT36|N'Zoth|Molten Core|Ninja Turtles|Mixed|1790277395|25|Incindis=47.9=275=0;Garr=103.5=859=0;Baron Geddon=54.8=1185=0;Shazzrah=31.6=1467=0;Sulfuron Harbinger=56.4=1844=0;Golemagg the Incinerator=52.8=2211=0;Basalthar & Smoldaris=64.7=2371=0;Sorcerer-Thane Thaurissan=72.4=2846=0;Lucifron=64.9=3171=0;Magmadar=66.4=3329=0;Majordomo Executus=139.3=3947=0;Ragnaros=133.7=4520=0
 L|U8T2Poqgz0lzllrT|N'Zoth|Molten Core|BRUTAL|Mixed|1789236518|28|Incindis=44.6=122=0;Lucifron=85.7=472=0;Magmadar=68.4=682=0;Garr=85.9=1742=0;Baron Geddon=65.7=2037=0;Shazzrah=25.9=2177=0;Sulfuron Harbinger=56.7=2525=0;Golemagg the Incinerator=55.2=2730=0;Basalthar & Smoldaris=58.3=2888=0;Sorcerer-Thane Thaurissan=68.6=3235=0;Majordomo Executus=109.3=3565=0;Ragnaros=156=4045=0
@@ -2221,13 +2218,14 @@ L|UA0cl-sP4ldi_Of1|N'Zoth|Molten Core|BRUTAL|Mixed|1788016542|32|Incindis=58.6=1
 L|C9GPDQ3YLPYkAkZD|N'Zoth|Molten Core|BRUTAL|Mixed|1791050190|32|Incindis=58.8=178=0;Lucifron=63=519=0;Magmadar=60.2=636=0;Basalthar & Smoldaris=65.3=755=0;Sorcerer-Thane Thaurissan=74=1072=0;Garr=117.6=1574=0;Baron Geddon=57.3=2103=1;Shazzrah=28=2288=0;Sulfuron Harbinger=54.8=2575=0;Golemagg the Incinerator=43.3=2758=0;Majordomo Executus=85.3=3004=0;Ragnaros=137.2=3390=0
 L|szND89OcSbPm6uxd|N'Zoth|Molten Core|BAD VIBES ONLY|Mixed|1789530647|31|Incindis=40=284=0;Lucifron=82.4=892=0;Magmadar=54.2=1174=0;Basalthar & Smoldaris=54.4=1900=0;Sorcerer-Thane Thaurissan=59.2=2376=0;Garr=139.5=3381=0;Baron Geddon=41.7=3840=0;Shazzrah=21.4=4074=0;Sulfuron Harbinger=51.6=4854=0;Golemagg the Incinerator=45.6=5113=0;Majordomo Executus=108=5485=0;Ragnaros=120.5=6171=0
 L|S1VmUyATFhkY7ruB|N'Zoth|Molten Core|Mushroom Vendor|Mixed|1788703849|27|Incindis=44.8=165=0;Garr=52.9=1161=1;Baron Geddon=42.6=1367=0;Shazzrah=57.2=1557=0;Sulfuron Harbinger=49.6=1927=0;Golemagg the Incinerator=50.3=2158=0;Lucifron=57.5=2401=0;Magmadar=52.8=2559=0;Basalthar & Smoldaris=55.9=2721=0;Sorcerer-Thane Thaurissan=59.3=3121=0;Majordomo Executus=82=3546=0;Ragnaros=135.1=4014=0
-L|yoM7lnyRvYEKKZn5|N'Zoth|Molten Core|I Griefers Inc I|Mixed|1788804761|34|Incindis=163.5==;Garr=76.4==;Baron Geddon=41.1==;Shazzrah=23.5==;Sulfuron Harbinger=46.3==;Lucifron=52.5==;Magmadar=45==;Basalthar & Smoldaris=45.2==;Sorcerer-Thane Thaurissan=57.9==;Golemagg the Incinerator=36.5==;Majordomo Executus=81.2==;Ragnaros=114.3==
+L|bm-fS8wXgzo2UdWR|N'Zoth|Molten Core|Fury|Mixed|1790878667|36|Incindis=38.1=135=0;Garr=61.4=448=0;Baron Geddon=37.3=652=0;Shazzrah=21.8=735=0;Sulfuron Harbinger=49.6=968=0;Golemagg the Incinerator=41.7=1164=0;Lucifron=49.2=1346=0;Magmadar=45.9=1478=0;Basalthar & Smoldaris=54.2=1584=0;Sorcerer-Thane Thaurissan=55.5=1865=0;Majordomo Executus=89.2=2147=0;Ragnaros=135.6=2532=0
 L|VJMw4OUi-jpYP-Rj|N'Zoth|Molten Core|We go again|Mixed|1790964545|29|Incindis=51.4=313=0;Lucifron=115.3=740=0;Magmadar=62.1=943=0;Garr=177.2=2240=1;Baron Geddon=51.2=2953=1;Shazzrah=27.6=3167=0;Sulfuron Harbinger=71.5=3569=0;Basalthar & Smoldaris=74.6=4236=0;Sorcerer-Thane Thaurissan=91.8=4709=0;Majordomo Executus=113.7=5229=0;Ragnaros=159.1=5849=0
 L|d3-YavZjBcj2QHMB|N'Zoth|Molten Core|The Silver Crusade|Mixed|1791223035|37|Incindis=39.9=187=0;Lucifron=58=463=0;Magmadar=44.7=651=0;Garr=119.8=1186=0;Baron Geddon=39.7=1511=0;Shazzrah=24.3=1633=0;Sulfuron Harbinger=45.4=1977=0;Golemagg the Incinerator=40=2253=0;Basalthar & Smoldaris=64.1=2403=0;Sorcerer-Thane Thaurissan=48.5=2724=0;Majordomo Executus=94.6=3080=0;Ragnaros=108.1=3528=0
 L|MurNlqH9jhn1ry4D|N'Zoth|Lower Tower of Karazhan|nope|Mixed|1787793109|10|Lord Blackwald II=61=223=0;Clawlord Howlfang=62.6=597=0;Grizikil=43.9=1042=0;Brood Queen Araxxna=43.6=1366=0;Moroes=70.9=1864=0
 L|d__ascEIx6MoaBDH|Y'Shaarj|Molten Core|Zug Zug|Horde|1789243841|21|Incindis=55.3=424=0;Lucifron=102.2=1019=0;Magmadar=95.7=1243=0;Garr=86.2=2122=0;Baron Geddon=78=2639=0;Shazzrah=33.1=3119=0;Sulfuron Harbinger=83.1=3853=0;Golemagg the Incinerator=85.9=4288=0;Basalthar & Smoldaris=108.4=4754=0;Sorcerer-Thane Thaurissan=82.4=5449=0;Majordomo Executus=171=6107=0;Ragnaros=203.8=7570=1
 L|JhH3SzeG9NET4xXz|N'Zoth|Onyxia's Lair|Raid Therapy|Mixed|1790705572|36|Onyxia=221=489=0;Broodcommander Axelus=76.4=901=0
 L|jpCXDnfpXwg5bW99|N'Zoth|Onyxia's Lair|Repentance|Mixed|1791060129|27|Broodcommander Axelus=107.7=187=0;Onyxia=253.7=766=0
+L|wjjp7sTM1-TtYM-d|N'Zoth|Molten Core|BRUTAL|Mixed|1788016551|32|Incindis=58.5=225=0;Garr=163.8=871=0;Baron Geddon=52.8=1551=0;Shazzrah=39.1=1705=0;Sulfuron Harbinger=50.1=2177=0;Golemagg the Incinerator=45.3=2393=0;Lucifron=62.9=2583=0;Magmadar=62.6=2739=0;Basalthar & Smoldaris=61.4=2977=0;Sorcerer-Thane Thaurissan=63.1=3409=0;Majordomo Executus=123.8=3932=0;Ragnaros=124.8=4463=0
 L|2rCzf38H3oZemPeJ|Y'Shaarj|Lower Tower of Karazhan|Sons of Mukla|Alliance|1786741320|10|Lord Blackwald II=96.8=798=0;Clawlord Howlfang=134.1=1535=0;Grizikil=79.3=2471=0;Brood Queen Araxxna=61.5=3049=0;Moroes=96.9=4065=0
 L|TOzfYikMh5pXYEAc|N'Zoth|Lower Tower of Karazhan|MEGAPANZAS|Mixed|1791244273|10|Lord Blackwald II=63.7=587=0;Clawlord Howlfang=61.8=1017=0;Brood Queen Araxxna=44=1603=0;Grizikil=54.3=2112=0;Moroes=74.5=2704=0
 L|lXevLAo128eWrnkg|N'Zoth|Molten Core|The Iron Hammers|Mixed|1791062364|22|Majordomo Executus=152.2=984=1;Ragnaros=223.4=2760=1
@@ -2235,7 +2233,6 @@ L|jvwOFS4gdFwbWr2s|N'Zoth|Zul'Gurub|I Griefers Inc I|Mixed|1791054271|16|Jin'do 
 L|sQRdF3_RsrKzYect|N'Zoth|Lower Tower of Karazhan|Raid Therapy|Mixed|1790192979|10|Lord Blackwald II=54.8=468=0;Clawlord Howlfang=66.6=833=0;Brood Queen Araxxna=42.2=1349=0;Grizikil=38=1791=0;Moroes=69.5=2268=0
 L|8FtZ-7IcEMh26fCZ|Y'Shaarj|Molten Core|Care Bears|Horde|1789242982|30|Incindis=69.3=327=0;Lucifron=82=922=0;Magmadar=75.3=1212=0;Basalthar & Smoldaris=79.7=1513=0;Sorcerer-Thane Thaurissan=125.9=2146=0;Garr=261.1=3445=0;Baron Geddon=96.8=4145=0;Shazzrah=40.1=4451=0;Sulfuron Harbinger=88.8=5107=0;Golemagg the Incinerator=91.6=5605=0;Majordomo Executus=185.6=6079=0;Ragnaros=205.7=6727=0
 L|_bCJQ2CJsXjSDw1O|N'Zoth|Molten Core|Phoenix|Mixed|1788227552|33|Incindis=43.2=43=0;Garr=125.2=690=0;Baron Geddon=55.4=1070=0;Shazzrah=22.4=1315=0;Sulfuron Harbinger=58.2=1963=0;Golemagg the Incinerator=49.4=2269=0;Lucifron=58.7=2595=0;Magmadar=51.2=2804=0;Basalthar & Smoldaris=51=2986=0;Sorcerer-Thane Thaurissan=65.7=3469=0;Majordomo Executus=114.1=3972=0;Ragnaros=150.3=4592=0
-L|AmPu2jNJ6b0X9Uq4|N'Zoth|Molten Core|Tolerable Company|Mixed|1787688935|27|Garr=128.2=593=0;Baron Geddon=79.2=1052=0;Shazzrah=31.6=1484=0;Sulfuron Harbinger=64.7=1951=0;Golemagg the Incinerator=60.5=2995=1;Lucifron=71.5=3364=0;Magmadar=70.3=3562=0;Basalthar & Smoldaris=67.2=3794=0;Sorcerer-Thane Thaurissan=122=4378=0;Majordomo Executus=135.4=5084=0;Ragnaros=175.6=5896=0
 L|yNaI9zSl01qmxJVw|C'Thun|Molten Core|Hell Fire|Mixed|1790448538|27|Incindis=52.7=427=0;Basalthar & Smoldaris=89.4=913=0;Lucifron=56.3=1111=0;Magmadar=53.6=1410=0;Baron Geddon=47.5=2521=0;Garr=180.5=3035=0;Shazzrah=22.6=3873=0;Sulfuron Harbinger=54.1=4562=0;Golemagg the Incinerator=64.9=5027=0;Majordomo Executus=98.9=5563=0;Ragnaros=152.9=6312=0
 L|nOXbsXQa4AYbnUUw|N'Zoth|Molten Core|strawberry fields|Mixed|1788706004|23|Incindis=37.8=186=0;Garr=68.1=573=0;Baron Geddon=33.4=803=0;Shazzrah=23.8=962=0;Sulfuron Harbinger=38.6=1171=0;Golemagg the Incinerator=40.8=1422=0;Lucifron=47.5=1618=0;Magmadar=44.7=1738=0;Basalthar & Smoldaris=44=1920=0;Sorcerer-Thane Thaurissan=53=2177=0;Majordomo Executus=80.5=2474=0;Ragnaros=104.8=2870=0
 L|ielRsJJoWrmsGIkr|N'Zoth|Lower Tower of Karazhan|The Ashen Banner|Mixed|1788402962|10|Lord Blackwald II=67.9=808=0;Clawlord Howlfang=64.4=1856=2;Brood Queen Araxxna=49.6=2482=0;Grizikil=49.3=3063=0;Moroes=77.1=3683=0
@@ -2244,7 +2241,7 @@ L|f7NM6LXHBRxbRte3|Y'Shaarj|Onyxia's Lair|The Anvilguard|Alliance|1789589182|24|
 L|Lu_OBu9dMmoM-tf3|Y'Shaarj|Molten Core|Zug Zug|Horde|1787430424|23|Incindis=94.7=424=0;Lucifron=104.6=1102=0;Magmadar=84.2=1383=0;Basalthar & Smoldaris=97.1=1752=0;Garr=156.2=3125=1;Baron Geddon=153.2=3621=0;Shazzrah=27=4148=0;Sulfuron Harbinger=94.6=5045=0;Golemagg the Incinerator=128=5549=0;Majordomo Executus=155.8=6847=1;Ragnaros=225.4=7533=0;Sorcerer-Thane Thaurissan=102.9=8751=0
 L|Axpq3PljGgZF37LU|N'Zoth|Lower Tower of Karazhan|Eunoia|Mixed|1786902411|10|Lord Blackwald II=63.1=582=0;Clawlord Howlfang=62.5=1023=0;Brood Queen Araxxna=53=1534=0;Grizikil=53.6=2045=0;Moroes=80.1=2645=0
 L|amUh_fghMTI3ZdZw|N'Zoth|Onyxia's Lair|Strawman Arguments|Mixed|1788286889|27|Onyxia=189.7=1182=1;Broodcommander Axelus=75.6=1488=0
-L|B-D5jEla97VhY0I0|N'Zoth|Onyxia's Lair|ThunderClan Warriors|Mixed|1790011164|25|Broodcommander Axelus=134=381=0;Onyxia=496.4=1267=0
+L|dgsfdhLWiO-bWvII|N'Zoth|Onyxia's Lair|Skill Issue|Mixed|1789306826|25|Onyxia=499.5=1327=1;Broodcommander Axelus=116.7=1788=0
 L|6CQSPjDOq2vAr5nU|Y'Shaarj|Molten Core|ERROR|Horde|1786646611|36|Incindis=50.4==;Lucifron=106.8==;Magmadar=53.3==;Basalthar & Smoldaris=67.5==;Sorcerer-Thane Thaurissan=71.7==;Garr=141.2==;Baron Geddon=58.6==;Shazzrah=32.5==;Sulfuron Harbinger=60.4==;Golemagg the Incinerator=57.9==;Majordomo Executus=101.3==;Ragnaros=147.3==
 L|5P-s_yeNSsg-WBX2|N'Zoth|Onyxia's Lair|Cold Embrace|Mixed|1790883030|32|Onyxia=302.7=2718=3;Broodcommander Axelus=111.6=3075=0
 L|VJHHUSK9WNRzdCUp|N'Zoth|Molten Core|The Ashen Banner|Mixed|1790992350|35|Incindis=37.3=148=0;Garr=76.7=657=0;Baron Geddon=35.4=891=0;Shazzrah=24.1=1008=0;Sulfuron Harbinger=47.5=1385=0;Golemagg the Incinerator=38.7=1566=0;Lucifron=46.2=1755=0;Magmadar=42.2=1883=0;Basalthar & Smoldaris=49.7=2045=0;Sorcerer-Thane Thaurissan=48.9=2377=0;Majordomo Executus=86.3=2688=0;Ragnaros=106.3=3125=0
@@ -2252,7 +2249,6 @@ L|vNQv-fk-041Xxe3A|N'Zoth|Lower Tower of Karazhan|Amnesia|Mixed|1789580924|10|Lo
 L|oqNUEhwG11aoiyXC|N'Zoth|Molten Core|who pulled|Mixed|1791051124|22|Incindis=43.2=207=0;Garr=132.5=742=0;Baron Geddon=52=1037=0;Shazzrah=23.9=1259=0;Sulfuron Harbinger=55.9=1726=0;Golemagg the Incinerator=70.9=2101=0;Basalthar & Smoldaris=52.5=2322=0;Sorcerer-Thane Thaurissan=60.2=2752=0;Lucifron=98.3=3056=0;Magmadar=60.8=3242=0;Majordomo Executus=142.9=3717=0;Ragnaros=185.3=4333=0
 L|UwBHJdUFC_mriHn4|N'Zoth|Molten Core|MEGAPANZAS|Mixed|1790551583|24|Incindis=37.9=182=0;Lucifron=80.3=510=0;Magmadar=41.2=691=0;Basalthar & Smoldaris=43.3=849=0;Sorcerer-Thane Thaurissan=49.5=1174=0;Garr=164.7=1678=0;Baron Geddon=37.6=2051=0;Shazzrah=25.8=2192=0;Sulfuron Harbinger=49.8=2616=0;Golemagg the Incinerator=43.2=2952=0;Majordomo Executus=118.5=3340=0;Ragnaros=174.8=3965=0
 L|WP6hLxoT_QSa6ST9|N'Zoth|Lower Tower of Karazhan|One Blood|Mixed|1789914203|10|Lord Blackwald II=92.5=752=0;Clawlord Howlfang=66.2=1275=0;Brood Queen Araxxna=52.7=2272=0;Grizikil=60.4=2811=0;Moroes=83.2=3425=0
-L|RH19OngzjSRprptW|N'Zoth|Molten Core|Cleave|Mixed|1789308371|29|Incindis=66=183=0;Garr=40.5=566=0;Baron Geddon=25.5=838=0;Shazzrah=16.7=943=0;Sulfuron Harbinger=34.1=1159=0;Golemagg the Incinerator=30=1355=0;Lucifron=41.5=1523=0;Magmadar=33.9=2213=0;Basalthar & Smoldaris=43.7=2342=0;Sorcerer-Thane Thaurissan=46.6=2711=0;Majordomo Executus=75.6=3364=1;Ragnaros=94.4=3792=0
 L|4SES0SDXcgMEjubQ|Y'Shaarj|Zul'Gurub|Care Bears|Horde|1791143872|19|Jin'do the Hexxer=56.8=665=0;High Priestess Arlokk=32=1215=0;High Priest Thekal=109=2142=0;Gri'lek=89.6=3198=0;Bloodlord Mandokir=119.5=4029=0;High Priestess Mar'li=73.3=4752=0;High Priest Venoxis=65.4=5165=0;High Priestess Jeklik=56.3=5711=0;Hakkar=127=6455=0;Gahz'ranka=66.8=6861=0
 L|3YUaBV-si1pFqaLR|N'Zoth|Onyxia's Lair|The Silver Crusade|Mixed|1790015107|35|Onyxia=260.5=697=0;Broodcommander Axelus=96.5=1089=0
 L|o0yx_WKtfaDB-_SL|Y'Shaarj|Molten Core|Zug Zug|Horde|1786307234|26|Majordomo Executus=143=2434=1;Ragnaros=195.9=3819=1;Sorcerer-Thane Thaurissan=103.7=4548=0
@@ -2277,6 +2273,7 @@ L|RW3oq_YdnDmGtb1g|N'Zoth|Molten Core|Smokey Tokers|Mixed|1789585786|52|Lucifron
 L|Ygohj1O7c_tXwBSi|Y'Shaarj|Onyxia's Lair|Kor Kron Enforcers|Horde|1791141975|24|Broodcommander Axelus=206.8=1952=2
 L|a_mWGJw7mwCqB4Lg|N'Zoth|Molten Core|Hard Reserved|Mixed|1788618788|25|Incindis=38.4=322=0;Garr=55=744=0;Baron Geddon=39.8=1055=0;Shazzrah=30.5=1183=0;Sulfuron Harbinger=49.7=1590=0;Golemagg the Incinerator=43.4=1812=0;Lucifron=63.4=2051=0;Magmadar=56.3=2227=0;Basalthar & Smoldaris=51.8=2393=0;Sorcerer-Thane Thaurissan=50.8=2702=0;Majordomo Executus=83.1=3111=0;Ragnaros=112.1=3571=0
 L|f8htkmhC2SOPn0vt|N'Zoth|Molten Core|Deja vu|Mixed|1790538614|31|Incindis=48.3=254=0;Lucifron=89.9=1069=0;Magmadar=51.7=1288=0;Basalthar & Smoldaris=64=1479=0;Sorcerer-Thane Thaurissan=62.2=1850=0;Golemagg the Incinerator=48.2=2221=0;Sulfuron Harbinger=57.3=2524=0;Baron Geddon=55.3=2762=0;Shazzrah=28.1=3234=0;Garr=132.1=3622=0;Majordomo Executus=139.1=4276=0;Ragnaros=141.2=4782=0
+L|HS_9VfOLC0aFvGxS|N'Zoth|Molten Core|Oktagon|Mixed|1789582820|26|Incindis=38.6=152=0;Garr=43.1=533=0;Baron Geddon=41.4=738=0;Shazzrah=21.5=861=0;Sulfuron Harbinger=54=1172=0;Golemagg the Incinerator=38.3=1391=0;Lucifron=53.5=1575=0;Magmadar=41.7=1705=0;Basalthar & Smoldaris=54.3=1841=0;Sorcerer-Thane Thaurissan=58.4=2179=0;Majordomo Executus=76.8=2511=0;Ragnaros=142.8=2988=0
 L|uLW2k7EJDkI1DhfJ|N'Zoth|Molten Core|Soulbound|Mixed|1787778314|28|Incindis=61.1=375=0;Garr=101.6=1169=0;Baron Geddon=61.5=1590=0;Shazzrah=36.4=1912=0;Sulfuron Harbinger=73.4=2586=0;Golemagg the Incinerator=48.8=2987=0;Basalthar & Smoldaris=67=3329=0;Lucifron=103=4460=0;Magmadar=69.8=4724=0;Ragnaros=168.2=7424=0
 L|hP_XwR0sIgTv2jgY|N'Zoth|Molten Core|Redridge Ultras|Mixed|1790189724|26|Golemagg the Incinerator=70.7=71=0;Basalthar & Smoldaris=102.4=347=0;Sorcerer-Thane Thaurissan=69.9=899=0;Majordomo Executus=92.5=1281=0;Ragnaros=142.7=3417=1
 L|QYDigCzY49D_bUBr|N'Zoth|Molten Core|The ScarIet Crusade|Mixed|1789834353|27|Incindis=75.5=264=0;Lucifron=156.9=993=0;Magmadar=95.3=1848=1;Garr=143.2=2945=0;Baron Geddon=115.6=3435=0;Shazzrah=49.1=3832=0;Golemagg the Incinerator=98.7=5397=0;Sulfuron Harbinger=132.1=5742=0;Basalthar & Smoldaris=82.6=6031=0;Sorcerer-Thane Thaurissan=128.2=6757=0;Majordomo Executus=171.6=8664=2;Ragnaros=290=9743=0
@@ -2287,6 +2284,7 @@ L|_jaIuAN9zx66Ryqj|N'Zoth|Molten Core|Ostatni Bastion|Mixed|1786822075|23|Incind
 L|VSLYJiMQthY4loG6|N'Zoth|Molten Core|Smokey Tokers|Mixed|1788094837|37|Incindis=47.2=235=0;Garr=83.4=1014=0;Baron Geddon=80.9=1241=0;Shazzrah=22.7=1487=0;Sulfuron Harbinger=52.7=1863=0;Golemagg the Incinerator=44.3=2147=0;Lucifron=52.9=2349=0;Magmadar=46.8=2480=0;Basalthar & Smoldaris=71=2648=0;Sorcerer-Thane Thaurissan=58=2952=0;Majordomo Executus=89.3=3324=0;Ragnaros=127.2=3862=0
 L|TDd-PdAfoimT8GtD|N'Zoth|Molten Core|Fury|Mixed|1789070408|29|Incindis=42.5=532=0;Garr=42.6=961=0;Baron Geddon=44.5=1269=0;Shazzrah=22.5=1387=0;Sulfuron Harbinger=50.5=1736=0;Lucifron=55.2=2129=0;Magmadar=51.4=2265=0;Basalthar & Smoldaris=278.3=2683=0;Basalthar & Smoldaris=61.3=3214=0;Sorcerer-Thane Thaurissan=53.5=3532=0;Golemagg the Incinerator=43.4=3789=0;Majordomo Executus=95.1=4326=0;Ragnaros=131.1=4964=0
 L|et4pgz5YhhkNQgaj|Y'Shaarj|Zul'Gurub|Kor Kron Enforcers|Horde|1791231629|18|Jin'do the Hexxer=50.2=1058=0;High Priestess Jeklik=38.3=1787=0;High Priest Venoxis=38.5=2164=0;Bloodlord Mandokir=89=2902=0;High Priestess Mar'li=53=4286=0;High Priest Thekal=84.8=4701=0;Gahz'ranka=60.8=5043=0;High Priestess Arlokk=26=5487=0;Hakkar=81=6283=0
+L|rYrauH_lPP16PoxT|N'Zoth|Molten Core|Raid Therapy|Mixed|1790709591|28|Incindis=31.5=186=0;Garr=73.3=673=0;Baron Geddon=34=904=0;Shazzrah=20.6=1069=0;Sulfuron Harbinger=45.2=1341=0;Golemagg the Incinerator=36.7=1548=0;Basalthar & Smoldaris=42.6=1724=0;Sorcerer-Thane Thaurissan=46.9=2059=0;Lucifron=49.8=2321=0;Magmadar=39.4=2479=0;Majordomo Executus=94.5=2925=0;Ragnaros=104.6=3373=0
 L|3AugNayucrjSN_zY|N'Zoth|Molten Core|Cleave|Mixed|1791121388|32|Incindis=75.5=196=0;Garr=101.1=441=0;Baron Geddon=25.5=622=0;Shazzrah=16.9=666=0;Sulfuron Harbinger=32.8=866=0;Golemagg the Incinerator=30.3=1028=0;Lucifron=52.9=1181=0;Magmadar=33.3=1234=0;Basalthar & Smoldaris=38.5=1346=0;Sorcerer-Thane Thaurissan=38.5=1562=0;Majordomo Executus=63=1764=0;Ragnaros=91.1=2054=0
 L|WlxbE1KAXX1Vv8H-|N'Zoth|Lower Tower of Karazhan|Redridge Ultras|Mixed|1791222885|10|Lord Blackwald II=50.9=505=0;Clawlord Howlfang=63.2=1131=0;Grizikil=51.2=1603=0;Brood Queen Araxxna=49.5=1974=0;Moroes=69.8=2535=0
 L|MCfSrwqmj5eRjCLo|N'Zoth|Onyxia's Lair|Phoenix|Mixed|1788834836|30|Onyxia=285=741=0;Broodcommander Axelus=67.5=1591=1
@@ -2297,7 +2295,7 @@ L|04vkd4s72Nkr5OtZ|N'Zoth|Lower Tower of Karazhan|Cleave|Mixed|1788791584|10|Lor
 L|XXmvtBCawHVyAES8|N'Zoth|Zul'Gurub|Raid Therapy|Mixed|1790968435|12|Jin'do the Hexxer=30.6=313=0;High Priestess Arlokk=21.5=663=0;Gahz'ranka=38.2=825=0;High Priest Thekal=60.8=1074=0;Gri'lek=34.9=1482=0;High Priestess Jeklik=33.1=2310=0;High Priest Venoxis=24.9=2534=0;Bloodlord Mandokir=91.4=2974=0;High Priestess Mar'li=37=3462=0;Hakkar=64.2=4399=0
 L|E9gScK-bosD4MI_o|Y'Shaarj|Molten Core|Care Bears|Horde|1787431499|28|Incindis=60.6=534=0;Lucifron=77.7=935=0;Magmadar=86.5=1224=0;Basalthar & Smoldaris=125.3=2008=1;Sorcerer-Thane Thaurissan=95.9=2566=0;Garr=141.7=3510=0;Baron Geddon=106.3=3971=0;Shazzrah=54.3=4353=0;Sulfuron Harbinger=98.1=4984=0;Golemagg the Incinerator=91.8=5452=0;Majordomo Executus=132.9=5994=0;Ragnaros=189.1=6822=0
 L|xO9aYiIRAzGdAKhm|N'Zoth|Lower Tower of Karazhan|Strawman Arguments|Mixed|1787338012|10|Lord Blackwald II=66.2=562=0;Clawlord Howlfang=67.4=979=0;Brood Queen Araxxna=48.9=1485=0;Grizikil=48.5=1943=0;Moroes=64.7=2513=0
-L|KLIGvNJBxjMRPa7F|N'Zoth|Molten Core|GTD|Mixed|1787335891|37|Incindis=58.5==;Lucifron=106.8==;Magmadar=70.7==;Basalthar & Smoldaris=71.9==;Sorcerer-Thane Thaurissan=70.3==;Garr=137.1==;Baron Geddon=57==;Shazzrah=24.8==;Sulfuron Harbinger=71.5==;Golemagg the Incinerator=52.4==;Majordomo Executus=110.6==;Ragnaros=152.7==
+L|KLIGvNJBxjMRPa7F|N'Zoth|Molten Core|GTD|Mixed|1787335891|37|Incindis=58.5=223=0;Lucifron=106.8=605=0;Magmadar=70.7=863=0;Basalthar & Smoldaris=71.9=1074=0;Sorcerer-Thane Thaurissan=70.3=1466=0;Garr=137.1=2277=0;Baron Geddon=57=2643=0;Shazzrah=24.8=2834=0;Sulfuron Harbinger=71.5=3290=0;Golemagg the Incinerator=52.4=3577=0;Majordomo Executus=110.6=3932=0;Ragnaros=152.7=4403=0
 L|Mv1oKmMaD-C3FskM|Y'Shaarj|Onyxia's Lair|Sons of Mukla|Mixed|1789929926|21|Broodcommander Axelus=138=310=0;Onyxia=263.8=1902=1
 L|HUlfdgiRPQmDuFyG|N'Zoth|Molten Core|The Silver Crusade|Mixed|1789409620|37|Incindis=43.2=178=0;Lucifron=67.1=935=0;Magmadar=50.7=1084=0;Garr=129.6=1662=0;Baron Geddon=58.1=1938=0;Shazzrah=28.6=2103=0;Sulfuron Harbinger=54=2385=0;Golemagg the Incinerator=47.4=2735=0;Basalthar & Smoldaris=57.5=2891=0;Sorcerer-Thane Thaurissan=55.8=3237=0;Majordomo Executus=82=3585=0;Ragnaros=132.8=4154=0
 L|xm9yrxrvAiX2RKEU|N'Zoth|Molten Core|Ninja Turtles|Mixed|1784834713|22|Incindis=57.4=322=0;Garr=109.4=1035=0;Baron Geddon=67.2=1347=0;Shazzrah=32.6=1624=0;Sulfuron Harbinger=66.1=2137=0;Golemagg the Incinerator=62.2=2543=0;Basalthar & Smoldaris=70.5=2827=0;Sorcerer-Thane Thaurissan=92.7=3250=0;Lucifron=94.3=3551=0;Magmadar=68.4=3753=0;Majordomo Executus=93.8=4442=0;Ragnaros=215.2=5112=0
@@ -2305,23 +2303,23 @@ L|K0fXJqYpcpy313pi|N'Zoth|Molten Core|Cleave|Mixed|1788702448|25|Incindis=108=18
 L|JLA8An-Eh2p-Zx9Z|N'Zoth|Zul'Gurub|The Cult|Mixed|1791089112|12|Jin'do the Hexxer=56.9=873=0;High Priestess Jeklik=54.9=1536=0;High Priest Venoxis=38.3=2081=0;High Priestess Mar'li=54=2817=0;Bloodlord Mandokir=110.9=3634=0;High Priest Thekal=103.7=4144=0;Gahz'ranka=59.6=4436=0;High Priestess Arlokk=33.1=4774=0;Hakkar=104.9=5741=0
 L|AVCPr7aGVD1ZIQhA|N'Zoth|Zul'Gurub|Fury|Mixed|1790885361|16|Jin'do the Hexxer=33.9=103=0;High Priestess Arlokk=25.9=513=0;High Priest Thekal=83.1=881=0;Bloodlord Mandokir=86.5=1368=0;High Priestess Mar'li=39.7=1836=0;High Priest Venoxis=34.6=2125=0;High Priestess Jeklik=41.2=2497=0;Hakkar=79.9=2967=0
 L|Eb0v3-aGZUoPRUnG|N'Zoth|Zul'Gurub|Ostatni Bastion|Mixed|1791060035|20|Jin'do the Hexxer=30.2=386=0;High Priestess Arlokk=23.7=679=0;Gahz'ranka=47=869=0;High Priest Thekal=80.7=1093=0;Bloodlord Mandokir=54.1=1577=0;High Priestess Mar'li=44=2009=0;High Priest Venoxis=40.5=2200=0;High Priestess Jeklik=28.6=2581=0;Hakkar=53.5=3023=0
-L|j7sLx4XpBeRvZAR5|N'Zoth|Onyxia's Lair|Deja vu|Mixed|1790794819|23|Onyxia=215.9=415=0;Broodcommander Axelus=104.5=725=0
+L|qhLq_IB1Tx20F-Cr|N'Zoth|Molten Core|The Silver Crusade|Mixed|1790618081|40|Incindis=41=166=0;Lucifron=78.2=430=0;Magmadar=51.4=593=0;Garr=125.5=1070=0;Baron Geddon=50.7=1333=0;Shazzrah=23.6=1456=0;Sulfuron Harbinger=48.4=1735=0;Golemagg the Incinerator=48.1=1996=0;Basalthar & Smoldaris=54.6=2204=0;Sorcerer-Thane Thaurissan=56.2=2469=0;Majordomo Executus=111.4=2852=0;Ragnaros=126.4=3280=0
 L|0nA1lvpcpLeZzZ9m|N'Zoth|Zul'Gurub|Remnant|Mixed|1791251715|18|Jin'do the Hexxer=27.1=333=0;High Priestess Arlokk=23.2=606=0;Gahz'ranka=30.9=845=0;High Priest Thekal=80.5=1084=0;Gri'lek=36.4=1760=0;Bloodlord Mandokir=59.1=2159=0;High Priest Venoxis=24.8=2494=0;High Priestess Jeklik=41.3=2787=0;Hakkar=68.7=3117=0
 L|20w5sOFsv5GHXmJ4|N'Zoth|Lower Tower of Karazhan|strawberry fields|Mixed|1787623798|10|Lord Blackwald II=59.5=607=0;Brood Queen Araxxna=36.9=1124=0;Grizikil=37.7=1544=0;Clawlord Howlfang=80.8=2134=1;Moroes=65.8=2641=0
 L|cut6mrYDF5-d7CxA|N'Zoth|Lower Tower of Karazhan|Bastion de Guerra|Mixed|1791243100|10|Clawlord Howlfang=132.1=809=1;Lord Blackwald II=93.3=1437=0;Brood Queen Araxxna=57.2=1952=0;Grizikil=70.4=2552=0;Moroes=95.8=3348=0
-L|bGRDTAHXtWA85AF1|N'Zoth|Molten Core|Repentance|Mixed|1788642695|28|Incindis=70.2=250=0;Garr=91.7=1513=0;Baron Geddon=61.1=2115=1;Shazzrah=35.5=2307=0;Sulfuron Harbinger=64.8=2661=0;Golemagg the Incinerator=658.8=3485=0;Golemagg the Incinerator=80.7=4089=0;Lucifron=84.7=4795=0;Magmadar=88.2=5045=0;Basalthar & Smoldaris=69.8=5261=0;Sorcerer-Thane Thaurissan=91.7=5772=0;Majordomo Executus=107=7029=0;Ragnaros=186.4=7710=0
+L|LQ9MzsC7CeZ0_uBr|N'Zoth|Molten Core|Skull Emoji|Mixed|1789308929|28|Incindis=27.8=163=0;Garr=31.1=459=0;Baron Geddon=28.6=650=0;Shazzrah=17.3=741=0;Sulfuron Harbinger=32.5=948=0;Lucifron=50=2248=0;Magmadar=42.5=2335=0;Golemagg the Incinerator=37.6=2486=0;Basalthar & Smoldaris=40.3=2700=0;Sorcerer-Thane Thaurissan=48.2=2967=0;Ragnaros=107.9=3792=0
 L|05eYSS-8jLzIxQUf|N'Zoth|Molten Core|Repentance|Mixed|1791057483|28|Incindis=45.7=178=0;Garr=128.3=641=0;Baron Geddon=41.9=969=0;Shazzrah=25.3=1090=0;Sulfuron Harbinger=50.3=1522=0;Golemagg the Incinerator=43.9=1734=0;Basalthar & Smoldaris=68.6=1897=0;Sorcerer-Thane Thaurissan=58.3=2238=0;Lucifron=60.7=2596=0;Magmadar=54.6=2728=0;Majordomo Executus=81.6=3031=0;Ragnaros=124.7=3558=0
 L|ffEvSF9CdCc68jgA|N'Zoth|Lower Tower of Karazhan|Phoenix|Mixed|1790921945|10|Clawlord Howlfang=81.5=592=0;Lord Blackwald II=73.1=1298=0;Brood Queen Araxxna=55.6=1940=0;Grizikil=54.4=2590=0;Moroes=75.4=3447=0
-L|bvuo5-rZK7nAHgMG|N'Zoth|Onyxia's Lair|Oktagon|Mixed|1790793756|30|Broodcommander Axelus=90.7=146=0;Onyxia=224.6=640=0
 L|5Qurf6-EOfTuvmof|N'Zoth|Lower Tower of Karazhan|The Silver Crusade|Mixed|1786905001|10|Lord Blackwald II=67.6=640=0;Clawlord Howlfang=84.9=1037=0;Grizikil=58.9=1566=0;Brood Queen Araxxna=51.7=1959=0;Moroes=80.1=2467=0
 L|0ovbu8f0vkXgjYTa|N'Zoth|Molten Core|Deja vu|Mixed|1791143802|28|Incindis=51.7=384=0;Lucifron=61.5=747=0;Magmadar=65=924=0;Basalthar & Smoldaris=67=1108=0;Sorcerer-Thane Thaurissan=78.7=1477=0;Golemagg the Incinerator=53.4=1909=0;Sulfuron Harbinger=57.5=2488=0;Baron Geddon=56.3=2690=0;Shazzrah=25.1=3319=0;Garr=140.5=3725=0;Majordomo Executus=87.9=4262=0;Ragnaros=197.1=4780=0
 L|F6dYEdp9satb9u3l|N'Zoth|Lower Tower of Karazhan|Skill Issue|Alliance|1789501508|10|Lord Blackwald II=73.4=663=0;Clawlord Howlfang=89.3=1082=0;Brood Queen Araxxna=56.4=1548=0;Grizikil=62.2=2059=0;Moroes=74.8=2591=0
 L|XIPJuG1p7nhEyb50|N'Zoth|Lower Tower of Karazhan|The Ashen Banner|Mixed|1784773381|10|Lord Blackwald II=71=491=0;Clawlord Howlfang=72.5=879=0;Brood Queen Araxxna=54.2=1318=0;Grizikil=63.3=1745=0;Moroes=81.6=2250=0
 L|cY4CIwXid6uG_6RI|N'Zoth|Molten Core|Mushroom Vendor|Mixed|1790536034|31|Incindis=41.7=148=0;Garr=79.9=547=0;Baron Geddon=48.3=769=0;Shazzrah=22.9=853=0;Sulfuron Harbinger=54.3=1129=0;Golemagg the Incinerator=54.3=1330=0;Lucifron=55.8=1515=0;Magmadar=54.4=1648=0;Basalthar & Smoldaris=70.5=1784=0;Sorcerer-Thane Thaurissan=62.9=2112=0;Majordomo Executus=123.2=2516=0;Ragnaros=129.9=2997=0
 L|FGr5JB_Lv9BOAWVL|Y'Shaarj|Lower Tower of Karazhan|Care Bears|Horde|1789155455|11|Lord Blackwald II=99.4=1597=0;Clawlord Howlfang=91.1=2131=0;Brood Queen Araxxna=71.7=3100=0;Grizikil=64.8=3856=0;Moroes=82.5=4830=1
-L|dJOjKxLd2qw_eUok|N'Zoth|Zul'Gurub|Deja vu|Mixed|1790883701|12|High Priestess Jeklik=36.3=510=0;High Priest Venoxis=34.3=742=0;High Priestess Mar'li=49.2=1269=0;Bloodlord Mandokir=91.6=1797=0;High Priest Thekal=89.5=2442=0;High Priestess Arlokk=24.3=2811=0;Jin'do the Hexxer=37.4=3195=0;Hakkar=78.9=4142=0
+L|O5eh8uLkrZ_88pDw|N'Zoth|Zul'Gurub|Fika|Mixed|1790881599|19|Jin'do the Hexxer=32.1=536=0;High Priestess Jeklik=38.6=1152=0;High Priest Venoxis=37.8=1371=0;High Priestess Mar'li=39.8=1839=0;Bloodlord Mandokir=77.3=2350=0;High Priest Thekal=60.1=2694=0;High Priest Thekal=18.4=2730=0;High Priestess Arlokk=24.7=3061=0;Hakkar=119.1=3667=0
 L|GRU4Y9HwMsH-kMeX|N'Zoth|Zul'Gurub|I Griefers Inc I|Mixed|1790966569|12|Jin'do the Hexxer=38.1=262=0;High Priestess Arlokk=29.1=641=0;Gahz'ranka=53.6=852=0;High Priest Thekal=92.1=1099=0;Gri'lek=53.7=1599=0;Bloodlord Mandokir=83=2263=0;High Priestess Mar'li=46.4=2679=0;High Priest Venoxis=36.5=2942=0;High Priestess Jeklik=53.3=3367=0;Hakkar=159.9=3838=0
 L|RRkW5IACdAaUyD73|N'Zoth|Molten Core|Netherbane|Mixed|1791242517|24|Incindis=67.5=338=0;Lucifron=82.7=918=0;Magmadar=73.8=1374=0;Garr=180.4=2500=0;Baron Geddon=74.7=3679=1;Shazzrah=41.7=4103=0;Sulfuron Harbinger=141.3=4815=0;Golemagg the Incinerator=84.4=6015=1;Basalthar & Smoldaris=91.9=6320=0;Sorcerer-Thane Thaurissan=95.5=7051=0;Majordomo Executus=130.7=8364=1;Ragnaros=237.7=10017=2
+L|OLZsdjmMwp8wc1M1|Y'Shaarj|Onyxia's Lair|ERROR|Horde|1789313622|30|Broodcommander Axelus=71.5=257=0;Onyxia=218.8=876=0
 L|NrpystHRxvLanVAL|N'Zoth|Molten Core|nope|Mixed|1787276527|31|Incindis=35.6=147=0;Garr=82=985=1;Baron Geddon=38.6=1286=0;Shazzrah=22.7=1456=0;Sulfuron Harbinger=43.5=1852=0;Golemagg the Incinerator=40.5=2100=0;Basalthar & Smoldaris=45=2295=0;Sorcerer-Thane Thaurissan=47.4=2647=0;Lucifron=49.6=2937=0;Magmadar=40.2=3148=0;Majordomo Executus=81.7=3585=0;Ragnaros=103.4=4108=0
 L|ydapBYQT2X9SykWe|Y'Shaarj|Zul'Gurub|Care Bears|Horde|1790986816|13|Jin'do the Hexxer=57.3=780=0;High Priestess Arlokk=32.7=1401=0;Gahz'ranka=45.9=1744=0;High Priest Thekal=125.8=2569=1;Bloodlord Mandokir=106.2=3811=0;High Priestess Mar'li=55.9=5054=0;High Priest Venoxis=63.2=5437=0;High Priestess Jeklik=49.8=6166=0;Hakkar=149.3=7009=0;Gri'lek=99.3=7676=0
 L|tSiX8YOT57d8pKcV|N'Zoth|Molten Core|Raid Therapy|Mixed|1790882819|28|Incindis=34.3=198=0;Garr=83.5=808=0;Baron Geddon=37.7=1192=0;Shazzrah=17.5=1348=0;Sulfuron Harbinger=37=1651=0;Golemagg the Incinerator=37.7=1864=0;Basalthar & Smoldaris=42.4=2066=0;Sorcerer-Thane Thaurissan=44.4=2452=0;Lucifron=48.2=2645=0;Magmadar=35.6=2828=0;Majordomo Executus=79.6=3279=0;Ragnaros=111.3=3832=0
@@ -2341,7 +2339,7 @@ L|wodkdQuxSbiTpIBn|N'Zoth|Molten Core|Bastion de Guerra|Mixed|1788647153|23|Inci
 L|b2fGZk4lGOdfDz7V|N'Zoth|Lower Tower of Karazhan|Mushroom Vendor|Mixed|1789934969|10|Lord Blackwald II=52.5=461=0;Clawlord Howlfang=55.4=834=0;Brood Queen Araxxna=44.1=1202=0;Grizikil=42.5=1565=0;Moroes=70.8=2086=0
 L|kG4Yovuc2jQqyQph|N'Zoth|Molten Core|Amnesia|Mixed|1789300896|31|Incindis=25.8=172=0;Garr=41.3=772=0;Baron Geddon=31.4=1020=0;Shazzrah=16.9=1124=0;Sulfuron Harbinger=40.4=1426=0;Golemagg the Incinerator=28.7=1634=0;Lucifron=43.6=1837=0;Magmadar=31.8=2075=0;Basalthar & Smoldaris=41.9=2227=0;Sorcerer-Thane Thaurissan=36.6=2534=0;Majordomo Executus=85.5=3048=0;Ragnaros=101=3470=0
 L|QNniodanPrx4Prdy|N'Zoth|Molten Core|Thud and Blunder|Mixed|1785549861|30|Incindis=51.1=209=0;Lucifron=70=706=0;Magmadar=64.6=917=0;Basalthar & Smoldaris=83.5=1117=0;Sorcerer-Thane Thaurissan=93.8=1572=0;Garr=125.1=2527=0;Baron Geddon=48.6=2920=0;Shazzrah=43.3=3101=0;Sulfuron Harbinger=81.2=3731=0;Golemagg the Incinerator=58=4159=0;Majordomo Executus=110.9=4562=0;Ragnaros=156.1=5146=0
-L|nwjSEicYbwNYFBfI|N'Zoth|Lower Tower of Karazhan|Raid Therapy|Mixed|1789680623|10|Lord Blackwald II=53=494=0;Brood Queen Araxxna=29.5=1051=0;Grizikil=31.5=1503=0;Clawlord Howlfang=58.7=1948=0;Moroes=53.4=2484=0
+L|V682_zeh7DVrYTWv|N'Zoth|Onyxia's Lair|The Crackshot Cartel|Mixed|1789234716|19|Broodcommander Axelus=144.3=324=0;Onyxia=308.1=2263=1
 L|oxucOZlRIxiCct5B|N'Zoth|Molten Core|Phoenix|Mixed|1788832296|36|Incindis=44=277=0;Garr=141.7=873=0;Baron Geddon=52.8=1327=0;Shazzrah=23.7=1525=0;Sulfuron Harbinger=53.9=2057=0;Golemagg the Incinerator=44.8=2369=0;Lucifron=53.7=2654=0;Magmadar=48.2=2854=0;Basalthar & Smoldaris=53.1=3166=0;Sorcerer-Thane Thaurissan=66.7=3616=0;Majordomo Executus=99.1=4125=0;Ragnaros=153.1=4728=0
 L|HWsjSwQ61cW5kXGQ|N'Zoth|Onyxia's Lair|One Blood|Mixed|1790704762|20|Onyxia=249.6=909=0;Onyxia=360.7=1724=0;Broodcommander Axelus=113.4=2310=0
 L|I_QbDUK4BpFvzu64|Y'Shaarj|Molten Core|Crit Happens|Horde|1789587376|16|Incindis=67.6=582=0;Lucifron=154.9=1367=0;Basalthar & Smoldaris=95.9=1972=0;Sorcerer-Thane Thaurissan=97.8=4938=3
@@ -2356,13 +2354,16 @@ L|i-CnQGbuGVorp-RQ|Y'Shaarj|Lower Tower of Karazhan|I OKEAH I|Alliance|178844414
 L|rcZFsX1NT-RWUQ8_|N'Zoth|Molten Core|strawberry fields|Mixed|1789225901|18|Incindis=35.1=205=0;Garr=45.4=586=0;Baron Geddon=40.2=930=0;Shazzrah=27.4=1118=0;Sulfuron Harbinger=54.6=1408=0;Golemagg the Incinerator=46.2=1726=0;Lucifron=57.6=1911=0;Magmadar=47.7=2152=0;Basalthar & Smoldaris=58.9=2338=0;Sorcerer-Thane Thaurissan=49.8=3142=0;Majordomo Executus=90.3=3519=0;Ragnaros=141.2=3988=0
 L|UlmbXP2ILCZaQLJL|N'Zoth|Zul'Gurub|Cleave|Mixed|1791213691|15|Jin'do the Hexxer=26.9=254=0;High Priestess Arlokk=18.7=627=0;High Priest Thekal=90.6=897=0;High Priestess Mar'li=27.7=2103=0;High Priest Venoxis=24.4=2247=0;High Priestess Jeklik=24.7=2582=0;Hakkar=52.5=3052=0;Gahz'ranka=27.4=3314=0
 L|QFKW08ai3E_jE4dN|N'Zoth|Lower Tower of Karazhan|ThunderClan Warriors|Mixed|1789744003|10|Lord Blackwald II=72.9=1180=0;Clawlord Howlfang=83.9=1925=0;Brood Queen Araxxna=60.2=2515=0;Grizikil=89.2=3186=0;Moroes=89.6=4076=0
+L|EsFQy0mGGJJtX8i6|N'Zoth|Onyxia's Lair|I Griefers Inc I|Mixed|1791224993|27|Onyxia=191=337=0;Broodcommander Axelus=75.5=655=0
 L|aDI9lXYBVLDJz40_|N'Zoth|Lower Tower of Karazhan|BAD VIBES ONLY|Mixed|1789617510|10|Lord Blackwald II=67.4=694=0;Clawlord Howlfang=79.1=1256=0;Brood Queen Araxxna=49.9=1847=0;Grizikil=51.1=2337=0;Moroes=68.5=2936=0
-L|DGNB73mYQDOg2VkK|N'Zoth|Onyxia's Lair|Raid Therapy|Mixed|1790878368|31|Onyxia=209==;Broodcommander Axelus=96.2==
+L|DGNB73mYQDOg2VkK|N'Zoth|Onyxia's Lair|Raid Therapy|Mixed|1790878368|31|Onyxia=209=398=0;Broodcommander Axelus=96.2=716=0
 L|xsdyeuua06HqOYdn|N'Zoth|Lower Tower of Karazhan|I Griefers Inc I|Mixed|1790362316|10|Lord Blackwald II=101.9=505=0;Clawlord Howlfang=61.5=815=0;Brood Queen Araxxna=45.8=1212=0;Grizikil=48.2=1683=0;Moroes=72.7=2242=0
 L|4MzjYoKTJyKLY5AN|Y'Shaarj|Molten Core|Care Bears|Horde|1786218309|38|Incindis=66.3=360=0;Lucifron=83.6=887=0;Magmadar=81.6=1236=0;Basalthar & Smoldaris=77.7=1907=1;Sorcerer-Thane Thaurissan=87=2459=0;Garr=221=3501=0;Baron Geddon=107.1=4130=0;Shazzrah=41.9=4398=0;Sulfuron Harbinger=70.3=4996=0;Golemagg the Incinerator=76.8=5345=0;Majordomo Executus=117.9=5923=0;Ragnaros=196.9=6510=0
+L|B-D5jEla97VhY0I0|N'Zoth|Onyxia's Lair|ThunderClan Warriors|Mixed|1790011164|25|Broodcommander Axelus=134=381=0;Onyxia=496.4=1267=0
 L|bBtCdTLNm0bWTEvZ|Y'Shaarj|Zul'Gurub|The Anvilguard|Mixed|1790968583|12|High Priestess Jeklik=41.2=952=0;High Priest Venoxis=46.4=1331=0;High Priestess Mar'li=52.7=2071=0;Bloodlord Mandokir=111.2=2685=0;High Priest Thekal=107.2=4435=0;High Priestess Arlokk=29.7=4963=0;Jin'do the Hexxer=53.7=5922=0;Hakkar=115.4=7600=0
 L|FnW7t9MmL9m3kPNy|N'Zoth|Molten Core|GTD|Mixed|1788096130|35|Incindis=53=296=0;Lucifron=94.9=684=0;Magmadar=84.2=954=0;Basalthar & Smoldaris=61=1166=0;Sorcerer-Thane Thaurissan=63.2=1539=0;Garr=147.5=2244=0;Baron Geddon=75.8=3014=1;Shazzrah=25.9=3219=0;Sulfuron Harbinger=73.8=3683=0;Golemagg the Incinerator=56.3=3964=0;Majordomo Executus=113.4=4336=0;Ragnaros=172.5=4852=0
 L|eK40dQSPENKxz1Gt|N'Zoth|Zul'Gurub|Cleave|Mixed|1790960633|18|Jin'do the Hexxer=34.2=96678=1;High Priestess Arlokk=19.9=97042=0;Gahz'ranka=35.4=97228=0;High Priest Thekal=47.9=97494=0;Gri'lek=25.8=97832=0;Bloodlord Mandokir=46.7=98250=0;High Priestess Mar'li=28.1=98614=0;High Priest Venoxis=23.4=98800=0;High Priestess Jeklik=27.7=99090=0;Hakkar=49.4=99439=0
+L|j7sLx4XpBeRvZAR5|N'Zoth|Onyxia's Lair|Deja vu|Mixed|1790794819|23|Onyxia=215.9=415=0;Broodcommander Axelus=104.5=725=0
 L|_CIvfZc0hugjXETh|N'Zoth|Molten Core|BAD VIBES ONLY|Mixed|1788924817|28|Incindis=49.1=266=0;Lucifron=88.6=771=0;Magmadar=58.7=1162=0;Basalthar & Smoldaris=59.6=1382=0;Sorcerer-Thane Thaurissan=64.3=1821=0;Garr=110.3=2750=0;Baron Geddon=49=3168=0;Shazzrah=26=3384=0;Sulfuron Harbinger=54.5=3828=0;Golemagg the Incinerator=48.8=4071=0;Majordomo Executus=101.7=4621=0;Ragnaros=150.8=5251=0
 L|vQlIwcyFsVN2fP_t|N'Zoth|Onyxia's Lair|Ninja Turtles|Mixed|1789329503|25|Onyxia=235.1=458=0;Broodcommander Axelus=142.3=910=0
 L|R6CAvZcexDFlulgW|N'Zoth|Molten Core|Remnant|Mixed|1784487205|40|Incindis=37.6=155=0;Garr=103.3=574=0;Baron Geddon=43=851=0;Shazzrah=23.2=949=0;Sulfuron Harbinger=41.4=1283=0;Golemagg the Incinerator=36.3=1537=0;Lucifron=52.8=1711=0;Magmadar=39.3=1854=0;Basalthar & Smoldaris=51.2=1986=0;Sorcerer-Thane Thaurissan=50.3=2305=0;Majordomo Executus=71.4=2709=0;Ragnaros=119.5=3184=0
@@ -2377,9 +2378,7 @@ L|rvcSEAiaIFlERi3v|N'Zoth|Zul'Gurub|Netherbane|Mixed|1790893583|15|Jin'do the He
 L|DORhxQAKWrVowd2r|N'Zoth|Molten Core|Fury|Mixed|1790274870|33|Incindis=96.7=106=0;Garr=135.7=606=0;Baron Geddon=75.1=925=0;Shazzrah=22.7=1046=0;Sulfuron Harbinger=47.8=1663=0;Golemagg the Incinerator=41.9=1863=0;Lucifron=47.4=2066=0;Magmadar=40.3=2233=0;Basalthar & Smoldaris=54=2380=0;Sorcerer-Thane Thaurissan=56.4=2718=0;Majordomo Executus=91.9=3103=0;Ragnaros=126.3=3547=0
 L|EAAeqXIL8PGCGzYP|N'Zoth|Molten Core|strawberry fields|Mixed|1789916482|20|Incindis=34.6=179=0;Garr=133=642=0;Baron Geddon=34.9=987=0;Shazzrah=19=1176=0;Sulfuron Harbinger=34.6=1381=0;Golemagg the Incinerator=36.5=1703=0;Lucifron=41.8=1902=0;Magmadar=47.9=2020=0;Basalthar & Smoldaris=46.2=2249=0;Sorcerer-Thane Thaurissan=50.7=2570=0;Majordomo Executus=84.8=2987=0;Ragnaros=144.9=3505=0
 L|vUswrZhapP55F8fO|N'Zoth|Molten Core|Ostatni Bastion|Mixed|1791053719|25|Incindis=47.9=223=0;Lucifron=68.9=535=0;Magmadar=51.6=711=0;Basalthar & Smoldaris=66.2=888=0;Sorcerer-Thane Thaurissan=58.8=1282=0;Garr=142.6=1866=0;Baron Geddon=109.7=2215=0;Shazzrah=26.2=2421=0;Sulfuron Harbinger=55.2=2709=0;Golemagg the Incinerator=45.3=2934=0;Majordomo Executus=108.4=3250=0;Ragnaros=161.8=3762=0
-L|SKOsAWm10rKrEX9E|N'Zoth|Molten Core|Booty Bay Boys|Mixed|1786996984|25|Incindis=47.8=363=0;Lucifron=75.4=1241=0;Magmadar=74.7=1515=0;Garr=142.2=2444=0;Baron Geddon=61=2960=0;Shazzrah=58.7=3244=0;Sulfuron Harbinger=63.6=4032=0;Golemagg the Incinerator=67.8=4394=0;Basalthar & Smoldaris=79.5=5094=1;Sorcerer-Thane Thaurissan=100.7=5670=0;Majordomo Executus=130.5=6400=0;Ragnaros=154=7088=0
 L|n2gRs5mAnV-92KgK|N'Zoth|Molten Core|Smokey Tokers|Mixed|1788375653|25|Incindis=40.2=242=0;Garr=58.7=921=0;Baron Geddon=38.3=1262=0;Shazzrah=25.9=1403=0;Sulfuron Harbinger=52.6=1870=0;Golemagg the Incinerator=42.2=2167=0;Lucifron=65.7=2308=0;Magmadar=49=2515=0;Basalthar & Smoldaris=59.7=2676=0;Sorcerer-Thane Thaurissan=54.2=3002=0;Majordomo Executus=91=3311=0;Ragnaros=139.9=3766=0
 L|9jjeT2nijAfLdEh0|N'Zoth|Onyxia's Lair|The Ashen Banner|Mixed|1788704258|23|Broodcommander Axelus=74.2=74=0;Onyxia=265.7=608=0
-L|3TFRcdJ6jkKrRr-d|N'Zoth|Onyxia's Lair|The Silver Crusade|Mixed|1789753815|32|Onyxia=324.3=579=0;Broodcommander Axelus=120.6=952=0
 L|ZyQ5u46vRtyUryrB|N'Zoth|Onyxia's Lair|The Silver Crusade|Mixed|1791226699|34|Onyxia=210.7=2050=2;Broodcommander Axelus=99.8=2866=0
 ]]
