@@ -1303,7 +1303,13 @@ local function syncNow()
 	local B = W.Board
 	local st = B:SyncStatus()
 	if not (st and st.alive) then
-		W.Print("The sync helper isn't running. Double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r - it syncs straight away, then every 10 minutes while its window is open.")
+		if B.chronFeed then
+			W.Print("Your raid times come from " .. (B.chronFrom or "the master") .. "'s feed - they update by themselves while they're online. Nothing to do.")
+			W.Print("|cff888888(Rather fetch them yourself? Double-click tools\\WhoDidIt-Sync.cmd in the WhoDidIt folder - or tools\\AutoSync-On.cmd to have it start with Windows.)|r")
+		else
+			W.Print("The sync helper isn't running. Double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r - it syncs straight away, then every 10 minutes while its window is open.")
+			W.Print("|cff888888Or double-click |cffffd100tools\\AutoSync-On.cmd|cff888888 once: the helper then starts by itself (minimised) whenever you log into Windows.|r")
+		end
 		return
 	end
 	if st.state == "running" then W.Print("A sync is already running - see the bar on the Rankings tab.") return end
@@ -1349,7 +1355,13 @@ local function syncTip()
 		"The first sync reads every raid on the server from the last 90 days (about 45 minutes);",
 		"times appear here as it goes. Later syncs only fetch new uploads (a minute or two).",
 		" ",
-		"|cffffd100Sync now|r asks the helper to sync straight away (it has to be running)." }
+		"|cffffd100Sync now|r asks the helper to sync straight away (it has to be running).",
+		" ",
+		"|cffffd100Two ways to get them:|r",
+		"- |cff66ccffNothing to install:|r a WhoDidIt user who runs the helper with Master on feeds",
+		"  everyone on the realm in game (you get them while they're online, and keep them).",
+		"- |cff66ccffRun the helper yourself:|r fresher, and Sync now works. |cffffd100tools\\AutoSync-On.cmd|r",
+		"  makes it start by itself (minimised) with Windows; AutoSync-Off.cmd undoes it." }
 	return l
 end
 tooltip(syncBtn, "Sync now", syncTip, "ANCHOR_TOP")

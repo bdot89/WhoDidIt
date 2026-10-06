@@ -264,8 +264,22 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
 
 The API is marked experimental by Chronicle, so it may change.
 
-### Master feed: one person syncs, everyone gets the times
+### Two ways to get the raid times
 
+| | How | You need |
+| --- | --- | --- |
+| **Nothing to install** | A WhoDidIt user with Master on feeds everyone on the realm in game (see below). You get the times while they're online and keep them. | Just the addon |
+| **Fetch them yourself** | Run the sync helper: fresher times (every 10 minutes) and **Sync now** works. | PowerShell (built into Windows) |
+
+**Happy to have the helper running?** Double-click **`tools\AutoSync-On.cmd`** once. It adds a shortcut to your
+Windows Startup folder, so the helper starts by itself (minimised on the taskbar) every time you log into Windows, and
+starts it right away. Nothing else changes; **`tools\AutoSync-Off.cmd`** removes it again. Only one copy of the helper
+ever runs at a time, so double-clicking `WhoDidIt-Sync.cmd` as well does no harm.
+
+**The master's setup:** AutoSync-On plus **Master** on Rankings. New times then arrive by themselves every 10 minutes
+(or straight away with **Sync now**) and go out to everyone on your realm whenever you're online.
+
+### Master feed: one person syncs, everyone gets the times
 Only **one** person needs the sync helper. They switch on **Master** (bottom left of Rankings, or `/wdi master on`).
 While they're online, their WhoDidIt feeds every other WhoDidIt user on the realm with the Chronicle raid times, over
 WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.

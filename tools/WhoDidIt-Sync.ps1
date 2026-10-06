@@ -34,6 +34,9 @@
       WhoDidIt-Sync.ps1 -NoPackUpdate      leave the mob packs alone
       WhoDidIt-Sync.ps1 -DetailsPerSync 600  read more raids in full per sync (default 150)
 
+    To have it start (minimised) every time you log into Windows, double-click
+    AutoSync-On.cmd; AutoSync-Off.cmd undoes it. Only one copy runs at a time.
+
     The API allows 60 requests a minute; this stays at about one a second
     and caches everything it has read, so only new uploads are fetched
     after the first sync.
@@ -491,6 +494,16 @@ if ($UpdatesOnly) {
     Update-Doping
     Update-MarkData
     Update-ClassicAPI
+    return
+}
+
+# only one helper at a time (e.g. started with Windows, then double-clicked too)
+$script:Single = New-Object System.Threading.Mutex($false, "WhoDidIt-Sync")
+$mine = $false
+try { $mine = $script:Single.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $mine = $true }
+if (-not $mine) {
+    Log "WhoDidIt-Sync is already running in another window - this one closes. (Sync now in game asks that one.)"
+    Start-Sleep -Seconds 4
     return
 }
 
