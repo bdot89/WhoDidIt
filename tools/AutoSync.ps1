@@ -51,7 +51,7 @@ if ($Off) {
     if ($had) { Write-Host "Done: the WhoDidIt sync helper no longer starts by itself." }
     else { Write-Host "It wasn't set to start by itself." }
     if (Test-Path -LiteralPath $vbs) { Remove-Item -LiteralPath $vbs -Force }
-    $running = Get-Helper
+    $running = @(Get-Helper)
     foreach ($p in $running) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }
     if ($running.Count -gt 0) { Write-Host "Stopped the helper that was running." }
     return
@@ -82,13 +82,13 @@ if (-not $Minimised) {
     Write-Host "Done: the WhoDidIt sync helper now runs in the background (no window), starting when you log into"
     Write-Host "Windows, when you unlock the PC, and every 15 minutes if it ever stopped."
     Write-Host "Its progress shows on WhoDidIt's Rankings tab. To undo: double-click AutoSync-Off.cmd."
-    if ((Get-Helper).Count -gt 0) {
+    if (@(Get-Helper).Count -gt 0) {
         Write-Host "The helper is already running."
     } else {
         Start-ScheduledTask -TaskName $taskName
         Write-Host "Started it now, in the background."
         Start-Sleep -Seconds 6
-        if ((Get-Helper).Count -eq 0) {
+        if (@(Get-Helper).Count -eq 0) {
             Write-Host "But the helper isn't running. Try double-clicking WhoDidIt-Sync.cmd to see why." -ForegroundColor Yellow
         }
     }
@@ -107,7 +107,7 @@ $sc.Save()
 if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) { Unregister-ScheduledTask -TaskName $taskName -Confirm:$false }
 Write-Host "Done: the WhoDidIt sync helper now starts with Windows (minimised)."
 Write-Host "Its progress shows on WhoDidIt's Rankings tab. To undo: double-click AutoSync-Off.cmd."
-if ((Get-Helper).Count -gt 0) {
+if (@(Get-Helper).Count -gt 0) {
     Write-Host "The helper is already running."
 } else {
     Start-Process -FilePath $ps -ArgumentList $sc.Arguments -WorkingDirectory $PSScriptRoot -WindowStyle Minimized
