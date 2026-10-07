@@ -484,6 +484,22 @@ function Sync {
 . (Join-Path $PSScriptRoot "EmbedUpdate.ps1")
 . (Join-Path $PSScriptRoot "MarkDataUpdate.ps1")
 . (Join-Path $PSScriptRoot "ClassicApiUpdate.ps1")
+
+# only one helper at a time (e.g. started with Windows, then double-clicked too),
+# whatever it was started for: two updates at once would race on the same folders
+$script:Single = New-Object System.Threading.Mutex($false, "WhoDidIt-Sync")
+$mine = $false
+try { $mine = $script:Single.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $mine = $true }
+if (-not $mine) {
+    if ($LoggerOnly -or $UpdatesOnly) {
+        Log "WhoDidIt-Sync is already running - it checks for updates itself every hour. Close it first to update right now."
+    } else {
+        Log "WhoDidIt-Sync is already running in another window - this one closes. (Sync now in game asks that one.)"
+    }
+    Start-Sleep -Seconds 4
+    return
+}
+
 if ($LoggerOnly) {
     Update-Chronicle
     return
@@ -494,16 +510,6 @@ if ($UpdatesOnly) {
     Update-Doping
     Update-MarkData
 
-    return
-}
-
-# only one helper at a time (e.g. started with Windows, then double-clicked too)
-$script:Single = New-Object System.Threading.Mutex($false, "WhoDidIt-Sync")
-$mine = $false
-try { $mine = $script:Single.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $mine = $true }
-if (-not $mine) {
-    Log "WhoDidIt-Sync is already running in another window - this one closes. (Sync now in game asks that one.)"
-    Start-Sleep -Seconds 4
     return
 }
 
