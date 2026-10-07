@@ -7,10 +7,16 @@
     WhoDidIt's Rankings tab) without you opening anything. The Rankings bar in
     game shows what it's doing.
 
-    It adds one shortcut to your Windows Startup folder, plus a tiny launcher
-    script next to this file (WhoDidIt-Sync-Hidden.vbs) that starts the helper
-    without a window. Nothing else changes.
-      %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\WhoDidIt-Sync.lnk
+    It adds one scheduled task for your Windows user ("WhoDidIt-Sync", no admin
+    rights needed), plus a tiny launcher script next to this file
+    (WhoDidIt-Sync-Hidden.vbs) that starts the helper without a window. The
+    task starts the helper when you log into Windows, when you unlock the PC
+    (also after sleep), and every 15 minutes in case it stopped; the helper
+    only ever runs once, so a start while it's running just ends. Nothing
+    else changes. (Older versions used a Startup folder shortcut instead;
+    it's removed.)
+
+    -Minimised keeps the old way: a Startup shortcut with a minimised window.
 
     Usage (or double-click AutoSync-On.cmd / AutoSync-Off.cmd):
       AutoSync.ps1              start it with Windows, in the background, and start it now
@@ -19,6 +25,7 @@
 #>
 param([switch]$Off, [switch]$Minimised)
 
+$taskName = "WhoDidIt-Sync"
 $startup = [Environment]::GetFolderPath("Startup")
 $link = Join-Path $startup "WhoDidIt-Sync.lnk"
 $script = Join-Path $PSScriptRoot "WhoDidIt-Sync.ps1"
@@ -32,12 +39,17 @@ function Get-Helper {
 }
 
 if ($Off) {
+    $had = $false
+    if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+        $had = $true
+    }
     if (Test-Path -LiteralPath $link) {
         Remove-Item -LiteralPath $link -Force
-        Write-Host "Done: the WhoDidIt sync helper no longer starts with Windows."
-    } else {
-        Write-Host "It wasn't set to start with Windows."
+        $had = $true
     }
+    if ($had) { Write-Host "Done: the WhoDidIt sync helper no longer starts by itself." }
+    else { Write-Host "It wasn't set to start by itself." }
     if (Test-Path -LiteralPath $vbs) { Remove-Item -LiteralPath $vbs -Force }
     $running = Get-Helper
     foreach ($p in $running) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }
@@ -45,43 +57,59 @@ if ($Off) {
     return
 }
 
-$shell = New-Object -ComObject WScript.Shell
-$sc = $shell.CreateShortcut($link)
-if ($Minimised) {
-    $psArgs = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Minimized -File `"$script`""
-    $sc.TargetPath = $ps
-    $sc.Arguments = $psArgs
-    $sc.WindowStyle = 7
-} else {
-    # wscript runs the helper with no window at all (PowerShell alone would flash one)
+if (-not $Minimised) {
+    # the hidden launcher, run by a scheduled task (log on, unlock, every 15 minutes)
     $line = "CreateObject(""WScript.Shell"").Run ""powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """"$script"""""", 0, False"
     $vb = "' Starts WhoDidIt's sync helper with no window (written by AutoSync.ps1).`r`n" + $line + "`r`n"
     # UTF-16 with a BOM, which wscript reads: a folder name with an accent or umlaut stays intact
     [IO.File]::WriteAllText($vbs, $vb, [Text.Encoding]::Unicode)
-    $sc.TargetPath = $wscript
-    $sc.Arguments = "`"$vbs`""
+
+    $me = "$env:USERDOMAIN\$env:USERNAME"
+    $action = New-ScheduledTaskAction -Execute $wscript -Argument "`"$vbs`"" -WorkingDirectory $PSScriptRoot
+    $logon = New-ScheduledTaskTrigger -AtLogOn -User $me
+    $every = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 15) -RepetitionDuration (New-TimeSpan -Days 3650)
+    $cls = Get-CimClass -Namespace Root/Microsoft/Windows/TaskScheduler -ClassName MSFT_TaskSessionStateChangeTrigger
+    $unlock = New-CimInstance -CimClass $cls -ClientOnly
+    $unlock.StateChange = 8   # unlocking the PC (also after sleep)
+    $unlock.UserId = $me
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
+        -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 5)
+    $principal = New-ScheduledTaskPrincipal -UserId $me -LogonType Interactive -RunLevel Limited
+    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($logon, $unlock, $every) -Settings $settings `
+        -Principal $principal -Description "WhoDidIt: keeps the sync helper running (Chronicle raid times for the Rankings tab). Remove with AutoSync-Off.cmd." -Force | Out-Null
+    # the old way (a Startup shortcut) isn't needed any more
+    if (Test-Path -LiteralPath $link) { Remove-Item -LiteralPath $link -Force }
+    Write-Host "Done: the WhoDidIt sync helper now runs in the background (no window), starting when you log into"
+    Write-Host "Windows, when you unlock the PC, and every 15 minutes if it ever stopped."
+    Write-Host "Its progress shows on WhoDidIt's Rankings tab. To undo: double-click AutoSync-Off.cmd."
+    if ((Get-Helper).Count -gt 0) {
+        Write-Host "The helper is already running."
+    } else {
+        Start-ScheduledTask -TaskName $taskName
+        Write-Host "Started it now, in the background."
+        Start-Sleep -Seconds 6
+        if ((Get-Helper).Count -eq 0) {
+            Write-Host "But the helper isn't running. Try double-clicking WhoDidIt-Sync.cmd to see why." -ForegroundColor Yellow
+        }
+    }
+    return
 }
+
+# -Minimised: the old way, a Startup shortcut with a minimised window
+$shell = New-Object -ComObject WScript.Shell
+$sc = $shell.CreateShortcut($link)
+$sc.TargetPath = $ps
+$sc.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Minimized -File `"$script`""
+$sc.WindowStyle = 7
 $sc.WorkingDirectory = $PSScriptRoot
 $sc.Description = "WhoDidIt: fetch Chronicle raid times for the Rankings tab"
 $sc.Save()
-Write-Host ("Done: the WhoDidIt sync helper now starts with Windows" + $(if ($Minimised) { " (minimised)." } else { ", in the background (no window)." }))
+if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) { Unregister-ScheduledTask -TaskName $taskName -Confirm:$false }
+Write-Host "Done: the WhoDidIt sync helper now starts with Windows (minimised)."
 Write-Host "Its progress shows on WhoDidIt's Rankings tab. To undo: double-click AutoSync-Off.cmd."
-
-# start it now too, unless it's already running
 if ((Get-Helper).Count -gt 0) {
     Write-Host "The helper is already running."
-} elseif ($Minimised) {
+} else {
     Start-Process -FilePath $ps -ArgumentList $sc.Arguments -WorkingDirectory $PSScriptRoot -WindowStyle Minimized
     Write-Host "Started it now (minimised on your taskbar)."
-} else {
-    Start-Process -FilePath $wscript -ArgumentList "`"$vbs`"" -WorkingDirectory $PSScriptRoot
-    Write-Host "Started it now, in the background."
-}
-
-# check it really runs (a hidden helper that fails says nothing otherwise)
-if ((Get-Helper).Count -eq 0) {
-    Start-Sleep -Seconds 4
-    if ((Get-Helper).Count -eq 0) {
-        Write-Host "But the helper isn't running. Try double-clicking WhoDidIt-Sync.cmd to see why." -ForegroundColor Yellow
-    }
 }

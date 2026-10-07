@@ -307,11 +307,13 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
   `CustomData\WhoDidIt_ChronicleCache.json`. The API is marked experimental by Chronicle, so it may change.
 - **Faction:** comes from the raiders' races. OctoWoW raids cross-faction, so many guilds show as **M** (mixed).
 
-**Run it in the background:** double-click **`tools\AutoSync-On.cmd`** once. The helper then runs with **no window**,
-starting by itself every time you log into Windows (and right away). It adds one shortcut to your Windows Startup
-folder and a tiny launcher script (`tools\WhoDidIt-Sync-Hidden.vbs`); nothing else changes. **`tools\AutoSync-Off.cmd`**
-removes the shortcut and stops the helper. (`AutoSync.ps1 -Minimised` keeps a minimised window instead.) Only one copy
-of the helper ever runs, so double-clicking `WhoDidIt-Sync.cmd` as well does no harm.
+**Run it in the background:** double-click **`tools\AutoSync-On.cmd`** once. The helper then runs with **no window**
+and keeps itself running: it starts when you log into Windows, when you unlock the PC (also after sleep, for PCs that
+are never shut down), and every 15 minutes if it ever stopped, and right away. It adds one scheduled task for your
+Windows user (`WhoDidIt-Sync`, no admin rights) and a tiny launcher script (`tools\WhoDidIt-Sync-Hidden.vbs`);
+nothing else changes. **`tools\AutoSync-Off.cmd`** removes both and stops the helper. (`AutoSync.ps1 -Minimised`
+uses a Startup shortcut with a minimised window instead.) Only one copy of the helper ever runs, so the extra starts,
+or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
 
 **Maintainer:** keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
 characters). Logging into the master character on a realm feeds that realm.
@@ -868,8 +870,9 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 - **Built-in addons** (Chronicle logger, RollFor, DopingControl) and AutoMarker's packs are downloaded from their
   authors' GitHub at a commit the maintainer has tested and pinned, never whatever is newest. None of their code is
   stored in this repository, and code from other repositories only gets in through a reviewed commit, never a bot.
-- **AutoSync** adds one shortcut to your Windows Startup folder and a launcher script next to the helper;
-  `AutoSync-Off.cmd` removes both. After starting the helper it checks that it's really running.
+- **AutoSync** adds one scheduled task for your Windows user (log on, unlock, every 15 minutes; no admin rights) and
+  a launcher script next to the helper; `AutoSync-Off.cmd` removes both. After starting the helper it checks that
+  it's really running.
 - The **ClassicAPI installer** installs the pinned, tested release, checks its SHA-256 against the pin and backs up
   `dlls.txt`.
 - **Learn packs** notes mobs and where they stand into your own saved settings (at most 1,500 per raid; `/wdi marks
