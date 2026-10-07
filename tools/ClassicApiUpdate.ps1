@@ -8,17 +8,19 @@
     "ClassicAPI (optional)" in the README).
 
     What installing does:
-      1. downloads ClassicAPI.dll from the latest GitHub release
-      2. checks its SHA-256 against the one GitHub publishes for that file -
-         if they don't match, nothing is changed
+      1. downloads ClassicAPI.dll from the release the WhoDidIt maintainer
+         has tested (pinned below, like every other download), not whatever
+         is newest
+      2. checks its SHA-256 against the checksum pinned here (and the one
+         GitHub publishes) - if they don't match, nothing is changed
       3. backs up dlls.txt (dlls.txt.bak, once) and copies the DLL into the
          WoW folder
       4. adds "ClassicAPI.dll" to dlls.txt, the list of DLLs VanillaFixes
          loads when the game starts
 
-    Once installed, WhoDidIt-Sync keeps it up to date (only while WoW is
-    closed - a running game has the DLL open). If you never install it,
-    this does nothing.
+    Nothing updates it behind your back: run Install-ClassicAPI.cmd again
+    (WoW closed) after a WhoDidIt update to get a newer pinned version. If
+    you never install it, this does nothing.
 
     To remove it: delete the ClassicAPI.dll line from dlls.txt (or put
     dlls.txt.bak back) and restart WoW.
@@ -26,8 +28,14 @@
     Usage (or double-click Install-ClassicAPI.cmd):
       ClassicApiUpdate.ps1 -Install     install it, or update it
       ClassicApiUpdate.ps1              update it only if already installed
+      ClassicApiUpdate.ps1 -Install -Latest   testers: the newest release instead
+                                            (checked against GitHub's checksum only)
 #>
-param([switch]$Install)
+param([switch]$Install, [switch]$Latest)
+
+# the tested release and the SHA-256 of its ClassicAPI.dll (maintainer: update both together)
+$CapiPin    = "v1.15.16"
+$CapiPinSha = "e34886fb9725b9059375a5c37bff81ce220633c4e2c39719ef3223a6b8fc703d"
 
 $CapiUA   = "WhoDidIt-ClassicApiUpdate/1.0 (+https://github.com/bdot89/WhoDidIt)"
 $CapiRepo = "brues-code/ClassicAPI"
@@ -60,7 +68,7 @@ function Get-FileSha256($path) {
     (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
-function Update-ClassicAPI([switch]$Install) {
+function Update-ClassicAPI([switch]$Install, [switch]$Latest) {
     $installed = (Test-Path -LiteralPath $CapiDll) -and (Test-ClassicApiListed)
     if (-not $installed -and -not $Install) { return }   # optional: never installed without asking
 
@@ -69,7 +77,8 @@ function Update-ClassicAPI([switch]$Install) {
         return
     }
     try {
-        $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/$CapiRepo/releases/latest" -TimeoutSec 30 `
+        $which = if ($Latest) { "latest" } else { "tags/$CapiPin" }
+        $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/$CapiRepo/releases/$which" -TimeoutSec 30 `
             -Headers @{ "User-Agent" = $CapiUA; "Accept" = "application/vnd.github+json" }
     } catch {
         Log ("ClassicAPI: couldn't check for updates (" + $_.Exception.Message + ")")
@@ -78,7 +87,14 @@ function Update-ClassicAPI([switch]$Install) {
     $asset = $rel.assets | Where-Object { $_.name -eq "ClassicAPI.dll" } | Select-Object -First 1
     if (-not $asset) { Log "ClassicAPI: the latest release ($($rel.tag_name)) has no ClassicAPI.dll"; return }
     $want = ([string]$asset.digest -replace '^sha256:', '').ToLowerInvariant()
-    if ($want -notmatch '^[0-9a-f]{64}$') { Log "ClassicAPI: GitHub gave no checksum for $($rel.tag_name), so it wasn't installed"; return }
+    if ($Latest) {
+        if ($want -notmatch '^[0-9a-f]{64}$') { Log "ClassicAPI: GitHub gave no checksum for $($rel.tag_name), so it wasn't installed"; return }
+        Log "ClassicAPI: testing the newest release, $($rel.tag_name) (not the pinned $CapiPin)"
+    } else {
+        # the pinned checksum decides; a release whose file changed since it was tested is refused
+        if ($want -and $want -ne $CapiPinSha) { Log "ClassicAPI: the file in release $CapiPin isn't the one that was tested - nothing was changed"; return }
+        $want = $CapiPinSha
+    }
 
     $have = if (Test-Path -LiteralPath $CapiDll) { Get-FileSha256 $CapiDll } else { "" }
     if ($have -eq $want -and (Test-ClassicApiListed)) {
@@ -123,5 +139,5 @@ if ($MyInvocation.InvocationName -ne ".") {
     if ($Install) {
         Log "ClassicAPI is optional: WhoDidIt works without it. It adds a few extras (see the README)."
     }
-    Update-ClassicAPI -Install:$Install
+    Update-ClassicAPI -Install:$Install -Latest:$Latest
 }
