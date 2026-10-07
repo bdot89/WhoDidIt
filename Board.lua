@@ -1350,15 +1350,16 @@ W:Every(2, function()
 end)
 
 ------------------------------------------------------------------ master feed
--- One WhoDidIt user who runs the sync helper can be the "master" (/wdi master
--- on): while they're online, their WhoDidIt feeds every other WhoDidIt user on
--- the realm with Chronicle's raid times over the hidden channel, so nobody
--- else needs anything but the addon. Every minute the master says how fresh
--- its times are; anyone behind asks, and the master streams the raw lines
--- (all of them once, then only what changed) packed into chat messages. One
--- stream serves everyone listening. A raid's boss list is only sent when
--- someone opens that raid. What arrives is saved, so it's there next login.
---   H~synced~lines~server~m            what I have (every minute; m 1 = the master)
+-- The maintainer's character, running the sync helper, is the "master" (/wdi
+-- master on): while it's online, its WhoDidIt feeds every other WhoDidIt user
+-- on the realm with Chronicle's raid times over the hidden channel, so nobody
+-- else needs anything but the addon. Only a master ever sends times (there
+-- are no relays). Every minute the master says how fresh its times are;
+-- anyone behind asks, and the master streams the raw lines (all of them once,
+-- then only what changed) packed into chat messages. One stream serves
+-- everyone listening. A raid's boss list is only sent when someone opens that
+-- raid. What arrives is saved, so it's there next login.
+--   H~synced~lines~server~m            what I have (every minute; m is always 1)
 -- Only the maintainer's characters (B.MASTERS) can be the master: every copy
 -- of WhoDidIt ignores feed messages from anyone else. Character names are
 -- unique per realm and the channel only reaches the sender's own realm, so
@@ -1411,16 +1412,17 @@ B.Trusted = trusted
 function B.CanMaster() return trusted(UnitName("player")) end
 -- the master: one of those characters, /wdi master on, with the sync helper's own file on this PC
 function B.IsMaster() return opts().master and B.CanMaster() and B.chronRaw ~= nil and not B.chronFeed end
-local function canServe() return B.IsMaster() end
+
 local servers = {}   -- other servers heard lately: name -> { name, synced, master, at }
 local function better(a, b)
 	if (a.master and 1 or 0) ~= (b.master and 1 or 0) then return a.master end
 	if a.synced ~= b.synced then return a.synced > b.synced end
 	return a.name < b.name
 end
--- am I the one who talks on this realm right now?
+-- am I the one who talks on this realm right now? (two master characters
+-- online at once: the freshest one)
 local function isLead()
-	if not canServe() then return false end
+	if not B.IsMaster() then return false end
 	local me = { name = UnitName("player"), synced = B.chron and B.chron.synced or 0, master = B.IsMaster() }
 	local now = GetTime()
 	for _, s in pairs(servers) do
@@ -1593,7 +1595,7 @@ function B:FeedStatus()
 	for _, s in pairs(recv) do
 		if GetTime() - s.at < 60 then return { from = s.from, got = s.got, total = s.total } end
 	end
-	if feedTotal > 0 and feedSent < feedTotal then return { master = true, relay = not B.IsMaster(), got = feedSent, total = feedTotal } end
+	if feedTotal > 0 and feedSent < feedTotal then return { master = true, got = feedSent, total = feedTotal } end
 end
 
 function B:FeedReceive(msg, sender)
