@@ -403,6 +403,119 @@ W:On("UNIT_PET", function() W:UpdateRoster() end)
 
 W:DetectEnv()
 
+------------------------------------------------------------------ crash backup
+-- WoW writes addon data to disk only at logout or /reload, so a crash loses
+-- everything since: a whole raid. So after each change to the fights or the
+-- Hall of Fame tally (checked every 20 seconds, written out of combat only)
+-- WhoDidIt also writes them to its own file in CustomData through Nampower.
+-- At login, a backup newer than what WoW saved means the game crashed: the
+-- backup is put back. Each account has its own file (several accounts can
+-- share a PC); WoW's own save keeps the matching number, so normally nothing
+-- is restored.
+local BACKUP_EVERY = 20
+
+-- a Lua table constructor for v (strings, numbers, booleans, tables)
+local function ser(v, out, depth)
+	local t = type(v)
+	if t == "string" then tinsert(out, string.format("%q", v))
+	elseif t == "number" then
+		if v ~= v or v == math.huge or v == -math.huge then tinsert(out, "0") else tinsert(out, tostring(v)) end
+	elseif t == "boolean" then tinsert(out, v and "true" or "false")
+	elseif t == "table" and depth < 30 then
+		tinsert(out, "{")
+		for k, x in pairs(v) do
+			local kt, xt = type(k), type(x)
+			if (kt == "string" or kt == "number") and (xt == "string" or xt == "number" or xt == "boolean" or xt == "table") then
+				tinsert(out, "[")
+				ser(k, out, depth + 1)
+				tinsert(out, "]=")
+				ser(x, out, depth + 1)
+				tinsert(out, ",")
+			end
+		end
+		tinsert(out, "}")
+	else tinsert(out, "nil") end
+end
+
+local function backupFile(db) return "WhoDidIt_Backup_" .. db.backupId .. ".txt" end
+
+-- what's worth a backup changed? (fights saved or deleted, the tally)
+local function backupKey(db)
+	local f = db.fights or {}
+	local first, last = f[1], f[getn(f)]
+	local function key(r) return r and (tostring(r.date) .. tostring(r.enc) .. tostring(r.dur)) or "-" end
+	return getn(f) .. "|" .. key(first) .. "|" .. key(last) .. "|" .. tostring(db.career and db.career.fights)
+		.. "|" .. tostring(db.careerTest and db.careerTest.fights)
+end
+
+local lastBackup
+function W:Backup(force)
+	local db = WhoDidItDB
+	if not db or not WriteCustomFile then return end
+	if not db.backupId then
+		-- the account name WoW remembers (so even a crash in the first session can be undone), else a random id
+		local acct = string.gsub(strlower(GetCVar and GetCVar("accountName") or ""), "[^%w]", "")
+		db.backupId = (acct ~= "") and acct or string.format("%08x", math.random(1, 2147483646))
+	end
+	local k = backupKey(db)
+	if not force and k == lastBackup then return end
+	db.backupSeq = (db.backupSeq or 0) + 1
+	-- each fight (and each other part) in a function of its own: Lua 5.0 allows
+	-- about 262,000 different constants per function, and 25 fights could pass that
+	local out = { "return { seq = " .. db.backupSeq .. ", at = " .. time() .. ", fights = {" }
+	for i = 1, getn(db.fights or {}) do
+		tinsert(out, "(function() return ")
+		ser(db.fights[i], out, 0)
+		tinsert(out, " end)(),")
+	end
+	tinsert(out, "}")
+	for _, part in ipairs({ "career", "careerTest", "board" }) do
+		if type(db[part]) == "table" then
+			tinsert(out, ", " .. part .. " = (function() return ")
+			ser(db[part], out, 0)
+			tinsert(out, " end)()")
+		end
+	end
+	tinsert(out, " }")
+	local ok = pcall(WriteCustomFile, backupFile(db), table.concat(out), "w")
+	if ok then lastBackup = k end
+end
+
+-- at login: put back what a crash lost
+W:On("ADDON_LOADED", function(name)
+	if name ~= "WhoDidIt" then return end
+	local db = WhoDidItDB
+	if not db or not ReadCustomFile then return end
+	if not db.backupId then
+		local acct = string.gsub(strlower(GetCVar and GetCVar("accountName") or ""), "[^%w]", "")
+		if acct == "" then return end
+		db.backupId = acct
+	end
+	local ok, text = pcall(ReadCustomFile, backupFile(db))
+	if not ok or type(text) ~= "string" or text == "" then return end
+	local fn = loadstring(text)
+	if not fn then return end
+	setfenv(fn, {})   -- data only: the file can't reach anything
+	local ok2, data = pcall(fn)
+	if not ok2 or type(data) ~= "table" or type(data.fights) ~= "table" then return end
+	if (tonumber(data.seq) or 0) <= (db.backupSeq or 0) then return end   -- WoW saved normally
+	local lost = getn(data.fights) - getn(db.fights)
+	db.fights = data.fights
+	db.career, db.careerTest = data.career, data.careerTest
+	if type(data.board) == "table" then db.board = data.board end
+	db.backupSeq = data.seq
+	lastBackup = backupKey(db)
+	W.restoredNote = "WoW didn't save last time (it crashed), so your fights and Hall of Fame were put back from WhoDidIt's backup ("
+		.. date("%d %b %H:%M", data.at or time()) .. ")" .. ((lost > 0) and (": " .. lost .. " fight" .. ((lost == 1) and "" or "s") .. " recovered") or "") .. "."
+end)
+W:On("PLAYER_ENTERING_WORLD", function()
+	if W.restoredNote then W.Print("|cff33ff33" .. W.restoredNote .. "|r") W.restoredNote = nil end
+end)
+W:Every(BACKUP_EVERY, function()
+	if UnitAffectingCombat("player") then return end
+	W:Backup()
+end)
+
 ------------------------------------------------------------------ other addons: ask first
 
 -- Switching off an addon someone installed is their decision. When WhoDidIt

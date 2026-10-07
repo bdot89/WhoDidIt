@@ -844,6 +844,9 @@ Demo fights are labelled *(demo)*. Automatic post-fight messages for them stay i
 - Turtle's custom raids (Karazhan, Emerald Sanctum) are detected as world bosses, but their mechanics aren't in the database yet. Add avoidable spells with `/wdi avoid <spell>`, or edit [`Data.lua`](Data.lua). Pull requests with mechanics are welcome!
 - Weapon oils, stones and imbues on other players are read through SuperWoW; out of range they show as **?**, never as missing.
 - Something not working? `/wdi errors` lists any errors WhoDidIt caught, for a bug report.
+- **Crash-proof fights.** WoW only saves addon data when you log out or `/reload`, so a crash used to lose the whole
+  session. WhoDidIt now also keeps a backup of your fights, Hall of Fame and kill times in `CustomData` (written out of
+  combat after each fight). If WoW crashes, the next login puts them back and says so in chat.
 
 ## Privacy and security
 
