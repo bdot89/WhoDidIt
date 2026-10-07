@@ -518,18 +518,41 @@ W:On("CHAT_MSG_ADDON", function(prefix, msg, channel, sender)
 	c.names[sender] = true
 end)
 
+-- whoever won a claim has a few seconds to really post it; if nothing from
+-- them shows up (a modified client, a disconnect), the next one in line posts
+local waiting = {}   -- { fn, at }: at = when to post if nobody else has
+local function heardPost(msg, sender)
+	if not sender or sender == UnitName("player") or not msg or not string.find(msg, "WhoDidIt]", 1, true) then return end
+	waiting = {}
+end
+for _, ev in ipairs({ "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING", "CHAT_MSG_PARTY",
+	"CHAT_MSG_GUILD", "CHAT_MSG_OFFICER", "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_CHANNEL" }) do
+	W:On(ev, heardPost)
+end
+
 W:Every(0.5, function()
 	local now = GetTime()
 	for tag, c in pairs(claims) do
 		if now - c.at > 2 then
 			if c.fn then
-				local first
+				local first, mine = nil, 0
+				local me = UnitName("player")
 				for n in pairs(c.names) do
 					if not first or n < first then first = n end
+					if n < me then mine = mine + 1 end
 				end
-				if first == UnitName("player") then c.fn() end
+				-- second in line waits 6s, third 12s...
+				if first == me then c.fn()
+				elseif first then tinsert(waiting, { fn = c.fn, at = now + 6 * mine }) end
 			end
 			claims[tag] = nil
+		end
+	end
+	for i = getn(waiting), 1, -1 do
+		if now >= waiting[i].at then
+			local fn = waiting[i].fn
+			tremove(waiting, i)
+			fn()
 		end
 	end
 end)
