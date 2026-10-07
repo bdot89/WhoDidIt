@@ -1375,8 +1375,20 @@ local FEED = "WDIF1"
 local FEED_MARGIN = 14 * 86400   -- re-send records this much older than "since" (late uploads)
 local feedq = {}
 local feedSent, feedTotal = 0, 0    -- master: the stream going out
-local pendingSince                   -- master: a stream to start (lowest "since" asked)
-local lastStream = 0
+local pendingSince                   -- master: an update stream to start (lowest "since" asked)
+local pendingFull                    -- master: someone needs a full copy
+local lastStream, lastFull = 0, -1000
+local curSince                       -- master: "since" of the stream going out
+-- Anyone may ask (A, Q), and asking makes the master talk, so asking is
+-- rationed: per character one ask every 5 minutes and 6 boss lists every 10
+-- minutes; streams at least a minute apart; a full copy (asked from scratch,
+-- or from more than 2 days back) at most every 30 minutes, however many
+-- characters ask; boss lists on their own queue of at most 40 messages.
+local A_EVERY, Q_MAX, Q_WINDOW = 300, 6, 600
+local STREAM_GAP, FULL_GAP, FULL_AGE, LOGQ_MAX = 60, 1800, 2 * 86400, 40
+local askedA, askedQ = {}, {}        -- master: sender -> last A / { since, n } of Q
+local logq, logSent = {}, {}         -- master: boss list parts to send / slug -> when
+local lastAsk = -1000                -- player: when I last asked for a stream
 local want                           -- player: { at, since } when to ask
 local recv = {}                      -- player: streams coming in, by sid
 local logParts = {}                  -- player: raid boss lists coming in, by slug
@@ -1526,13 +1538,19 @@ local function buildStream(since)
 	feedSend("E~" .. sid .. "~" .. getn(out))
 	feedSent, feedTotal = 0, getn(out) + 2
 	lastStream = GetTime()
+	curSince = since
+	if since < (c and c.synced or 0) - FULL_AGE then lastFull = lastStream end
 	return recs
 end
 
--- a raid's boss list, in parts that fit a chat message
+-- a raid's boss list, in parts that fit a chat message (on its own short queue)
 local function sendLog(slug)
 	local line = B.chronRawL and B.chronRawL[slug]
 	if not line then return end
+	local now = GetTime()
+	if logSent[slug] and now - logSent[slug] < 30 then return end   -- just sent: everyone asking got it
+	if getn(logq) + floor(string.len(line) / 200) + 1 > LOGQ_MAX then return end
+	logSent[slug] = now
 	local parts = {}
 	local i = 1
 	while i <= string.len(line) do
@@ -1542,7 +1560,7 @@ local function sendLog(slug)
 	for k = 1, getn(parts) do
 		-- chat treats | as the start of a colour / link code: send it as ^
 		local part = string.gsub(string.gsub(parts[k], "~", " "), "|", "^")
-		feedSend("L~" .. clean(slug) .. "~" .. k .. "~" .. getn(parts) .. "~" .. part)
+		tinsert(logq, FEED .. "~L~" .. clean(slug) .. "~" .. k .. "~" .. getn(parts) .. "~" .. part)
 	end
 end
 
@@ -1620,9 +1638,22 @@ function B:FeedReceive(msg, sender)
 	elseif kind == "A" then
 		local since = tonumber(p[3]) or 0
 		if want and since <= want.since then want = nil end   -- their stream will cover us
-		if isLead() then pendingSince = math.min(pendingSince or since, since) end
+		if not isLead() then return end
+		local now = GetTime()
+		if askedA[sender] and now - askedA[sender] < A_EVERY then return end
+		if since >= (B.chron and B.chron.synced or 0) then return end            -- nothing newer to send
+		if curSince and getn(feedq) > 0 and since >= curSince then return end   -- the stream going out covers it
+		askedA[sender] = now
+		if since < (B.chron and B.chron.synced or 0) - FULL_AGE then pendingFull = true
+		else pendingSince = math.min(pendingSince or since, since) end
 	elseif kind == "Q" then
-		if isLead() and p[3] then sendLog(p[3]) end
+		if not isLead() or not p[3] or not (B.chronRawL and B.chronRawL[p[3]]) then return end
+		local now = GetTime()
+		local q = askedQ[sender]
+		if not q or now - q.since > Q_WINDOW then q = { since = now, n = 0 }; askedQ[sender] = q end
+		if q.n >= Q_MAX then return end
+		q.n = q.n + 1
+		sendLog(p[3])
 	elseif kind == "B" then
 		if not feedOn() or B.IsMaster() then return end
 		local since, synced = tonumber(p[5]) or 0, tonumber(p[4]) or 0
@@ -1700,20 +1731,44 @@ W:Every(1, function()
 			local c = B.chron
 			feedSend("H~" .. (c and c.synced or 0) .. "~" .. (B.chronLines or 0) .. "~" .. clean(c and c.server or "?") .. "~" .. (B.IsMaster() and "1" or "0"))
 		end
-		-- start a stream someone asked for (one at a time, not more than every 20s)
-		if pendingSince and getn(feedq) == 0 and now - lastStream > 20 then
-			local since = pendingSince
-			pendingSince = nil
-			buildStream(since)
+		-- start a stream someone asked for: one at a time, a minute apart, a full
+		-- copy (which also covers every update asked) at most every 30 minutes
+		if getn(feedq) == 0 and now - lastStream > STREAM_GAP then
+			if pendingFull and now - lastFull > FULL_GAP then
+				pendingFull, pendingSince = nil, nil
+				buildStream(0)
+			elseif pendingSince then
+				local since = pendingSince
+				pendingSince = nil
+				buildStream(since)
+			end
 		end
 	elseif want and now >= want.at then
 		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
 		want = nil
-		if B.master and B.master.synced > mine then feedSend("A~" .. mine) end
+		-- the master answers one ask per 10 minutes: don't ask more than every 5
+		if B.master and B.master.synced > mine and now - lastAsk > 300 then
+			lastAsk = now
+			feedSend("A~" .. mine)
+		end
 	end
-	if getn(feedq) == 0 then return end
+
+	if getn(feedq) == 0 and getn(logq) == 0 then return end
 	local id = chanId()
 	if not id then B:Join() return end
+	-- boss lists first: someone is looking at that raid right now
+	if getn(logq) > 0 then
+		SendChatMessage(tremove(logq, 1), "CHANNEL", nil, id)
+		return
+	end
 	SendChatMessage(tremove(feedq, 1), "CHANNEL", nil, id)
 	if feedSent < feedTotal then feedSent = feedSent + 1 end
+end)
+
+-- forget askers after their window (every table keyed by a name needs eviction)
+W:Every(60, function()
+	local now = GetTime()
+	for n, t in pairs(askedA) do if now - t > A_EVERY then askedA[n] = nil end end
+	for n, q in pairs(askedQ) do if now - q.since > Q_WINDOW then askedQ[n] = nil end end
+	for s, t in pairs(logSent) do if now - t > 30 then logSent[s] = nil end end
 end)

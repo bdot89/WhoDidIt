@@ -3990,7 +3990,7 @@ function UI:FeedPanel()
 	elseif m then
 		tinsert(rows, row("|cff33ff33" .. m.name .. " is online|r with times from " .. B.Ago(m.synced) .. ". Your WhoDidIt is asking for them.",
 			C_DIM .. "starts within a minute|r"))
-		tinsert(rows, row(C_DIM .. "The first copy takes about 10 minutes; after that only changes are sent (seconds).|r"))
+		tinsert(rows, row(C_DIM .. "The first copy takes about 10 minutes; after that only changes are sent (seconds). If a full copy went out just before you logged in, the next one can take up to half an hour.|r"))
 	elseif who then
 		tinsert(rows, row("Waiting for |cffffd100" .. who .. "|r to come online on " .. realm .. ".",
 			C_DIM .. "nothing to do|r"))
