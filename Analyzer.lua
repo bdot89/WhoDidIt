@@ -46,10 +46,12 @@ end
 
 local function round1(v) return floor(v * 10 + 0.5) / 10 end
 
-function A.AvoidRule(spell, role)
+-- zone / demo: the fight's own (F.zone, F.demo), so a row opened later, after
+-- leaving the raid, still finds the rule
+function A.AvoidRule(spell, role, zone, demo)
 	local rule = W.Data.avoid[spell]
-	-- only in its own raid (fights are analysed where they happened)
-	if rule and rule.zones and not A.demoBuild and not rule.zones[GetRealZoneText() or ""] then rule = nil end
+	-- only in its own raid
+	if rule and rule.zones and not demo and not rule.zones[zone or GetRealZoneText() or ""] then rule = nil end
 	if not rule and WhoDidItDB.avoid[spell] then rule = W.Data.customRule end
 	if not rule or (rule.notTank and role == "tank") then return nil end
 	return rule
@@ -115,7 +117,6 @@ end
 ------------------------------------------------------------------ build
 
 function A:Build(F, final)
-	A.demoBuild = F.demo and true or nil   -- demo fights: avoidable spells count wherever you are
 	local D = W.Data
 	local db = WhoDidItDB
 	local now = final and F.tEnd or GetTime()
@@ -255,7 +256,7 @@ function A:Build(F, final)
 					local key = (l.sp or "?") .. " (" .. (l.s or "?") .. ")"
 					top[key] = (top[key] or 0) + (l.a or 0)
 					if l.x == "crushing" then crush = crush + 1 end
-					if A.AvoidRule(l.sp, role) then
+					if A.AvoidRule(l.sp, role, F.zone, F.demo) then
 						avoidDmg = avoidDmg + (l.a or 0)
 						avoidTop[l.sp] = (avoidTop[l.sp] or 0) + (l.a or 0)
 					end
@@ -290,8 +291,8 @@ function A:Build(F, final)
 		elseif carrier and carrier ~= d.name then
 			kind, text = "splash", "Killed by " .. carrier .. "'s " .. carrierDebuff
 			faultWho, faultPts = carrier, 3
-		elseif (ksp and A.AvoidRule(ksp, role)) or (dmg5 > 0 and avoidDmg / dmg5 >= 0.4) then
-			local sp = (ksp and A.AvoidRule(ksp, role)) and ksp
+		elseif (ksp and A.AvoidRule(ksp, role, F.zone, F.demo)) or (dmg5 > 0 and avoidDmg / dmg5 >= 0.4) then
+			local sp = (ksp and A.AvoidRule(ksp, role, F.zone, F.demo)) and ksp
 			if not sp then
 				local best = 0
 				for s, v in pairs(avoidTop) do if v > best then best = v; sp = s end end
@@ -508,7 +509,7 @@ function A:Build(F, final)
 		local p = players[name]
 		local role = p and p._role
 		for spell, r in pairs(list) do
-			local rule = A.AvoidRule(spell, role)
+			local rule = A.AvoidRule(spell, role, F.zone, F.demo)
 			if rule then
 				local tl = tal(name)
 				tl.avoidDmg = tl.avoidDmg + r.dmg
@@ -891,7 +892,7 @@ function A:Build(F, final)
 		for sp, list in pairs(mechDeaths) do
 			local msp, ml = sp, list
 			cause(25 * getn(list), getn(list) .. " died to " .. sp .. ": " .. names(list), nil, function()
-				local rule = A.AvoidRule(msp, "dps")
+				local rule = A.AvoidRule(msp, "dps", F.zone, F.demo)
 				local rows = { H("Deaths to " .. msp) }
 				if rule then tinsert(rows, R("|cffaaaaaa" .. rule.tip .. "|r")) end
 				for i = 1, getn(ml) do
