@@ -1282,6 +1282,45 @@ local function split(msg)
 end
 
 local recvCount = {}   -- records taken from each sender this session
+
+-- Whose times count: a guild's times are only taken from a member of that
+-- guild, and the game doesn't tell an addon a stranger's guild. So WhoDidIt
+-- remembers the guild of every player it sees itself (raid, party, your guild
+-- roster, target, mouseover) and takes a guild's times only from someone it
+-- has seen in that guild. Times from someone not seen yet wait (in memory,
+-- capped) until they are. A made-up time for another guild goes nowhere.
+local guildOf, nGuildOf = {}, 0   -- character -> guild name
+local held, nHeld = {}, 0         -- sender -> { messages waiting }
+local function learnGuild(name, g)
+	if not name or not g or g == "" or guildOf[name] == g then return end
+	if nGuildOf > 3000 then guildOf, nGuildOf = {}, 0 end
+	if not guildOf[name] then nGuildOf = nGuildOf + 1 end
+	guildOf[name] = g
+	local wait = held[name]
+	if wait then
+		held[name] = nil
+		nHeld = nHeld - 1
+		for i = 1, getn(wait) do B:Receive(wait[i], name) end
+	end
+end
+local function learnUnit(unit)
+	if UnitExists(unit) and UnitIsPlayer(unit) then learnGuild(UnitName(unit), (GetGuildInfo(unit))) end
+end
+B.LearnUnit = learnUnit
+W:On("UPDATE_MOUSEOVER_UNIT", function() learnUnit("mouseover") end)
+W:On("PLAYER_TARGET_CHANGED", function() learnUnit("target") end)
+local function learnGroup()
+	for i = 1, GetNumRaidMembers() do learnUnit("raid" .. i) end
+	for i = 1, GetNumPartyMembers() do learnUnit("party" .. i) end
+end
+W:On("RAID_ROSTER_UPDATE", learnGroup)
+W:On("PARTY_MEMBERS_CHANGED", learnGroup)
+W:On("GUILD_ROSTER_UPDATE", function()
+	local g = B.MyGuild()
+	if not g then return end
+	for i = 1, GetNumGuildMembers() do learnGuild((GetGuildRosterInfo(i)), g) end
+end)
+
 function B:Receive(msg, sender)
 	local p = split(msg)
 	local kind = p[2]
@@ -1305,6 +1344,21 @@ function B:Receive(msg, sender)
 	else
 		if not W.Data.clears[key] or secs < CLEAR_MIN or secs > CLEAR_MAX then return end
 	end
+	-- only a member of that guild can share its times
+	local sg = (sender == UnitName("player")) and B.MyGuild() or guildOf[sender or ""]
+	if not sg then
+		local wait = held[sender or "?"]
+		if not wait then
+			if nHeld >= 40 then held, nHeld = {}, 0 end   -- the oldest waiting go
+			wait = {}
+			held[sender or "?"] = wait
+			nHeld = nHeld + 1
+		end
+		if getn(wait) < 60 then tinsert(wait, msg) end
+		recvCount[sender or "?"] = recvCount[sender or "?"] - 1   -- counted when it's taken
+		return
+	end
+	if sg ~= guild then return end
 	seen[kind .. SEP .. guild .. SEP .. key] = GetTime()
 	if B:Merge(kind == "K" and "kills" or "clears", B.Realm(), key, guild,
 		{ t = secs, d = d, f = fac, n = n, by = sender, net = true }) then B.rivalsDirty = true end
@@ -1333,6 +1387,8 @@ W:Every(2, function()
 	if joinAt and now >= joinAt then
 		joinAt = nil
 		B:Join()
+		-- your guild's roster: whose times count for your guild (see learnGuild)
+		if IsInGuild() and GuildRoster then GuildRoster() end
 		if not asked then B:Ask() end
 	end
 	if respondAt and now >= respondAt then
