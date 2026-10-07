@@ -1373,18 +1373,38 @@ masterBtn:SetScript("OnClick", function()
 	UI:Refresh()
 end)
 tooltip(masterBtn, "Master feed", function()
-	return { "For one person (with the sync helper running): feed everyone else.",
-		"While you're online, your WhoDidIt sends the Chronicle raid times to every",
-		"WhoDidIt user on your realm over its hidden channel: everything once, then",
-		"only what changed. They need nothing but the addon, and keep what they got.",
-		"A raid's boss list is sent when someone opens that raid.",
+	local B, o = W.Board, WhoDidItDB.opts
+	local c = B and B.chron
+	local have = B and B.chronRaw and not B.chronFeed
+	local G, Wh, D, OK, NO = "|cffffd100", "|cffffffff", "|cff888888", "|cff33ff33", "|cffff7777"
+	return {
+		Wh .. "You feed everyone else the raid times.|r",
 		" ",
-		"All realms' times go out. To reach players on another realm, log into your master",
-		"character there (this setting and the sync file are shared by your characters).",
-		"Only those characters can be the master: everyone else's WhoDidIt ignores anyone else.",
+		G .. "What it does|r",
+		"While you're online, your WhoDidIt sends the",
+		"Chronicle raid times to " .. Wh .. "every WhoDidIt user|r",
+		"on " .. Wh .. (B and B.Realm() or "your realm") .. "|r. They need " .. Wh .. "nothing but the addon|r,",
+		"and they keep what they get.",
 		" ",
-		"|cff888888Needs \"sharing\" on. Everyone else just leaves this off - they receive automatically.|r",
-		"|cff888888Only reaches players on the same realm (custom channels are per realm).|r" }
+		G .. "How it sends|r",
+		"- " .. Wh .. "First time:|r everything (about 10 min)",
+		"- " .. Wh .. "After that:|r only what changed (seconds)",
+		"- " .. Wh .. "Raid details:|r when someone opens a raid",
+		" ",
+		G .. "Other realms|r",
+		"Log into your master character on that realm.",
+		"This setting and the sync file are shared",
+		"by all your characters.",
+		" ",
+		G .. "Right now|r",
+		"Master: " .. (o.master and (OK .. "on|r") or (NO .. "off|r")) .. "   Sharing: " .. (o.shareBoard and (OK .. "on|r") or (NO .. "off|r")),
+		"Times to send: " .. (have and (OK .. "yes|r" .. ((c and c.synced) and (", synced " .. B.Ago(c.synced)) or ""))
+			or (NO .. "none|r - run the sync helper")),
+		" ",
+		D .. "Only your master characters can feed: everyone|r",
+		D .. "else's WhoDidIt ignores anyone else. Reaches|r",
+		D .. "your own realm and faction only. Everyone else|r",
+		D .. "leaves this off and just receives.|r" }
 end, "ANCHOR_TOP")
 syncBar:SetScript("OnClick", syncNow)
 local function syncTip()
