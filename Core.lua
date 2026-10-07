@@ -478,8 +478,10 @@ function W:SaveFight(rec)
 	local db = WhoDidItDB
 	tinsert(db.fights, 1, rec)
 	-- an older fight selected in the window: it moved down one place
-	-- (1 means "the newest", so it follows the new fight; 0 is the live view)
-	if W.UI and W.UI.selIdx and W.UI.selIdx > 1 then W.UI.selIdx = W.UI.selIdx + 1 end
+	-- (1 means "the newest": with the window closed it follows the new fight, with it
+	-- open the fight being read stays on screen; 0 is the live view)
+	local shown = W.UI and W.UI.frame and W.UI.frame:IsVisible()
+	if W.UI and W.UI.selIdx and (W.UI.selIdx > 1 or (W.UI.selIdx == 1 and shown)) then W.UI.selIdx = W.UI.selIdx + 1 end
 	-- over the limit: drop the oldest demo fight first, so the demo never costs real fights
 	while getn(db.fights) > (db.opts.maxFights or 25) do
 		local drop = getn(db.fights)
