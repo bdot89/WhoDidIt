@@ -1408,10 +1408,9 @@ syncBar:SetScript("OnClick", syncNow)
 local function syncTip()
 	if not (W.Board and W.Board.CanMaster and W.Board.CanMaster()) then
 		return { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
-			"They reach you in game from the WhoDidIt maintainer's master feed:",
-			"nothing to install or run. The first copy takes about 15 minutes while",
-			"they're online; after that new times arrive within minutes, and what",
-			"you have is kept between logins." }
+			"WhoDidIt comes with every guild's times as of its last update, and",
+			"the maintainer's master feed adds newer ones in game while they're",
+			"online, within minutes. Nothing to install or run." }
 	end
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
 		"WoW addons can't go online, so a small helper does it: |cffffd100tools\\WhoDidIt-Sync.cmd|r",

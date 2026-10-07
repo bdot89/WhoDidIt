@@ -73,3 +73,7 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   (they refuse to run on a PC without a B.MASTERS character).
 - The built-in Chronicle logger logs nothing until the player says yes (opts.chronUse), and stays
   off when the separate ChronicleCompanion is installed but disabled (WDI_CHRON_OFF).
+- RaidTimes.lua (WDI_RAIDTIMES) ships every guild's raid times from the maintainer's sync
+  (tools/Publish-RaidTimes.ps1: C/K/C2/K2/L lines only, no PC/PK; refuses [[ ]] in a line, since
+  it's a Lua 5.0 long string). B:SeedSnapshot puts it into the saved feed when it's newer, so the
+  feed only sends what's newer; FULL_AGE is 21 days so a few-weeks-old snapshot asks for an update.

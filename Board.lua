@@ -1422,6 +1422,7 @@ local joinAt
 W:On("PLAYER_ENTERING_WORLD", function()
 	if not joinAt then joinAt = GetTime() + 15 end
 	B:SplitEra()
+	B:SeedSnapshot()
 	B:LoadChronicle()
 	B.rivalsDirty = true
 	B:OnZone()
@@ -1481,7 +1482,7 @@ local curSince                       -- master: "since" of the stream going out
 -- or from more than 2 days back) at most every 30 minutes, however many
 -- characters ask; boss lists on their own queue of at most 40 messages.
 local A_EVERY, Q_MAX, Q_WINDOW = 300, 6, 600
-local STREAM_GAP, FULL_GAP, FULL_AGE, LOGQ_MAX = 60, 1800, 2 * 86400, 40
+local STREAM_GAP, FULL_GAP, FULL_AGE, LOGQ_MAX = 60, 1800, 21 * 86400, 40
 local askedA, askedQ = {}, {}        -- master: sender -> last A / { since, n } of Q
 local logq, logSent = {}, {}         -- master: boss list parts to send / slug -> when
 local lastAsk = -1000                -- player: when I last asked for a stream
@@ -1591,6 +1592,36 @@ local function store()
 		WhoDidItDB.feed = f
 	end
 	return f
+end
+
+-- The raid times that ship with WhoDidIt (RaidTimes.lua, WDI_RAIDTIMES: the
+-- maintainer's last sync, published with tools\Publish-RaidTimes.cmd). On a
+-- fresh install, or when they're newer than what this PC has, they go into
+-- the saved feed as if a full copy had just arrived: Rankings is full at once,
+-- even with the master offline, and the master feed only sends what's newer.
+function B:SeedSnapshot()
+	local s = WDI_RAIDTIMES
+	if type(s) ~= "table" or type(s.text) ~= "string" or not tonumber(s.synced) then return end
+	if not WhoDidItDB or B.FeedSynced() >= s.synced then return end
+	local f = store()
+	f.logAt = f.logAt or {}
+	local n = 0
+	for line in string.gfind(s.text, "[^\n]+") do
+		local p = splitBar(line)
+		local t, key = p[1], nil
+		if t == "C" or t == "C2" then key = t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or "")
+		elseif t == "K" or t == "K2" then key = t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or "") .. "|" .. (p[5] or "")
+		elseif t == "L" and p[2] then
+			f.logs[p[2]] = line
+			f.logAt[p[2]] = s.synced
+		end
+		if key then f.lines[key] = line; n = n + 1 end
+	end
+	f.synced, f.part = s.synced, nil
+	f.server = s.server or f.server
+	f.from = f.from or "the WhoDidIt download"
+	f.dirty = true
+	B.seeded = n
 end
 
 -- how fresh the saved feed is (a stream that missed a message still counts)

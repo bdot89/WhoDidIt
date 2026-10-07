@@ -97,8 +97,8 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
-4. That's it. Rankings fills in by itself from the [master feed](#master-feed-nothing-to-install): the first copy
-   takes about 15 minutes in the background while the maintainer is online, and the Rankings tab shows the progress.
+4. That's it. Rankings is full straight away: WhoDidIt comes with every guild's raid times as of its last update,
+   and the [master feed](#master-feed-nothing-to-install) adds newer ones in game while the maintainer is online.
 
 **Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#logging-chronicle-logs),
 [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the
@@ -242,7 +242,8 @@ Rankings fills up from three places (hover a row to see which one a time came fr
 
 | Source | What it brings | You need |
 | --- | --- | --- |
-| **[Master feed](#master-feed-nothing-to-install)** | Every guild's Chronicle times on every realm, passed on in game by the maintainer's character | just the addon |
+| **The download** | Every guild's Chronicle times as of the maintainer's last publish (`RaidTimes.lua`), so a fresh install has full Rankings at once, even with the master offline | just the addon |
+| **[Master feed](#master-feed-nothing-to-install)** | Everything newer, passed on in game by the maintainer's character | just the addon |
 | **[Sync helper](#sync-helper-maintainer-only)** | Where the feed gets them: the maintainer's PC fetches Chronicle's times every 10 minutes | nothing (maintainer only) |
 | **Other WhoDidIt users** | Each guild's own bests, shared by its members right after the kill: before anyone uploads a log, and from guilds that never upload | just the addon |
 
@@ -254,9 +255,10 @@ Chronicle's times are on a website, and WoW addons can't go online. So the maint
 one of their master characters is online, their WhoDidIt passes the times on to every other WhoDidIt user on the realm
 over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.
 
-- **After a fresh install:** within a minute of the master being online, your WhoDidIt asks for the times. The first
-  copy is everything: about 530 messages, one every 1.6 seconds or so, so about 15 minutes for OctoWoW (if one went out just before
-  you logged in, the next can take up to half an hour). It comes in quietly in the
+- **After a fresh install:** Rankings is already full from the times that come with WhoDidIt. Within a minute of the
+  master being online, your WhoDidIt asks for what's newer, which is a short update (seconds to a few minutes).
+  Only without those built-in times (an old copy of WhoDidIt) is the first copy everything: about 530 messages, one
+  every 1.6 seconds or so, about 15 minutes (if one went out just before you logged in, up to half an hour). It comes in quietly in the
   background while you play. After that only what changed is sent (seconds), and one send serves everyone listening.
 - **While you wait:** the top of the Rankings tab says what's happening: "Receiving them from Upsilon" with a progress
   bar, the % and the minutes left; "Upsilon is online… your WhoDidIt is asking for them"; or "Waiting for Upsilon to
@@ -335,7 +337,10 @@ nothing else changes. **`tools\AutoSync-Off.cmd`** removes both and stops the he
 uses a Startup shortcut with a minimised window instead.) Only one copy of the helper ever runs, so the extra starts,
 or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
 
-**Maintainer:** keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
+**Maintainer:** now and then (weekly is plenty), double-click **`tools\Publish-RaidTimes.cmd`**. It puts the helper's
+latest times into the download (`RaidTimes.lua`, about 400 KB; your own characters' personal bests are left out),
+checks them and pushes them, so fresh installs start with them. The older that snapshot, the more the feed has to send.
+Keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
 characters). Logging into the master character on a realm feeds that realm.
 
 ### Banter
