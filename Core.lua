@@ -19,6 +19,10 @@ W.env = {}
 local floor = math.floor
 local getn = table.getn
 
+-- a fresh random sequence each login, so clients don't all wait the same time
+-- before asking on the channel and award titles don't repeat in the same order
+if math.randomseed then pcall(math.randomseed, time() + floor(math.mod(GetTime() * 1000, 100000))) end
+
 ------------------------------------------------------------------ output / formatting
 
 function W.Print(msg)
@@ -247,11 +251,16 @@ end
 
 -- an error in one handler is reported once and the others still run
 -- (in a raid, combat events arrive hundreds of times a second)
-local seenErr = {}
+local seenErr, nSeen = {}, 0
 function W:Oops(where, err)
 	err = tostring(err)
-	if seenErr[err] then return end
-	seenErr[err] = true
+	-- keyed by where + the start of the message, so an error with a changing
+	-- number or name in it counts once; and never more than 50 kept
+	local key = tostring(where) .. ":" .. string.sub(err, 1, 60)
+	if seenErr[key] then return end
+	if nSeen >= 50 then return end
+	seenErr[key] = true
+	nSeen = nSeen + 1
 	W.Print("|cffff5555error|r in " .. tostring(where) .. ": " .. err .. "  |cff888888(saved for bug reports: /wdi errors)|r")
 	if not WhoDidItDB then return end
 	WhoDidItDB.errors = WhoDidItDB.errors or {}
