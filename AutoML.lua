@@ -186,8 +186,8 @@ local function makeButton(parent, text, w, h)
 	b:SetWidth(w)
 	b:SetHeight(h)
 	b:SetText(text)
-	if b.SetTextFontObject then b:SetTextFontObject(GameFontNormalSmall) end
-	if b.SetHighlightFontObject then b:SetHighlightFontObject(GameFontHighlightSmall) end
+	if b.SetTextFontObject then b:SetTextFontObject(W.FontO("GameFontNormalSmall")) end
+	if b.SetHighlightFontObject then b:SetHighlightFontObject(W.FontO("GameFontHighlightSmall")) end
 	return b
 end
 
@@ -229,13 +229,13 @@ function A:BuildPanel()
 	fill:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -4, 4)
 	tinsert(UISpecialFrames, "WhoDidItAutoLootPanel")
 
-	local title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	local title = p:CreateFontString(nil, "OVERLAY", W.FontT("GameFontNormal"))
 	title:SetPoint("TOPLEFT", p, "TOPLEFT", 12, -12)
 	title:SetText("Auto master looting")
 	local close = CreateFrame("Button", nil, p, "UIPanelCloseButton")
 	close:SetPoint("TOPRIGHT", p, "TOPRIGHT", -2, -2)
 
-	p.status = p:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	p.status = p:CreateFontString(nil, "OVERLAY", W.FontT("GameFontHighlightSmall"))
 	p.status:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
 	p.status:SetWidth(COLS * (CW + 4) - 4)
 	p.status:SetJustifyH("LEFT")
@@ -256,7 +256,7 @@ function A:BuildPanel()
 	p.bkBtn:SetScript("OnClick", function() A.mode = "backup"; A:RefreshPanel() end)
 	tip(p.bkBtn, "If my bags are full", { "When the loot goes to you and your bags run out of space,", "it goes to this player instead. Nobody = it stays on the corpse." })
 
-	p.hint = p:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	p.hint = p:CreateFontString(nil, "OVERLAY", W.FontT("GameFontDisableSmall"))
 	p.hint:SetPoint("TOPLEFT", p.onBtn, "BOTTOMLEFT", 0, -8)
 	p.hint:SetJustifyH("LEFT")
 
@@ -272,7 +272,7 @@ function A:BuildPanel()
 		p.cells[i] = c
 	end
 
-	p.foot = p:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	p.foot = p:CreateFontString(nil, "OVERLAY", W.FontT("GameFontDisableSmall"))
 	p.foot:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 12, 10)
 	p.foot:SetWidth(COLS * (CW + 4) - 4)
 	p.foot:SetJustifyH("LEFT")

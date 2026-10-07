@@ -929,3 +929,4 @@ without a licence comes out again if its author asks:
 | [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the raid pack data in `PackData.lua` (GUIDs, packs, marks), included with credit, removed on request; not under WhoDidIt's MIT licence | none stated |
 | [Chronicle External API](https://legacy.chronicleclassic.com/developers/api) | Chronicle | every guild's raid times | API terms |
 | [ClassicAPI](https://github.com/brues-code/ClassicAPI) (optional) | brues-code | extras, see above | GPL-3.0 |
+| [Fira Sans Condensed](https://github.com/google/fonts/tree/main/ofl/firasanscondensed) | The Mozilla Foundation, Telefonica S.A. | the font (`Fonts`) | SIL Open Font Licence 1.1 (`FontsOFL.txt`) |

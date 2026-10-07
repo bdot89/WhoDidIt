@@ -509,7 +509,7 @@ function M:PickMark(current, fn, removeFn, who)
 		fill:SetTexture(0.05, 0.05, 0.08, 1)
 		fill:SetPoint("TOPLEFT", p, "TOPLEFT", 3, -3)
 		fill:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -3, 3)
-		p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		p.title = p:CreateFontString(nil, "OVERLAY", W.FontT("GameFontNormalSmall"))
 		p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 8, -6)
 		p.sel = p:CreateTexture(nil, "BORDER")
 		p.sel:SetTexture(1, 0.82, 0, 0.35)
@@ -528,7 +528,7 @@ function M:PickMark(current, fn, removeFn, who)
 				t:SetTexture(M.ICONS)
 				t:SetTexCoord(M.IconCoords(mark))
 			else
-				local fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				local fs = b:CreateFontString(nil, "OVERLAY", W.FontT("GameFontHighlightSmall"))
 				fs:SetPoint("CENTER", b, "CENTER", 0, 0)
 				fs:SetText("|cff999999none|r")
 			end
@@ -555,7 +555,7 @@ function M:PickMark(current, fn, removeFn, who)
 		p.rem:SetHeight(20)
 		p.rem:SetPoint("TOPLEFT", p, "TOPLEFT", 8 + 9 * 26 + 2, -23)
 		p.rem:SetText("|cffff7777Take out|r")
-		if p.rem.SetTextFontObject then p.rem:SetTextFontObject(GameFontNormalSmall) end
+		if p.rem.SetTextFontObject then p.rem:SetTextFontObject(W.FontO("GameFontNormalSmall")) end
 		p.rem:SetScript("OnClick", function()
 			local f = M.picker.removeFn
 			M.picker:Hide()

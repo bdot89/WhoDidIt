@@ -49,6 +49,33 @@ UI.COL = {
 	btn   = { 0.11, 0.11, 0.13, 0.96 },    btnEdge   = { 0.3, 0.3, 0.35, 1 },
 	sel   = { 0.85, 0.66, 0.15, 1 },       hover     = { 1, 0.82, 0, 0.13 },
 }
+-- WhoDidIt's font: Fira Sans Condensed (SIL Open Font Licence, Fonts\OFL.txt), regular for
+-- text, semibold for the gold titles and button labels, one size up from WoW's own
+-- (it's narrower). Copies of the WoW font objects WhoDidIt uses; without CreateFont
+-- on this client the WoW ones stay.
+UI.FONT = "Interface\\AddOns\\WhoDidIt\\Fonts\\FiraSansCondensed-Regular.ttf"
+UI.FONT_BOLD = "Interface\\AddOns\\WhoDidIt\\Fonts\\FiraSansCondensed-SemiBold.ttf"
+UI.FONTS = {}
+if CreateFont then
+	for _, name in ipairs({ "GameFontNormal", "GameFontNormalSmall", "GameFontNormalLarge",
+		"GameFontHighlight", "GameFontHighlightSmall", "GameFontDisable", "GameFontDisableSmall" }) do
+		local base = getglobal(name)
+		if base and base.GetFont then
+			local _, size, flags = base:GetFont()
+			local fo = CreateFont("WhoDidIt" .. name)
+			fo:SetFont(string.find(name, "Normal") and UI.FONT_BOLD or UI.FONT, (size or 12) + 1, flags or "")
+			if base.GetTextColor then
+				local r, g, b = base:GetTextColor()
+				fo:SetTextColor(r or 1, g or 1, b or 1)
+			end
+			UI.FONTS[name] = "WhoDidIt" .. name
+		end
+	end
+end
+-- a font template name / font object: WhoDidIt's copy when there is one
+function UI.F(name) return UI.FONTS[name] or name end
+function UI.FO(name) return getglobal(UI.FONTS[name] or name) end
+
 function UI.Flat(fr, bg, edge)
 	fr:SetBackdrop({ bgFile = UI.FLAT, edgeFile = UI.FLAT, tile = false, edgeSize = 1,
 		insets = { left = 1, right = 1, top = 1, bottom = 1 } })
@@ -82,6 +109,9 @@ function UI.Skin(b)
 		h:SetAlpha(0.55)
 	end
 	UI.Flat(b, UI.COL.btn, UI.COL.btnEdge)
+	if b.SetTextFontObject then b:SetTextFontObject(UI.FO("GameFontNormal")) end
+	if b.SetHighlightFontObject then b:SetHighlightFontObject(UI.FO("GameFontHighlight")) end
+	if b.SetDisabledFontObject then b:SetDisabledFontObject(UI.FO("GameFontDisable")) end
 	return b
 end
 -- the selected tab: a gold border and the glow kept on
@@ -134,11 +164,11 @@ local function CreateList(parent, nrows, rowh, width)
 		hl:SetAllPoints(b)
 		hl:SetTexture(1, 1, 1, 0.08)
 
-		b.r = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		b.r = b:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 		b.r:SetPoint("RIGHT", b, "RIGHT", -4, 0)
 		b.r:SetJustifyH("RIGHT")
 
-		b.l = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		b.l = b:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 		b.l:SetPoint("LEFT", b, "LEFT", 4, 0)
 		b.l:SetJustifyH("LEFT")
 		b.l:SetHeight(rowh)
@@ -221,7 +251,7 @@ local function CreateList(parent, nrows, rowh, width)
 						local c = d.cols[j]
 						local fs = b.c[j]
 						if not fs then
-							fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+							fs = b:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 							fs:SetHeight(self.rowh)
 							b.c[j] = fs
 						end
@@ -331,7 +361,7 @@ function UI.GridCell(row, size, wheel)
 	-- the X / ? / - mark sits on its own layer above the icon
 	c.top = CreateFrame("Frame", nil, c)
 	c.top:SetAllPoints(c)
-	c.txt = c.top:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	c.txt = c.top:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormal"))
 	c.txt:SetPoint("CENTER", c, "CENTER", 0, 0)
 	c.num = c.top:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
 	c.num:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -1, 1)
@@ -481,15 +511,15 @@ statusBar:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -2)
 statusBar:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, -2)
 statusBar:SetHeight(20)
 
-local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+local title = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormalLarge"))
 title:SetPoint("TOPLEFT", f, "TOPLEFT", PAD + 4, -10)
 title:SetText("|cffff5555Who|cffffd100DidIt|r")
 
-local version = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+local version = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
 version:SetPoint("BOTTOMLEFT", title, "BOTTOMRIGHT", 4, 1)
 version:SetText("v" .. W.version)
 
-local envText = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+local envText = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
 envText:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -36)
 envText:SetJustifyH("RIGHT")
 
@@ -501,8 +531,8 @@ local amlBtn = UI.Skin(CreateFrame("Button", nil, f, "UIPanelButtonTemplate"))
 amlBtn:SetWidth(118)
 amlBtn:SetHeight(18)
 amlBtn:SetPoint("RIGHT", envText, "LEFT", -10, 0)
-if amlBtn.SetTextFontObject then amlBtn:SetTextFontObject(GameFontNormalSmall) end
-if amlBtn.SetHighlightFontObject then amlBtn:SetHighlightFontObject(GameFontHighlightSmall) end
+if amlBtn.SetTextFontObject then amlBtn:SetTextFontObject(UI.FO("GameFontNormalSmall")) end
+if amlBtn.SetHighlightFontObject then amlBtn:SetHighlightFontObject(UI.FO("GameFontHighlightSmall")) end
 amlBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 amlBtn:SetScript("OnClick", function()
 	if not W.AutoML then W.Print(W.RESTART_MSG) return end
@@ -601,11 +631,11 @@ end
 
 local left = panel(PAD, TOP, LEFTW, HEIGHT + TOP - PAD)
 
-local leftHead = left:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+local leftHead = left:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormal"))
 leftHead:SetPoint("TOPLEFT", left, "TOPLEFT", 10, -9)
 leftHead:SetText("Encounters")
 
-local leftCount = left:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+local leftCount = left:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
 leftCount:SetPoint("TOPRIGHT", left, "TOPRIGHT", -10, -11)
 leftCount:SetJustifyH("RIGHT")
 
@@ -625,9 +655,9 @@ sep:SetPoint("BOTTOMRIGHT", left, "BOTTOMRIGHT", -8, 132)
 
 -- smaller text, so labels like "Auto shout-outs: smart" fit
 local function smallText(b)
-	if b.SetTextFontObject then b:SetTextFontObject(GameFontNormalSmall) end
-	if b.SetHighlightFontObject then b:SetHighlightFontObject(GameFontHighlightSmall) end
-	if b.SetDisabledFontObject then b:SetDisabledFontObject(GameFontDisableSmall) end
+	if b.SetTextFontObject then b:SetTextFontObject(UI.FO("GameFontNormalSmall")) end
+	if b.SetHighlightFontObject then b:SetHighlightFontObject(UI.FO("GameFontHighlightSmall")) end
+	if b.SetDisabledFontObject then b:SetDisabledFontObject(UI.FO("GameFontDisableSmall")) end
 	return b
 end
 
@@ -749,19 +779,19 @@ tooltip(demoBtn, "Demo / test mode", {
 
 local header = panel(RX, TOP, RW, HEADH)
 
-local rTitle = header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+local rTitle = header:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormalLarge"))
 rTitle:SetPoint("TOPLEFT", header, "TOPLEFT", 10, -9)
 rTitle:SetWidth(HEADW)
 rTitle:SetHeight(18)
 rTitle:SetJustifyH("LEFT")
 
-local rInfo = header:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+local rInfo = header:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 rInfo:SetPoint("TOPLEFT", rTitle, "BOTTOMLEFT", 0, -3)
 rInfo:SetWidth(HEADW)
 rInfo:SetHeight(12)
 rInfo:SetJustifyH("LEFT")
 
-local rVerdict = header:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+local rVerdict = header:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 rVerdict:SetPoint("TOPLEFT", rInfo, "BOTTOMLEFT", 0, -5)
 rVerdict:SetWidth(HEADW)
 rVerdict:SetHeight(28)
@@ -807,7 +837,7 @@ end)
 tooltip(srCopy, "raidres.fly.dev", { "The website where you make the soft-res sheet: raiders pick their items there,",
 	"then you use its RollFor export to import the sheet here.",
 	"Click: copies the link (with ClassicAPI straight to your clipboard,", "otherwise a box opens with it selected - press Ctrl+C)." }, "ANCHOR_LEFT")
-local srSite = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+local srSite = header:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormal"))
 srSite:SetPoint("RIGHT", srCopy, "LEFT", -8, 0)
 srSite:SetText("|cffaaaaaaSoft-res sheets:|r  |cffffd100raidres.fly.dev|r")
 srCopy:Hide()
@@ -918,7 +948,7 @@ do
 		b:SetWidth(w)
 		b:SetHeight(CG.ROWH - 2)
 		b:SetPoint("LEFT", h, "LEFT", x, 0)
-		b.fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		b.fs = b:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormalSmall"))
 		b.fs:SetAllPoints(b)
 		b.fs:SetJustifyH("CENTER")
 		b:SetScript("OnEnter", function()
@@ -1058,7 +1088,7 @@ for tab, list in pairs(ACTIONS) do
 	end
 end
 
-local hintText = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+local hintText = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
 hintText:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + 4, PAD + 6)
 hintText:SetJustifyH("LEFT")
 
@@ -1425,11 +1455,11 @@ do
 	syncBar.fill:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
 	syncBar.fill:SetPoint("TOPLEFT", syncBar, "TOPLEFT", 1, -1)
 	syncBar.fill:SetPoint("BOTTOMLEFT", syncBar, "BOTTOMLEFT", 1, 1)
-	syncBar.top = syncBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	syncBar.top = syncBar:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 	syncBar.top:SetPoint("TOPLEFT", syncBar, "TOPLEFT", 5, -3)
 	syncBar.top:SetPoint("TOPRIGHT", syncBar, "TOPRIGHT", -5, -3)
 	syncBar.top:SetJustifyH("LEFT")
-	syncBar.bot = syncBar:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	syncBar.bot = syncBar:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
 	syncBar.bot:SetPoint("BOTTOMLEFT", syncBar, "BOTTOMLEFT", 5, 3)
 	syncBar.bot:SetPoint("BOTTOMRIGHT", syncBar, "BOTTOMRIGHT", -5, 3)
 	syncBar.bot:SetJustifyH("LEFT")
@@ -1962,7 +1992,7 @@ function UI.ArtProbe()
 		fr:EnableMouse(true)
 		local close = CreateFrame("Button", nil, fr, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", fr, "TOPRIGHT", -6, -6)
-		local title = fr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local title = fr:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormal"))
 		title:SetPoint("TOP", fr, "TOP", 0, -16)
 		title:SetText("WhoDidIt artwork check - screenshot this for the maintainer")
 		UI.artFrame = fr
@@ -1978,7 +2008,7 @@ function UI.ArtProbe()
 			tex:SetWidth(160); tex:SetHeight(80)
 			tex:SetPoint("TOPLEFT", fr, "TOPLEFT", 18 + col * 166, -40 - rowN * 98)
 			local ok = tex:SetTexture(all[i])
-			local fs = fr:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+			local fs = fr:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 			fs:SetWidth(160)
 			fs:SetPoint("TOP", tex, "BOTTOM", 0, -1)
 			local short = string.gsub(all[i], "^.*\\", "")
@@ -2971,7 +3001,7 @@ local function nameAt(text, rec, x)
 	if getn(found) == 0 then return nil end
 	table.sort(found, function(a, b) return a[2] < b[2] end)
 	if not measure then
-		measure = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		measure = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
 		measure:Hide()
 	end
 	local function width(s)

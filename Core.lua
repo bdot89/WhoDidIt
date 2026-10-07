@@ -25,6 +25,9 @@ if math.randomseed then pcall(math.randomseed, time() + floor(math.mod(GetTime()
 
 ------------------------------------------------------------------ output / formatting
 
+-- WhoDidIt's font (UI.lua): a font template name / font object, WoW's own until the UI has loaded
+function W.FontT(name) return (W.UI and W.UI.F) and W.UI.F(name) or name end
+function W.FontO(name) return getglobal(W.FontT(name)) end
 function W.Print(msg)
 	DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Who|cffffd100DidIt|r: " .. tostring(msg))
 end
