@@ -182,6 +182,7 @@ local COLS, ROWS, CW, CH = 4, 11, 92, 18
 
 local function makeButton(parent, text, w, h)
 	local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	if W.UI and W.UI.Skin then W.UI.Skin(b) end
 	b:SetWidth(w)
 	b:SetHeight(h)
 	b:SetText(text)

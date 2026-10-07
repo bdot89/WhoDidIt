@@ -550,6 +550,7 @@ function M:PickMark(current, fn, removeFn, who)
 			p.btns[k] = b
 		end
 		p.rem = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
+		if W.UI and W.UI.Skin then W.UI.Skin(p.rem) end
 		p.rem:SetWidth(78)
 		p.rem:SetHeight(20)
 		p.rem:SetPoint("TOPLEFT", p, "TOPLEFT", 8 + 9 * 26 + 2, -23)

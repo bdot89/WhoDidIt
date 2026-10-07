@@ -38,6 +38,59 @@ local KIND_COLOR = {
 }
 
 
+------------------------------------------------------------------ the look
+
+-- Flat dark panels and buttons with crisp 1-pixel borders. WHITE8X8 is a plain
+-- white square in the client (Interface\Buttons\WHITE8X8.blp, checked in its files).
+UI.FLAT = "Interface\\Buttons\\WHITE8X8"
+UI.COL = {
+	frame = { 0.035, 0.035, 0.045, 0.96 }, frameEdge = { 0.42, 0.34, 0.16, 1 },
+	panel = { 0.07, 0.07, 0.085, 0.88 },   panelEdge = { 0.2, 0.2, 0.24, 1 },
+	btn   = { 0.11, 0.11, 0.13, 0.96 },    btnEdge   = { 0.3, 0.3, 0.35, 1 },
+	sel   = { 0.85, 0.66, 0.15, 1 },       hover     = { 1, 0.82, 0, 0.13 },
+}
+function UI.Flat(fr, bg, edge)
+	fr:SetBackdrop({ bgFile = UI.FLAT, edgeFile = UI.FLAT, tile = false, edgeSize = 1,
+		insets = { left = 1, right = 1, top = 1, bottom = 1 } })
+	fr:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
+	fr:SetBackdropBorderColor(edge[1], edge[2], edge[3], edge[4])
+end
+
+-- a WoW panel button made flat: its red art hidden, a dark fill, a thin border,
+-- a soft gold glow on hover (and while it's the selected tab)
+function UI.Skin(b)
+	if not b or b.wdiSkin then return b end
+	b.wdiSkin = true
+	local hidden = 0
+	for _, get in ipairs({ "GetNormalTexture", "GetPushedTexture", "GetDisabledTexture" }) do
+		local t = b[get] and b[get](b)
+		if t then t:SetAlpha(0); hidden = hidden + 1 end
+	end
+	if hidden == 0 then
+		-- no Get...Texture on this client: take the art away instead
+		pcall(b.SetNormalTexture, b, "")
+		pcall(b.SetPushedTexture, b, "")
+		pcall(b.SetDisabledTexture, b, "")
+	end
+	-- the hover glow: the client's own quest-log highlight (a soft gold band)
+	b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+	local h = b.GetHighlightTexture and b:GetHighlightTexture()
+	if h then
+		h:ClearAllPoints()
+		h:SetPoint("TOPLEFT", b, "TOPLEFT", 1, -1)
+		h:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -1, 1)
+		h:SetAlpha(0.55)
+	end
+	UI.Flat(b, UI.COL.btn, UI.COL.btnEdge)
+	return b
+end
+-- the selected tab: a gold border and the glow kept on
+function UI.SkinSelect(b, on)
+	local e = on and UI.COL.sel or UI.COL.btnEdge
+	if b.wdiSkin then b:SetBackdropBorderColor(e[1], e[2], e[3], e[4]) end
+	if on then b:LockHighlight() else b:UnlockHighlight() end
+end
+
 ------------------------------------------------------------------ list widget
 
 local function CreateList(parent, nrows, rowh, width)
@@ -108,13 +161,15 @@ local function CreateList(parent, nrows, rowh, width)
 	s:SetWidth(14)
 	s:SetPoint("TOPRIGHT", L, "TOPRIGHT", 0, 0)
 	s:SetPoint("BOTTOMRIGHT", L, "BOTTOMRIGHT", 0, 0)
-	s:SetBackdrop({
-		bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
-		edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
-		tile = true, tileSize = 8, edgeSize = 8,
-		insets = { left = 3, right = 3, top = 6, bottom = 6 },
-	})
-	s:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob")
+	s:SetWidth(8)
+	UI.Flat(s, { 0, 0, 0, 0.35 }, { 0.18, 0.18, 0.22, 1 })
+	s:SetThumbTexture(UI.FLAT)
+	local thumb = s:GetThumbTexture()
+	if thumb then
+		thumb:SetVertexColor(0.55, 0.5, 0.38, 0.9)
+		thumb:SetWidth(6)
+		thumb:SetHeight(24)
+	end
 	s:SetMinMaxValues(0, 0)
 	s:SetValueStep(1)
 	s:SetValue(0)
@@ -397,23 +452,28 @@ f:SetClampedToScreen(true)
 f:RegisterForDrag("LeftButton")
 f:SetScript("OnDragStart", function() this:StartMoving() end)
 f:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
-f:SetBackdrop({
-	bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-	tile = true, tileSize = 16, edgeSize = 16,
-	insets = { left = 4, right = 4, top = 4, bottom = 4 },
-})
-f:SetBackdropColor(0.04, 0.04, 0.06, 0.95)
-f:SetBackdropBorderColor(0.55, 0.55, 0.6, 1)
+UI.Flat(f, UI.COL.frame, UI.COL.frameEdge)
 f:Hide()
 UI.frame = f
 tinsert(UISpecialFrames, "WhoDidItFrame")
 
 local titleBar = f:CreateTexture(nil, "ARTWORK")
-titleBar:SetTexture(1, 1, 1, 0.06)
+titleBar:SetTexture(UI.FLAT)
+if titleBar.SetGradientAlpha then
+	titleBar:SetGradientAlpha("VERTICAL", 0.1, 0.08, 0.04, 0.9, 0.22, 0.17, 0.07, 0.9)
+else
+	titleBar:SetVertexColor(0.16, 0.13, 0.06, 0.9)
+end
 titleBar:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)
 titleBar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -5, -5)
 titleBar:SetHeight(24)
+-- a thin gold line under the title bar
+local titleLine = f:CreateTexture(nil, "ARTWORK")
+titleLine:SetTexture(UI.FLAT)
+titleLine:SetVertexColor(UI.COL.frameEdge[1], UI.COL.frameEdge[2], UI.COL.frameEdge[3], 0.8)
+titleLine:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
+titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
+titleLine:SetHeight(1)
 -- the second row: auto-loot and the add-on lights, on the right
 local statusBar = f:CreateTexture(nil, "ARTWORK")
 statusBar:SetTexture(1, 1, 1, 0.03)
@@ -437,7 +497,7 @@ local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -2, -2)
 
 -- auto master looting: on/off at a glance, click to pick who gets the loot
-local amlBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+local amlBtn = UI.Skin(CreateFrame("Button", nil, f, "UIPanelButtonTemplate"))
 amlBtn:SetWidth(118)
 amlBtn:SetHeight(18)
 amlBtn:SetPoint("RIGHT", envText, "LEFT", -10, 0)
@@ -475,19 +535,12 @@ local function panel(x, y, w, h)
 	p:SetPoint("TOPLEFT", f, "TOPLEFT", x, y)
 	p:SetWidth(w)
 	p:SetHeight(h)
-	p:SetBackdrop({
-		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-		tile = true, tileSize = 16, edgeSize = 12,
-		insets = { left = 3, right = 3, top = 3, bottom = 3 },
-	})
-	p:SetBackdropColor(1, 1, 1, 0.03)
-	p:SetBackdropBorderColor(0.4, 0.4, 0.45, 0.8)
+	UI.Flat(p, UI.COL.panel, UI.COL.panelEdge)
 	return p
 end
 
 local function button(parent, text, w, h)
-	local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	local b = UI.Skin(CreateFrame("Button", nil, parent, "UIPanelButtonTemplate"))
 	b:SetWidth(w)
 	b:SetHeight(h or 20)
 	b:SetText(text)
@@ -901,7 +954,7 @@ end
 function UI.SetGridHead(cols, endA, endB)
 	local h = consList.head
 	local key = UI.consView or "buffs"
-	if key == "used" then h.used:LockHighlight(); h.buffs:UnlockHighlight() else h.buffs:LockHighlight(); h.used:UnlockHighlight() end
+	UI.SkinSelect(h.used, key == "used"); UI.SkinSelect(h.buffs, key ~= "used")
 	h.role.fs:SetText("ROLE")
 	h.role.tipTitle, h.role.tip = "Role", { "Tank, healer, melee, ranged or caster - from what they did in the fight." }
 	for i = 1, getn(h.cols) do
@@ -1048,7 +1101,7 @@ UI.modeButtons = {}
 for i = 1, getn(MODES) do
 	local m = MODES[i]
 	-- sized to the label, one after another
-	local b = CreateFrame("Button", "WhoDidItMode" .. i, f, "UIPanelButtonTemplate")
+	local b = UI.Skin(CreateFrame("Button", "WhoDidItMode" .. i, f, "UIPanelButtonTemplate"))
 	b:SetHeight(18)
 	b:SetText(m.text)
 	local label = getglobal("WhoDidItMode" .. i .. "Text")
@@ -1604,7 +1657,7 @@ function UI:ApplyMode()
 	local function vis(b, on) if on then b:Show() else b:Hide() end end
 	for i = 1, getn(UI.modeButtons) do
 		local b = UI.modeButtons[i]
-		if b.id == UI.mode then b:LockHighlight() else b:UnlockHighlight() end
+		UI.SkinSelect(b, b.id == UI.mode)
 	end
 	for i = 1, getn(UI.tabButtons) do vis(UI.tabButtons[i], fights) end
 	for i = 1, getn(UI.rankButtons) do vis(UI.rankButtons[i], UI.mode == "rankings") end
@@ -1861,9 +1914,8 @@ end
 
 -- a raid's picture for its run header: the first of these the game has (see
 -- /wdi art); nil = none, the header is plain
--- checked in game with /wdi art (8 Oct 2026): ZG, MC, BWL, Naxx, ES and Karazhan
--- load; Onyxia and both AQs didn't under the first names tried, so there are
--- more guesses for them (the first that loads is used, none = a plain header)
+-- names from the client's own file lists (8 Oct 2026; ZG, MC, BWL, Naxx, ES and Karazhan also
+-- checked in game with /wdi art). The first that loads is used; none = a plain header.
 do   -- (a block: UI.lua is near Lua 5.0's 200 file-level locals)
 local LS = "Interface\\Glues\\LoadingScreens\\"
 UI.ART = {
@@ -1875,9 +1927,9 @@ UI.ART = {
 	["Tower of Karazhan"]       = { LS .. "LoadScreenKarazhan" },
 	["Lower Tower of Karazhan"] = { LS .. "LoadScreenKarazhan" },
 	["Upper Tower of Karazhan"] = { LS .. "LoadScreenKarazhan" },
-	["Onyxia's Lair"]           = { LS .. "LoadScreenOnyxia", LS .. "LoadScreenOnyxiaRaid", LS .. "LoadScreenDragonLair" },
-	["Ruins of Ahn'Qiraj"]      = { LS .. "LoadScreenAQRuins", LS .. "LoadScreenAQ20", LS .. "LoadScreenAhnQirajRuin", LS .. "LoadScreenSilithus" },
-	["Ahn'Qiraj"]               = { LS .. "LoadScreenAQTemple", LS .. "LoadScreenAQ40", LS .. "LoadScreenAhnQirajTemple40", LS .. "LoadScreenSilithus" },
+	["Onyxia's Lair"]           = { LS .. "LoadScreenRaid" },   -- vanilla gave her lair no picture of its own: the general raid one
+	["Ruins of Ahn'Qiraj"]      = { LS .. "LoadScreenAhnQiraj20man" },
+	["Ahn'Qiraj"]               = { LS .. "LoadScreenAhnQiraj40man" },
 }
 end
 UI.artOK = {}
@@ -3431,9 +3483,9 @@ function UI:RefreshRankings()
 	UI.rankButtons[3]:SetText("Realm: " .. realm)
 	UI.rankButtons[4]:SetText("Faction: " .. faction)
 	if UI.rk.view == "kills" then
-		UI.rankButtons[1]:LockHighlight(); UI.rankButtons[2]:UnlockHighlight()
+		UI.SkinSelect(UI.rankButtons[1], true); UI.SkinSelect(UI.rankButtons[2], false)
 	else
-		UI.rankButtons[2]:LockHighlight(); UI.rankButtons[1]:UnlockHighlight()
+		UI.SkinSelect(UI.rankButtons[2], true); UI.SkinSelect(UI.rankButtons[1], false)
 	end
 
 	local guilds = {}
@@ -4452,7 +4504,7 @@ function UI:RefreshFame()
 	for i = 1, getn(UI.fameButtons) do
 		local b = UI.fameButtons[i]
 		local on = (not UI.fame.who) and ((i == 1 and v == "hero") or (i == 2 and v == "blame") or (i == 3 and v == "plays") or (i == 4 and v == "blunders"))
-		if on then b:LockHighlight() else b:UnlockHighlight() end
+		UI.SkinSelect(b, on)
 	end
 	famePerBtn:SetText("Per fight: " .. (UI.fame.per and "|cff33ff33on|r" or "off"))
 	fameTestBtn:SetText(C.HasTest() and "|cff33ccffClear test data|r" or "|cff777777No test data|r")
@@ -4514,12 +4566,12 @@ function UI:Refresh()
 
 	for i = 1, getn(UI.tabButtons) do
 		local b = UI.tabButtons[i]
-		if b.id == UI.tab then b:LockHighlight() else b:UnlockHighlight() end
+		UI.SkinSelect(b, b.id == UI.tab)
 	end
 	for i = 1, getn(UI.meterButtons) do
 		local b = UI.meterButtons[i]
 		if UI.tab == "meters" then b:Show() else b:Hide() end
-		if b.id == UI.meter then b:LockHighlight() else b:UnlockHighlight() end
+		UI.SkinSelect(b, b.id == UI.meter)
 	end
 	for tab, list in pairs(UI.actionButtons) do
 		for i = 1, getn(list) do
