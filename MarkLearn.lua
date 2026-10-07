@@ -33,6 +33,7 @@ local getn, tinsert = table.getn, table.insert
 local floor = math.floor
 local MARKS = { 8, 7, 6, 5, 4, 3, 2, 1 }   -- skull first
 local GAP = 12                               -- yards between mobs of one pack
+local MAX_NOTED = 1500                       -- mobs noted per zone, at most
 local PREFIX = "Learned "
 
 local function db() return WhoDidItDB and WhoDidItDB.marks end
@@ -64,6 +65,13 @@ function L:Count(zone)
 	return n
 end
 
+-- forget what was noted in a zone (the packs made from it stay)
+function L:Clear(zone)
+	local d = db()
+	if d and d.learned then d.learned[zone] = nil end
+	W.Print("Forgot the mobs noted in " .. zone .. ". Packs you already made are kept.")
+end
+
 local seq = 0
 local function round(v) return v and floor(v * 10 + 0.5) / 10 end
 
@@ -76,8 +84,10 @@ function L:Note(guid)
 	local cls = UnitClassification(guid)
 	if cls == "worldboss" or UnitCreatureType(guid) == "Critter" then return end
 	local s = store(GetRealZoneText())
-	local old = s[guid]
-	if old and old.x then return end
+	if s[guid] then
+		if s[guid].x then return end
+		s[guid] = nil   -- saved without a position by an older version
+	end
 	local x, y, z
 	if UnitPosition then
 		local ok, a, b, c = pcall(UnitPosition, guid)
@@ -93,12 +103,23 @@ function L:Note(guid)
 			end
 		end
 	end
+	-- no position, no use: nothing is saved (it's tried again next time it's seen)
+	if not x then return end
+	if L:Count(GetRealZoneText()) >= MAX_NOTED then return end
 	seq = seq + 1
 	s[guid] = {
 		n = UnitName(guid), x = round(x), y = round(y), z = round(z),
 		m = ((UnitPowerType(guid) == 0) and (UnitManaMax(guid) or 0) > 0) and 1 or nil,
 		hp = UnitHealthMax(guid), t = time() * 1000 + math.mod(seq, 1000),
 	}
+end
+
+-- what a learned pack looked like when it was made: if it differs now, it was changed by hand
+function L.Sig(p)
+	local l = {}
+	for g, mark in pairs(p.mobs or {}) do tinsert(l, g .. "=" .. tostring(mark)) end
+	table.sort(l)
+	return table.concat(l, ",")
 end
 
 -- group the noted mobs of a zone into packs and save them as yours
@@ -113,6 +134,26 @@ function L:Build(zone, gap)
 		W.Print("No mobs noted in " .. zone .. " yet. Switch Learn on and walk through the raid first.")
 		return 0
 	end
+	-- learned packs you changed by hand are yours now: kept as they are, and
+	-- their mobs left out of the new packs
+	local d = db()
+	d.packs[zone] = d.packs[zone] or {}
+	local kept, used = {}, {}
+	for name, p in pairs(d.packs[zone]) do
+		if p.learned then
+			if p.sig and p.sig ~= L.Sig(p) then
+				p.learned, p.sig = nil, nil
+				kept[name] = true
+				for g in pairs(p.mobs or {}) do used[g] = true end
+			else
+				d.packs[zone][name] = nil
+			end
+		end
+	end
+	for i = getn(list), 1, -1 do
+		if used[list[i].g] then tremove(list, i) end
+	end
+	n = getn(list)
 	table.sort(list, function(a, b) return a.r.t < b.r.t end)   -- the order you met them
 	-- chain mobs within "gap" yards of each other into one pack
 	local g2, pack, packs = gap * gap, {}, {}
@@ -138,12 +179,8 @@ function L:Build(zone, gap)
 			tinsert(packs, members)
 		end
 	end
-	-- replace the learned packs of this zone, keep everything else of yours
-	local d = db()
-	d.packs[zone] = d.packs[zone] or {}
-	for name, p in pairs(d.packs[zone]) do
-		if p.learned then d.packs[zone][name] = nil end
-	end
+	-- the learned packs of this zone were replaced above; everything else of yours stays
+	local num = 0
 	for k = 1, getn(packs) do
 		local mobs = {}
 		for i = 1, getn(packs[k]) do tinsert(mobs, list[packs[k][i]]) end
@@ -159,16 +196,27 @@ function L:Build(zone, gap)
 			count[nm] = (count[nm] or 0) + 1
 			if count[nm] > topN then top, topN = nm, count[nm] end
 		end
-		local name = PREFIX .. string.format("%02d", k) .. " - " .. (top or "?") .. ((getn(mobs) > 1) and (" x" .. getn(mobs)) or "")
+		-- numbered in the order you met them, skipping names a kept pack has
+		local name
+		repeat
+			num = num + 1
+			name = PREFIX .. string.format("%02d", num) .. " - " .. (top or "?") .. ((getn(mobs) > 1) and (" x" .. getn(mobs)) or "")
+		until not d.packs[zone][name]
 		local p = { mobs = {}, names = {}, learned = true }
 		for i = 1, getn(mobs) do
 			p.mobs[mobs[i].g] = MARKS[i] or 0
 			p.names[mobs[i].g] = mobs[i].r.n
 		end
+		p.sig = L.Sig(p)
 		d.packs[zone][name] = p
 	end
 	if M.Changed then M:Changed() end
-	W.Print("Made " .. getn(packs) .. " packs from " .. n .. " mobs in " .. zone .. " (" .. gap .. " yard gap). They're saved as your own packs - change any mark by hand.")
+	local nk = 0
+	for _ in pairs(kept) do nk = nk + 1 end
+	W.Print("Made " .. getn(packs) .. " packs from " .. n .. " mobs in " .. zone .. " (" .. gap .. " yard gap)"
+		.. ((nk > 0) and (", and kept " .. nk .. " learned pack" .. ((nk == 1) and "" or "s") .. " you changed by hand") or "")
+		.. ". They're saved as your own packs - change any mark by hand; a changed pack is kept when you make packs again."
+		.. " Done with this raid? /wdi marks learn clear forgets the noted mobs.")
 	return getn(packs)
 end
 

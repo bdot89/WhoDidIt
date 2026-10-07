@@ -1108,6 +1108,7 @@ function M:Slash(rest)
 		W.UI:SetMode("marks")
 	elseif cmd == "learn" then
 		if not M.Learn then W.Print(W.RESTART_MSG) return end
+		if arg == "clear" then M.Learn:Clear(zone) return end
 		M.Learn:Set(arg == "on" or (arg == "" and not M.Learn:On()))
 		if W.UI and W.UI.Refresh then W.UI:Refresh() end
 	elseif cmd == "build" then
