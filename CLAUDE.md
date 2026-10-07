@@ -57,3 +57,8 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   (/wdi errors).
 - Blame needs evidence. When the data is ambiguous, show it as information with 0 points.
 - One feature per commit.
+- Raid scaling eras: D.SCALING.at in Data.lua and $ScalingCutoff in tools/WhoDidIt-Sync.ps1 must
+  stay equal (6 Oct 2026 04:54 UTC). Boards "kills+" / "clears+" hold the bests since then;
+  the helper writes them as C2 / K2 lines and the feed sends them as "c!," / "k!," records
+  (older clients skip those). Chronicle's leaderboard can't filter by date, so clears since
+  are worked out from the raid logs (bosses every top run killed, time of the last one).

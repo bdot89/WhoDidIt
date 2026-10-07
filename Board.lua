@@ -165,12 +165,14 @@ function B:LoadChronicle()
 				local secs = tonumber(p[6])
 				if secs and secs >= CHRON_KILL_MIN and secs <= KILL_MAX then me.kills[p[5]] = { t = secs, d = tonumber(p[7]), g = p[8], slug = p[9], chron = true } end
 			end
-		elseif t == "C" or t == "K" then
-			B.chronLines = B.chronLines + 1
+		elseif t == "C" or t == "K" or t == "C2" or t == "K2" then
+			-- C2 / K2: a guild's best since the raid scaling change, on the "+" boards
+			local post = (t == "C2" or t == "K2")
+			if not post then B.chronLines = B.chronLines + 1 end
 			local realm = p[2]
 			local zone = CHRON_ZONE[p[3]] or p[3]
 			local kind, key, guild, fac, secs, d, n, slug
-			if t == "C" then
+			if t == "C" or t == "C2" then
 				kind, key, guild, fac, secs, d, n, slug = "clears", zone, p[4], p[5], tonumber(p[6]), tonumber(p[7]), tonumber(p[8]), p[9]
 			else
 				kind, key, guild, fac, secs, d, n, slug = "kills", p[4], p[5], p[6], tonumber(p[7]), tonumber(p[8]), tonumber(p[9]), p[10]
@@ -186,14 +188,22 @@ function B:LoadChronicle()
 					r = { kills = {}, clears = {} }
 					data.realms[realm] = r
 				end
-				local list = r[kind][key]
-				if not list then
-					list = {}
-					r[kind][key] = list
-				end
-				local old = list[guild]
-				if not old or secs < old.t then
-					list[guild] = { t = secs, d = d, f = fac, n = n, slug = slug, chron = true }
+				-- the all-time board, and the "since the scaling change" one: C2 / K2
+				-- lines, and any all-time best that's itself from since then
+				local kinds = post and { kind .. "+" } or { kind }
+				if not post and d and W.Data.SCALING and d >= W.Data.SCALING.at then tinsert(kinds, kind .. "+") end
+				for ki = 1, getn(kinds) do
+					local k = kinds[ki]
+					r[k] = r[k] or {}
+					local list = r[k][key]
+					if not list then
+						list = {}
+						r[k][key] = list
+					end
+					local old = list[guild]
+					if not old or secs < old.t then
+						list[guild] = { t = secs, d = d, f = fac, n = n, slug = slug, chron = true }
+					end
 				end
 				data.zones[zone] = true
 			end
@@ -307,6 +317,12 @@ end)
 -- keep a record if it's that guild's best; true if it improved
 function B:Merge(kind, realm, key, guild, rec)
 	local r = B:DB(realm)
+	-- a time since the raid scaling change also goes on the "since" board
+	local s = W.Data.SCALING
+	if s and string.sub(kind, -1) ~= "+" and rec.d and rec.d >= s.at then
+		B:Merge(kind .. "+", realm, key, guild, rec)
+	end
+	r[kind] = r[kind] or {}
 	local list = r[kind][key]
 	if not list then
 		list = {}
@@ -330,13 +346,40 @@ end
 
 B.ALL = "All realms"
 
+-- before the raid scaling change (Data.lua D.SCALING)? Rankings marks those times.
+-- Every board has a twin with only the times since: kind .. "+" ("kills+", "clears+").
+function B.PrePatch(rec)
+	local s = W.Data.SCALING
+	return s and rec and rec.d and rec.d > 0 and rec.d < s.at and true or false
+end
+function B.PostKind(kind) return kind .. "+" end
+
+-- once: times recorded before this version that are from since the change
+-- go on the "since" boards too
+function B:SplitEra()
+	local s = W.Data.SCALING
+	if not s or not WhoDidItDB or WhoDidItDB.eraSplit == s.at then return end
+	for realm, r in pairs(WhoDidItDB.board or {}) do
+		if type(r) == "table" then
+			for _, kind in ipairs({ "kills", "clears" }) do
+				for key, list in pairs(r[kind] or {}) do
+					for g, rec in pairs(list) do
+						if rec.d and rec.d >= s.at then B:Merge(kind .. "+", realm, key, g, rec) end
+					end
+				end
+			end
+		end
+	end
+	WhoDidItDB.eraSplit = s.at
+end
+
 -- guild -> best record on one realm, WhoDidIt and Chronicle merged
 local function realmBoard(realm, kind, key)
 	local merged = {}
 	local mine = WhoDidItDB.board and WhoDidItDB.board[realm]
-	for g, rec in pairs(mine and mine[kind][key] or {}) do merged[g] = rec end
+	for g, rec in pairs(mine and mine[kind] and mine[kind][key] or {}) do merged[g] = rec end
 	local c = B.chron and B.chron.realms[realm]
-	if c and c[kind][key] then
+	if c and c[kind] and c[kind][key] then
 		for g, rec in pairs(c[kind][key]) do
 			local old = merged[g]
 			if not old or rec.t < old.t then merged[g] = rec end
@@ -984,7 +1027,9 @@ end
 -- names come from anyone's uploads; the line is said in your name)
 function B:BanterLine(kind, key, what, secs, old, realm, guild, rival, anon)
 	local bkind = (kind == "kill") and "kills" or "clears"
-	local board = B:Board(realm, bkind, key, "All")
+	-- other guilds: only their times since the raid scaling change (a kill today
+	-- isn't measured against times set under the old scaling); our own best stays all-time
+	local board = B:Board(realm, bkind .. "+", key, "All")
 	local ahead, behind, passed
 	local rank, of = 1, 1
 	for i = 1, getn(board) do
@@ -1001,7 +1046,7 @@ function B:BanterLine(kind, key, what, secs, old, realm, guild, rival, anon)
 		end
 	end
 	-- the other realms' fastest guilds
-	local others = B:OtherRealms(bkind, key, realm)
+	local others = B:OtherRealms(bkind .. "+", key, realm)
 	local fasterOther, slowerOther = others[1], nil
 	if fasterOther and fasterOther[2].t >= secs then fasterOther = nil end
 	for i = 1, getn(others) do
@@ -1376,6 +1421,7 @@ end)
 local joinAt
 W:On("PLAYER_ENTERING_WORLD", function()
 	if not joinAt then joinAt = GetTime() + 15 end
+	B:SplitEra()
 	B:LoadChronicle()
 	B.rivalsDirty = true
 	B:OnZone()
@@ -1608,6 +1654,10 @@ local function buildStream(since)
 	end
 	for line in string.gfind(raw, "[^\n]+") do
 		local t = string.sub(line, 1, 2)
+		-- C2 / K2 (bests since the raid scaling change) go out as "c!," / "k!,": a
+		-- WhoDidIt from before them reads "!" as an unknown name and skips them
+		local post = (string.sub(line, 1, 3) == "C2|" or string.sub(line, 1, 3) == "K2|")
+		if post then t = string.sub(line, 1, 1) .. "|" end
 		if t == "C|" or t == "K|" then
 			local p = {}
 			for part in string.gfind(line .. "|", "(.-)|") do tinsert(p, part) end
@@ -1616,11 +1666,11 @@ local function buildStream(since)
 				local rec
 				if t == "C|" then
 					-- C|realm|instance|guild|faction|secs|ended|players|slug
-					rec = "C" .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. string.sub(p[5] or "?", 1, 1) .. ","
+					rec = (post and "c!," or "C") .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. string.sub(p[5] or "?", 1, 1) .. ","
 						.. (p[6] or "") .. "," .. b36(p[7]) .. "," .. b36(p[8]) .. "," .. string.sub(clean(p[9]), 1, 60)
 				else
 					-- K|realm|instance|boss|guild|faction|secs|ended|players|slug
-					rec = "K" .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. idx(p[5]) .. "," .. string.sub(p[6] or "?", 1, 1) .. ","
+					rec = (post and "k!," or "K") .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. idx(p[5]) .. "," .. string.sub(p[6] or "?", 1, 1) .. ","
 						.. (p[7] or "") .. "," .. b36(p[8]) .. "," .. b36(p[9]) .. "," .. string.sub(clean(p[10]), 1, 60)
 				end
 				if blen + string.len(rec) + 1 > 220 then flush() end
@@ -1673,7 +1723,7 @@ local function lineEnded(line)
 		p[i] = part
 		if i >= 9 then break end
 	end
-	return tonumber((p[1] == "C") and p[7] or p[8]) or 0
+	return tonumber((p[1] == "C" or p[1] == "C2") and p[7] or p[8]) or 0
 end
 
 -- partial: some messages went missing. Records are merged one by one, so
@@ -1703,18 +1753,22 @@ end
 
 local function decode(s, rec)
 	local p = {}
-	for part in string.gfind(string.sub(rec, 2) .. ",", "(.-),") do tinsert(p, part) end
+	-- "c!," / "k!,": a best since the raid scaling change (a C2 / K2 line)
+	local first = string.sub(rec, 1, 1)
+	local post = (first == "c" or first == "k")
+	for part in string.gfind(string.sub(rec, post and 4 or 2) .. ",", "(.-),") do tinsert(p, part) end
+	local tag = string.upper(first) .. (post and "2" or "")
 	local d = s.dict
 	local fac = { A = "Alliance", H = "Horde", M = "Mixed", U = "Unknown" }
-	if string.sub(rec, 1, 1) == "C" then
+	if first == "C" or first == "c" then
 		local realm, inst, guild = d[p[1]], d[p[2]], d[p[3]]
 		if not (realm and inst and guild) then return end
-		s.lines["C|" .. realm .. "|" .. inst .. "|" .. guild] = "C|" .. realm .. "|" .. inst .. "|" .. guild .. "|" .. (fac[p[4]] or "Unknown")
+		s.lines[tag .. "|" .. realm .. "|" .. inst .. "|" .. guild] = tag .. "|" .. realm .. "|" .. inst .. "|" .. guild .. "|" .. (fac[p[4]] or "Unknown")
 			.. "|" .. (p[5] or "") .. "|" .. (unb36(p[6]) or 0) .. "|" .. (unb36(p[7]) or 0) .. "|" .. (p[8] or "")
 	else
 		local realm, inst, boss, guild = d[p[1]], d[p[2]], d[p[3]], d[p[4]]
 		if not (realm and inst and boss and guild) then return end
-		s.lines["K|" .. realm .. "|" .. inst .. "|" .. boss .. "|" .. guild] = "K|" .. realm .. "|" .. inst .. "|" .. boss .. "|" .. guild .. "|" .. (fac[p[5]] or "Unknown")
+		s.lines[tag .. "|" .. realm .. "|" .. inst .. "|" .. boss .. "|" .. guild] = tag .. "|" .. realm .. "|" .. inst .. "|" .. boss .. "|" .. guild .. "|" .. (fac[p[5]] or "Unknown")
 			.. "|" .. (p[6] or "") .. "|" .. (unb36(p[7]) or 0) .. "|" .. (unb36(p[8]) or 0) .. "|" .. (p[9] or "")
 	end
 end

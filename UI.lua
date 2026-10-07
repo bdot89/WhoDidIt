@@ -2805,6 +2805,15 @@ local function instBosses(zone)
 	return list
 end
 
+-- the raid scaling change (Data.lua D.SCALING): Rankings shows all times, with
+-- the ones from before it marked *, or only the times since (the "+" boards)
+function UI.RkKind(kind) return (UI.rk.era == "post") and (kind .. "+") or kind end
+function UI.PreMark(rec) return (rec and W.Board.PrePatch(rec)) and " |cffff9933*|r" or "" end
+function UI.PreTip(rec)
+	if not (rec and W.Board.PrePatch(rec)) then return " " end
+	return "|cffff9933* Set before " .. W.Data.SCALING.name .. ".|r Raids under 30 now have it harder, so it isn't directly comparable."
+end
+
 local RANK_COL = { "|cffffd100", "|cffd0d0d0", "|cffe08a3c" }   -- gold, silver, bronze
 local FAC_BAR = { Alliance = { 0.2, 0.5, 1 }, Horde = { 0.9, 0.2, 0.2 }, Mixed = { 0.65, 0.35, 0.9 } }
 
@@ -2826,14 +2835,18 @@ local LB_SPEC_ALL = { { 28, "RIGHT" }, { 14, "CENTER" }, { 120, "LEFT" }, { 76, 
 -- time compared with your guild's ("1:38.6 faster" / "3:51.1 slower")
 local function boardRows(rows, realm, faction, kind, key, myGuild)
 	local B = W.Board
-	local list = B:Board(realm, kind, key, faction)
+	local list = B:Board(realm, UI.RkKind(kind), key, faction)
 	if getn(list) == 0 then
+		if UI.rk.era == "post" then
+			tinsert(rows, row(C_DIM .. "No times since " .. W.Data.SCALING.short .. " yet (" .. W.Data.SCALING.name .. "). Switch to All times at the top.|r"))
+			return
+		end
 		tinsert(rows, row(C_DIM .. "No times yet. They show up when you or a WhoDidIt user on your realm gets one,|r"))
 		tinsert(rows, row(C_DIM .. "or when tools\\WhoDidIt-Sync pulls them from Chronicle.|r"))
 		return
 	end
 	local home = B.Realm()
-	local mine = myGuild and B:GuildBest(home, kind, key, myGuild)
+	local mine = myGuild and B:GuildBest(home, UI.RkKind(kind), key, myGuild)
 	local best = list[1][2].t
 	local allRealms = (realm == B.ALL)
 	local spec = allRealms and LB_SPEC_ALL or LB_SPEC
@@ -2856,7 +2869,7 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 		end
 		local vals = { rankTxt(i), facTag(rec.f), facName(g, rec.f, isMine) }
 		if allRealms then tinsert(vals, C_DIM .. rlm .. "|r") end
-		tinsert(vals, C_DIM .. B.Date(rec.d) .. "|r")
+		tinsert(vals, C_DIM .. B.Date(rec.d) .. "|r" .. UI.PreMark(rec))
 		tinsert(vals, (rec.n and rec.n > 0) and (C_DIM .. rec.n .. "|r") or "")
 		tinsert(vals, C_TIME .. B.Fmt(rec.t) .. "|r")
 		tinsert(vals, cmp)
@@ -2867,10 +2880,12 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 			          "|cffffd100From Chronicle|r (chronicleclassic.com) - " .. B.Date(rec.d),
 			          "Realm: " .. B.RealmLabel(rlm) .. "   Faction: " .. (rec.f or "?") .. ((rec.f == "Mixed") and " (cross-faction raid)" or ""),
 			          "|cff33ff33Click: open this raid - every boss kill, wipes, and the Chronicle link|r",
+			          UI.PreTip(rec),
 			      } or {
 			          "Recorded " .. B.Date(rec.d) .. (rec.by and (" by " .. rec.by) or "") .. "   Realm: " .. (rlm or "?"),
 			          rec.net and "Shared by a WhoDidIt user (self-reported)" or "Recorded by your WhoDidIt",
 			          "|cff888888Click: what's known about this time|r",
+			          UI.PreTip(rec),
 			      },
 			  click = function()
 				UI.rk.log = { slug = rec.slug, guild = g, realm = rlm, rec = rec, kind = kind, key = key }
@@ -2887,16 +2902,17 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 	local mine = B:MyBest(kind, key)
 	tinsert(rows, cells(PIN_SPEC, {
 		C_YOU .. "Your best " .. ((kind == "kills") and "kill" or "clear") .. "|r",
-		mine and (C_TIME .. B.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
+		mine and (C_TIME .. B.Fmt(mine.t) .. "|r" .. UI.PreMark(mine)) or (C_DIM .. "-|r"),
 		"",
 		mine and (C_DIM .. B.Date(mine.d) .. ((mine.g and mine.g ~= "") and ("  with " .. mine.g) or "") .. "|r") or (C_DIM .. "none yet|r"),
 	}, mine and mine.slug and {
 		tipTitle = "Your best", tip = { "Click: open that raid" },
 		click = function() UI.rk.log = { slug = mine.slug, guild = mine.g or "?", realm = B.Realm(), rec = mine, kind = kind, key = key }; UI:Refresh() end } or nil))
 	if guild then
-		local g = B:GuildBest(realm, kind, key, guild)
-		local rank, of = B:Rank(realm, kind, key, guild, faction)
-		local top = B:Board(realm, kind, key, faction)[1]
+		local ek = UI.RkKind(kind)
+		local g = B:GuildBest(realm, ek, key, guild)
+		local rank, of = B:Rank(realm, ek, key, guild, faction)
+		local top = B:Board(realm, ek, key, faction)[1]
 		local note = ""
 		if g and top and top[2] ~= g then
 			note = "|cffff7777" .. B.Fmt(g.t - top[2].t) .. " behind|r " .. facName(top[1], top[2].f)
@@ -2905,7 +2921,7 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 		end
 		tinsert(rows, cells(PIN_SPEC, {
 			C_GUILD .. guild .. "|r",
-			g and (C_TIME .. B.Fmt(g.t) .. "|r") or (C_DIM .. "-|r"),
+			g and (C_TIME .. B.Fmt(g.t) .. "|r" .. UI.PreMark(g)) or (C_DIM .. "-|r"),
 			rank and (rankTxt(rank) .. C_DIM .. " of " .. of .. "|r") or (g and (C_DIM .. B.Realm() .. "|r") or ""),
 			g and note or (C_DIM .. "no " .. ((kind == "kills") and "kill" or "clear") .. " yet|r"),
 		}, g and {
@@ -2945,10 +2961,11 @@ function UI:RankNavRows(realm)
 	for i = 1, getn(zones) do
 		local zone = zones[i]
 		local me = B:MyBest("clears", zone)
-		local g = guild and B:GuildBest(home, "clears", zone, guild)
-		local top = B:Board(realm, "clears", zone, "All")[1]
+		local ck = UI.RkKind("clears")
+		local g = guild and B:GuildBest(home, ck, zone, guild)
+		local top = B:Board(realm, ck, zone, "All")[1]
 		local rank, of
-		if g then rank, of = B:Rank(realm, "clears", zone, guild, "All") end
+		if g then rank, of = B:Rank(realm, ck, zone, guild, "All") end
 		local right = ""
 		if run and run.zone == zone then
 			right = "|cff33ccffrun|r"
@@ -2959,10 +2976,10 @@ function UI:RankNavRows(realm)
 		if nRivals > 0 then right = "|cffff5555! |r" .. right end
 		local line2
 		if g then
-			line2 = "|cff33ff33" .. B.Fmt(g.t) .. "|r"
-			if top and top[2] ~= g then line2 = line2 .. "  |cff888888#1 " .. B.Fmt(top[2].t) .. "|r" end
+			line2 = "|cff33ff33" .. B.Fmt(g.t) .. "|r" .. UI.PreMark(g)
+			if top and top[2] ~= g then line2 = line2 .. "  |cff888888#1 " .. B.Fmt(top[2].t) .. "|r" .. UI.PreMark(top[2]) end
 		elseif top then
-			line2 = "|cff888888#1 " .. B.Fmt(top[2].t) .. "  " .. top[1] .. "|r"
+			line2 = "|cff888888#1 " .. B.Fmt(top[2].t) .. "|r" .. UI.PreMark(top[2]) .. "  |cff888888" .. top[1] .. "|r"
 		else
 			line2 = "|cff555555no times yet|r"
 		end
@@ -2991,10 +3008,11 @@ function UI:RankKillRows(realm, faction, zone)
 	local bosses = instBosses(zone)
 	for i = 1, getn(bosses) do
 		local enc = bosses[i]
-		local top = B:Board(realm, "kills", enc, faction)[1]
+		local kk = UI.RkKind("kills")
+		local top = B:Board(realm, kk, enc, faction)[1]
 		local mine = B:MyBest("kills", enc)
-		local g = guild and B:GuildBest(realm, "kills", enc, guild)
-		local rank = g and B:Rank(realm, "kills", enc, guild, faction)
+		local g = guild and B:GuildBest(realm, kk, enc, guild)
+		local rank = g and B:Rank(realm, kk, enc, guild, faction)
 		local gap = ""
 		if g and top and top[2] ~= g then
 			gap = "|cffff7777+" .. B.Fmt(g.t - top[2].t) .. "|r"
@@ -3004,11 +3022,11 @@ function UI:RankKillRows(realm, faction, zone)
 		local beaten = B.Rivals and B:Rivals(nil, "kills", enc)[1]
 		tinsert(rows, cells(spec, {
 				(beaten and "|cffff5555! |r" or "") .. "|cffffffff" .. enc .. "|r",
-				mine and (C_YOU .. B.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
-				g and (C_GUILD .. B.Fmt(g.t) .. "|r") or (C_DIM .. "-|r"),
+				mine and (C_YOU .. B.Fmt(mine.t) .. "|r" .. UI.PreMark(mine)) or (C_DIM .. "-|r"),
+				g and (C_GUILD .. B.Fmt(g.t) .. "|r" .. UI.PreMark(g)) or (C_DIM .. "-|r"),
 				rank and rankTxt(rank) or "",
 				gap,
-				top and (C_TIME .. B.Fmt(top[2].t) .. "|r") or (C_DIM .. "-|r"),
+				top and (C_TIME .. B.Fmt(top[2].t) .. "|r" .. UI.PreMark(top[2])) or (C_DIM .. "-|r"),
 				top and facName(top[1], top[2].f, top[1] == guild and top[3] == B.Realm()) or "",
 			},
 			{ click = function()
@@ -3025,6 +3043,7 @@ function UI:RankKillRows(realm, faction, zone)
 			          "guild = your guild's best, its rank and how far behind #1 it is",
 			          "#1 = the fastest guild (" .. realm .. ", " .. faction .. ")",
 			          beaten and ("|cffff5555! " .. B:RivalText(beaten) .. "|r") or " ",
+			          "|cffff9933*|r = set before " .. W.Data.SCALING.name,
 			          "|cff888888Click: the full leaderboard (click a guild there to open its raid)|r",
 			          "|cff888888Shift-click: open the #1 guild's raid|r" },
 			  tipTitle = enc }))
@@ -3252,6 +3271,22 @@ function UI:RefreshRankings()
 	elseif UI.rk.boss then rows = UI:RankBossRows(realm, faction, UI.rk.boss)
 	elseif UI.rk.view == "kills" then rows = UI:RankKillRows(realm, faction, zone)
 	else rows = UI:RankClearRows(realm, faction, zone) end
+	-- all times (marked * before the raid scaling change), or only the times since
+	if not UI.rk.log then
+		local S = W.Data.SCALING
+		local post = (UI.rk.era == "post")
+		tinsert(rows, 1, row("|cffffd100Times:|r  " .. (post and ("|cff888888All times|r  |cffffffff< Since " .. S.short .. " >|r")
+				or ("|cffffffff< All times >|r  |cff888888Since " .. S.short .. "|r")),
+			post and (C_DIM .. "only since " .. S.name .. "|r") or ("|cffff9933*|r " .. C_DIM .. "= before " .. S.name .. "|r"),
+			{ tipTitle = "Raid scaling change, " .. S.short,
+			  tip = { S.what, "Times set before it aren't directly comparable with times since.",
+			          " ",
+			          "|cffffd100All times|r: every best, the ones from before marked |cffff9933*|r",
+			          "|cffffd100Since " .. S.short .. "|r: only times set since the change, ranked on their own",
+			          " ",
+			          "|cff33ff33Click to switch.|r" },
+			  click = function() UI.rk.era = (UI.rk.era ~= "post") and "post" or nil; UI:Refresh() end }))
+	end
 	-- no Chronicle times yet: say what's happening and how the sharing works, on top
 	if not B.chron and not UI.rk.log then
 		local top = UI:FeedPanel()
@@ -3261,7 +3296,7 @@ function UI:RefreshRankings()
 
 	hintText:SetText("Click a guild's time to open their raid.  Clears: first combat to the last boss.  |cffff5555!|r = beaten recently.")
 	hintText:Show()
-	local key = "rk" .. realm .. faction .. zone .. UI.rk.view .. tostring(UI.rk.boss) .. (UI.rk.log and (UI.rk.log.guild .. tostring(UI.rk.log.slug)) or "")
+	local key = "rk" .. realm .. faction .. zone .. UI.rk.view .. tostring(UI.rk.era) .. tostring(UI.rk.boss) .. (UI.rk.log and (UI.rk.log.guild .. tostring(UI.rk.log.slug)) or "")
 	mainList:SetData(rows, key == lastModeKey)
 	lastModeKey = key
 end

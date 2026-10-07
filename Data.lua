@@ -147,6 +147,19 @@ D.clears = {
 	["Emerald Sanctum"] = { "Erennius", "Solnius" },
 }
 
+-- OctoWoW's raid scaling change (patch notes 6 Oct 2026, 04:54 UTC): raids under 30
+-- players got harder per player (no more sharp drops below 30), bigger ones a bit
+-- easier, and some trash lost its extra small-raid reductions (ZG bats and
+-- prowlers, MC Flamewakers / Protectors / Core Ragers). Times from before it
+-- aren't comparable, so Rankings marks them and can show only the times since.
+-- Keep "at" in step with $ScalingCutoff in tools/WhoDidIt-Sync.ps1.
+D.SCALING = {
+	at = 1791262440,
+	short = "6 Oct",
+	name = "the 6 Oct raid scaling change",
+	what = "Raids under 30 players got harder per player; bigger raids a little easier.",
+}
+
 -- Rankings list name for instances whose zone text is short
 D.instanceTitle = { ["Ahn'Qiraj"] = "Temple of Ahn'Qiraj" }
 

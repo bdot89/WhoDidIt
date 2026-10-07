@@ -218,6 +218,25 @@ A kill or clear counts for the raid's majority guild (at least half the raid). P
 other realm. Every leaderboard time is compared with your guild's ("1:38.6 faster" / "3:51.1 slower"). The left column
 shows your guild's clear, its rank (gold / silver / bronze) and a green bar for how close you are to #1.
 
+### Times before and after the 6 Oct raid scaling change
+
+OctoWoW changed how raids scale with the number of players on **6 October 2026**
+([patch notes](https://octowow.st/forum/viewtopic.php?t=2816)). Enemy health and melee damage now scale smoothly
+with raid size: raids under 30 players have it harder per player (at 20 of 40, or 12 of 20, about 15% more health
+and damage per player than a full raid), some trash lost extra small-raid reductions (ZG's Bloodseeker Bats and
+Zulian Prowlers, MC's Flamewakers, Flamewaker Protectors and Core Ragers), and raids over 30 are no longer punished
+by the old system. Times from before and after aren't directly comparable, so Rankings keeps them apart:
+
+- **All times** (the default): every best, with an amber **\*** on any time set before the change. Hover it for
+  why.
+- **Since 6 Oct**: click the **Times** line at the top of Rankings to rank only times set since the change, with
+  their own #1s, gaps and your guild's rank. Click again for all times.
+- Where they come from: the sync helper (and so the master feed) works out every guild's best kill and best full
+  clear since the change from Chronicle's raid logs. A clear counts the bosses every top run of that raid killed,
+  timed to the last of them, which matches Chronicle's own clear times for 191 of 193 top runs. Your own WhoDidIt
+  recordings and other users' shared times are split by their date.
+- Banter compares a new kill only with other guilds' times since the change. Your personal and guild bests are
+  still all-time.
 ### Where the raid times come from
 
 Rankings fills up from three places (hover a row to see which one a time came from):

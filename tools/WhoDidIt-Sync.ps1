@@ -71,6 +71,11 @@ $Instances = @(
     "Ruins of Ahn'Qiraj", "Temple of Ahn'Qiraj", "Naxxramas", "Emerald Sanctum",
     "Lower Tower of Karazhan", "Upper Tower of Karazhan"
 )
+# OctoWoW's raid scaling change (patch notes 2026-10-06, posted 04:54 UTC): raids
+# under 30 got harder per player, so times from before it aren't comparable.
+# Besides the all-time bests, each guild's best SINCE then is written too
+# (C2 / K2 lines; the same as C / K). Keep in step with D.SCALING in Data.lua.
+$ScalingCutoff = 1791262440
 $Alliance = @("Human", "Dwarf", "NightElf", "Night Elf", "Gnome", "HighElf", "High Elf", "Draenei")
 $Horde    = @("Orc", "Troll", "Tauren", "Undead", "Scourge", "Goblin", "BloodElf", "Blood Elf")
 
@@ -243,11 +248,13 @@ function Keep-Best($table, $key, $rec) {
     if (-not $table.ContainsKey($key) -or $rec.secs -lt $table[$key].secs) { $table[$key] = $rec }
 }
 
-# best kill per realm / boss / guild (or, $mine, per realm / your character / boss)
-function Get-BestKills($cache, [bool]$mine = $false) {
+# best kill per realm / boss / guild (or, $mine, per realm / your character / boss);
+# $since: only raids that ended at or after it
+function Get-BestKills($cache, [bool]$mine = $false, [long]$since = 0) {
     $best = @{}
     foreach ($id in $cache.logs.Keys) {
         $log = $cache.logs[$id]
+        if ($since -gt 0 -and [long]$log.ended -lt $since) { continue }
         foreach ($k in @($log.kills)) {
             $rec = @{ id = $id; realm = $log.realm; instance = $log.instance; boss = $k.n; guild = $log.guild; faction = $log.faction;
                       secs = $k.s; ended = $log.ended; players = $log.players; slug = $log.slug }
@@ -281,14 +288,54 @@ function Read-LogKills($inst) {
     return ,$kills
 }
 
+# each guild's best full clear since $since, worked out from the raid logs: the
+# bosses every leaderboard run of that instance killed are the required ones,
+# and the clear time is when the last of them died (time into the raid). Checked
+# against Chronicle's own clear times: 191 of 193 top runs match to the second.
+function Get-ClearsSince($clears, $cache, $bySlug, [long]$since) {
+    $required = @{}
+    foreach ($c in $clears.Values) {
+        if (-not $c.slug -or -not $c.instance) { continue }
+        $l = $bySlug[$c.slug]
+        if (-not $l) { continue }
+        $names = @(@($l.kills) | ForEach-Object { $_.n })
+        if (-not $required.ContainsKey($c.instance)) { $required[$c.instance] = @{ n = 0; set = $names } }
+        $r = $required[$c.instance]
+        $r.n++
+        $r.set = @($r.set | Where-Object { $names -contains $_ })
+    }
+    $best = @{}
+    foreach ($id in $cache.logs.Keys) {
+        $l = $cache.logs[$id]
+        if ([long]$l.ended -lt $since -or -not $l.guild -or -not $l.instance) { continue }
+        $r = $required[$l.instance]
+        if (-not $r -or $r.n -lt 3 -or $r.set.Count -eq 0) { continue }   # too few runs to know what counts
+        $at = @{}
+        foreach ($k in @($l.kills)) { if ($k.n) { $at[$k.n] = $k.a } }
+        $last = 0; $all = $true
+        foreach ($n in $r.set) {
+            if (-not $at.ContainsKey($n)) { $all = $false; break }
+            if ($at[$n] -gt $last) { $last = $at[$n] }
+        }
+        if (-not $all -or $last -le 0) { continue }
+        Keep-Best $best "$($l.realm)|$($l.instance)|$($l.guild)" @{
+            realm = $l.realm; instance = $l.instance; guild = $l.guild; faction = $l.faction;
+            secs = $last; ended = $l.ended; players = $l.players; slug = $l.slug }
+    }
+    return $best
+}
+
 function Write-Output-File($clears, $myClears, $cache, $status) {
     $best = Get-BestKills $cache
     $myKills = Get-BestKills $cache $true
     # logs behind any time on the boards: their whole boss list goes in too (L lines)
     $bySlug = @{}
     foreach ($id in $cache.logs.Keys) { $l = $cache.logs[$id]; if ($l.slug) { $bySlug[$l.slug] = $l } }
+    # the same since the raid scaling change
+    $postKills = Get-BestKills $cache $false $ScalingCutoff
+    $postClears = Get-ClearsSince $clears $cache $bySlug $ScalingCutoff
     $shown = @{}
-    foreach ($r in @($best.Values) + @($myKills.Values) + @($clears.Values) + @($myClears.Values)) { if ($r.slug) { $shown[$r.slug] = $true } }
+    foreach ($r in @($best.Values) + @($myKills.Values) + @($clears.Values) + @($myClears.Values) + @($postKills.Values) + @($postClears.Values)) { if ($r.slug) { $shown[$r.slug] = $true } }
     $lines = New-Object System.Collections.Generic.List[string]
     $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     $lines.Add("WDICHRON|2|$now|$(Clean $Server)|$Days|$status")
@@ -298,6 +345,15 @@ function Write-Output-File($clears, $myClears, $cache, $status) {
     }
     foreach ($b in $best.Values) {
         $lines.Add(("K|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}" -f (Clean $b.realm), (Clean $b.instance), (Clean $b.boss), (Clean $b.guild),
+            $b.faction, [math]::Round($b.secs, 1), $b.ended, $b.players, $b.slug))
+    }
+    # since the raid scaling change: C2 / K2, the same fields as C / K
+    foreach ($c in $postClears.Values) {
+        $lines.Add(("C2|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}" -f (Clean $c.realm), (Clean $c.instance), (Clean $c.guild), $c.faction,
+            [math]::Round($c.secs, 1), $c.ended, $c.players, $c.slug))
+    }
+    foreach ($b in $postKills.Values) {
+        $lines.Add(("K2|{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}|{8}" -f (Clean $b.realm), (Clean $b.instance), (Clean $b.boss), (Clean $b.guild),
             $b.faction, [math]::Round($b.secs, 1), $b.ended, $b.players, $b.slug))
     }
     foreach ($m in $myClears.Values) {
