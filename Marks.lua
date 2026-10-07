@@ -254,20 +254,29 @@ function M:Set(unit, mark)
 	SetRaidTarget(unit, mark, 1)   -- SuperWoW: a mark only you can see
 end
 
+-- may WhoDidIt put this mark on this mob by itself? Not when the mob carries a
+-- mark someone else set (by hand, or another addon), and not when that icon is
+-- on another living mob someone else put it on
+local function mayMark(guid, mark)
+	local cur = GetRaidTargetIndex(guid) or 0
+	if cur == mark then return false end
+	if cur > 0 and M.mine[guid] ~= cur then return false end
+	local ok, holder = UnitExists("mark" .. mark)
+	if mark > 0 and ok and holder and holder ~= guid and not UnitIsDead(holder) and M.mine[holder] ~= mark then return false end
+	return true
+end
+
+-- every automatic mark (packs and smart rules) goes through this
+function M:SetAuto(guid, mark)
+	if mayMark(guid, mark) then M:Set(guid, mark) return true end
+end
+
 -- mark every mob of a pack that's here; mark 0 clears it from pack members
 function M:MarkPack(pack)
 	local n = 0
 	for guid, mark in pairs(pack.mobs) do
 		if UnitExists(guid) and (mark == 0 or not UnitIsDead(guid)) then
-			local cur = GetRaidTargetIndex(guid) or 0
-			if cur ~= mark then
-				-- this mob carries a mark we didn't set: someone chose it, keep it
-				local theirs = cur > 0 and M.mine[guid] ~= cur
-				-- that icon is on another living mob, put there by someone else: don't steal it
-				local ok, holder = UnitExists("mark" .. mark)
-				local taken = mark > 0 and ok and holder and holder ~= guid and not UnitIsDead(holder) and M.mine[holder] ~= mark
-				if not theirs and not taken then M:Set(guid, mark) end
-			end
+			M:SetAuto(guid, mark)
 			if mark > 0 then n = n + 1 end
 		end
 	end
@@ -804,13 +813,14 @@ function M:OnModel(guid)
 	elseif k == "next" then
 		if not GetRaidTargetIndex(guid) then M:NextMark(guid, r.reverse) end
 	elseif k == "fixed" then
-		if GetRaidTargetIndex(guid) ~= r.mark then M:Set(guid, r.mark) end
+		if GetRaidTargetIndex(guid) ~= r.mark then M:SetAuto(guid, r.mark) end
 	elseif k == "watch" or k == "hounds" then
 		r.watch[guid] = true
 		M.checkWatch = true
 	elseif k == "eggs" then
 		local mark = table.remove(eggMarks, 1)
-		if mark then M:Set(guid, mark) end
+		-- someone else's mark there: the icon goes back for the next egg
+		if mark and not M:SetAuto(guid, mark) then table.insert(eggMarks, 1, mark) end
 	elseif k == "solnius" then
 		if name == "Solnius" then
 			if UnitAffectingCombat(guid) then solnius.started = true end
@@ -823,7 +833,7 @@ function M:OnModel(guid)
 				for i = 1, getn(r.prio) do
 					local l = solnius.adds[r.prio[i]] or {}
 					for j = 1, getn(l) do
-						if mark >= 1 then M:Set(l[j], mark) end
+						if mark >= 1 then M:SetAuto(l[j], mark) end
 						mark = mark - 1
 					end
 				end
@@ -888,6 +898,8 @@ local function pollHounds(r, dt)
 		return ha > hb
 	end)
 	if list[1] and GetRaidTargetIndex(list[1]) ~= 8 then
+		-- (straight M:Set: the skull moves between Core Hounds, also from another
+		-- WhoDidIt marker's hound; a skull on anything else was respected above)
 		M:Set(list[1], 8)
 		if GetNumRaidMembers() > 0 then SendAddonMessage(M.SYNC, "HOUND", "RAID") end
 	end
@@ -1040,10 +1052,39 @@ W:On("ADDON_LOADED", function(name)
 	d.opts   = d.opts or {}
 	if d.opts.enabled == nil then d.opts.enabled = true end
 	if d.opts.mouseover == nil then d.opts.mouseover = false end
-	if d.opts.smart == nil then d.opts.smart = true end
+	-- smart marks put marks up by themselves, so they're off until you say yes
+	-- (asked the first time you enter a raid; installs from before ask too)
+	if not d.opts.smartAsked then d.opts.smart = false end
 	M.standDown = IsAddOnLoaded("AutoMarker") and true or nil
 	M:LoadBuiltin()
 end)
+
+StaticPopupDialogs["WHODIDIT_SMARTMARKS"] = {
+	text = "WhoDidIt can mark known adds for you in raids (smart marks): Razuvious' Understudies, Buru's eggs, the biggest Core Hound, Skeram's images and more.\n\nAs raid lead or assist the raid sees them, otherwise only you do. Marks someone else set are left alone.\n\nUse smart marks?",
+	button1 = "Yes", button2 = "No",
+	OnAccept = function()
+		WhoDidItDB.marks.opts.smart, WhoDidItDB.marks.opts.smartAsked = true, true
+		W.Print("Smart marks: |cff33ff33on|r. Switch them off on the Auto Marker tab (Smart), or single ones under each zone.")
+		if W.UI then W.UI:Refresh() end
+	end,
+	OnCancel = function()
+		WhoDidItDB.marks.opts.smart, WhoDidItDB.marks.opts.smartAsked = false, true
+		W.Print("Smart marks: off. Switch them on any time on the Auto Marker tab (Smart).")
+		if W.UI then W.UI:Refresh() end
+	end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+local askedSmart
+local function askSmart()
+	local d = WhoDidItDB and WhoDidItDB.marks
+	if askedSmart or not d or d.opts.smartAsked or not d.opts.enabled or M.standDown then return end
+	local inInst, typ = IsInInstance()
+	if not inInst or typ ~= "raid" then return end
+	askedSmart = true
+	StaticPopup_Show("WHODIDIT_SMARTMARKS")
+end
+W:On("ZONE_CHANGED_NEW_AREA", askSmart)
+W:On("PLAYER_ENTERING_WORLD", askSmart)
 
 local handedOver
 W:On("PLAYER_ENTERING_WORLD", function()

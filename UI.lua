@@ -1164,6 +1164,7 @@ end)
 smartBtn:SetScript("OnClick", function()
 	local o = WhoDidItDB.marks.opts
 	o.smart = not o.smart
+	o.smartAsked = true   -- chosen here: no need to ask in the next raid
 	UI:Refresh()
 end)
 hiddenBtn:SetScript("OnClick", function()

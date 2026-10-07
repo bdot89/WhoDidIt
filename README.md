@@ -409,7 +409,9 @@ addon (by Weird Vibes). `tools\WhoDidIt-Sync.cmd` downloads them into `Marks\pac
 maintainer has pinned. Only the pack data is used (read, never run), converted to WhoDidIt's format. Your own packs are saved separately and never
 overwritten. Run `tools\WhoDidIt-Sync.cmd -UpdatesOnly` to fetch just the packs and the built-in addons.
 
-**Smart marks.** These cover what fixed packs can't, and each one can be switched off in its zone's list:
+**Smart marks.** These cover what fixed packs can't. They put marks up by themselves, so they're **off until you say
+yes**: WhoDidIt asks the first time you enter a raid (or switch them with **Smart** on the Auto Marker tab). Each one
+can be switched off in its zone's list, and a mark someone else set is never moved:
 
 | Where | What |
 | --- | --- |
