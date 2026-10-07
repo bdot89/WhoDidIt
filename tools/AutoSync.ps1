@@ -27,7 +27,7 @@ $ps = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
 $wscript = Join-Path $env:SystemRoot "System32\wscript.exe"
 
 function Get-Helper {
-    @(Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe'" -ErrorAction SilentlyContinue |
+    @(Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe' OR Name = 'pwsh.exe'" -ErrorAction SilentlyContinue |
         Where-Object { $_.CommandLine -and $_.CommandLine -like "*WhoDidIt-Sync.ps1*" })
 }
 
@@ -38,6 +38,7 @@ if ($Off) {
     } else {
         Write-Host "It wasn't set to start with Windows."
     }
+    if (Test-Path -LiteralPath $vbs) { Remove-Item -LiteralPath $vbs -Force }
     $running = Get-Helper
     foreach ($p in $running) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }
     if ($running.Count -gt 0) { Write-Host "Stopped the helper that was running." }
@@ -55,7 +56,8 @@ if ($Minimised) {
     # wscript runs the helper with no window at all (PowerShell alone would flash one)
     $line = "CreateObject(""WScript.Shell"").Run ""powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """"$script"""""", 0, False"
     $vb = "' Starts WhoDidIt's sync helper with no window (written by AutoSync.ps1).`r`n" + $line + "`r`n"
-    [IO.File]::WriteAllText($vbs, $vb, [Text.Encoding]::ASCII)
+    # UTF-16 with a BOM, which wscript reads: a folder name with an accent or umlaut stays intact
+    [IO.File]::WriteAllText($vbs, $vb, [Text.Encoding]::Unicode)
     $sc.TargetPath = $wscript
     $sc.Arguments = "`"$vbs`""
 }
@@ -74,4 +76,12 @@ if ((Get-Helper).Count -gt 0) {
 } else {
     Start-Process -FilePath $wscript -ArgumentList "`"$vbs`"" -WorkingDirectory $PSScriptRoot
     Write-Host "Started it now, in the background."
+}
+
+# check it really runs (a hidden helper that fails says nothing otherwise)
+if ((Get-Helper).Count -eq 0) {
+    Start-Sleep -Seconds 4
+    if ((Get-Helper).Count -eq 0) {
+        Write-Host "But the helper isn't running. Try double-clicking WhoDidIt-Sync.cmd to see why." -ForegroundColor Yellow
+    }
 }
