@@ -1,0 +1,14 @@
+ChronicleCompanion, built into WhoDidIt
+========================================
+
+This folder is ChronicleCompanion, the official logging addon for
+chronicleclassic.com, by Emyrk: https://github.com/Emyrk/ChronicleCompanion
+
+All credit for it goes to its author. WhoDidIt ships it at the commit named in
+wdi_version.lua, with only the small changes needed to run it from inside
+WhoDidIt (it starts with WhoDidIt, takes its version from wdi_version.lua and
+finds its icons in this folder; see tools\EmbedUpdate.ps1). Nothing in how it
+logs is changed.
+
+Its repository states no licence. This folder is not covered by WhoDidIt's MIT
+licence, and it will be removed from WhoDidIt if its author asks.

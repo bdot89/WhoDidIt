@@ -388,7 +388,7 @@ function C:OpenFull()
 	if DC_Matrix and DC_Matrix.Toggle then
 		DC_Matrix.Toggle()
 	else
-		W.Print("DopingControl isn't installed yet: double-click tools\\WhoDidIt-Sync.cmd once (it downloads it), then " .. W.RESTART_HINT .. ".")
+		W.Print("DopingControl is missing from your WhoDidIt folder: " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. ".")
 	end
 end
 

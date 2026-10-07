@@ -3,12 +3,12 @@
 
 	WhoDidIt carries its own copy of ChronicleCompanion, the official
 	logging addon for chronicleclassic.com (by Emyrk), so it doesn't need
-	installing separately. The copy lives in the Chronicle\ folder and is
-	downloaded - and kept up to date - from the official source
-	(github.com/Emyrk/ChronicleCompanion) by tools\WhoDidIt-Sync. It isn't
-	part of the WhoDidIt repository.
+	installing separately. The copy lives in the Chronicle\ folder and
+	ships with WhoDidIt, at the commit in Chronicle\wdi_version.lua (from
+	github.com/Emyrk/ChronicleCompanion, credited in Chronicle\WDI_NOTICE.txt).
+	It logs nothing until the player says yes (Logs.lua asks once).
 
-	The sync tool makes three small changes to Chronicle's files so they
+	tools\EmbedUpdate.ps1 (maintainer) makes three small changes to Chronicle's files so they
 	run from inside WhoDidIt: it starts them on WhoDidIt's ADDON_LOADED
 	instead of ChronicleCompanion's, takes the version from
 	Chronicle\wdi_version.lua instead of ChronicleCompanion.toc, and points
@@ -22,7 +22,14 @@
 	off for the next session.
 ----------------------------------------------------------------------]]
 
-WDI_CHRON_SKIP = IsAddOnLoaded("ChronicleCompanion") and true or nil
+-- The separate addon is installed but switched off in the AddOns list: the
+-- player doesn't want Chronicle logging, so the built-in copy stays off too.
+local function standaloneOff()
+	local ok, name, _, _, enabled = pcall(GetAddOnInfo, "ChronicleCompanion")
+	return ok and name ~= nil and not enabled
+end
+WDI_CHRON_OFF = (not IsAddOnLoaded("ChronicleCompanion") and standaloneOff()) and true or nil
+WDI_CHRON_SKIP = (IsAddOnLoaded("ChronicleCompanion") or WDI_CHRON_OFF) and true or nil
 
 -- Both declare Chronicle's saved variables; while the separate addon runs,
 -- give it its own tables back once WhoDidIt's saved copies have loaded.

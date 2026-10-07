@@ -57,8 +57,63 @@ local function noted(n, what)
 	end
 end
 
+-- the built-in copy logs only once the player has said yes (asked the first
+-- time they enter a raid); the separate addon is the player's own choice
+local AUTO = { autoEnableInRaid = true, autoEnableInDungeon = true, showLogReminder = true }
+function L:Allowed()
+	return L:Source() ~= "builtin" or WhoDidItDB.opts.chronUse == true
+end
+local function quiet()
+	if not (L:Available() and L:Source() == "builtin") then return end
+	for k in pairs(AUTO) do ChronicleLog:SetSetting(k, false) end
+	if ChronicleLog:IsEnabled() then ChronicleLog:Disable() end
+end
+function L:Use(on)
+	WhoDidItDB.opts.chronUse = on and true or false
+	if not L:Available() then return end
+	if on then
+		for k, v in pairs(AUTO) do ChronicleLog:SetSetting(k, v) end
+	else
+		quiet()
+	end
+end
+-- the separate ChronicleCompanion is installed but switched off (so nothing logs)
+function L:StandaloneOff() return WDI_CHRON_OFF and true or false end
+
+W:On("ADDON_LOADED", function(name)
+	if name ~= "WhoDidIt" then return end
+	if WhoDidItDB.opts.chronUse ~= true then quiet() end
+end)
+
+StaticPopupDialogs["WHODIDIT_CHRONLOG"] = {
+	text = "WhoDidIt has Chronicle's logger built in. It records your raids to a log file that you can upload to chronicleclassic.com (for the Rankings and your guild's logs).\n\nLog your raids?",
+	button1 = "Yes, log them", button2 = "No",
+	OnAccept = function()
+		L:Use(true)
+		L:Start()
+		W.Print("Chronicle logging is |cff33ff33on|r: it starts by itself in raids. The Logging tab has the details and switches.")
+	end,
+	OnCancel = function()
+		L:Use(false)
+		W.Print("Chronicle logging stays |cffff5555off|r. Switch it on any time on the Logging tab.")
+	end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+local askedLog
+local function askLog()
+	if askedLog or not WhoDidItDB or WhoDidItDB.opts.chronUse ~= nil or L:Source() ~= "builtin" then return end
+	local inInst, typ = IsInInstance()
+	if not inInst or typ ~= "raid" then return end
+	askedLog = true
+	StaticPopup_Show("WHODIDIT_CHRONLOG")
+end
+W:On("ZONE_CHANGED_NEW_AREA", askLog)
+W:On("PLAYER_ENTERING_WORLD", askLog)
+
 function L:Start()
 	if not L:Available() then return end
+	-- starting it by hand is a yes
+	if L:Source() == "builtin" and WhoDidItDB.opts.chronUse ~= true then L:Use(true) end
 	if not ChronicleLog:IsEnabled() then
 		ChronicleLog:Enable()
 		W.Print("Chronicle logging |cff33ff33started|r.")
@@ -116,7 +171,7 @@ end
 -- variables, so its settings are saved with WhoDidIt's on the way out.
 local handedOver
 W:On("PLAYER_ENTERING_WORLD", function()
-	if handedOver or not (WDI_CHRON_SKIP and WDI_CHRON_VERSION) then return end
+	if handedOver or not (WDI_CHRON_SKIP and WDI_CHRON_VERSION) or not IsAddOnLoaded("ChronicleCompanion") then return end
 	handedOver = true
 	W:AskHandover("ChronicleCompanion", "the Chronicle logger (v" .. WDI_CHRON_VERSION .. ", the Logging tab)")
 end)
@@ -125,7 +180,7 @@ end)
 
 -- a boss was pulled
 function L:OnFightStart()
-	if WhoDidItDB.opts.chronStartOnPull and L:Available() and not ChronicleLog:IsEnabled() then
+	if WhoDidItDB.opts.chronStartOnPull and L:Available() and L:Allowed() and not ChronicleLog:IsEnabled() then
 		ChronicleLog:Enable()
 		W.Print("Chronicle logging |cff33ff33started|r for the pull.")
 	end

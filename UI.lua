@@ -1343,12 +1343,10 @@ local function syncNow()
 	local B = W.Board
 	local st = B:SyncStatus()
 	if not (st and st.alive) then
-		if B.chronFeed then
-			W.Print("Your raid times come from " .. (B.chronFrom or "the master") .. "'s feed - they update by themselves while they're online. Nothing to do.")
-			W.Print("|cff888888(Rather fetch them yourself? Double-click tools\\WhoDidIt-Sync.cmd in the WhoDidIt folder - or tools\\AutoSync-On.cmd to have it start with Windows.)|r")
+		if not (B.CanMaster and B.CanMaster()) then
+			W.Print("Your raid times come from " .. (B.chronFrom or (B.master and B.master.name) or "the master") .. "'s feed - they arrive and update by themselves while they're online. Nothing to do.")
 		else
-			W.Print("The sync helper isn't running. Double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r - it syncs straight away, then every 10 minutes while its window is open.")
-			W.Print("|cff888888Or double-click |cffffd100tools\\AutoSync-On.cmd|cff888888 once: the helper then starts by itself (minimised) whenever you log into Windows.|r")
+			W.Print("The sync helper isn't running on this PC. Double-click |cffffd100tools\\AutoSync-On.cmd|r once: it then runs in the background and starts by itself with Windows.")
 		end
 		return
 	end
@@ -1408,6 +1406,13 @@ tooltip(masterBtn, "Master feed", function()
 end, "ANCHOR_TOP")
 syncBar:SetScript("OnClick", syncNow)
 local function syncTip()
+	if not (W.Board and W.Board.CanMaster and W.Board.CanMaster()) then
+		return { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
+			"They reach you in game from the WhoDidIt maintainer's master feed:",
+			"nothing to install or run. The first copy takes about 15 minutes while",
+			"they're online; after that new times arrive within minutes, and what",
+			"you have is kept between logins." }
+	end
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
 		"WoW addons can't go online, so a small helper does it: |cffffd100tools\\WhoDidIt-Sync.cmd|r",
 		"in the WhoDidIt folder. Leave its window open while you play: it syncs every 10 minutes.",
@@ -1438,12 +1443,12 @@ function UI:UpdateSync()
 	local function ago(t) local m = floor((time() - t) / 60); return (m < 1) and "just now" or (m < 120 and (m .. " min ago") or (floor(m / 60) .. " h ago")) end
 	masterBtn:SetText("Master: " .. (WhoDidItDB.opts.master and "|cff33ff33on|r" or "off"))
 	-- only the maintainer's characters see the master switch
-	if B.CanMaster and B.CanMaster() then masterBtn:Show() else masterBtn:Hide() end
+	if B.CanMaster and B.CanMaster() then masterBtn:Show(); syncBtn:Show() else masterBtn:Hide(); syncBtn:Hide() end
 	local fs = B.FeedStatus and B:FeedStatus()
 	if fs and not fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.2, 0.55, 1)
 		syncBar.top:SetText("|cff66ccffReceiving raid times|r from " .. (fs.from or "?"))
-		syncBar.bot:SetText(fs.got .. " / " .. fs.total .. " messages - about " .. math.max(1, floor((fs.total - fs.got) / 60 + 0.5)) .. " min")
+		syncBar.bot:SetText(fs.got .. " / " .. fs.total .. " messages - about " .. math.max(1, floor((fs.total - fs.got) * 1.6 / 60 + 0.5)) .. " min")
 		return
 	elseif fs and fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.85, 0.65, 0.1)
@@ -1457,6 +1462,14 @@ function UI:UpdateSync()
 		syncBar.bot:SetText("synced " .. ago(c.synced or 0) .. (live and " - they're online, updates are live" or " - updates when they're online"))
 		return
 	end
+	-- players: the times come from the master feed; the helper is the maintainer's
+	if not (B.CanMaster and B.CanMaster()) then
+		local m = B.master and (GetTime() - B.master.at) < 150 and B.master
+		bar(c and 1 or 0.05, 0.15, 0.55, 0.85)
+		syncBar.top:SetText(c and ("|cff66ccffRaid times|r synced " .. ago(c.synced or 0)) or "|cff66ccffWaiting for the raid times|r")
+		syncBar.bot:SetText(m and (m.name .. " is online - they come from their feed") or "they come from the master feed, nothing to do")
+		return
+	end
 	if not ReadCustomFile then
 		bar(1, 0.6, 0.15, 0.15)
 		syncBar.top:SetText("|cffff7777Needs Nampower|r")
@@ -1464,11 +1477,11 @@ function UI:UpdateSync()
 	elseif not st then
 		bar(0, 0.6, 0.15, 0.15)
 		syncBar.top:SetText(c and ("|cffffd100Synced " .. ago(c.synced or 0) .. "|r") or "|cffff7777Never synced on this PC|r")
-		syncBar.bot:SetText("Run tools\\WhoDidIt-Sync.cmd")
+		syncBar.bot:SetText("run tools\\AutoSync-On.cmd once")
 	elseif not st.alive then
 		bar(1, 0.35, 0.35, 0.35)
 		syncBar.top:SetText("|cffff9933Sync helper isn't running|r")
-		syncBar.bot:SetText((c and c.synced) and ("last sync " .. ago(c.synced) .. " - run WhoDidIt-Sync.cmd") or "run tools\\WhoDidIt-Sync.cmd")
+		syncBar.bot:SetText((c and c.synced) and ("last sync " .. ago(c.synced) .. " - starts within 15 min (AutoSync)") or "run tools\\AutoSync-On.cmd once")
 	elseif st.state == "running" then
 		local frac = (st.total > 0) and (st.done / st.total) or 0.05
 		bar(frac, 0.2, 0.55, 1)
@@ -2842,7 +2855,7 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 			return
 		end
 		tinsert(rows, row(C_DIM .. "No times yet. They show up when you or a WhoDidIt user on your realm gets one,|r"))
-		tinsert(rows, row(C_DIM .. "or when tools\\WhoDidIt-Sync pulls them from Chronicle.|r"))
+		tinsert(rows, row(C_DIM .. "or when the raid times arrive from the master feed.|r"))
 		return
 	end
 	local home = B.Realm()
@@ -3147,7 +3160,7 @@ function UI:RankLogRows()
 			elseif B.chronFeed then
 				tinsert(rows, row(C_DIM .. "This raid's boss list comes from " .. (B.chronFrom or "the master") .. " - open it again while they're online.|r"))
 			else
-				tinsert(rows, row(C_DIM .. "This raid's boss list isn't downloaded yet. tools\\WhoDidIt-Sync fetches it on its next sync.|r"))
+				tinsert(rows, row(C_DIM .. "This raid's boss list isn't here yet. It's asked for from the master feed while the master is online.|r"))
 			end
 		else
 			tinsert(rows, row(C_DIM .. (rec.net and ("Shared by a WhoDidIt user" .. (rec.by and (" (" .. rec.by .. ")") or "") .. " - there's no Chronicle log for it.")
@@ -3234,7 +3247,7 @@ function UI:RefreshRankings()
 		local mins = floor((time() - c.synced) / 60)
 		chron = "Chronicle " .. ((c.status ~= "ok") and ("|cffffd100" .. (c.status or "") .. "|r") or (mins < 2 and "just synced" or (mins .. " min ago")))
 	else
-		chron = "|cffff9933Chronicle not synced - run tools\\WhoDidIt-Sync.cmd|r"
+		chron = "|cffff9933Chronicle times: waiting for the master feed|r"
 	end
 	UI:UpdateSync()
 	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. (UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
@@ -3322,13 +3335,15 @@ function UI:LogRows()
 	local L = W.Logs
 	local rows = {}
 	if not L:Available() then
-		head(rows, "The Chronicle logger isn't installed yet")
-		tinsert(rows, row("WhoDidIt has Chronicle's logger (|cffffd100ChronicleCompanion|r) built in - it writes the logs you upload to chronicleclassic.com."))
-		tinsert(rows, row("It's downloaded from the official source by the helper: run |cffffd100tools\\WhoDidIt-Sync.cmd|r once,"))
-		tinsert(rows, row("then " .. W.RESTART_HINT .. ". The helper keeps it up to date from then on."))
-		if WDI_CHRON_VERSION then
-			tinsert(rows, row("|cffff7777v" .. WDI_CHRON_VERSION .. " is downloaded but didn't load - " .. W.RESTART_HINT .. ".|r"))
+		if L:StandaloneOff() then
+			head(rows, "Chronicle logging is off")
+			tinsert(rows, row("You switched the |cffffd100ChronicleCompanion|r addon off in the AddOns list, so WhoDidIt's built-in copy stays off too."))
+			tinsert(rows, row("To log raids: switch ChronicleCompanion back on, or delete it from Interface\\AddOns to use the built-in one."))
+			return rows
 		end
+		head(rows, "The Chronicle logger didn't load")
+		tinsert(rows, row("WhoDidIt has Chronicle's logger (|cffffd100ChronicleCompanion|r) built in - it writes the logs you upload to chronicleclassic.com."))
+		tinsert(rows, row("Its files are missing or didn't load: " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
 		return rows
 	end
 	local opts = WhoDidItDB.opts
@@ -3341,12 +3356,13 @@ function UI:LogRows()
 			.. (WDI_CHRON_DATE and ("  |cff888888" .. WDI_CHRON_DATE .. "|r") or ""),
 			{ tipTitle = "Built-in Chronicle logger", tip = {
 				"ChronicleCompanion by Emyrk, from github.com/Emyrk/ChronicleCompanion.",
-				"tools\\WhoDidIt-Sync checks for a new version every hour and installs it when WoW is closed.",
+				"Ships with WhoDidIt at the version the maintainer tested; newer ones come with WhoDidIt updates.",
+				(WhoDidItDB.opts.chronUse == true) and "You said yes to logging raids." or "Logs nothing until you say yes (asked in your first raid, or Start logging).",
 				"Commit: " .. string.sub(WDI_CHRON_COMMIT or "?", 1, 7) } }))
 	elseif WDI_CHRON_VERSION then
 		tinsert(rows, row("Logger", "|cffffd100ChronicleCompanion addon|r  |cffffffffv" .. (L:Version() or "?") .. "|r  |cff888888built-in v" .. WDI_CHRON_VERSION .. " takes over after /reload|r"))
 	else
-		tinsert(rows, row("Logger", "|cffffd100ChronicleCompanion addon|r  |cffffffffv" .. (L:Version() or "?") .. "|r  |cff888888run tools\\WhoDidIt-Sync to build it in|r"))
+		tinsert(rows, row("Logger", "|cffffd100ChronicleCompanion addon|r  |cffffffffv" .. (L:Version() or "?") .. "|r"))
 	end
 	tinsert(rows, row("Log file", "|cffffffffWoW folder\\CustomData\\" .. file .. "|r"))
 	tinsert(rows, row("Lines logged but not saved yet", "|cffffffff" .. FmtNum(L:Unsaved()) .. "|r"))
@@ -3390,8 +3406,8 @@ function UI:RefreshLogs()
 		rTitle:SetText("Logging  " .. (L:Enabled() and "|cff33ff33ON - logging|r" or "|cffff5555OFF|r"))
 		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. FmtNum(L:Unsaved()) .. " unsaved lines|r")
 	else
-		rTitle:SetText("Logging  |cffff5555Chronicle logger not found|r")
-		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once to install the Chronicle logger|r")
+		rTitle:SetText("Logging  |cffff5555" .. (L:StandaloneOff() and "off (ChronicleCompanion is switched off)" or "Chronicle logger not found") .. "|r")
+		rInfo:SetText("|cffaaaaaa" .. (L:StandaloneOff() and "Switch ChronicleCompanion on in the AddOns list to log raids" or "Its files are missing: download WhoDidIt again") .. "|r")
 	end
 	rVerdict:SetText("Upload the log at |cffffd100chronicleclassic.com|r after your raid.\n|cff888888Addons can't reach the internet, so uploading happens on the website.|r")
 	hintText:SetText("Click an option to switch it on or off.  Hover the buttons for details.")
@@ -3546,9 +3562,9 @@ function UI:ZoneRows(zone)
 	if info then
 		tinsert(rows, row("From |cffffd100AutoMarker|r " .. (info.version or "?") .. "  " .. C_DIM .. "(by Weird Vibes, github.com/MarcelineVQ/AutoMarker)|r",
 			C_TIME .. info.packs .. "|r packs, " .. C_TIME .. info.mobs .. "|r mobs  " .. C_DIM .. (info.date or "") .. "|r",
-			{ tipTitle = "Built-in packs", tip = { "tools\\WhoDidIt-Sync downloads them and checks for new ones every hour.", "Your own packs are saved separately and never overwritten." } }))
+			{ tipTitle = "Built-in packs", tip = { "They ship with WhoDidIt (PackData.lua): AutoMarker's raid pack data, credited.", "Your own packs are saved separately and never overwritten." } }))
 	else
-		tinsert(rows, row("|cffff7777Not installed.|r Double-click |cffffd100tools\\WhoDidIt-Sync.cmd|r (in the WhoDidIt folder) once, then " .. W.RESTART_HINT .. ".  " .. C_DIM .. "Your own packs work without them.|r"))
+		tinsert(rows, row("|cffff7777Missing.|r PackData.lua isn't loaded: " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. ".  " .. C_DIM .. "Your own packs work without it.|r"))
 	end
 	return rows
 end
@@ -3936,10 +3952,10 @@ function UI:RefreshLoot()
 
 	local src = Lt:Source()
 	if not src then
-		rTitle:SetText("SR MasterLoot  |cffff5555RollFor isn't installed yet|r")
-		rInfo:SetText("|cffaaaaaaRun tools\\WhoDidIt-Sync.cmd once, then " .. W.RESTART_HINT .. "|r")
-		rVerdict:SetText("RollFor is built in - the helper downloads it from its official source.\n"
-			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is downloaded: " .. W.RESTART_HINT .. ".|r") or "|cff888888The guide below works without it.|r"))
+		rTitle:SetText("SR MasterLoot  |cffff5555RollFor didn't load|r")
+		rInfo:SetText("|cffaaaaaaIts files are missing: " .. W.SYNC_HOWTO .. "|r")
+		rVerdict:SetText("RollFor ships with WhoDidIt.\n"
+			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is there: " .. W.RESTART_HINT .. ".|r") or "|cff888888The guide below works without it.|r"))
 	else
 		rTitle:SetText("SR MasterLoot  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
 			.. (src == "builtin" and "|cff33ff33built in|r" or "|cffffd100separate addon|r"))
@@ -4065,7 +4081,7 @@ function UI:FeedPanel()
 	info("Where it goes:", "saved with your WhoDidIt settings on your PC, so Rankings is full next login, even when they're offline.")
 	info("Never posted:", "other guilds' names never go into chat by themselves; anything you post shows you the text first.")
 	info("Live:", "after the first copy, new times arrive within minutes of being uploaded to Chronicle, while they're online.")
-	info("Your choice:", "/wdi feed off ignores the feed. Rather fetch them yourself? tools\\WhoDidIt-Sync.cmd (optional).")
+	info("Your choice:", "/wdi feed off ignores the feed. Nothing to install or run either way.")
 	head(rows, "Times recorded in game")
 	return rows
 end
@@ -4394,10 +4410,10 @@ function UI:EmptyRows()
 	tinsert(rows, row("Nampower: " .. yn(e.nampower) .. "     SuperWoW: " .. yn(e.superwow) .. "     TWThreat: " .. (e.twthreat and "|cff33ff33found|r" or "|cff888888not loaded (server queries used)|r")))
 	local miss = W.MissingExtras()
 	if getn(miss) > 0 then
-		tinsert(rows, row("|cffff9933Not downloaded yet:|r " .. table.concat(miss, ", ")))
-		tinsert(rows, row("   To get them, " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
+		tinsert(rows, row("|cffff9933Missing from your WhoDidIt folder:|r " .. table.concat(miss, ", ")))
+		tinsert(rows, row("   To fix it, " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
 	else
-		tinsert(rows, row("Built-in extras (raid times, mob packs, logger, RollFor, DopingControl): |cff33ff33all installed|r"))
+		tinsert(rows, row("Built in (raid packs, Chronicle logger, RollFor, DopingControl): |cff33ff33all there|r  " .. C_DIM .. "raid times come from the master feed|r"))
 	end
 	tinsert(rows, row("ClassicAPI: " .. (e.classicapi and "|cff33ff33found|r" or "|cff999999not installed - optional extra, /wdi classicapi shows what it adds and how to get it|r"),
 		nil, { click = function() W:ClassicApiInfo() end }))

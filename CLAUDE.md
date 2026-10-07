@@ -66,3 +66,10 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   NPCList.lua (Weird Vibes) at the pin in tools/MarkDataUpdate.ps1, data only, credited in the
   file and README, not under WhoDidIt's MIT licence, removed if the author asks. Rebuild it only
   with that script from the real upstream file, never from edited copies.
+- Players install WhoDidIt by drag and drop only: nothing may tell them to run a CMD/PowerShell
+  file (ClassicAPI, a DLL, is the one optional exception). Chronicle\, RollFor\ and DopingControl\
+  ship in the repo at the pins in tools/EmbedUpdate.ps1 (maintainer tool: move a pin, run it,
+  review, commit), each with WDI_NOTICE.txt. The sync helper and AutoSync are maintainer-only
+  (they refuse to run on a PC without a B.MASTERS character).
+- The built-in Chronicle logger logs nothing until the player says yes (opts.chronUse), and stays
+  off when the separate ChronicleCompanion is installed but disabled (WDI_CHRON_OFF).

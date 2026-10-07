@@ -1,0 +1,14 @@
+RollFor, built into WhoDidIt
+============================
+
+This folder is RollFor, the master-loot roller by Obszczymucha, in sica42's
+1.12 fork: https://github.com/sica42/roll-for-vanilla
+
+All credit for it goes to its authors. WhoDidIt ships it at the commit named in
+wdi_version.lua, with only the small changes needed to run it from inside
+WhoDidIt (its version comes from wdi_version.lua, its images are found in this
+folder, its library lists are expanded into WhoDidIt.toc; see
+tools\EmbedUpdate.ps1). Nothing in how it rolls is changed.
+
+Its repository states no licence. This folder is not covered by WhoDidIt's MIT
+licence, and it will be removed from WhoDidIt if its authors ask.

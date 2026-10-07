@@ -11,16 +11,12 @@
     It also finds your own characters (from the WTF folder) in Chronicle's
     raid rosters, so your personal best kills and clears show up too.
 
-    It also installs what's built into WhoDidIt, each from its official
-    source at the commit the WhoDidIt maintainer has tested (pinned in
-    EmbedUpdate.ps1), never whatever is newest. Every
-    hour it checks you have the pinned version; newer ones arrive with a
-    WhoDidIt update. (-Latest on EmbedUpdate.ps1 tries the newest, for testing.)
-      - the Chronicle logger (github.com/Emyrk/ChronicleCompanion),
-        RollFor (github.com/sica42/roll-for-vanilla) and DopingControl
-        (github.com/ShempError/DopingControl) - see EmbedUpdate.ps1
-      (the auto marker's raid packs ship with WhoDidIt in PackData.lua:
-      nothing is downloaded for them)
+    FOR THE WHODIDIT MAINTAINER ONLY. Players need none of this: their raid
+    times arrive in game from the maintainer's master feed, and the Chronicle
+    logger, RollFor, DopingControl and the raid packs ship with WhoDidIt.
+    It only runs on a PC with one of the master characters (B.MASTERS in
+    Board.lua, looked up in the WTF folder); -Force runs it anyway.
+    (To move the built-in addons to newer versions: tools\EmbedUpdate.ps1.)
       (ClassicAPI, a DLL inside the game, is never updated by this: run
       Install-ClassicAPI.cmd yourself when you want a new version)
 
@@ -29,11 +25,7 @@
       WhoDidIt-Sync.ps1 -Once              sync once and exit
       WhoDidIt-Sync.ps1 -Server "OctoWoW"  another Chronicle server
       WhoDidIt-Sync.ps1 -Days 30           only raids from the last 30 days
-      WhoDidIt-Sync.ps1 -UpdatesOnly       only install / update the built-in addons
-      WhoDidIt-Sync.ps1 -LoggerOnly        only install / update the Chronicle logger
-      WhoDidIt-Sync.ps1 -NoLoggerUpdate    leave the Chronicle logger alone
-      WhoDidIt-Sync.ps1 -NoRollForUpdate   leave RollFor alone
-      WhoDidIt-Sync.ps1 -NoDopingUpdate    leave DopingControl alone
+      WhoDidIt-Sync.ps1 -Force             run on a PC without a master character (testing)
 
       WhoDidIt-Sync.ps1 -DetailsPerSync 600  read more raids in full per sync (default 150)
 
@@ -55,6 +47,7 @@ param(
     [switch]$NoRollForUpdate,
     [switch]$NoDopingUpdate,
     [switch]$NoPackUpdate,           # no longer used (the packs ship with WhoDidIt); kept so old shortcuts work
+    [switch]$Force,                  # run even on a PC without a master character
     [int]$DetailsPerSync = 150
 )
 
@@ -540,55 +533,52 @@ function Sync {
 
 # ------------------------------------------------------------------ main
 
-. (Join-Path $PSScriptRoot "EmbedUpdate.ps1")
+# This helper is for the WhoDidIt maintainer only: their master character feeds
+# everyone's raid times in game, and the Chronicle logger, RollFor and
+# DopingControl ship with WhoDidIt. So it runs only on a PC with one of the
+# master characters (B.MASTERS in Board.lua, found in the WTF folder), unless
+# started with -Force.
+function Test-IsMaster {
+    $board = Join-Path $PSScriptRoot "..\Board.lua"
+    if (-not (Test-Path -LiteralPath $board)) { return $false }
+    $src = [IO.File]::ReadAllText($board)
+    $m = [regex]::Match($src, '(?s)B\.MASTERS\s*=\s*\{(.*?)\n\}')
+    if (-not $m.Success) { return $false }
+    foreach ($r in [regex]::Matches($m.Groups[1].Value, '\["([^"]+)"\]\s*=\s*\{([^}]*)\}')) {
+        $realm = $r.Groups[1].Value
+        foreach ($n in [regex]::Matches($r.Groups[2].Value, '(\w+)\s*=\s*true')) {
+            if ($MyChars.ContainsKey("$realm|$($n.Groups[1].Value.ToLower())")) { return $true }
+        }
+    }
+    return $false
+}
+if (-not $Force -and -not (Test-IsMaster)) {
+    Log "Nothing to do here: this helper is only for WhoDidIt's maintainer."
+    Log "Your raid times arrive in game from the maintainer's master feed, and everything else ships with WhoDidIt."
+    Log "(If it was set to start with Windows, double-click tools\AutoSync-Off.cmd to stop that.)"
+    Start-Sleep -Seconds 8
+    return
+}
 
 . (Join-Path $PSScriptRoot "ClassicApiUpdate.ps1")
 
-# only one helper at a time (e.g. started with Windows, then double-clicked too),
-# whatever it was started for: two updates at once would race on the same folders
+# only one helper at a time (e.g. started with Windows, then double-clicked too)
 $script:Single = New-Object System.Threading.Mutex($false, "WhoDidIt-Sync")
 $mine = $false
 try { $mine = $script:Single.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $mine = $true }
 if (-not $mine) {
-    if ($LoggerOnly -or $UpdatesOnly) {
-        Log "WhoDidIt-Sync is already running - it checks for updates itself every hour. Close it first to update right now."
-    } else {
-        Log "WhoDidIt-Sync is already running in another window - this one closes. (Sync now in game asks that one.)"
-    }
+    Log "WhoDidIt-Sync is already running in another window - this one closes. (Sync now in game asks that one.)"
     Start-Sleep -Seconds 4
     return
 }
-
-if ($LoggerOnly) {
-    Update-Chronicle
-    return
-}
-if ($UpdatesOnly) {
-    Update-Chronicle
-    Update-RollFor
-    Update-Doping
-
+if ($LoggerOnly -or $UpdatesOnly) {
+    Log "The built-in addons ship with WhoDidIt now. To move their pins, run tools\EmbedUpdate.ps1 and commit the result."
     return
 }
 
 Log "WhoDidIt-Sync for $Server (WoW folder: $WowDir)"
-$loggerEvery = [math]::Max(1, [math]::Ceiling(60 / [math]::Max(1, $IntervalMinutes)))
-$round = 0
 while ($true) {
-    if (($round % $loggerEvery) -eq 0) {
-        if (-not $NoLoggerUpdate) {
-            try { Update-Chronicle } catch { Log ("Chronicle logger check failed: " + $_.Exception.Message) }
-        }
-        if (-not $NoRollForUpdate) {
-            try { Update-RollFor } catch { Log ("RollFor check failed: " + $_.Exception.Message) }
-        }
-        if (-not $NoDopingUpdate) {
-            try { Update-Doping } catch { Log ("DopingControl check failed: " + $_.Exception.Message) }
-        }
-
-    }
-    $round++
-    Remove-Item -LiteralPath $RequestFile -Force -ErrorAction SilentlyContinue   # this sync answers any request
+    if (Test-Path -LiteralPath $RequestFile) { [IO.File]::Delete($RequestFile) }   # this sync answers any request
     $failed = $null
     try { Sync } catch { $failed = $_.Exception.Message; Log ("Sync failed: " + $failed) }
     $script:St.next = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + $IntervalMinutes * 60

@@ -1,5 +1,6 @@
 <#
     AutoSync - run WhoDidIt's sync helper in the background, starting with Windows.
+    For the WhoDidIt maintainer only (on a PC with a master character; -Force otherwise).
 
     For anyone happy to have the helper (WhoDidIt-Sync.ps1) running: it starts
     with no window every time you log into Windows, so new Chronicle raid times
@@ -23,7 +24,7 @@
       AutoSync.ps1 -Minimised   the same, but with a minimised window on the taskbar
       AutoSync.ps1 -Off         stop it starting with Windows, and stop it now
 #>
-param([switch]$Off, [switch]$Minimised)
+param([switch]$Off, [switch]$Minimised, [switch]$Force)
 
 $taskName = "WhoDidIt-Sync"
 $startup = [Environment]::GetFolderPath("Startup")
@@ -54,6 +55,32 @@ if ($Off) {
     $running = @(Get-Helper)
     foreach ($p in $running) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }
     if ($running.Count -gt 0) { Write-Host "Stopped the helper that was running." }
+    return
+}
+
+# for the WhoDidIt maintainer only (the helper feeds everyone's raid times):
+# a PC without one of the master characters (B.MASTERS in Board.lua) has no use for it
+function Test-IsMaster {
+    $wtf = Join-Path $PSScriptRoot "..\..\..\..\WTF\Account"
+    $board = Join-Path $PSScriptRoot "..\Board.lua"
+    if (-not (Test-Path -LiteralPath $wtf) -or -not (Test-Path -LiteralPath $board)) { return $false }
+    $chars = @{}
+    foreach ($acct in Get-ChildItem -LiteralPath $wtf -Directory) {
+        foreach ($realm in Get-ChildItem -LiteralPath $acct.FullName -Directory) {
+            foreach ($c in Get-ChildItem -LiteralPath $realm.FullName -Directory) { $chars["$($realm.Name)|$($c.Name.ToLower())"] = $true }
+        }
+    }
+    $m = [regex]::Match([IO.File]::ReadAllText($board), '(?s)B\.MASTERS\s*=\s*\{(.*?)\n\}')
+    foreach ($r in [regex]::Matches($m.Groups[1].Value, '\["([^"]+)"\]\s*=\s*\{([^}]*)\}')) {
+        foreach ($n in [regex]::Matches($r.Groups[2].Value, '(\w+)\s*=\s*true')) {
+            if ($chars.ContainsKey("$($r.Groups[1].Value)|$($n.Groups[1].Value.ToLower())")) { return $true }
+        }
+    }
+    return $false
+}
+if (-not $Force -and -not (Test-IsMaster)) {
+    Write-Host "You don't need this: the sync helper is only for WhoDidIt's maintainer."
+    Write-Host "Your raid times arrive in game by themselves, and everything else ships with WhoDidIt."
     return
 }
 

@@ -36,9 +36,9 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
-- 📝 **Logging.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Optional: needs ChronicleCompanion, installed normally or by the sync helper.*
+- 📝 **Logging.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Built in; logs nothing until you say yes.*
 - 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *~365 raid packs come with the download (from AutoMarker's data, credited), nothing else needed.*
-- 💰 **SR MasterLoot.** Soft-res master looting with RollFor, with a step-by-step guide. *Optional: needs RollFor, installed normally or by the sync helper.* **Auto-loot** hands out the trash loot for you.
+- 💰 **SR MasterLoot.** Soft-res master looting with RollFor, with a step-by-step guide. *Built in.* **Auto-loot** hands out the trash loot for you.
 - 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and no character names or anything from your PC are shared (with sharing on, just your guild's best times). See [Privacy and security](#privacy-and-security).
 
 ## Screenshots
@@ -100,15 +100,14 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 4. That's it. Rankings fills in by itself from the [master feed](#master-feed-nothing-to-install): the first copy
    takes about 15 minutes in the background while the maintainer is online, and the Rankings tab shows the progress.
 
-**Optional extras** (WhoDidIt works without them):
+**Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#logging-chronicle-logs),
+[RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the
+[Auto Marker's raid packs](#auto-marker), each at the version the maintainer tested. Raid times arrive in game. The
+`tools` folder is for the maintainer; players never need it.
 
-| Extra | What it adds | How |
-| --- | --- | --- |
-| [Sync helper](#sync-helper-optional) | The [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), and [DopingControl](#full-check-dopingcontrol) installed for you; your own fresher raid times and **Sync now** | double-click `tools\WhoDidIt-Sync.cmd` once (WoW can stay open), then restart WoW |
-| [ClassicAPI](#classicapi-optional) | Copy links straight to the clipboard, faster consume scans, "running out" warnings, `/reload` picks up updates | close WoW, double-click `tools\Install-ClassicAPI.cmd` |
-
-You can also install ChronicleCompanion, RollFor or DopingControl the normal way instead of using the helper. The
-helper only installs versions the WhoDidIt maintainer has tested (pinned), never whatever is newest.
+**Optional:** [ClassicAPI](#classicapi-optional) (copy links straight to the clipboard, faster consume scans, "running
+out" warnings, `/reload` picks up updates). It's a DLL, so it needs installing: close WoW and double-click
+`tools\Install-ClassicAPI.cmd`, or follow the steps by hand.
 
 **Updating:** download the new zip and replace the `WhoDidIt` folder (keep the folder name), or `git pull` if you
 cloned it. Your fights, settings and Hall of Fame are in `WTF\...\SavedVariables` and are kept. A full restart of WoW
@@ -231,7 +230,7 @@ by the old system. Times from before and after aren't directly comparable, so Ra
   why.
 - **Since 6 Oct**: click the **Times** line at the top of Rankings to rank only times set since the change, with
   their own #1s, gaps and your guild's rank. Click again for all times.
-- Where they come from: the sync helper (and so the master feed) works out every guild's best kill and best full
+- Where they come from: the maintainer's sync helper (and so the master feed) works out every guild's best kill and best full
   clear since the change from Chronicle's raid logs. A clear counts the bosses every top run of that raid killed,
   timed to the last of them, which matches Chronicle's own clear times for 191 of 193 top runs. Your own WhoDidIt
   recordings and other users' shared times are split by their date.
@@ -244,10 +243,10 @@ Rankings fills up from three places (hover a row to see which one a time came fr
 | Source | What it brings | You need |
 | --- | --- | --- |
 | **[Master feed](#master-feed-nothing-to-install)** | Every guild's Chronicle times on every realm, passed on in game by the maintainer's character | just the addon |
-| **[Sync helper](#sync-helper-optional)** | The same Chronicle times, fetched by your own PC every 10 minutes, plus **Sync now** | the optional helper (PowerShell, built into Windows) |
+| **[Sync helper](#sync-helper-maintainer-only)** | Where the feed gets them: the maintainer's PC fetches Chronicle's times every 10 minutes | nothing (maintainer only) |
 | **Other WhoDidIt users** | Each guild's own bests, shared by its members right after the kill: before anyone uploads a log, and from guilds that never upload | just the addon |
 
-With both the feed and the helper, whichever copy is newer is used.
+
 
 ### Master feed (nothing to install)
 
@@ -290,7 +289,11 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
 
 What's in the feed, and what never is, is listed under [Privacy and security](#privacy-and-security).
 
-### Sync helper (optional)
+### Sync helper (maintainer only)
+
+**Players never need this**: their raid times arrive from the master feed. It's how the maintainer's PC gets them in
+the first place, and it only runs on a PC with one of the master characters (`-Force` runs it anyway, for testing;
+anyone who started it before can stop it with `tools\AutoSync-Off.cmd`).
 
 WoW addons can't go online, so a small helper does it for them. `tools\WhoDidIt-Sync.cmd` (PowerShell, built into
 Windows) uses Chronicle's public [External API](https://legacy.chronicleclassic.com/developers/api) to pull:
@@ -301,18 +304,14 @@ Windows) uses Chronicle's public [External API](https://legacy.chronicleclassic.
   rosters it downloads. The names never leave your PC.
 
 It writes them to `CustomData\WhoDidIt_Chronicle.txt`, and WhoDidIt reads that file live through Nampower, with no
-`/reload`. It also installs and updates the built-in addons and packs (see [Install](#install)).
+`/reload`.
 
 ```
 tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (close the window to stop)
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
-tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the built-in addons
-tools\WhoDidIt-Sync.cmd -LoggerOnly        only install / update the built-in Chronicle logger
-tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
-tools\WhoDidIt-Sync.cmd -NoRollForUpdate   leave RollFor alone
-tools\WhoDidIt-Sync.cmd -NoDopingUpdate    leave DopingControl alone
+tools\WhoDidIt-Sync.cmd -Force             run on a PC without a master character (testing)
 tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (default 150)
 ```
 
@@ -373,23 +372,20 @@ that realm's fastest guild gets under our time.
 ## Logging (Chronicle logs)
 
 WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official addon for
-[chronicleclassic.com](https://chronicleclassic.com), made by Emyrk. You don't need to install it separately.
+[chronicleclassic.com](https://chronicleclassic.com), made by Emyrk
+([github.com/Emyrk/ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion)). It ships in `WhoDidIt\Chronicle\`
+at the version the maintainer tested, credited in `Chronicle\WDI_NOTICE.txt`; nothing to install.
 
-- **Install:** `tools\WhoDidIt-Sync.cmd` downloads it from the official source,
-  [github.com/Emyrk/ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion), into `WhoDidIt\Chronicle\`.
-  Restart WoW afterwards; a `/reload` isn't enough the first time. To install or update only the logger, run
-  `tools\WhoDidIt-Sync.cmd -LoggerOnly`.
-- **Updates:** the helper installs the version the WhoDidIt maintainer has tested (pinned to a commit), never whatever
-  is newest; newer Chronicle versions arrive with a WhoDidIt update. While it runs it checks every hour that you have
-  the pinned version. One that arrives while you're playing installs when you close WoW, so the logger never changes
-  mid-raid. If a version can't be adapted safely, the helper keeps the current one and says why.
-- **What's changed:** nothing in Chronicle's logging. The helper only lets its files run from inside WhoDidIt: they
-  start with WhoDidIt, take their version from `Chronicle\wdi_version.lua`, and find their minimap icons in the new
-  folder. `/chronicle`, `/chron`, `/clog`, the minimap button, the options panel and the log files are all exactly as before.
-- **Already have ChronicleCompanion installed?** WhoDidIt's copy stands down, so nothing is logged twice, and it asks
-  once whether to switch the separate addon off. **No** keeps it running with its own settings untouched; **Yes**
-  switches it off from your next login and the built-in copy takes over with your settings.
-- Chronicle's code isn't stored in this repository. It's downloaded from its source, at the pinned commit.
+- **It logs nothing until you say yes.** The first time you enter a raid, WhoDidIt asks whether to log your raids
+  (or click **Start logging** on the Logging tab). Say no and it stays off; switch it on any time.
+- **Switched ChronicleCompanion off?** If you have the separate addon installed but switched off in the AddOns list,
+  WhoDidIt takes that as "no logging" and its built-in copy stays off too.
+- **Already use ChronicleCompanion?** If the separate addon is on, WhoDidIt's copy stands down, so nothing is logged
+  twice, and it asks once whether to switch the separate one off. **No** keeps it with its own settings untouched.
+- **What's changed:** nothing in Chronicle's logging. Its files only run from inside WhoDidIt: they start with
+  WhoDidIt, take their version from `Chronicle\wdi_version.lua`, and find their minimap icons in the new folder.
+  `/chronicle`, `/chron`, `/clog`, the minimap button, the options panel and the log files are all exactly as before.
+  Newer Chronicle versions arrive with WhoDidIt updates.
 
 The **Logging** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
 
@@ -534,8 +530,8 @@ DopingControl itself is built into WhoDidIt, exactly as its author made it. Clic
 - **Equipment**: every slot, with missing enchants marked.
 - **Options**: what each role and class is expected to have, a whisper / report button and a minimap button.
 
-A player it can't read is shown as unknown, never as missing. `tools\WhoDidIt-Sync` downloads it from the author's
-GitHub and keeps it up to date (it isn't stored in this repository). If you already have DopingControl installed,
+A player it can't read is shown as unknown, never as missing. DopingControl ships with WhoDidIt
+(`WhoDidIt\DopingControl\`, MIT licence, at the version the maintainer tested). If you already have DopingControl installed,
 WhoDidIt asks once whether to switch the separate copy off (No keeps it, with its own settings).
 
 ## Auto-loot (auto master looting)
@@ -595,9 +591,9 @@ item and who soft-reserved it, it runs the roll, handles ties, and gives the ite
 All of RollFor's own commands work as before: `/rf`, `/arf`, `/rr`, `/irr`, `/fr`, `/cr`, `/sr`, `/srs`, `/src`, `/sro`,
 `/rfw`, `/rfo`, `/htr`, `/rf config`. So do its minimap button and its key bindings (Esc > Key Bindings > RollFor).
 
-**How it's built in.** RollFor isn't stored in this repository. `tools\WhoDidIt-Sync.cmd` downloads the version the
-WhoDidIt maintainer has tested (v4.8.1, pinned to a commit) from [sica42/roll-for-vanilla](https://github.com/sica42/roll-for-vanilla)
-into `WhoDidIt\RollFor\`, and installs a newer pinned version (with a WhoDidIt update) while WoW is closed. Restart WoW after the first install; a `/reload` isn't enough.
+**How it's built in.** RollFor ships in `WhoDidIt\RollFor\` at the version the maintainer tested (v4.8.1, from
+[sica42/roll-for-vanilla](https://github.com/sica42/roll-for-vanilla)), credited in `RollFor\WDI_NOTICE.txt`; nothing
+to install.
 The only changes to RollFor's files: its version comes from `RollFor\wdi_version.lua`, its images are found in the new
 folder, and its library list is expanded into `WhoDidIt.toc`. Its key bindings are added to WhoDidIt's. Nothing in how
 it rolls is changed, and it still talks to raiders' copies of RollFor (roll windows, version checks).
@@ -890,17 +886,14 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 **Your PC**
 
 - The addon can't go online. Through Nampower it only reads and writes its own files in `CustomData`.
-- The **sync helper** is optional. It only *reads* from Chronicle's public API and *downloads* from GitHub; it uploads
-  nothing. Your character names (from the `WTF` folder) are only matched against downloaded raid rosters on your PC.
-  It writes to the WhoDidIt folder, `CustomData` and Windows' temp folder (downloads before they're checked and
-  unpacked), needs no admin rights, and runs one copy at a time, whatever it was started for.
-- **Built-in addons** (Chronicle logger, RollFor, DopingControl) are downloaded from their authors' GitHub at a
-  commit the maintainer has tested and pinned, never whatever is newest. None of their code is stored in this
-  repository, and code from other repositories only gets in through a reviewed commit, never a bot. The Auto
-  Marker's raid pack data ships in `PackData.lua` (data only, credited to AutoMarker).
-- **AutoSync** adds one scheduled task for your Windows user (log on, unlock, every 15 minutes; no admin rights) and
-  a launcher script next to the helper; `AutoSync-Off.cmd` removes both. After starting the helper it checks that
-  it's really running.
+- **Nothing to run.** WhoDidIt is just the addon folder: no programs, no downloads, no background processes.
+- **Built-in addons** (Chronicle logger, RollFor, DopingControl) and the Auto Marker's pack data ship in the folder,
+  at a version the maintainer tested, credited to their authors. Code from other repositories only gets in through
+  a reviewed commit, never a bot.
+- The **sync helper** (maintainer only, and only on a PC with a master character) *reads* from Chronicle's public
+  API; it uploads nothing. It writes to `CustomData` and Windows' temp folder, needs no admin rights, and runs one
+  copy at a time. **AutoSync** (also maintainer only) adds one scheduled task for the Windows user and a launcher
+  script; `AutoSync-Off.cmd` removes both and works for anyone.
 - The **ClassicAPI installer** installs the pinned, tested release, checks its SHA-256 against the pin and backs up
   `dlls.txt`.
 - **Learn packs** notes mobs and where they stand into your own saved settings (at most 1,500 per raid; `/wdi marks
@@ -919,15 +912,15 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 
 WhoDidIt is released under the [MIT licence](LICENSE): use it, change it and pass it on, keeping the copyright notice.
 
-It works with other people's projects. None of their code is part of this repository: the sync helper downloads the
-addons, pinned to a tested version, onto your own PC. The one thing shipped from another project is the Auto
-Marker's raid pack data (`PackData.lua`, data only). Each keeps its own terms:
+It builds on other people's projects, which ship inside it with credit, each at a version the maintainer tested and
+each keeping its own terms. Folders and files from them are **not** covered by WhoDidIt's MIT licence, and anything
+without a licence comes out again if its author asks:
 
 | Project | Author | Used for | Licence |
 | --- | --- | --- | --- |
-| [ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion) | Emyrk | the Logging tab | none stated |
-| [RollFor](https://github.com/sica42/roll-for-vanilla) (1.12 fork) | Obszczymucha, sica42 | SR MasterLoot | none stated |
-| [DopingControl](https://github.com/ShempError/DopingControl) | ShempError | Full check, consume data | MIT |
+| [ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion) | Emyrk | the Logging tab (`Chronicle\`, shipped) | none stated |
+| [RollFor](https://github.com/sica42/roll-for-vanilla) (1.12 fork) | Obszczymucha, sica42 | SR MasterLoot (`RollFor\`, shipped) | none stated |
+| [DopingControl](https://github.com/ShempError/DopingControl) | ShempError | Full check, consume data (`DopingControl\`, shipped) | MIT |
 | [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the raid pack data in `PackData.lua` (GUIDs, packs, marks), included with credit, removed on request; not under WhoDidIt's MIT licence | none stated |
 | [Chronicle External API](https://legacy.chronicleclassic.com/developers/api) | Chronicle | every guild's raid times | API terms |
 | [ClassicAPI](https://github.com/brues-code/ClassicAPI) (optional) | brues-code | extras, see above | GPL-3.0 |

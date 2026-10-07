@@ -374,17 +374,17 @@ W:On("PLAYER_ENTERING_WORLD", function()
 	end
 end)
 
--- the built-in extras tools\WhoDidIt-Sync.cmd downloads (they aren't on GitHub)
+-- the parts that ship in the WhoDidIt folder: missing only if files were lost
+-- (raid times aren't here: they come in game from the master feed)
 function W.MissingExtras()
 	local miss = {}
-	if W.Board and not W.Board.chron then tinsert(miss, "every guild's raid times (Rankings)") end
 	if W.Marks and not W.Marks.dataInfo then tinsert(miss, "the Auto Marker's raid packs") end
 	if not WDI_CHRON_VERSION then tinsert(miss, "the Chronicle logger") end
 	if not WDI_ROLLFOR_VERSION then tinsert(miss, "RollFor") end
 	if not WDI_DOPING_VERSION then tinsert(miss, "DopingControl") end
 	return miss
 end
-W.SYNC_HOWTO = "double-click |cffffd100Interface\\AddOns\\WhoDidIt\\tools\\WhoDidIt-Sync.cmd|r once (WoW can stay open)"
+W.SYNC_HOWTO = "download WhoDidIt again and replace the WhoDidIt folder (they're part of it)"
 
 -- first run: say what's missing and how to get it, once a session
 local extrasTold
@@ -393,8 +393,8 @@ W:Every(12, function()
 	extrasTold = true
 	local miss = W.MissingExtras()
 	if getn(miss) == 0 then return end
-	W.Print("|cffff9933Not downloaded yet:|r " .. table.concat(miss, ", ") .. ". To get them, " .. W.SYNC_HOWTO
-		.. ", then " .. W.RESTART_HINT .. ". Leave its window open while you play to keep the raid times up to date.")
+	W.Print("|cffff9933Missing from your WhoDidIt folder:|r " .. table.concat(miss, ", ") .. ". To fix it, " .. W.SYNC_HOWTO
+		.. ", then " .. W.RESTART_HINT .. ".")
 end)
 
 W:On("RAID_ROSTER_UPDATE", function() W:UpdateRoster() end)

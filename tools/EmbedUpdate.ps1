@@ -1,9 +1,9 @@
 <#
-    EmbedUpdate - keeps the addons built into WhoDidIt up to date.
+    EmbedUpdate (maintainer tool) - keeps the addons built into WhoDidIt up to date.
 
     WhoDidIt carries other addons inside it, so they don't have to be
-    installed separately. None of them is stored in the WhoDidIt repository:
-    this downloads each from its official source and, whenever its authors
+    installed separately. They ship in the WhoDidIt repository; for the maintainer,
+    this downloads each from its official source at the pinned commit and, whenever its authors
     push a new version, fetches that too.
 
       Chronicle logger  ChronicleCompanion by Emyrk (chronicleclassic.com)
