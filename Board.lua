@@ -109,9 +109,9 @@ function B:LoadChronicle()
 		if ok and type(v) == "string" and v ~= "" then s, fromFile = v, true end
 	end
 	local f = WhoDidItDB and WhoDidItDB.feed
-	if f and (f.synced or 0) > 0 and not (WhoDidItDB.opts and WhoDidItDB.opts.noFeed) then
+	if f and B.FeedSynced() > 0 and not (WhoDidItDB.opts and WhoDidItDB.opts.noFeed) then
 		local _, _, a = string.find(s or "", "^WDICHRON|%d+|(%d+)")
-		if not s or f.synced > (tonumber(a) or 0) then s, fromFile = B.FeedText(), false end
+		if not s or B.FeedSynced() > (tonumber(a) or 0) then s, fromFile = B.FeedText(), false end
 	end
 	if not s then
 		local had = B.chron ~= nil
@@ -1459,17 +1459,28 @@ local function store()
 	return f
 end
 
--- the feed as the same text the sync file has, for LoadChronicle
+-- how fresh the saved feed is (a stream that missed a message still counts)
+function B.FeedSynced()
+	local f = WhoDidItDB and WhoDidItDB.feed
+	if not f then return 0 end
+	return math.max(f.synced or 0, f.part or 0)
+end
+
+-- the feed as the same text the sync file has, for LoadChronicle (built when
+-- it changes, kept in memory only: the lines themselves are what's saved)
+local feedText
 function B.FeedText()
 	local f = WhoDidItDB and WhoDidItDB.feed
-	if not f or not f.synced or f.synced == 0 then return nil end
-	if f.text and not f.dirty then return f.text end
-	local out = { "WDICHRON|2|" .. f.synced .. "|" .. (f.server or "?") .. "|90|ok" }
+	local synced = B.FeedSynced()
+	if not f or synced == 0 then return nil end
+	f.text = nil   -- older versions saved this copy too
+	if feedText and not f.dirty then return feedText end
+	local out = { "WDICHRON|2|" .. synced .. "|" .. (f.server or "?") .. "|90|ok" }
 	for _, line in pairs(f.lines) do tinsert(out, line) end
 	for _, line in pairs(f.logs) do tinsert(out, line) end
-	f.text = table.concat(out, "\n") .. "\n"
+	feedText = table.concat(out, "\n") .. "\n"
 	f.dirty = nil
-	return f.text
+	return feedText
 end
 
 ------------------------------------------------------------------ master side
@@ -1483,7 +1494,7 @@ local function buildStream(since)
 	local recs = 0
 	-- new names wait in "names" and go out (packed) just before the records using them
 	local function idx(s)
-		s = clean(s)
+		s = string.sub(clean(s), 1, 100)   -- no single entry can outgrow a chat message
 		if not dict[s] then
 			n = n + 1
 			dict[s] = b36(n)
@@ -1518,11 +1529,11 @@ local function buildStream(since)
 				if t == "C|" then
 					-- C|realm|instance|guild|faction|secs|ended|players|slug
 					rec = "C" .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. string.sub(p[5] or "?", 1, 1) .. ","
-						.. (p[6] or "") .. "," .. b36(p[7]) .. "," .. b36(p[8]) .. "," .. clean(p[9])
+						.. (p[6] or "") .. "," .. b36(p[7]) .. "," .. b36(p[8]) .. "," .. string.sub(clean(p[9]), 1, 60)
 				else
 					-- K|realm|instance|boss|guild|faction|secs|ended|players|slug
 					rec = "K" .. idx(p[2]) .. "," .. idx(p[3]) .. "," .. idx(p[4]) .. "," .. idx(p[5]) .. "," .. string.sub(p[6] or "?", 1, 1) .. ","
-						.. (p[7] or "") .. "," .. b36(p[8]) .. "," .. b36(p[9]) .. "," .. clean(p[10])
+						.. (p[7] or "") .. "," .. b36(p[8]) .. "," .. b36(p[9]) .. "," .. string.sub(clean(p[10]), 1, 60)
 				end
 				if blen + string.len(rec) + 1 > 220 then flush() end
 				tinsert(buf, rec)
@@ -1566,11 +1577,31 @@ end
 
 ------------------------------------------------------------------ player side
 
-local function applyStream(s, sender)
+-- a raid time's date: C|realm|instance|guild|faction|secs|ended|... / K|...|boss|...|ended|...
+local function lineEnded(line)
+	local p, i = {}, 0
+	for part in string.gfind(line .. "|", "(.-)|") do
+		i = i + 1
+		p[i] = part
+		if i >= 9 then break end
+	end
+	return tonumber((p[1] == "C") and p[7] or p[8]) or 0
+end
+
+-- partial: some messages went missing. Records are merged one by one, so
+-- what did arrive is kept, but "synced" stays where it was and the next ask
+-- starts from the same point.
+local function applyStream(s, sender, partial)
 	local f = store()
-	local first = (f.synced or 0) == 0
+	local first = (f.synced or 0) == 0 and not partial
 	for key, line in pairs(s.lines) do f.lines[key] = line end
-	f.synced, f.server, f.from, f.dirty = s.synced, s.server, sender, true
+	-- times older than half a year drop off (the helper reads 90 days)
+	local old = time() - 180 * 86400
+	for key, line in pairs(f.lines) do
+		if lineEnded(line) < old then f.lines[key] = nil end
+	end
+	f.server, f.from, f.dirty = s.server, sender, true
+	if partial then f.part = math.max(f.part or 0, s.synced) else f.synced = s.synced end
 	if first then
 		local n = 0
 		for _ in pairs(s.lines) do n = n + 1 end
@@ -1602,7 +1633,8 @@ end
 
 -- ask the master for one raid's boss list (when someone opens it)
 function B:AskLog(slug)
-	if not slug or not B.master or askedLog[slug] then return false end
+	-- asked in the last minute: the answer is on its way (or never coming; then ask again)
+	if not slug or not B.master or (askedLog[slug] and GetTime() - askedLog[slug] < 60) then return false end
 	askedLog[slug] = GetTime()
 	feedSend("Q~" .. clean(slug))
 	return true
@@ -1690,8 +1722,8 @@ function B:FeedReceive(msg, sender)
 	elseif kind == "E" then
 		local s = recv[p[3]]
 		recv[p[3]] = nil
-		-- a missed message means a gap: don't trust it, ask again next minute
-		if s and s.got == s.total then applyStream(s, sender) end
+		-- a missed message: keep what arrived, ask again from the same point later
+		if s then applyStream(s, sender, s.got < s.total) end
 	elseif kind == "L" then
 		local slug, i, n = p[3], tonumber(p[4]), tonumber(p[5])
 		if not (slug and i and n) or not askedLog[slug] then return end
@@ -1704,6 +1736,8 @@ function B:FeedReceive(msg, sender)
 		if string.sub(line, 1, 2) == "L|" then
 			local f = store()
 			f.logs[slug] = line
+			f.logAt = f.logAt or {}
+			f.logAt[slug] = time()
 			f.dirty = true
 			if B:LoadChronicle() and W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
 		end
@@ -1765,9 +1799,34 @@ W:Every(1, function()
 	if feedSent < feedTotal then feedSent = feedSent + 1 end
 end)
 
--- forget askers after their window (every table keyed by a name needs eviction)
+-- forget askers after their window (every table keyed by a name needs eviction),
+-- streams whose end never came (keep what arrived), unanswered boss list asks,
+-- and keep at most 200 saved boss lists
 W:Every(60, function()
 	local now = GetTime()
+	for sid, s in pairs(recv) do
+		if now - s.at > 120 then
+			recv[sid] = nil
+			if s.got > 0 then applyStream(s, s.from, true) end
+		end
+	end
+	for slug, t in pairs(askedLog) do
+		if now - t > 60 then askedLog[slug] = nil; logParts[slug] = nil end
+	end
+	local f = WhoDidItDB and WhoDidItDB.feed
+	if f and f.logs then
+		local n, oldest, oldT = 0, nil, nil
+		for slug in pairs(f.logs) do
+			n = n + 1
+			local t = f.logAt and f.logAt[slug] or 0
+			if not oldT or t < oldT then oldest, oldT = slug, t end
+		end
+		if n > 200 and oldest then
+			f.logs[oldest] = nil
+			if f.logAt then f.logAt[oldest] = nil end
+			f.dirty = true
+		end
+	end
 	for n, t in pairs(askedA) do if now - t > A_EVERY then askedA[n] = nil end end
 	for n, q in pairs(askedQ) do if now - q.since > Q_WINDOW then askedQ[n] = nil end end
 	for s, t in pairs(logSent) do if now - t > 30 then logSent[s] = nil end end
