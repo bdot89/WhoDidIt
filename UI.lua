@@ -715,6 +715,35 @@ rVerdict:SetHeight(28)
 rVerdict:SetJustifyH("LEFT")
 rVerdict:SetJustifyV("TOP")
 
+UI.headArt = header:CreateTexture(nil, "BACKGROUND")
+UI.headArt:SetPoint("TOPLEFT", header, "TOPLEFT", 4, -4)
+UI.headArt:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", -4, 4)
+UI.headArt:Hide()
+UI.headShade = header:CreateTexture(nil, "BORDER")
+UI.headShade:SetPoint("TOPLEFT", header, "TOPLEFT", 4, -4)
+UI.headShade:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", -4, 4)
+UI.headShade:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+if UI.headShade.SetGradientAlpha then
+	UI.headShade:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0.9, 0, 0, 0, 0.2)
+else
+	UI.headShade:SetVertexColor(0, 0, 0, 0.6)
+end
+UI.headShade:Hide()
+-- the header shows the raid it's about (nil: plain)
+function UI.SetHeaderArt(zone)
+	local a = zone and UI.ZoneArt(zone)
+	if a then
+		UI.headArt:SetTexture(a[1])
+		UI.headArt:SetTexCoord(0, 1, 0.40, 0.58)
+		UI.headArt:SetAlpha(0.6)
+		UI.headArt:Show()
+		UI.headShade:Show()
+	else
+		UI.headArt:Hide()
+		UI.headShade:Hide()
+	end
+end
+
 -- SR MasterLoot: where soft-res sheets are made, with a copy box for the link
 local SR_SITE = "https://raidres.fly.dev"
 local srCopy = button(header, "Copy link", 84, 20)
@@ -1832,18 +1861,25 @@ end
 
 -- a raid's picture for its run header: the first of these the game has (see
 -- /wdi art); nil = none, the header is plain
+-- checked in game with /wdi art (8 Oct 2026): ZG, MC, BWL, Naxx, ES and Karazhan
+-- load; Onyxia and both AQs didn't under the first names tried, so there are
+-- more guesses for them (the first that loads is used, none = a plain header)
+do   -- (a block: UI.lua is near Lua 5.0's 200 file-level locals)
+local LS = "Interface\\Glues\\LoadingScreens\\"
 UI.ART = {
-	["Zul'Gurub"]            = { "Interface\\Glues\\LoadingScreens\\LoadScreenZulGurub" },
-	["Molten Core"]          = { "Interface\\Glues\\LoadingScreens\\LoadScreenMoltenCore" },
-	["Onyxia's Lair"]        = { "Interface\\Glues\\LoadingScreens\\LoadScreenOnyxiasLair", "Interface\\Glues\\LoadingScreens\\LoadScreenOnyxiaLair" },
-	["Blackwing Lair"]       = { "Interface\\Glues\\LoadingScreens\\LoadScreenBlackwingLair", "Interface\\Glues\\LoadingScreens\\LoadScreenBlackWingLair" },
-	["Ruins of Ahn'Qiraj"]   = { "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQirajRuins", "Interface\\Glues\\LoadingScreens\\LoadScreenRuinsOfAhnQiraj", "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQiraj" },
-	["Ahn'Qiraj"]            = { "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQirajTemple", "Interface\\Glues\\LoadingScreens\\LoadScreenTempleOfAhnQiraj", "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQiraj" },
-	["Naxxramas"]            = { "Interface\\Glues\\LoadingScreens\\LoadScreenNaxxramas" },
-	["Emerald Sanctum"]      = { "Interface\\Glues\\LoadingScreens\\LoadScreenEmeraldSanctum", "Interface\\Glues\\LoadingScreens\\LoadScreenEmeraldDream" },
-	["Tower of Karazhan"]    = { "Interface\\Glues\\LoadingScreens\\LoadScreenKarazhan", "Interface\\Glues\\LoadingScreens\\LoadScreenTowerOfKarazhan" },
-	["Lower Tower of Karazhan"] = { "Interface\\Glues\\LoadingScreens\\LoadScreenKarazhan", "Interface\\Glues\\LoadingScreens\\LoadScreenLowerKarazhan" },
+	["Zul'Gurub"]               = { LS .. "LoadScreenZulGurub" },
+	["Molten Core"]             = { LS .. "LoadScreenMoltenCore" },
+	["Blackwing Lair"]          = { LS .. "LoadScreenBlackwingLair" },
+	["Naxxramas"]               = { LS .. "LoadScreenNaxxramas" },
+	["Emerald Sanctum"]         = { LS .. "LoadScreenEmeraldSanctum" },
+	["Tower of Karazhan"]       = { LS .. "LoadScreenKarazhan" },
+	["Lower Tower of Karazhan"] = { LS .. "LoadScreenKarazhan" },
+	["Upper Tower of Karazhan"] = { LS .. "LoadScreenKarazhan" },
+	["Onyxia's Lair"]           = { LS .. "LoadScreenOnyxia", LS .. "LoadScreenOnyxiaRaid", LS .. "LoadScreenDragonLair" },
+	["Ruins of Ahn'Qiraj"]      = { LS .. "LoadScreenAQRuins", LS .. "LoadScreenAQ20", LS .. "LoadScreenAhnQirajRuin", LS .. "LoadScreenSilithus" },
+	["Ahn'Qiraj"]               = { LS .. "LoadScreenAQTemple", LS .. "LoadScreenAQ40", LS .. "LoadScreenAhnQirajTemple40", LS .. "LoadScreenSilithus" },
 }
+end
 UI.artOK = {}
 -- the first path the game can load; SetTexture says whether it could
 function UI.FirstArt(paths)
@@ -3173,7 +3209,7 @@ function UI:RankNavRows(realm)
 			line2 = "|cff555555no times yet|r"
 		end
 		tinsert(rows, row("|cffffffff" .. instTitle(zone) .. "|r\n" .. line2, right,
-			{ sel = (UI.rk.inst == zone),
+			{ sel = (UI.rk.inst == zone), art = UI.ZoneArt(zone),
 			  bar = (g and top) and (top[2].t / g.t) or nil, ba = 0.28, cr = 0.15, cg = 0.75, cb = 0.3,
 			  tipTitle = instTitle(zone),
 			  tip = {
@@ -3427,6 +3463,7 @@ function UI:RefreshRankings()
 	end
 	UI:UpdateSync()
 	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. (UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
+	UI.SetHeaderArt(zone)
 	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. ng .. " guild(s)   |   " .. chron
 		.. "   |   sharing " .. (WhoDidItDB.opts.shareBoard and "on" or "off") .. "|r")
 	local guild = B.MyGuild()
@@ -3847,6 +3884,7 @@ function UI:RefreshMarks()
 	local yours = 0
 	for _ in pairs(WhoDidItDB.marks.packs[zone] or {}) do yours = yours + 1 end
 	rTitle:SetText("Auto Marker  |cffffffff" .. zone .. "|r")
+	UI.SetHeaderArt(zone)
 	rInfo:SetText((MODE_TEXT[M:MarkMode()] or "") .. "   |cff888888|   " .. getn(names) .. " packs" .. (yours > 0 and (", " .. yours .. " yours") or "") .. "|r")
 	if M.standDown then
 		rVerdict:SetText("|cffff9933The separate AutoMarker addon is still loaded, so WhoDidIt is standing by.|r\n|cff888888It has been switched off - /reload and WhoDidIt takes over.|r")
@@ -4450,6 +4488,7 @@ function UI:Refresh()
 	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat")
 		.. "  " .. (e.classicapi and "|cff33ff33ClassicAPI|r" or "|cff777777ClassicAPI?|r"))
 	UI:UpdateAML()
+	UI.SetHeaderArt(nil)   -- each tab sets its own
 
 	UI:ApplyMode()
 	if UI.mode == "fame" then
@@ -4504,6 +4543,7 @@ function UI:Refresh()
 	end
 
 	rTitle:SetText(rec.enc .. "  " .. (RESULT[rec.result] or rec.result) .. (rec.demo and "  |cff33ccff(demo)|r" or ""))
+	UI.SetHeaderArt(not rec.demo and rec.zone or nil)
 	local info = { rec.zone or "", rec.date or "", "Duration " .. FmtTime(rec.dur), "Deaths " .. getn(rec.deaths) }
 	if rec.healMana then tinsert(info, "Healer mana at wipe " .. pct(rec.healMana)) end
 	rInfo:SetText("|cffaaaaaa" .. table.concat(info, "   |   ") .. "|r")
