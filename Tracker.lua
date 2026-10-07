@@ -83,7 +83,7 @@ end
 
 function T.NewFight(t0, enc)
 	return {
-		t0 = t0, date = date("%Y-%m-%d %H:%M"), zone = GetRealZoneText(),
+		t0 = t0, date = date("%Y-%m-%d %H:%M"), at = time(), zone = GetRealZoneText(),
 		enc = enc,
 		bosses = {}, nBoss = 0,
 		players = {}, deaths = {}, timeline = {}, aggro = {},

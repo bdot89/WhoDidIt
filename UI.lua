@@ -66,6 +66,11 @@ local function CreateList(parent, nrows, rowh, width)
 		b.stripe = b:CreateTexture(nil, "BACKGROUND")
 		b.stripe:SetAllPoints(b)
 
+		-- a picture behind the row (d.art), e.g. a raid's loading screen on a run header
+		b.art = b:CreateTexture(nil, "BACKGROUND")
+		b.art:SetAllPoints(b)
+		b.art:Hide()
+
 		b.bar = b:CreateTexture(nil, "BORDER")
 		b.bar:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
 		b.bar:SetPoint("TOPLEFT", b, "TOPLEFT", 0, -1)
@@ -175,8 +180,20 @@ local function CreateList(parent, nrows, rowh, width)
 				else
 					b.r:SetText(d.r or "")
 					b.l:SetText(d.l or "")
+					-- d.indent: start the text further in (fights under their raid run)
+					b.l:ClearAllPoints()
+					b.l:SetPoint("LEFT", b, "LEFT", 4 + (d.indent or 0), 0)
 					local rw = (d.r and d.r ~= "") and (b.r:GetStringWidth() + 12) or 0
-					b.l:SetWidth(self.rowW - rw - 8)
+					b.l:SetWidth(self.rowW - rw - 8 - (d.indent or 0))
+				end
+				-- d.art = { path, alpha, left, right, top, bottom } (tex coords crop the picture)
+				if d.art and d.art[1] then
+					b.art:SetTexture(d.art[1])
+					b.art:SetTexCoord(d.art[3] or 0, d.art[4] or 1, d.art[5] or 0, d.art[6] or 1)
+					b.art:SetAlpha(d.art[2] or 0.35)
+					b.art:Show()
+				else
+					b.art:Hide()
 				end
 				for j = ncols + 1, getn(b.c) do b.c[j]:Hide() end
 				-- raid mark icons: d.icons = { { x, mark }, ... }
@@ -1709,20 +1726,180 @@ function UI:FightRows()
 			{ sel = (UI.selIdx == 0), click = function() UI.selIdx = 0; UI.detail = nil; UI.cause = nil; UI.liveRec = nil; UI:Refresh() end }))
 	end
 	local fights = WhoDidItDB.fights
-	for i = 1, getn(fights) do
-		local rec = fights[i]
-		local idx = i
-		local nd = getn(rec.deaths or {})
-		tinsert(rows, row(
-			rec.enc .. "\n|cff888888" .. (rec.date or "") .. "  " .. FmtTime(rec.dur) .. "  " .. nd .. " dead|r",
-			RESULT[rec.result] or rec.result,
-			{ sel = (UI.selIdx == i), click = function() UI.selIdx = idx; UI.detail = nil; UI.cause = nil; UI:Refresh() end,
-			  tip = { rec.zone or "", rec.verdict or "" }, tipTitle = rec.enc }))
+	local runs = UI.FightRuns(fights)
+	UI.runOpen = UI.runOpen or {}
+	for r = 1, getn(runs) do
+		local run = runs[r]
+		local open = UI.runOpen[run.key]
+		if open == nil then
+			-- the newest run, and the one holding the selected fight, start unfolded
+			open = (r == 1)
+			for j = 1, getn(run.idx) do if run.idx[j] == UI.selIdx then open = true end end
+		end
+		tinsert(rows, UI.RunHeader(run, open))
+		if open then
+			for j = 1, getn(run.idx) do
+				local i = run.idx[j]
+				local rec, idx = fights[i], i
+				local nd = getn(rec.deaths or {})
+				tinsert(rows, row(
+					rec.enc .. "\n|cff888888" .. string.sub(rec.date or "", 12) .. "  " .. FmtTime(rec.dur) .. "  " .. nd .. " dead|r",
+					RESULT[rec.result] or rec.result,
+					{ indent = 10, sel = (UI.selIdx == i), click = function() UI.selIdx = idx; UI.detail = nil; UI.cause = nil; UI:Refresh() end,
+					  tip = { rec.zone or "", rec.verdict or "" }, tipTitle = rec.enc }))
+			end
+		end
 	end
 	if getn(rows) == 0 then
 		tinsert(rows, row("|cff888888No fights recorded yet.\nPull a boss!|r"))
 	end
 	return rows
+end
+
+------------------------------------------------------------------ raid runs
+
+-- a fight's start in minutes, from its real time (rec.at) or its date text
+function UI.FightMinute(rec)
+	if rec.at then return floor(rec.at / 60) end
+	local _, _, y, mo, d, h, mi = string.find(rec.date or "", "(%d+)-(%d+)-(%d+) (%d+):(%d+)")
+	if not y then return 0 end
+	y, mo = tonumber(y), tonumber(mo)
+	-- days since 1970 (civil calendar)
+	if mo <= 2 then y = y - 1 end
+	local era = floor(y / 400)
+	local yoe = y - era * 400
+	local mp = math.mod(mo + 9, 12)
+	local doy = floor((153 * mp + 2) / 5) + tonumber(d) - 1
+	local doe = yoe * 365 + floor(yoe / 4) - floor(yoe / 100) + doy
+	local days = era * 146097 + doe - 719468
+	return days * 1440 + tonumber(h) * 60 + tonumber(mi)
+end
+
+-- fights (newest first) grouped into raid runs: the same raid, no more than
+-- 3 hours between one fight and the next. Demo fights are one run of their own.
+function UI.FightRuns(fights)
+	local runs, cur = {}, nil
+	for i = 1, getn(fights) do
+		local rec = fights[i]
+		local zone = rec.demo and "Demo" or (rec.zone or "?")
+		local m = UI.FightMinute(rec)
+		if not cur or cur.zone ~= zone or (cur.firstMin - (m + floor((rec.dur or 0) / 60))) > 180 then
+			cur = { zone = zone, idx = {}, firstMin = m, lastMin = m + floor((rec.dur or 0) / 60), demo = rec.demo }
+			tinsert(runs, cur)
+		end
+		tinsert(cur.idx, i)
+		cur.firstMin = m   -- going back in time: the run started at its oldest fight
+		cur.first = rec
+		cur.last = cur.last or rec
+	end
+	for r = 1, getn(runs) do
+		local run = runs[r]
+		run.key = run.zone .. "|" .. (run.first.date or "")
+	end
+	return runs
+end
+
+-- the header of one run: the raid, when, bosses down, wipes, how long; click folds it
+function UI.RunHeader(run, open)
+	local fights = WhoDidItDB.fights
+	local kills, wipes, killed = 0, 0, {}
+	local list = {}
+	for j = getn(run.idx), 1, -1 do   -- oldest first, for the tooltip
+		local rec = fights[run.idx[j]]
+		if rec.result == "KILL" then kills = kills + 1; killed[rec.enc] = true else wipes = wipes + 1 end
+		tinsert(list, (string.sub(rec.date or "", 12)) .. "  " .. rec.enc .. "  " .. FmtTime(rec.dur) .. "  " .. (RESULT[rec.result] or rec.result or ""))
+	end
+	local need = W.Data.clears[run.zone]
+	local progress = ""
+	if need then
+		local n = 0
+		for i = 1, getn(need) do if killed[need[i]] then n = n + 1 end end
+		progress = ((n == getn(need)) and "|cff33ff33" or "|cffffffff") .. n .. "/" .. getn(need) .. "|r  "
+	end
+	local span = (run.lastMin or 0) - (run.firstMin or 0)
+	local title = run.demo and "Demo fights" or (W.Data.instanceTitle[run.zone] or run.zone)
+	local when = string.sub(run.first.date or "", 6, 10) .. " " .. string.sub(run.first.date or "", 12)
+	local line2 = "|cffaaaaaa" .. when .. "|r  " .. progress .. "|cff33ff33" .. kills .. "|r|cffaaaaaa k|r  "
+		.. ((wipes > 0) and ("|cffff5555" .. wipes .. "|r|cffaaaaaa w|r  ") or "")
+		.. ((span > 0) and ("|cffaaaaaa" .. floor(span / 60) .. "h" .. string.format("%02d", math.mod(span, 60)) .. "|r") or "")
+	tinsert(list, 1, " ")
+	tinsert(list, " ")
+	tinsert(list, "|cff888888Click to " .. (open and "fold" or "unfold") .. " this run.|r")
+	return row("|cffffd100" .. title .. "|r\n" .. line2, open and "|cffffd100-|r" or "|cffffd100+|r",
+		{ head = true, art = UI.ZoneArt(run.zone), tipTitle = title .. "  " .. when, tip = list,
+		  click = function() UI.runOpen[run.key] = not open; UI:Refresh() end })
+end
+
+-- a raid's picture for its run header: the first of these the game has (see
+-- /wdi art); nil = none, the header is plain
+UI.ART = {
+	["Zul'Gurub"]            = { "Interface\\Glues\\LoadingScreens\\LoadScreenZulGurub" },
+	["Molten Core"]          = { "Interface\\Glues\\LoadingScreens\\LoadScreenMoltenCore" },
+	["Onyxia's Lair"]        = { "Interface\\Glues\\LoadingScreens\\LoadScreenOnyxiasLair", "Interface\\Glues\\LoadingScreens\\LoadScreenOnyxiaLair" },
+	["Blackwing Lair"]       = { "Interface\\Glues\\LoadingScreens\\LoadScreenBlackwingLair", "Interface\\Glues\\LoadingScreens\\LoadScreenBlackWingLair" },
+	["Ruins of Ahn'Qiraj"]   = { "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQirajRuins", "Interface\\Glues\\LoadingScreens\\LoadScreenRuinsOfAhnQiraj", "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQiraj" },
+	["Ahn'Qiraj"]            = { "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQirajTemple", "Interface\\Glues\\LoadingScreens\\LoadScreenTempleOfAhnQiraj", "Interface\\Glues\\LoadingScreens\\LoadScreenAhnQiraj" },
+	["Naxxramas"]            = { "Interface\\Glues\\LoadingScreens\\LoadScreenNaxxramas" },
+	["Emerald Sanctum"]      = { "Interface\\Glues\\LoadingScreens\\LoadScreenEmeraldSanctum", "Interface\\Glues\\LoadingScreens\\LoadScreenEmeraldDream" },
+	["Tower of Karazhan"]    = { "Interface\\Glues\\LoadingScreens\\LoadScreenKarazhan", "Interface\\Glues\\LoadingScreens\\LoadScreenTowerOfKarazhan" },
+	["Lower Tower of Karazhan"] = { "Interface\\Glues\\LoadingScreens\\LoadScreenKarazhan", "Interface\\Glues\\LoadingScreens\\LoadScreenLowerKarazhan" },
+}
+UI.artOK = {}
+-- the first path the game can load; SetTexture says whether it could
+function UI.FirstArt(paths)
+	if not UI.artTest then UI.artTest = UIParent:CreateTexture(nil, "BACKGROUND") end
+	for i = 1, getn(paths) do
+		local p = paths[i]
+		if UI.artOK[p] == nil then UI.artOK[p] = UI.artTest:SetTexture(p) and true or false end
+		if UI.artOK[p] then return p end
+	end
+end
+function UI.ZoneArt(zone)
+	local paths = UI.ART[zone or ""]
+	local p = paths and UI.FirstArt(paths)
+	-- the middle band of the picture, faded: text stays readable over it
+	if p then return { p, 0.4, 0, 1, 0.38, 0.62 } end
+end
+
+-- /wdi art: every candidate picture side by side, to see which the game has
+function UI.ArtProbe()
+	local fr = UI.artFrame
+	if not fr then
+		fr = CreateFrame("Frame", "WhoDidItArtProbe", UIParent)
+		fr:SetWidth(860); fr:SetHeight(520)
+		fr:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+		fr:SetFrameStrata("DIALOG")
+		fr:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+			tile = true, tileSize = 32, edgeSize = 32, insets = { left = 11, right = 12, top = 12, bottom = 11 } })
+		fr:EnableMouse(true)
+		local close = CreateFrame("Button", nil, fr, "UIPanelCloseButton")
+		close:SetPoint("TOPRIGHT", fr, "TOPRIGHT", -6, -6)
+		local title = fr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		title:SetPoint("TOP", fr, "TOP", 0, -16)
+		title:SetText("WhoDidIt artwork check - screenshot this for the maintainer")
+		UI.artFrame = fr
+		local all, seen = {}, {}
+		for _, paths in pairs(UI.ART) do
+			for i = 1, getn(paths) do if not seen[paths[i]] then seen[paths[i]] = true; tinsert(all, paths[i]) end end
+		end
+		table.sort(all)
+		local lines = {}
+		for i = 1, getn(all) do
+			local col, rowN = math.mod(i - 1, 5), floor((i - 1) / 5)
+			local tex = fr:CreateTexture(nil, "ARTWORK")
+			tex:SetWidth(160); tex:SetHeight(80)
+			tex:SetPoint("TOPLEFT", fr, "TOPLEFT", 18 + col * 166, -40 - rowN * 98)
+			local ok = tex:SetTexture(all[i])
+			local fs = fr:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+			fs:SetWidth(160)
+			fs:SetPoint("TOP", tex, "BOTTOM", 0, -1)
+			local short = string.gsub(all[i], "^.*\\", "")
+			fs:SetText((ok and "|cff33ff33" or "|cffff5555") .. short .. "|r")
+			tinsert(lines, (ok and "ok   " or "no   ") .. all[i])
+		end
+		if WriteCustomFile then pcall(WriteCustomFile, "WhoDidIt_ArtProbe.txt", table.concat(lines, "\n") .. "\n", "w") end
+	end
+	fr:Show()
 end
 
 ------------------------------------------------------------------ clicking a player's name

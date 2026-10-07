@@ -885,6 +885,8 @@ local function slash(msg)
 		db.opts.idleBlame = (rest == "on")
 		W.Print("Blame points for low activity / low DPS: " .. (db.opts.idleBlame and "|cffff7777on|r" or "|cff33ff33off|r (still shown, worth 0)")
 			.. " - applies to fights recorded from now on")
+	elseif cmd == "art" then
+		if W.UI and W.UI.ArtProbe then W.UI.ArtProbe() end
 	elseif cmd == "errors" then
 		local list = db.errors or {}
 		if getn(list) == 0 then W.Print("No errors recorded.") end

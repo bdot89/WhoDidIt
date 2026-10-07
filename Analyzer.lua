@@ -124,7 +124,7 @@ function A:Build(F, final)
 	if dur < 1 then dur = 1 end
 
 	local rec = {
-		enc = F.enc, zone = F.zone, date = F.date, dur = dur,
+		enc = F.enc, zone = F.zone, date = F.date, at = F.at, dur = dur,
 		result = final and F.result or "LIVE",
 		env = F.env, findings = {}, causes = {}, deaths = {}, blame = {},
 		players = {}, aggro = {}, notes = {}, threat = {},
