@@ -11,15 +11,18 @@
     It also finds your own characters (from the WTF folder) in Chronicle's
     raid rosters, so your personal best kills and clears show up too.
 
-    It also installs and updates what's built into WhoDidIt, each from its
-    official source, checking every hour:
+    It also installs what's built into WhoDidIt, each from its official
+    source at the commit the WhoDidIt maintainer has tested (pinned in
+    EmbedUpdate.ps1 / MarkDataUpdate.ps1), never whatever is newest. Every
+    hour it checks you have the pinned version; newer ones arrive with a
+    WhoDidIt update. (-Latest on EmbedUpdate.ps1 tries the newest, for testing.)
       - the Chronicle logger (github.com/Emyrk/ChronicleCompanion),
         RollFor (github.com/sica42/roll-for-vanilla) and DopingControl
         (github.com/ShempError/DopingControl) - see EmbedUpdate.ps1
-      (ClassicAPI, a DLL inside the game, is never updated by this: run
-      Install-ClassicAPI.cmd yourself when you want a new version)
       - the auto marker's mob packs (github.com/MarcelineVQ/AutoMarker) -
         see MarkDataUpdate.ps1
+      (ClassicAPI, a DLL inside the game, is never updated by this: run
+      Install-ClassicAPI.cmd yourself when you want a new version)
 
     Usage (or just double-click WhoDidIt-Sync.cmd):
       WhoDidIt-Sync.ps1                    sync now, then every 10 minutes

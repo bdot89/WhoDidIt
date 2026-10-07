@@ -7,15 +7,15 @@
     push a new version, fetches that too.
 
       Chronicle logger  ChronicleCompanion by Emyrk (chronicleclassic.com)
-                        github.com/Emyrk/ChronicleCompanion, branch main
+                        github.com/Emyrk/ChronicleCompanion (pinned commit)
                         -> WhoDidIt\Chronicle
       RollFor           the master-loot roller by Obszczymucha, sica42's
                         1.12 fork (the original now only supports TBC)
-                        github.com/sica42/roll-for-vanilla, latest release
+                        github.com/sica42/roll-for-vanilla (pinned commit, v4.8.1)
                         -> WhoDidIt\RollFor
       DopingControl     the raid consumables / buffs / enchants checker by
-                        ShempError (MIT), github.com/ShempError/DopingControl,
-                        branch main -> WhoDidIt\DopingControl
+                        ShempError (MIT), github.com/ShempError/DopingControl
+                        (pinned commit) -> WhoDidIt\DopingControl
 
     To run from inside WhoDidIt, a few things in their files are changed,
     and nothing else is touched:

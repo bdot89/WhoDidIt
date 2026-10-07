@@ -9,7 +9,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 
 Death recaps · blame &amp; hero boards · threat · meters · consume checks (DopingControl built in) · Hall of Fame
 <br>Every guild's kill &amp; clear times from Chronicle, synced in game · Chronicle logger · Auto Marker · SR master loot (RollFor) · Auto-loot
-<br>Nothing to install but the addon · nothing posted without you seeing it · no player data shared
+<br>Nothing to install but the addon · nothing posted without you seeing it · no character names shared
 
 ![WoW 1.12.1](https://img.shields.io/badge/WoW-1.12.1-c79c6e?style=flat-square)
 ![Lua 5.0](https://img.shields.io/badge/Lua-5.0-2c2d72?style=flat-square)
@@ -39,7 +39,7 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 📝 **Logging.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Optional: needs ChronicleCompanion, installed normally or by the sync helper.*
 - 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *WhoDidIt's standard packs come with the download; AutoMarker's ~365 packs are optional (the sync helper downloads them).*
 - 💰 **SR MasterLoot.** Soft-res master looting with RollFor, with a step-by-step guide. *Optional: needs RollFor, installed normally or by the sync helper.* **Auto-loot** hands out the trash loot for you.
-- 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and no player data leaves your PC. See [Privacy and security](#privacy-and-security).
+- 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and no character names or anything from your PC are shared (with sharing on, just your guild's best times). See [Privacy and security](#privacy-and-security).
 
 ## Screenshots
 
@@ -143,10 +143,12 @@ installed, these get better:
 | Updates that add new files | exit WoW and start it again | `/reload` is enough |
 
 **Getting it** (the easy way): close WoW and double-click **`tools\Install-ClassicAPI.cmd`**. It downloads
-`ClassicAPI.dll` from the project's latest GitHub release, checks its SHA-256 against the one GitHub publishes, backs
-up `dlls.txt` (`dlls.txt.bak`), copies the DLL into your WoW folder and adds it to `dlls.txt`. Start WoW through your
-launcher as usual. It needs VanillaFixes, which loads the DLLs in `dlls.txt` (most Turtle / OctoWoW setups have it).
-Nothing updates it behind your back: run `Install-ClassicAPI.cmd` again (WoW closed) when you want a newer version.
+`ClassicAPI.dll` from the release the WhoDidIt maintainer has tested (pinned in `tools\ClassicApiUpdate.ps1`, with its
+SHA-256: a file that doesn't match is refused), backs up `dlls.txt` (`dlls.txt.bak`), copies the DLL into your WoW
+folder and adds it to `dlls.txt`. Start WoW through your launcher as usual. It needs VanillaFixes, which loads the DLLs
+in `dlls.txt` (most Turtle / OctoWoW setups have it). Nothing updates it behind your back: run `Install-ClassicAPI.cmd`
+again (WoW closed) after a WhoDidIt update to get a newer pinned version. Testers: `ClassicApiUpdate.ps1 -Install
+-Latest` takes the newest release instead (checked against GitHub's checksum only).
 Ask your server first if you're unsure whether client DLLs are allowed.
 
 **By hand:** download `ClassicAPI.dll` from the [releases page](https://github.com/brues-code/ClassicAPI/releases/latest),
@@ -224,7 +226,7 @@ Rankings fills up from three places (hover a row to see which one a time came fr
 | --- | --- | --- |
 | **[Master feed](#master-feed-nothing-to-install)** | Every guild's Chronicle times on every realm, passed on in game by the maintainer's character | just the addon |
 | **[Sync helper](#sync-helper-optional)** | The same Chronicle times, fetched by your own PC every 10 minutes, plus **Sync now** | the optional helper (PowerShell, built into Windows) |
-| **Other WhoDidIt users** | Each guild's own bests, shared right after the kill: before anyone uploads a log, and from guilds that never upload | just the addon |
+| **Other WhoDidIt users** | Each guild's own bests, shared by its members right after the kill: before anyone uploads a log, and from guilds that never upload | just the addon |
 
 With both the feed and the helper, whichever copy is newer is used.
 
@@ -235,7 +237,8 @@ one of their master characters is online, their WhoDidIt passes the times on to 
 over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.
 
 - **After a fresh install:** within a minute of the master being online, your WhoDidIt asks for the times. The first
-  copy is everything: about 530 messages at one a second, so about 10 minutes for OctoWoW. It comes in quietly in the
+  copy is everything: about 530 messages at one a second, so about 10 minutes for OctoWoW (if one went out just before
+  you logged in, the next can take up to half an hour). It comes in quietly in the
   background while you play. After that only what changed is sent (seconds), and one send serves everyone listening.
 - **While you wait:** the top of the Rankings tab says what's happening: "Receiving them from Upsilon" with a progress
   bar, the % and the minutes left; "Upsilon is online… your WhoDidIt is asking for them"; or "Waiting for Upsilon to
@@ -249,8 +252,17 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
   reaches players on its own realm, so there's a master character on each realm.
 - **Only the maintainer can be the master.** The master characters are written into the addon (`B.MASTERS` in
   `Board.lua`), and every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm
-  and the channel only reaches the sender's own realm, so nobody can send as them. The **Master** button and
-  `/wdi master` only work on those characters; someone editing their own copy only fools themselves.
+  and the channel only reaches the sender's own realm, so nobody else can send as them while those characters exist.
+  The **Master** button and `/wdi master on|off` only work on those characters; someone editing their own copy only
+  fools themselves.
+- **Your own list:** `/wdi master list` shows whose times you take. `/wdi master remove <name>` stops trusting one (for
+  example if a master character were ever deleted or renamed and someone else took the name); `/wdi master add <name>`
+  trusts another character on your realm, such as another guild's own master. Only add someone you trust.
+- **Factions:** custom chat channels are split by faction, so a master only feeds players of its own faction.
+- **Polite by design:** anyone may ask the master, so asking is rationed. Each character can ask once every 5 minutes
+  and for 6 raid boss lists every 10 minutes; streams start at least a minute apart, and a full copy goes out at most
+  every 30 minutes however many characters ask. One player can't keep the master's character talking. A stream that
+  misses a message keeps what did arrive.
 - **Opting out:** `/wdi feed off` ignores the feed (`/wdi feed on` takes it again). `/wdi share off` leaves the hidden
   channel altogether.
 
@@ -344,16 +356,17 @@ WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official a
   [github.com/Emyrk/ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion), into `WhoDidIt\Chronicle\`.
   Restart WoW afterwards; a `/reload` isn't enough the first time. To install or update only the logger, run
   `tools\WhoDidIt-Sync.cmd -LoggerOnly`.
-- **Updates:** while the helper runs, it checks Chronicle's repository every hour and fetches any new version. A version
-  that arrives while you're playing installs when you close WoW, so the logger never changes mid-raid. If a new
-  version can't be adapted safely, the helper keeps the current one and says why.
+- **Updates:** the helper installs the version the WhoDidIt maintainer has tested (pinned to a commit), never whatever
+  is newest; newer Chronicle versions arrive with a WhoDidIt update. While it runs it checks every hour that you have
+  the pinned version. One that arrives while you're playing installs when you close WoW, so the logger never changes
+  mid-raid. If a version can't be adapted safely, the helper keeps the current one and says why.
 - **What's changed:** nothing in Chronicle's logging. The helper only lets its files run from inside WhoDidIt: they
   start with WhoDidIt, take their version from `Chronicle\wdi_version.lua`, and find their minimap icons in the new
   folder. `/chronicle`, `/chron`, `/clog`, the minimap button, the options panel and the log files are all exactly as before.
 - **Already have ChronicleCompanion installed?** WhoDidIt's copy stands down, so nothing is logged twice, and it asks
   once whether to switch the separate addon off. **No** keeps it running with its own settings untouched; **Yes**
   switches it off from your next login and the built-in copy takes over with your settings.
-- Chronicle's code isn't stored in this repository. It's always downloaded fresh from its source.
+- Chronicle's code isn't stored in this repository. It's downloaded from its source, at the pinned commit.
 
 The **Logging** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
 
@@ -392,8 +405,8 @@ Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one ge
 
 **Built-in packs.** About 1,800 mobs in about 365 packs: Naxx, AQ40, AQ20, BWL, MC, ZG, Onyxia, Emerald Sanctum,
 Karazhan, Timbermaw Hold and more. They're the packs collected by the [AutoMarker](https://github.com/MarcelineVQ/AutoMarker)
-addon (by Weird Vibes). `tools\WhoDidIt-Sync.cmd` downloads them into `Marks\packs.lua` and checks for new ones every
-hour. Only the pack data is used, converted to WhoDidIt's format. Your own packs are saved separately and never
+addon (by Weird Vibes). `tools\WhoDidIt-Sync.cmd` downloads them into `Marks\packs.lua`, at the commit the WhoDidIt
+maintainer has pinned. Only the pack data is used (read, never run), converted to WhoDidIt's format. Your own packs are saved separately and never
 overwritten. Run `tools\WhoDidIt-Sync.cmd -UpdatesOnly` to fetch just the packs and the built-in addons.
 
 **Smart marks.** These cover what fixed packs can't, and each one can be switched off in its zone's list:
@@ -425,7 +438,9 @@ anyone else's data:
 2. Click **Make packs** (or `/wdi marks build [yards]`). Mobs within 12 yards of each other become one pack, in the
    order you met them. Marks follow WhoDidIt's own priority: healers and casters first, then the toughest (skull,
    cross, square, moon, triangle, diamond, circle, star). They're saved as your own packs ("Learned 01 - Molten
-   Giant x2"); change any mark by hand. What was noted is kept, so you can rebuild with another gap.
+   Giant x2"); change any mark by hand. What was noted is kept, so you can rebuild with another gap; a learned pack
+   you changed by hand is kept as it is when you make packs again. `/wdi marks learn clear` forgets the noted mobs
+   once you're happy.
 3. **Standard for everyone (maintainer):** `/wdi marks export` writes your packs (learned and saved, never edited
    AutoMarker packs) to `CustomData\WhoDidIt_StdPacks.lua`; `tools\Publish-Packs.cmd` ships them as
    `DefaultPacks.lua`. Everyone who downloads WhoDidIt then gets them, with no helper.
@@ -552,9 +567,9 @@ item and who soft-reserved it, it runs the roll, handles ties, and gives the ite
 All of RollFor's own commands work as before: `/rf`, `/arf`, `/rr`, `/irr`, `/fr`, `/cr`, `/sr`, `/srs`, `/src`, `/sro`,
 `/rfw`, `/rfo`, `/htr`, `/rf config`. So do its minimap button and its key bindings (Esc > Key Bindings > RollFor).
 
-**How it's built in.** RollFor isn't stored in this repository. `tools\WhoDidIt-Sync.cmd` downloads its latest release
-from [sica42/roll-for-vanilla](https://github.com/sica42/roll-for-vanilla) into `WhoDidIt\RollFor\`, checks for a new
-one every hour, and installs updates while WoW is closed. Restart WoW after the first install; a `/reload` isn't enough.
+**How it's built in.** RollFor isn't stored in this repository. `tools\WhoDidIt-Sync.cmd` downloads the version the
+WhoDidIt maintainer has tested (v4.8.1, pinned to a commit) from [sica42/roll-for-vanilla](https://github.com/sica42/roll-for-vanilla)
+into `WhoDidIt\RollFor\`, and installs a newer pinned version (with a WhoDidIt update) while WoW is closed. Restart WoW after the first install; a `/reload` isn't enough.
 The only changes to RollFor's files: its version comes from `RollFor\wdi_version.lua`, its images are found in the new
 folder, and its library list is expanded into `WhoDidIt.toc`. Its key bindings are added to WhoDidIt's. Nothing in how
 it rolls is changed, and it still talks to raiders' copies of RollFor (roll windows, version checks).
@@ -736,6 +751,7 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi rankings              kill times & full clears
 /wdi share on|off          share your guild's times with WhoDidIt users on the realm (off = leave the hidden channel)
 /wdi feed on|off           take / ignore the raid times from the master feed
+/wdi master list           whose raid times you take (add|remove <name> changes your list)
 /wdi banter kills|clears on|off   fun kill / clear time lines (off by default)
 /wdi banter test           preview a banter line in your own chat
 /wdi logs                  Chronicle log controls
@@ -766,6 +782,7 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi marks                 Auto Marker tab (see Auto Marker for its commands)
 /wdi marks learn on|off    note mobs and where they stand, to build packs
 /wdi marks build [yards]   make packs from what was noted
+/wdi marks learn clear     forget the mobs noted in this raid
 /wdi loot                  SR MasterLoot tab
 /wdi aml                   Auto-loot on / off (see Auto-loot for more)
 /wdi classicapi            what the optional ClassicAPI adds, and how to get it
@@ -829,9 +846,14 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 
 **What's accepted**
 
-- The feed only from the master characters written into the addon; anyone else sending feed messages is ignored.
-- Times from other users are self-reported, so they're sanity-checked (a real boss, a kill between 5 seconds and an
-  hour, a clear between 2 minutes and 8 hours, no future dates), capped at 60 records per sender, and each board keeps only the 60 fastest guilds (always
+- The feed only from the master characters (the maintainer's, changed with `/wdi master add|remove`); anyone else
+  sending feed messages is ignored. Asking the master is rationed (see [Master feed](#master-feed-nothing-to-install)).
+- **A guild's shared times only count from a member of that guild.** The game won't tell an addon a stranger's
+  guild, so WhoDidIt remembers the guild of players it sees itself (your raid or party, your guild roster, anyone you
+  target or mouse over) and takes a guild's times only from someone it has seen in that guild. Times from someone not
+  seen yet wait until they are. A made-up time for another guild goes nowhere.
+- They're also sanity-checked (a real boss, a kill between 5 seconds and an hour, a clear between 2 minutes and 8
+  hours, no future dates), capped at 60 records per sender, and each board keeps only the 60 fastest guilds (always
   including yours). Hover a row to see where a time came from.
 
 **Your PC**
@@ -839,13 +861,18 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 - The addon can't go online. Through Nampower it only reads and writes its own files in `CustomData`.
 - The **sync helper** is optional. It only *reads* from Chronicle's public API and *downloads* from GitHub; it uploads
   nothing. Your character names (from the `WTF` folder) are only matched against downloaded raid rosters on your PC.
-  It writes only to the WhoDidIt folder and `CustomData`, needs no admin rights, and runs one copy at a time.
+  It writes to the WhoDidIt folder, `CustomData` and Windows' temp folder (downloads before they're checked and
+  unpacked), needs no admin rights, and runs one copy at a time, whatever it was started for.
 - **Built-in addons** (Chronicle logger, RollFor, DopingControl) and AutoMarker's packs are downloaded from their
   authors' GitHub at a commit the maintainer has tested and pinned, never whatever is newest. None of their code is
   stored in this repository, and code from other repositories only gets in through a reviewed commit, never a bot.
-- **AutoSync** adds one Startup shortcut and a launcher script; `AutoSync-Off.cmd` removes them.
-- The **ClassicAPI installer** checks the DLL's SHA-256 against the one GitHub publishes and backs up `dlls.txt`.
-- **Learn packs** notes mobs and where they stand into your own saved settings; nothing is shared.
+- **AutoSync** adds one shortcut to your Windows Startup folder and a launcher script next to the helper;
+  `AutoSync-Off.cmd` removes both. After starting the helper it checks that it's really running.
+- The **ClassicAPI installer** installs the pinned, tested release, checks its SHA-256 against the pin and backs up
+  `dlls.txt`.
+- **Learn packs** notes mobs and where they stand into your own saved settings (at most 1,500 per raid; `/wdi marks
+  learn clear` forgets them); nothing is shared. **Publish-Packs** (maintainer only) accepts only the exact lines the
+  export writes, and won't publish an empty or much smaller set of packs.
 
 **Your other addons**
 
