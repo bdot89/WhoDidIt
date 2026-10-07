@@ -1396,13 +1396,7 @@ W:Every(2, function()
 		lastAnswer = now
 		answer()
 	end
-	if getn(outq) == 0 then return end
-	local id = chanId()
-	if not id then
-		B:Join()
-		return
-	end
-	SendChatMessage(tremove(outq, 1), "CHANNEL", nil, id)
+	-- (outq is sent by the channel sender at the end of the file, paced with the feed)
 end)
 
 ------------------------------------------------------------------ master feed
@@ -1737,7 +1731,7 @@ end
 -- what's happening, for the Rankings bar: { from, got, total } while receiving
 function B:FeedStatus()
 	for _, s in pairs(recv) do
-		if GetTime() - s.at < 60 then return { from = s.from, got = s.got, total = s.total } end
+		if GetTime() - s.at < 60 then return { from = s.from, got = s.got, total = s.total, t0 = s.t0 } end
 	end
 	if feedTotal > 0 and feedSent < feedTotal then return { master = true, got = feedSent, total = feedTotal } end
 end
@@ -1786,12 +1780,12 @@ function B:FeedReceive(msg, sender)
 		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
 		-- only useful if it starts where we are (or from scratch) and is newer
 		if synced <= mine or (since > 0 and since > mine) then return end
-		recv[p[3]] = { since = since, synced = synced, total = tonumber(p[6]) or 0, server = p[7], got = 0, dict = {}, lines = {}, from = sender, at = GetTime() }
+		recv[p[3]] = { since = since, synced = synced, total = tonumber(p[6]) or 0, server = p[7], got = 0, dict = {}, lines = {}, from = sender, at = GetTime(), t0 = GetTime() }
 		want = nil
 		-- the first copy takes a while: say so (once)
 		if mine == 0 and not B.toldFeed then
 			B.toldFeed = true
-			W.Print("Getting every guild's raid times from |cffffd100" .. sender .. "|r (about " .. math.max(1, floor((tonumber(p[6]) or 0) / 60 + 0.5))
+			W.Print("Getting every guild's raid times from |cffffd100" .. sender .. "|r (about " .. math.max(1, floor((tonumber(p[6]) or 0) * 1.6 / 60 + 0.5))
 				.. " min, in the background). Rankings shows the progress and how the sharing works.")
 		end
 	elseif kind == "D" then
@@ -1846,7 +1840,7 @@ W:On("CHAT_MSG_CHANNEL", function(msg, sender, lang, chanFull, target, flags, zo
 	B:FeedReceive(msg, sender)
 end)
 
--- one feed message a second; the lead's "what I have" every minute
+-- the lead's "what I have" every minute, and streams to start (the channel sender at the end sends)
 -- (first one 20-40s after login, so a better server can be heard first)
 local lastHello
 W:Every(1, function()
@@ -1881,16 +1875,7 @@ W:Every(1, function()
 		end
 	end
 
-	if getn(feedq) == 0 and getn(logq) == 0 then return end
-	local id = chanId()
-	if not id then B:Join() return end
-	-- boss lists first: someone is looking at that raid right now
-	if getn(logq) > 0 then
-		SendChatMessage(tremove(logq, 1), "CHANNEL", nil, id)
-		return
-	end
-	SendChatMessage(tremove(feedq, 1), "CHANNEL", nil, id)
-	if feedSent < feedTotal then feedSent = feedSent + 1 end
+	-- (feedq and logq are sent by the channel sender below, paced with the board)
 end)
 
 -- forget askers after their window (every table keyed by a name needs eviction),
@@ -1925,3 +1910,69 @@ W:Every(60, function()
 	for n, q in pairs(askedQ) do if now - q.since > Q_WINDOW then askedQ[n] = nil end end
 	for s, t in pairs(logSent) do if now - t > 30 then logSent[s] = nil end end
 end)
+
+------------------------------------------------------------------ the channel sender
+-- Everything WhoDidIt says on the hidden channel goes out here, one message
+-- at a time: boss lists first (someone is looking at that raid), then guild
+-- times, then the feed. The server has a chat limit ("You must wait 7 Seconds
+-- before speaking again"), and a message sent while it applies is dropped. So
+-- messages go out at most every 1.6 seconds; if the limit still hits, the
+-- sender waits as long as the server says, sends the dropped message again,
+-- and from then on keeps 0.4 seconds more between messages (saved, up to 4).
+-- That red warning is hidden when it's about WhoDidIt's own message.
+local lastChan, pauseUntil, lastThrottle, lastJoin = -100, 0, -100, -100
+local lastMsg                         -- { msg, q, at }: the last message sent
+local function chanGap() return WhoDidItDB and WhoDidItDB.opts.chanGap or 1.6 end
+B.ChanGap = chanGap
+
+W:Every(0.2, function()
+	if not WhoDidItDB or not WhoDidItDB.opts.shareBoard then return end
+	local now = GetTime()
+	if now < pauseUntil or now - lastChan < chanGap() then return end
+	local q = (getn(logq) > 0 and logq) or (getn(outq) > 0 and outq) or (getn(feedq) > 0 and feedq)
+	if not q then return end
+	local id = chanId()
+	if not id then
+		if now - lastJoin > 5 then lastJoin = now; B:Join() end
+		return
+	end
+	local msg = tremove(q, 1)
+	lastChan = now
+	lastMsg = { msg = msg, q = q, at = now }
+	SendChatMessage(msg, "CHANNEL", nil, id)
+	if q == feedq and feedSent < feedTotal then feedSent = feedSent + 1 end
+end)
+
+-- "You must wait 7 Seconds before speaking again": ours if we just sent something
+local toldLimit
+local function throttled(text)
+	local _, _, n = string.find(text or "", "wait (%d+) [Ss]econds? before speaking")
+	if not n then return false end
+	local now = GetTime()
+	if now - lastChan > 3 then return false end   -- not after one of ours: leave it alone
+	if now - lastThrottle < 2 then return true end -- the same one, seen twice
+	lastThrottle = now
+	pauseUntil = now + tonumber(n) + 1
+	local o = WhoDidItDB.opts
+	o.chanGap = math.min(4, chanGap() + 0.4)
+	-- the message that hit the limit was dropped: send it again
+	if lastMsg and now - lastMsg.at < 3 then
+		tinsert(lastMsg.q, 1, lastMsg.msg)
+		if lastMsg.q == feedq and feedSent > 0 then feedSent = feedSent - 1 end
+		lastMsg = nil
+	end
+	if not toldLimit then
+		toldLimit = true
+		W.Print("The server's chat limit kicked in, so WhoDidIt now sends on its hidden channel every "
+			.. o.chanGap .. " seconds. Nothing to do; it remembers this.")
+	end
+	return true
+end
+if UIErrorsFrame and UIErrorsFrame.AddMessage then
+	local orig = UIErrorsFrame.AddMessage
+	UIErrorsFrame.AddMessage = function(self, text, a1, a2, a3, a4, a5)
+		if throttled(text) then return end
+		return orig(self, text, a1, a2, a3, a4, a5)
+	end
+end
+W:On("CHAT_MSG_SYSTEM", function(text) throttled(text) end)

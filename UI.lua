@@ -1387,7 +1387,7 @@ tooltip(masterBtn, "Master feed", function()
 		"and they keep what they get.",
 		" ",
 		G .. "How it sends|r",
-		"- " .. Wh .. "First time:|r everything (about 10 min)",
+		"- " .. Wh .. "First time:|r everything (about 15 min)",
 		"- " .. Wh .. "After that:|r only what changed (seconds)",
 		"- " .. Wh .. "Raid details:|r when someone opens a raid",
 		" ",
@@ -4001,7 +4001,9 @@ function UI:FeedPanel()
 	elseif o.noFeed then
 		tinsert(rows, row("|cffff9933You switched the feed off|r (/wdi feed off).", C_DIM .. "/wdi feed on|r"))
 	elseif fs and not fs.master and fs.total > 0 then
-		local left = math.max(1, floor((fs.total - fs.got) / 60 + 0.5))
+		-- seconds per message as they're really arriving (the master paces itself for the server's chat limit)
+		local per = (fs.t0 and fs.got >= 10) and ((GetTime() - fs.t0) / fs.got) or 1.6
+		local left = math.max(1, floor((fs.total - fs.got) * per / 60 + 0.5))
 		tinsert(rows, row("|cff66ccffReceiving them from " .. (fs.from or "?") .. "|r - the boards fill in when it's done.",
 			C_TIME .. floor(fs.got / fs.total * 100) .. "%|r  " .. C_DIM .. "about " .. left .. " min left|r",
 			{ bar = fs.got / fs.total, cr = 0.2, cg = 0.55, cb = 1, ba = 0.45 }))
@@ -4009,7 +4011,7 @@ function UI:FeedPanel()
 	elseif m then
 		tinsert(rows, row("|cff33ff33" .. m.name .. " is online|r with times from " .. B.Ago(m.synced) .. ". Your WhoDidIt is asking for them.",
 			C_DIM .. "starts within a minute|r"))
-		tinsert(rows, row(C_DIM .. "The first copy takes about 10 minutes; after that only changes are sent (seconds). If a full copy went out just before you logged in, the next one can take up to half an hour.|r"))
+		tinsert(rows, row(C_DIM .. "The first copy takes about 15 minutes; after that only changes are sent (seconds). If a full copy went out just before you logged in, the next one can take up to half an hour.|r"))
 	elseif who then
 		tinsert(rows, row("Waiting for |cffffd100" .. who .. "|r to come online on " .. realm .. ".",
 			C_DIM .. "nothing to do|r"))

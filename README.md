@@ -98,7 +98,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
 3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
 4. That's it. Rankings fills in by itself from the [master feed](#master-feed-nothing-to-install): the first copy
-   takes about 10 minutes in the background while the maintainer is online, and the Rankings tab shows the progress.
+   takes about 15 minutes in the background while the maintainer is online, and the Rankings tab shows the progress.
 
 **Optional extras** (WhoDidIt works without them):
 
@@ -237,7 +237,7 @@ one of their master characters is online, their WhoDidIt passes the times on to 
 over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: no helper, no PowerShell, no settings.
 
 - **After a fresh install:** within a minute of the master being online, your WhoDidIt asks for the times. The first
-  copy is everything: about 530 messages at one a second, so about 10 minutes for OctoWoW (if one went out just before
+  copy is everything: about 530 messages, one every 1.6 seconds or so, so about 15 minutes for OctoWoW (if one went out just before
   you logged in, the next can take up to half an hour). It comes in quietly in the
   background while you play. After that only what changed is sent (seconds), and one send serves everyone listening.
 - **While you wait:** the top of the Rankings tab says what's happening: "Receiving them from Upsilon" with a progress
@@ -261,7 +261,10 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
 - **Factions:** custom chat channels are split by faction, so a master only feeds players of its own faction.
 - **Polite by design:** anyone may ask the master, so asking is rationed. Each character can ask once every 5 minutes
   and for 6 raid boss lists every 10 minutes; streams start at least a minute apart, and a full copy goes out at most
-  every 30 minutes however many characters ask. One player can't keep the master's character talking. A stream that
+  every 30 minutes however many characters ask. One player can't keep the master's character talking.
+  Messages go out at most one every 1.6 seconds, under the server's chat limit ("You must wait 7 Seconds before
+  speaking again"); if it ever kicks in, WhoDidIt waits, resends what was dropped, slows down for good and hides the
+  warning, which was about its own hidden messages, not your chat. A stream that
   misses a message keeps what did arrive.
 - **Opting out:** `/wdi feed off` ignores the feed (`/wdi feed on` takes it again). `/wdi share off` leaves the hidden
   channel altogether.
