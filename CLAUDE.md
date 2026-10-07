@@ -62,3 +62,7 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   the helper writes them as C2 / K2 lines and the feed sends them as "c!," / "k!," records
   (older clients skip those). Chronicle's leaderboard can't filter by date, so clears since
   are worked out from the raid logs (bosses every top run killed, time of the last one).
+- PackData.lua (WDI_MARKDATA) ships the Auto Marker's raid pack data, converted from AutoMarker's
+  NPCList.lua (Weird Vibes) at the pin in tools/MarkDataUpdate.ps1, data only, credited in the
+  file and README, not under WhoDidIt's MIT licence, removed if the author asks. Rebuild it only
+  with that script from the real upstream file, never from edited copies.

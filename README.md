@@ -37,7 +37,7 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
 - 📝 **Logging.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Optional: needs ChronicleCompanion, installed normally or by the sync helper.*
-- 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *WhoDidIt's standard packs come with the download; AutoMarker's ~365 packs are optional (the sync helper downloads them).*
+- 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *~365 raid packs come with the download (from AutoMarker's data, credited), nothing else needed.*
 - 💰 **SR MasterLoot.** Soft-res master looting with RollFor, with a step-by-step guide. *Optional: needs RollFor, installed normally or by the sync helper.* **Auto-loot** hands out the trash loot for you.
 - 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and no character names or anything from your PC are shared (with sharing on, just your guild's best times). See [Privacy and security](#privacy-and-security).
 
@@ -84,7 +84,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 <table>
   <tr>
     <td width="50%"><img src="docs/logging.jpg" alt="Logging"><br><b>Logging.</b> The Chronicle combat logger, built in: start and stop logging, save, archive between lockouts, the automatic options (start in raids, save after every boss), and how to upload the log to chronicleclassic.com.</td>
-    <td width="50%"><img src="docs/marker.jpg" alt="Auto Marker"><br><b>Auto Marker.</b> Every saved pack in the zone (WhoDidIt's standard packs, AutoMarker's if you have them, and yours) with its marks, mob count and how many are in range. Hold Shift + Ctrl over a mob to mark its whole pack, or mark the next pack along the route. Mark mobs yourself and click <b>Save marks as pack</b> to keep them.</td>
+    <td width="50%"><img src="docs/marker.jpg" alt="Auto Marker"><br><b>Auto Marker.</b> Every pack in the zone (the built-in raid packs, WhoDidIt's standard ones and yours) with its marks, mob count and how many are in range. Hold Shift + Ctrl over a mob to mark its whole pack, or mark the next pack along the route. Mark mobs yourself and click <b>Save marks as pack</b> to keep them.</td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/masterloot.jpg" alt="SR MasterLoot"><br><b>SR MasterLoot.</b> RollFor for soft-res master looting, with a step-by-step guide (gold lines do that step), the imported soft-res sheet, loot given and every setting explained. <b>raidres.fly.dev</b> with a <b>Copy link</b> button at the top.</td>
@@ -104,7 +104,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 
 | Extra | What it adds | How |
 | --- | --- | --- |
-| [Sync helper](#sync-helper-optional) | The [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and [AutoMarker's packs](#auto-marker) installed for you; your own fresher raid times and **Sync now** | double-click `tools\WhoDidIt-Sync.cmd` once (WoW can stay open), then restart WoW |
+| [Sync helper](#sync-helper-optional) | The [Chronicle logger](#logging-chronicle-logs), [RollFor](#sr-masterloot-rollfor), and [DopingControl](#full-check-dopingcontrol) installed for you; your own fresher raid times and **Sync now** | double-click `tools\WhoDidIt-Sync.cmd` once (WoW can stay open), then restart WoW |
 | [ClassicAPI](#classicapi-optional) | Copy links straight to the clipboard, faster consume scans, "running out" warnings, `/reload` picks up updates | close WoW, double-click `tools\Install-ClassicAPI.cmd` |
 
 You can also install ChronicleCompanion, RollFor or DopingControl the normal way instead of using the helper. The
@@ -308,12 +308,11 @@ tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (clos
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
-tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the built-in addons and the mob packs
+tools\WhoDidIt-Sync.cmd -UpdatesOnly       only install / update the built-in addons
 tools\WhoDidIt-Sync.cmd -LoggerOnly        only install / update the built-in Chronicle logger
 tools\WhoDidIt-Sync.cmd -NoLoggerUpdate    leave the Chronicle logger alone
 tools\WhoDidIt-Sync.cmd -NoRollForUpdate   leave RollFor alone
 tools\WhoDidIt-Sync.cmd -NoDopingUpdate    leave DopingControl alone
-tools\WhoDidIt-Sync.cmd -NoPackUpdate      leave the mob packs alone
 tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (default 150)
 ```
 
@@ -427,11 +426,14 @@ Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one ge
   right-click takes it out. You can also add your target, rename the pack, or delete it. Changing a built-in pack saves
   your own copy, and **Restore** brings the original back.
 
-**Built-in packs.** About 1,800 mobs in about 365 packs: Naxx, AQ40, AQ20, BWL, MC, ZG, Onyxia, Emerald Sanctum,
-Karazhan, Timbermaw Hold and more. They're the packs collected by the [AutoMarker](https://github.com/MarcelineVQ/AutoMarker)
-addon (by Weird Vibes). `tools\WhoDidIt-Sync.cmd` downloads them into `Marks\packs.lua`, at the commit the WhoDidIt
-maintainer has pinned. Only the pack data is used (read, never run), converted to WhoDidIt's format. Your own packs are saved separately and never
-overwritten. Run `tools\WhoDidIt-Sync.cmd -UpdatesOnly` to fetch just the packs and the built-in addons.
+**Built-in packs.** About 1,800 mobs in 365 packs: Naxx, AQ40, AQ20, BWL, MC, ZG, Onyxia, Emerald Sanctum, Karazhan,
+Timbermaw Hold and more, shipped with WhoDidIt in [`PackData.lua`](PackData.lua). Nothing is downloaded and WhoDidIt
+doesn't need AutoMarker. The data (which mobs, by GUID, make up each pack, and the mark each one gets) comes from the
+[AutoMarker](https://github.com/MarcelineVQ/AutoMarker) addon by Weird Vibes, who collected it. The GUIDs and packs
+identify the actual mobs and the marks follow the kill orders raids use, so they're kept exactly as they are. Only the
+data is used, converted to WhoDidIt's format; none of AutoMarker's code. It's credited in the file, isn't covered by
+WhoDidIt's MIT licence, and will be removed if AutoMarker's author asks. Your own packs are saved separately and never
+overwritten.
 
 **Smart marks.** These cover what fixed packs can't. They put marks up by themselves, so they're **off until you say
 yes**: WhoDidIt asks the first time you enter a raid (or switch them with **Smart** on the Auto Marker tab). Each one
@@ -889,9 +891,10 @@ the channel altogether; `/wdi feed off` just ignores the feed.
   nothing. Your character names (from the `WTF` folder) are only matched against downloaded raid rosters on your PC.
   It writes to the WhoDidIt folder, `CustomData` and Windows' temp folder (downloads before they're checked and
   unpacked), needs no admin rights, and runs one copy at a time, whatever it was started for.
-- **Built-in addons** (Chronicle logger, RollFor, DopingControl) and AutoMarker's packs are downloaded from their
-  authors' GitHub at a commit the maintainer has tested and pinned, never whatever is newest. None of their code is
-  stored in this repository, and code from other repositories only gets in through a reviewed commit, never a bot.
+- **Built-in addons** (Chronicle logger, RollFor, DopingControl) are downloaded from their authors' GitHub at a
+  commit the maintainer has tested and pinned, never whatever is newest. None of their code is stored in this
+  repository, and code from other repositories only gets in through a reviewed commit, never a bot. The Auto
+  Marker's raid pack data ships in `PackData.lua` (data only, credited to AutoMarker).
 - **AutoSync** adds one scheduled task for your Windows user (log on, unlock, every 15 minutes; no admin rights) and
   a launcher script next to the helper; `AutoSync-Off.cmd` removes both. After starting the helper it checks that
   it's really running.
@@ -913,14 +916,15 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 
 WhoDidIt is released under the [MIT licence](LICENSE): use it, change it and pass it on, keeping the copyright notice.
 
-It works with other people's projects. None of their code is part of this repository; the sync helper downloads each
-one, pinned to a tested version, onto your own PC, and each keeps its own terms:
+It works with other people's projects. None of their code is part of this repository: the sync helper downloads the
+addons, pinned to a tested version, onto your own PC. The one thing shipped from another project is the Auto
+Marker's raid pack data (`PackData.lua`, data only). Each keeps its own terms:
 
 | Project | Author | Used for | Licence |
 | --- | --- | --- | --- |
 | [ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion) | Emyrk | the Logging tab | none stated |
 | [RollFor](https://github.com/sica42/roll-for-vanilla) (1.12 fork) | Obszczymucha, sica42 | SR MasterLoot | none stated |
 | [DopingControl](https://github.com/ShempError/DopingControl) | ShempError | Full check, consume data | MIT |
-| [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the Auto Marker's raid packs | none stated |
+| [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the raid pack data in `PackData.lua` (GUIDs, packs, marks), included with credit, removed on request; not under WhoDidIt's MIT licence | none stated |
 | [Chronicle External API](https://legacy.chronicleclassic.com/developers/api) | Chronicle | every guild's raid times | API terms |
 | [ClassicAPI](https://github.com/brues-code/ClassicAPI) (optional) | brues-code | extras, see above | GPL-3.0 |

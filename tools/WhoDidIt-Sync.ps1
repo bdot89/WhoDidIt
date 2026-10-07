@@ -13,14 +13,14 @@
 
     It also installs what's built into WhoDidIt, each from its official
     source at the commit the WhoDidIt maintainer has tested (pinned in
-    EmbedUpdate.ps1 / MarkDataUpdate.ps1), never whatever is newest. Every
+    EmbedUpdate.ps1), never whatever is newest. Every
     hour it checks you have the pinned version; newer ones arrive with a
     WhoDidIt update. (-Latest on EmbedUpdate.ps1 tries the newest, for testing.)
       - the Chronicle logger (github.com/Emyrk/ChronicleCompanion),
         RollFor (github.com/sica42/roll-for-vanilla) and DopingControl
         (github.com/ShempError/DopingControl) - see EmbedUpdate.ps1
-      - the auto marker's mob packs (github.com/MarcelineVQ/AutoMarker) -
-        see MarkDataUpdate.ps1
+      (the auto marker's raid packs ship with WhoDidIt in PackData.lua:
+      nothing is downloaded for them)
       (ClassicAPI, a DLL inside the game, is never updated by this: run
       Install-ClassicAPI.cmd yourself when you want a new version)
 
@@ -29,12 +29,12 @@
       WhoDidIt-Sync.ps1 -Once              sync once and exit
       WhoDidIt-Sync.ps1 -Server "OctoWoW"  another Chronicle server
       WhoDidIt-Sync.ps1 -Days 30           only raids from the last 30 days
-      WhoDidIt-Sync.ps1 -UpdatesOnly       only install / update the built-in addons and mob packs
+      WhoDidIt-Sync.ps1 -UpdatesOnly       only install / update the built-in addons
       WhoDidIt-Sync.ps1 -LoggerOnly        only install / update the Chronicle logger
       WhoDidIt-Sync.ps1 -NoLoggerUpdate    leave the Chronicle logger alone
       WhoDidIt-Sync.ps1 -NoRollForUpdate   leave RollFor alone
       WhoDidIt-Sync.ps1 -NoDopingUpdate    leave DopingControl alone
-      WhoDidIt-Sync.ps1 -NoPackUpdate      leave the mob packs alone
+
       WhoDidIt-Sync.ps1 -DetailsPerSync 600  read more raids in full per sync (default 150)
 
     To have it run in the background (no window) every time you log into Windows, double-click
@@ -54,7 +54,7 @@ param(
     [switch]$NoLoggerUpdate,
     [switch]$NoRollForUpdate,
     [switch]$NoDopingUpdate,
-    [switch]$NoPackUpdate,
+    [switch]$NoPackUpdate,           # no longer used (the packs ship with WhoDidIt); kept so old shortcuts work
     [int]$DetailsPerSync = 150
 )
 
@@ -541,7 +541,7 @@ function Sync {
 # ------------------------------------------------------------------ main
 
 . (Join-Path $PSScriptRoot "EmbedUpdate.ps1")
-. (Join-Path $PSScriptRoot "MarkDataUpdate.ps1")
+
 . (Join-Path $PSScriptRoot "ClassicApiUpdate.ps1")
 
 # only one helper at a time (e.g. started with Windows, then double-clicked too),
@@ -567,7 +567,6 @@ if ($UpdatesOnly) {
     Update-Chronicle
     Update-RollFor
     Update-Doping
-    Update-MarkData
 
     return
 }
@@ -587,9 +586,6 @@ while ($true) {
             try { Update-Doping } catch { Log ("DopingControl check failed: " + $_.Exception.Message) }
         }
 
-        if (-not $NoPackUpdate) {
-            try { Update-MarkData } catch { Log ("Mob pack check failed: " + $_.Exception.Message) }
-        }
     }
     $round++
     Remove-Item -LiteralPath $RequestFile -Force -ErrorAction SilentlyContinue   # this sync answers any request

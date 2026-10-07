@@ -7,9 +7,10 @@
 	or the next pack along the route, from a key or the Marks window.
 
 	Packs come from two places:
-	  - built in: the raid packs collected by the AutoMarker addon (by
-	    Weird Vibes), downloaded and kept up to date by tools\WhoDidIt-Sync
-	    into Marks\packs.lua (WDI_MARKDATA)
+	  - built in: PackData.lua (WDI_MARKDATA), shipped with WhoDidIt: the
+	    raid packs collected by the AutoMarker addon (by Weird Vibes),
+	    converted to WhoDidIt's format and credited there. Nothing is
+	    downloaded and WhoDidIt doesn't need AutoMarker.
 	  - yours: mark mobs in game, click "Save marks as pack", name it. Saved
 	    in WhoDidItDB.marks.packs; a pack of yours with the same name as a
 	    built-in one replaces it, and hiding a built-in one sticks.

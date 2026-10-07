@@ -2,7 +2,7 @@
 ## Title: |cffff5555Who|cffffd100DidIt|r
 ## Notes: Raid wipe & death analyser: death recaps, blame and hero boards, threat, meters, consume checks and Hall of Fame. Every guild's raid times from Chronicle, synced in game. Includes the Chronicle logger, an auto marker, RollFor and DopingControl. /wdi
 ## Author: bdot1
-## Version: 1.13.0
+## Version: 1.14.0
 ## SavedVariables: WhoDidItDB, ChronicleCompanionDB, RollForDb, DopingControlDB
 ## SavedVariablesPerCharacter: ChronicleCompanionCharDB, RollForCharDb
 ## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, AutoMasterLooter, DopingControl, TWThreat
@@ -171,8 +171,8 @@ Career.lua
 Shoutout.lua
 Board.lua
 Logs.lua
-# auto marker: built-in packs (downloaded by tools\WhoDidIt-Sync), then the marker
-Marks\packs.lua
+# auto marker: the raid pack data (from AutoMarker by Weird Vibes, credited in the file), then the marker
+PackData.lua
 # WhoDidIt's own standard packs (learned in game, shipped with the addon)
 DefaultPacks.lua
 Marks.lua
