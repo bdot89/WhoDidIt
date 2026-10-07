@@ -683,8 +683,22 @@ local function slash(msg)
 		W.Print("Threat queries: " .. (db.opts.queryThreat and "on" or "off"))
 	elseif (cmd == "log" or cmd == "share" or cmd == "banter") and not (W.Board and W.Logs) then
 		W.Print(W.RESTART_MSG)
+	elseif cmd == "master" and W.Board and W.Board.SetMaster and string.find(rest, "^%a+") then
+		-- add / remove / list: anyone's own list of who to take the feed from
+		local _, _, sub, who = string.find(rest, "^(%a+)%s*(%S*)")
+		if sub == "add" or sub == "remove" then W.Board.SetMaster(who, sub == "add")
+		elseif sub == "list" then
+			local l = W.Board.MasterList()
+			W.Print("Raid times are taken from: " .. ((getn(l) > 0) and table.concat(l, ", ") or "nobody on this realm") .. " (" .. W.Board.Realm() .. ")")
+		elseif not W.Board.CanMaster() then
+			W.Print("Usage: /wdi master list | add <name> | remove <name>")
+		elseif sub == "on" or sub == "off" then
+			db.opts.master = (sub == "on")
+			W.Print("Master feed: " .. (db.opts.master and "|cff33ff33on|r - while you're online, every WhoDidIt user on your realm gets your Chronicle raid times (needs the sync helper running on this PC)" or "off"))
+			if W.UI then W.UI:Refresh() end
+		end
 	elseif cmd == "master" and not (W.Board and W.Board.CanMaster and W.Board.CanMaster()) then
-		W.Print("Only the WhoDidIt maintainer's characters can be the master. You get the raid times from them automatically while they're online.")
+		W.Print("Only the WhoDidIt maintainer's characters can be the master. You get the raid times from them automatically while they're online. /wdi master list shows who they are.")
 	elseif cmd == "master" then
 		db.opts.master = (rest == "on") or (rest == "" and not db.opts.master)
 		if rest == "off" then db.opts.master = false end

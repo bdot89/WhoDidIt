@@ -3969,9 +3969,7 @@ function UI:FeedPanel()
 	local rows = {}
 	local o = WhoDidItDB.opts
 	local realm = B.Realm()
-	local names = {}
-	for n in pairs(B.MASTERS and B.MASTERS[realm] or {}) do tinsert(names, n) end
-	table.sort(names)
+	local names = B.MasterList and B.MasterList() or {}
 	local who = (getn(names) > 0) and table.concat(names, " / ") or nil
 	local fs = B.FeedStatus and B:FeedStatus()
 	local m = B.master and (GetTime() - B.master.at) < 150 and B.master or nil

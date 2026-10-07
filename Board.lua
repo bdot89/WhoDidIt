@@ -1466,15 +1466,53 @@ local function unb36(s) return tonumber(s or "", 36) end
 local function clean(s) return (string.gsub(s or "", "[~;,|=\n]", " ")) end
 
 local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
--- the characters allowed to be the master, per realm
+-- the characters allowed to be the master, per realm: the maintainer's, plus
+-- any you add yourself (/wdi master add Name), minus any you remove. A name is
+-- only as safe as the character behind it: if one of these is ever deleted
+-- or renamed and someone else takes the name, /wdi master remove it. Custom
+-- channels are split by faction, so a master only feeds its own faction.
 B.MASTERS = {
 	["Y'Shaarj"] = { Upsilon = true },
 	["C'Thun"]   = { Upsy = true },
 	["N'Zoth"]   = { Upsi = true },
 }
+local function myMasters(realm)
+	local m = WhoDidItDB and WhoDidItDB.masters
+	return m and m[realm or B.Realm()]
+end
 local function trusted(name)
+	if not name then return false end
+	local mine = myMasters()
+	if mine and mine[name] ~= nil then return mine[name] and true or false end   -- true = added, false = removed
 	local list = B.MASTERS[B.Realm()]
-	return name and list and list[name] and true or false
+	return list and list[name] and true or false
+end
+-- /wdi master add|remove Name: your own list of who to take the feed from
+function B.SetMaster(name, on)
+	name = name and string.gsub(name, "^%l", string.upper)
+	if not name or name == "" or string.find(name, "[^%a]") then
+		W.Print("Usage: /wdi master add|remove <character name> (on this realm)")
+		return
+	end
+	WhoDidItDB.masters = WhoDidItDB.masters or {}
+	local m = WhoDidItDB.masters[B.Realm()] or {}
+	WhoDidItDB.masters[B.Realm()] = m
+	local builtIn = B.MASTERS[B.Realm()] and B.MASTERS[B.Realm()][name]
+	if on then m[name] = (not builtIn) and true or nil
+	else m[name] = builtIn and false or nil end
+	W.Print(name .. (on and " |cff33ff33is trusted|r for raid times on " or " |cffff9933is no longer trusted|r for raid times on ") .. B.Realm()
+		.. (on and ". Only add a character you trust: its raid times go into your Rankings." or "."))
+end
+function B.MasterList()
+	local out = {}
+	for n in pairs(B.MASTERS[B.Realm()] or {}) do
+		if trusted(n) then tinsert(out, n) end
+	end
+	for n, v in pairs(myMasters() or {}) do
+		if v then tinsert(out, n .. " (added by you)") end
+	end
+	table.sort(out)
+	return out
 end
 B.Trusted = trusted
 function B.CanMaster() return trusted(UnitName("player")) end
