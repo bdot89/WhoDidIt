@@ -828,7 +828,7 @@ function UI.SetHeaderArt(zone)
 	end
 end
 
--- SR MasterLoot: where soft-res sheets are made, with a copy box for the link
+-- RollForML: where soft-res sheets are made, with a copy box for the link
 local SR_SITE = "https://raidres.fly.dev"
 local srCopy = button(header, "Copy link", 84, 20)
 srCopy:SetPoint("TOPRIGHT", header, "TOPRIGHT", -10, -10)
@@ -1123,9 +1123,9 @@ UI.rk = { view = "kills" }   -- rankings state: view, realm, faction, inst, boss
 local MODES = {
 	{ id = "fights",   text = "Fights"   },
 	{ id = "rankings", text = "Rankings" },
-	{ id = "logs",     text = "Logging"       },
+	{ id = "logs",     text = "Chronicle Logs" },
 	{ id = "marks",    text = "Auto Marker"   },
-	{ id = "loot",     text = "SR MasterLoot" },
+	{ id = "loot",     text = "RollForML" },
 	{ id = "fame",     text = "Hall of Fame" },
 }
 UI.modeButtons = {}
@@ -1168,10 +1168,10 @@ do
 end
 tooltip(UI.modeButtons[1], "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
 tooltip(UI.modeButtons[2], "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
-tooltip(UI.modeButtons[3], "Logging", { "Chronicle combat logging (built in): start, stop, save, archive and delete", "the log you upload to chronicleclassic.com." })
+tooltip(UI.modeButtons[3], "Chronicle Logs", { "Chronicle combat logging (built in): start, stop, save, archive and delete", "the log you upload to chronicleclassic.com." })
 tooltip(UI.modeButtons[4], "Auto Marker", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
 	"and quick save - mark mobs in game, click Save marks as pack." })
-tooltip(UI.modeButtons[5], "SR MasterLoot", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
+tooltip(UI.modeButtons[5], "RollForML", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
 	"see who won what, and a step-by-step guide." })
 tooltip(UI.modeButtons[6], "Hall of Fame", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,",
 	"with every clutch play and every mistake, their points, and the best plays and worst blunders ever." })
@@ -3698,10 +3698,10 @@ function UI:RefreshLogs()
 	fightList:SetData(UI:LogNavRows(), true)
 	UI.logButtons[1]:SetText(L:Enabled() and "|cffff5555Stop & save|r" or "|cff33ff33Start logging|r")
 	if L:Available() then
-		rTitle:SetText("Logging  " .. (L:Enabled() and "|cff33ff33ON - logging|r" or "|cffff5555OFF|r"))
+		rTitle:SetText("Chronicle Logs  " .. (L:Enabled() and "|cff33ff33ON - logging|r" or "|cffff5555OFF|r"))
 		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. FmtNum(L:Unsaved()) .. " unsaved lines|r")
 	else
-		rTitle:SetText("Logging  |cffff5555" .. (L:StandaloneOff() and "off (ChronicleCompanion is switched off)" or "Chronicle logger not found") .. "|r")
+		rTitle:SetText("Chronicle Logs  |cffff5555" .. (L:StandaloneOff() and "off (ChronicleCompanion is switched off)" or "Chronicle logger not found") .. "|r")
 		rInfo:SetText("|cffaaaaaa" .. (L:StandaloneOff() and "Switch ChronicleCompanion on in the AddOns list to log raids" or "Its files are missing: download WhoDidIt again") .. "|r")
 	end
 	rVerdict:SetText("Upload the log at |cffffd100chronicleclassic.com|r after your raid.\n|cff888888Addons can't reach the internet, so uploading happens on the website.|r")
@@ -4240,7 +4240,7 @@ local METHOD_TEXT = { freeforall = "Free for all", roundrobin = "Round robin", g
 
 function UI:RefreshLoot()
 	local Lt = W.Loot
-	leftHead:SetText("SR MasterLoot")
+	leftHead:SetText("RollForML")
 	leftCount:SetText("")
 	fightList:SetData(UI:LootNavRows(), true)
 	mlBtn:SetText("Auto ML: " .. (Lt:Setting("auto_master_loot") ~= false and "|cff33ff33on|r" or "|cffff5555off|r"))
@@ -4248,12 +4248,12 @@ function UI:RefreshLoot()
 
 	local src = Lt:Source()
 	if not src then
-		rTitle:SetText("SR MasterLoot  |cffff5555RollFor didn't load|r")
+		rTitle:SetText("RollForML  |cffff5555RollFor didn't load|r")
 		rInfo:SetText("|cffaaaaaaIts files are missing: " .. W.SYNC_HOWTO .. "|r")
 		rVerdict:SetText("RollFor ships with WhoDidIt.\n"
 			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is there: " .. W.RESTART_HINT .. ".|r") or "|cff888888The guide below works without it.|r"))
 	else
-		rTitle:SetText("SR MasterLoot  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
+		rTitle:SetText("RollForML  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
 			.. (src == "builtin" and "|cff33ff33built in|r" or "|cffffd100separate addon|r"))
 		local inGroup = GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0
 		local method, looter = Lt:LootMethod()
@@ -4310,7 +4310,7 @@ function UI:RefreshMissing()
 	srSite:Hide()
 	for i = 1, getn(UI.lootButtons) do UI.lootButtons[i]:Hide() end
 	for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
-	local titles = { logs = "Logging", marks = "Auto Marker", loot = "SR MasterLoot", fame = "Hall of Fame" }
+	local titles = { logs = "Chronicle Logs", marks = "Auto Marker", loot = "RollForML", fame = "Hall of Fame" }
 	leftHead:SetText(titles[UI.mode] or "Rankings")
 	leftCount:SetText("")
 	fightList:SetData({})

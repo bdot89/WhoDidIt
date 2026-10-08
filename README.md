@@ -8,7 +8,7 @@
 Records every boss fight, then tells you **why** the raid wiped and **who** did it.
 
 Death recaps · blame &amp; hero boards · threat · meters · consume checks (DopingControl built in) · Hall of Fame
-<br>Every guild's kill &amp; clear times from Chronicle, synced in game · Chronicle logger · Auto Marker · SR master loot (RollFor) · Auto-loot
+<br>Every guild's kill &amp; clear times from Chronicle, synced in game · Chronicle logger · Auto Marker · RollForML (soft-res master loot with RollFor) · Auto-loot
 <br>Nothing to install but the addon · nothing posted without you seeing it · no character names shared
 
 ![WoW 1.12.1](https://img.shields.io/badge/WoW-1.12.1-c79c6e?style=flat-square)
@@ -36,14 +36,14 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
-- 📝 **Logging.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Built in; logs nothing until you say yes.*
+- 📝 **Chronicle Logs.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Built in; logs nothing until you say yes.*
 - 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *~365 raid packs come with the download (from AutoMarker's data, credited), nothing else needed.*
-- 💰 **SR MasterLoot.** Soft-res master looting with RollFor, with a step-by-step guide. *Built in.* **Auto-loot** hands out the trash loot for you.
+- 💰 **RollForML.** Soft-res master looting with RollFor, with a step-by-step guide. *Built in.* **Auto-loot** hands out the trash loot for you.
 - 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and no character names or anything from your PC are shared (with sharing on, just your guild's best times). See [Privacy and security](#privacy-and-security).
 
 ## Screenshots
 
-Every window below is the built-in **Demo fight** (made-up raiders) or your own Rankings / Logging data.
+Every window below is the built-in **Demo fight** (made-up raiders) or your own Rankings / Chronicle Logs data.
 
 ### Fights: what happened in the fight
 
@@ -79,15 +79,15 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
   </tr>
 </table>
 
-### Logging, Auto Marker, SR MasterLoot and Auto-loot
+### Chronicle Logs, Auto Marker, RollForML and Auto-loot
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/logging.jpg" alt="Logging"><br><b>Logging.</b> The Chronicle combat logger, built in: start and stop logging, save, archive between lockouts, the automatic options (start in raids, save after every boss), and how to upload the log to chronicleclassic.com.</td>
+    <td width="50%"><img src="docs/logging.jpg" alt="Chronicle Logs"><br><b>Chronicle Logs.</b> The Chronicle combat logger, built in: start and stop logging, save, archive between lockouts, the automatic options (start in raids, save after every boss), and how to upload the log to chronicleclassic.com.</td>
     <td width="50%"><img src="docs/marker.jpg" alt="Auto Marker"><br><b>Auto Marker.</b> Every pack in the zone (the built-in raid packs, WhoDidIt's standard ones and yours) with its marks, mob count and how many are in range. Hold Shift + Ctrl over a mob to mark its whole pack, or mark the next pack along the route. Mark mobs yourself and click <b>Save marks as pack</b> to keep them.</td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/masterloot.jpg" alt="SR MasterLoot"><br><b>SR MasterLoot.</b> RollFor for soft-res master looting, with a step-by-step guide (gold lines do that step), the imported soft-res sheet, loot given and every setting explained. <b>raidres.fly.dev</b> with a <b>Copy link</b> button at the top.</td>
+    <td width="50%"><img src="docs/masterloot.jpg" alt="RollForML"><br><b>RollForML.</b> RollFor for soft-res master looting, with a step-by-step guide (gold lines do that step), the imported soft-res sheet, loot given and every setting explained. <b>raidres.fly.dev</b> with a <b>Copy link</b> button at the top.</td>
     <td width="50%"><img src="docs/autoloot.jpg" alt="Auto-loot"><br><b>Auto-loot.</b> The title-bar button shows whether it's on. Click it to pick who gets the trash loot (greys, whites, greens and raid mats) and who gets it when your bags are full. Epics are never handed out.</td>
   </tr>
 </table>
@@ -100,8 +100,8 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 4. That's it. Rankings is full straight away: WhoDidIt comes with every guild's raid times as of its last update,
    and the [master feed](#master-feed-nothing-to-install) adds newer ones in game while the maintainer is online.
 
-**Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#logging-chronicle-logs),
-[RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the
+**Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#chronicle-logs),
+[RollFor](#rollforml-soft-res-master-looting-with-rollfor), [DopingControl](#full-check-dopingcontrol) and the
 [Auto Marker's raid packs](#auto-marker), each at the version the maintainer tested. Raid times arrive in game. The
 download leaves out the maintainer's tools: its `tools` folder only has the optional ClassicAPI installer and
 `AutoSync-Off.cmd` (to undo AutoSync if an older version had it on). The Master switch and Sync now only appear on
@@ -170,7 +170,7 @@ once, in chat, and never again.
 
 ## The window
 
-Across the top: **Fights** · **Rankings** · **Logging** · **Auto Marker** · **SR MasterLoot**, and **Hall of Fame** on
+Across the top: **Fights** · **Rankings** · **Chronicle Logs** · **Auto Marker** · **RollForML**, and **Hall of Fame** on
 the far right. The row under it holds the **Auto-loot** button (on / off, click to choose who gets the loot) and the
 lights for Nampower, SuperWoW, threat data and the optional ClassicAPI (hover them for what each does).
 Bottom left, on every tab: **Post to** (where WhoDidIt posts) and that tab's buttons. Hover anything to see what it does.
@@ -380,7 +380,7 @@ that realm's fastest guild gets under our time.
   top 3, the instance's top 3 clears, or on how many bosses we're #1 and who has the rest. Use **Realm: All realms**
   to compare across the server. Both show you the exact text before it goes out.
 
-## Logging (Chronicle logs)
+## Chronicle Logs
 
 WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official addon for
 [chronicleclassic.com](https://chronicleclassic.com), made by Emyrk
@@ -388,7 +388,7 @@ WhoDidIt has Chronicle's logger built in: **ChronicleCompanion**, the official a
 at the version the maintainer tested, credited in `Chronicle\WDI_NOTICE.txt`; nothing to install.
 
 - **It logs nothing until you say yes.** The first time you enter a raid, WhoDidIt asks whether to log your raids
-  (or click **Start logging** on the Logging tab). Say no and it stays off; switch it on any time.
+  (or click **Start logging** on the Chronicle Logs tab). Say no and it stays off; switch it on any time.
 - **Switched ChronicleCompanion off?** If you have the separate addon installed but switched off in the AddOns list,
   WhoDidIt takes that as "no logging" and its built-in copy stays off too.
 - **Already use ChronicleCompanion?** If the separate addon is on, WhoDidIt's copy stands down, so nothing is logged
@@ -398,7 +398,7 @@ at the version the maintainer tested, credited in `Chronicle\WDI_NOTICE.txt`; no
   `/chronicle`, `/chron`, `/clog`, the minimap button, the options panel and the log files are all exactly as before.
   Newer Chronicle versions arrive with WhoDidIt updates.
 
-The **Logging** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
+The **Chronicle Logs** button (or `/wdi logs`) drives it from the WhoDidIt window. It shows which logger is running and its version:
 
 - **Start logging / Stop & save**, **Save now**, **Archive log** (between lockouts) and **Delete log**
 - Chronicle's auto-logging settings (raids, dungeons, save after combat, one file per realm)
@@ -560,14 +560,14 @@ The **Auto-loot** button in the title bar (next to Nampower) shows whether it's 
 
 It replaces the AutoMasterLooter addon (by balake).
 
-## SR MasterLoot (RollFor)
+## RollForML (soft-res master looting with RollFor)
 
-The **SR MasterLoot** button (or `/wdi loot`) is for master looting. WhoDidIt has [RollFor](https://github.com/sica42/roll-for-vanilla)
+The **RollForML** button (or `/wdi loot`) is for master looting. WhoDidIt has [RollFor](https://github.com/sica42/roll-for-vanilla)
 built in, the master-loot roller by Obszczymucha. It's sica42's 1.12 fork (v4.8.1), the newest version that still runs on
 the 1.12 client; the original RollFor has moved to TBC only. RollFor does the rolling itself: its loot window lists every
 item and who soft-reserved it, it runs the roll, handles ties, and gives the item to the winner when you click **Award**.
 
-**The SR MasterLoot tab**
+**The RollForML tab**
 
 - **raidres.fly.dev** is shown at the top right, with a **Copy link** button (straight to your clipboard with [ClassicAPI](#classicapi-optional), otherwise Ctrl+C in the box that opens), for anyone who doesn't know where soft-res sheets are made.
 
@@ -818,7 +818,7 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi marks learn on|off    note mobs and where they stand, to build packs
 /wdi marks build [yards]   make packs from what was noted
 /wdi marks learn clear     forget the mobs noted in this raid
-/wdi loot                  SR MasterLoot tab
+/wdi loot                  RollForML tab
 /wdi aml                   Auto-loot on / off (see Auto-loot for more)
 /wdi classicapi            what the optional ClassicAPI adds, and how to get it
 /wdi handover <addon>      ask again about switching a separate addon off
@@ -929,8 +929,8 @@ without a licence comes out again if its author asks:
 
 | Project | Author | Used for | Licence |
 | --- | --- | --- | --- |
-| [ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion) | Emyrk | the Logging tab (`Chronicle\`, shipped) | none stated |
-| [RollFor](https://github.com/sica42/roll-for-vanilla) (1.12 fork) | Obszczymucha, sica42 | SR MasterLoot (`RollFor\`, shipped) | none stated |
+| [ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion) | Emyrk | the Chronicle Logs tab (`Chronicle\`, shipped) | none stated |
+| [RollFor](https://github.com/sica42/roll-for-vanilla) (1.12 fork) | Obszczymucha, sica42 | RollForML (`RollFor\`, shipped) | none stated |
 | [DopingControl](https://github.com/ShempError/DopingControl) | ShempError | Full check, consume data (`DopingControl\`, shipped) | MIT |
 | [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the raid pack data in `PackData.lua` (GUIDs, packs, marks), included with credit, removed on request; not under WhoDidIt's MIT licence | none stated |
 | [Chronicle External API](https://legacy.chronicleclassic.com/developers/api) | Chronicle | every guild's raid times | API terms |

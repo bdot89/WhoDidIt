@@ -291,5 +291,5 @@ local handedOver
 W:On("PLAYER_ENTERING_WORLD", function()
 	if handedOver or not (WDI_ROLLFOR_SKIP and WDI_ROLLFOR_VERSION) then return end
 	handedOver = true
-	W:AskHandover("RollFor", "RollFor (v" .. WDI_ROLLFOR_VERSION .. ", the SR MasterLoot tab)")
+	W:AskHandover("RollFor", "RollFor (v" .. WDI_ROLLFOR_VERSION .. ", the RollForML tab)")
 end)
