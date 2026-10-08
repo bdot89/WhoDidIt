@@ -9,8 +9,10 @@
     game shows what it's doing.
 
     It adds one scheduled task for your Windows user ("WhoDidIt-Sync", no admin
-    rights needed), plus a tiny launcher script next to this file
-    (WhoDidIt-Sync-Hidden.vbs) that starts the helper without a window. The
+    rights needed) that runs the launcher next to this file
+    (WhoDidIt-Sync-Hidden.vbs, part of WhoDidIt) to start the helper without a
+    window. On a PC without the helper that launcher removes the task instead,
+    so an older version's leftover task goes away by itself. The
     task starts the helper when you log into Windows, when you unlock the PC
     (also after sleep), and every 15 minutes in case it stopped; the helper
     only ever runs once, so a start while it's running just ends. Nothing
@@ -51,7 +53,6 @@ if ($Off) {
     }
     if ($had) { Write-Host "Done: the WhoDidIt sync helper no longer starts by itself." }
     else { Write-Host "It wasn't set to start by itself." }
-    if (Test-Path -LiteralPath $vbs) { Remove-Item -LiteralPath $vbs -Force }
     $running = @(Get-Helper)
     foreach ($p in $running) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }
     if ($running.Count -gt 0) { Write-Host "Stopped the helper that was running." }
@@ -85,11 +86,11 @@ if (-not $Force -and -not (Test-IsMaster)) {
 }
 
 if (-not $Minimised) {
-    # the hidden launcher, run by a scheduled task (log on, unlock, every 15 minutes)
-    $line = "CreateObject(""WScript.Shell"").Run ""powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """"$script"""""", 0, False"
-    $vb = "' Starts WhoDidIt's sync helper with no window (written by AutoSync.ps1).`r`n" + $line + "`r`n"
-    # UTF-16 with a BOM, which wscript reads: a folder name with an accent or umlaut stays intact
-    [IO.File]::WriteAllText($vbs, $vb, [Text.Encoding]::Unicode)
+    # the hidden launcher (it ships with WhoDidIt), run by a scheduled task (log on, unlock, every 15 minutes)
+    if (-not (Test-Path -LiteralPath $vbs)) {
+        Write-Host "The launcher (tools\WhoDidIt-Sync-Hidden.vbs) is missing - get it back from the repository first." -ForegroundColor Yellow
+        return
+    }
 
     $me = "$env:USERDOMAIN\$env:USERNAME"
     $action = New-ScheduledTaskAction -Execute $wscript -Argument "`"$vbs`"" -WorkingDirectory $PSScriptRoot

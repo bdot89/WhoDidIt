@@ -371,8 +371,11 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
 **Run it in the background:** double-click **`tools\AutoSync-On.cmd`** once. The helper then runs with **no window**
 and keeps itself running: it starts when you log into Windows, when you unlock the PC (also after sleep, for PCs that
 are never shut down), and every 15 minutes if it ever stopped, and right away. It adds one scheduled task for your
-Windows user (`WhoDidIt-Sync`, no admin rights) and a tiny launcher script (`tools\WhoDidIt-Sync-Hidden.vbs`);
-nothing else changes. **`tools\AutoSync-Off.cmd`** removes both and stops the helper. (`AutoSync.ps1 -Minimised`
+Windows user (`WhoDidIt-Sync`, no admin rights) that runs the launcher `tools\WhoDidIt-Sync-Hidden.vbs`;
+nothing else changes. **`tools\AutoSync-Off.cmd`** removes the task and stops the helper. The launcher ships with
+WhoDidIt: on a PC without the helper (any player's, since the helper isn't in the download) it removes the task
+instead, so a task left over from an older version disappears by itself after an update, with no "Can not find
+script file" message. (`AutoSync.ps1 -Minimised`
 uses a Startup shortcut with a minimised window instead.) Only one copy of the helper ever runs, so the extra starts,
 or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
 

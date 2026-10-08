@@ -7,6 +7,5 @@
 /DopingControl.old/
 # older versions downloaded the raid packs here (they ship in PackData.lua now)
 /Marks/
-/tools/WhoDidIt-Sync-Hidden.vbs
 # the website's upload address and key (tools\Website-Export.ps1): this PC only
 /tools/website.json

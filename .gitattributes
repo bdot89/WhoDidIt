@@ -1,5 +1,6 @@
 *.cmd text eol=crlf
 *.ps1 text eol=crlf
+*.vbs text eol=crlf
 # left out of the download (GitHub's "Download ZIP" uses git archive): maintainer
 # tools and notes. Players keep Install-ClassicAPI (optional) and AutoSync-Off /
 # AutoSync.ps1 (to undo AutoSync if an older version had it on).
