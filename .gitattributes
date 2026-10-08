@@ -1,2 +1,18 @@
 *.cmd text eol=crlf
 *.ps1 text eol=crlf
+# left out of the download (GitHub's "Download ZIP" uses git archive): maintainer
+# tools and notes. Players keep Install-ClassicAPI (optional) and AutoSync-Off /
+# AutoSync.ps1 (to undo AutoSync if an older version had it on).
+/CLAUDE.md export-ignore
+/docs export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/tools/AutoSync-On.cmd export-ignore
+/tools/EmbedUpdate.ps1 export-ignore
+/tools/MarkDataUpdate.ps1 export-ignore
+/tools/Publish-Packs.cmd export-ignore
+/tools/Publish-Packs.ps1 export-ignore
+/tools/Publish-RaidTimes.cmd export-ignore
+/tools/Publish-RaidTimes.ps1 export-ignore
+/tools/WhoDidIt-Sync.cmd export-ignore
+/tools/WhoDidIt-Sync.ps1 export-ignore

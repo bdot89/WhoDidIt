@@ -1571,9 +1571,15 @@ function UI:UpdateSync()
 	local function bar(frac, r, g, b) syncBar.fill:SetWidth(math.max(1, w * math.min(1, frac))); syncBar.fill:SetVertexColor(r, g, b, 0.55) end
 	local function ago(t) local m = floor((time() - t) / 60); return (m < 1) and "just now" or (m < 120 and (m .. " min ago") or (floor(m / 60) .. " h ago")) end
 	masterBtn:SetText("Master: " .. (WhoDidItDB.opts.master and "|cff33ff33on|r" or "off"))
-	-- only the maintainer's characters see the master switch
-	if B.CanMaster and B.CanMaster() then masterBtn:Show(); syncBtn:Show() else masterBtn:Hide(); syncBtn:Hide() end
 	local fs = B.FeedStatus and B:FeedStatus()
+	-- only the maintainer's characters get the master switch, Sync now and the helper's
+	-- bar; players see the bar only while raid times are arriving
+	if B.CanMaster and B.CanMaster() then
+		masterBtn:Show(); syncBtn:Show(); syncBar:Show()
+	else
+		masterBtn:Hide(); syncBtn:Hide()
+		if fs and not fs.master then syncBar:Show() else syncBar:Hide() return end
+	end
 	if fs and not fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.2, 0.55, 1)
 		syncBar.top:SetText("|cff66ccffReceiving raid times|r from " .. (fs.from or "?"))
@@ -1591,14 +1597,7 @@ function UI:UpdateSync()
 		syncBar.bot:SetText("synced " .. ago(c.synced or 0) .. (live and " - they're online, updates are live" or " - updates when they're online"))
 		return
 	end
-	-- players: the times come from the master feed; the helper is the maintainer's
-	if not (B.CanMaster and B.CanMaster()) then
-		local m = B.master and (GetTime() - B.master.at) < 150 and B.master
-		bar(c and 1 or 0.05, 0.15, 0.55, 0.85)
-		syncBar.top:SetText(c and ("|cff66ccffRaid times|r synced " .. ago(c.synced or 0)) or "|cff66ccffWaiting for the raid times|r")
-		syncBar.bot:SetText(m and (m.name .. " is online - they come from their feed") or "they come from the master feed, nothing to do")
-		return
-	end
+	if not (B.CanMaster and B.CanMaster()) then return end   -- (players: nothing more to show)
 	if not ReadCustomFile then
 		bar(1, 0.6, 0.15, 0.15)
 		syncBar.top:SetText("|cffff7777Needs Nampower|r")
@@ -1639,7 +1638,7 @@ function UI:UpdateSync()
 	UI.syncState = st and st.state
 end
 W:Every(3, function()
-	if UI.mode == "rankings" and f:IsVisible() and syncBar:IsVisible() then
+	if UI.mode == "rankings" and f:IsVisible() then   -- (the bar may be hidden until times arrive)
 		UI:UpdateSync()
 		-- no times yet: refresh the "getting the raid times" panel too
 		if W.Board and not W.Board.chron then UI:Refresh() end
@@ -3533,7 +3532,7 @@ function UI:RefreshRankings()
 	local c = B.chron
 	local chron
 	local st = B.SyncStatus and B:SyncStatus()
-	if st and st.alive and st.state == "running" then
+	if st and st.alive and st.state == "running" and B.CanMaster and B.CanMaster() then
 		chron = "|cff66ccffChronicle syncing (see the bar, bottom left)|r"
 	elseif c and c.synced and B.chronFeed then
 		local mins = floor((time() - c.synced) / 60)

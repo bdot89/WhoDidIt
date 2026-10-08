@@ -103,7 +103,9 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 **Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#logging-chronicle-logs),
 [RollFor](#sr-masterloot-rollfor), [DopingControl](#full-check-dopingcontrol) and the
 [Auto Marker's raid packs](#auto-marker), each at the version the maintainer tested. Raid times arrive in game. The
-`tools` folder is for the maintainer; players never need it.
+download leaves out the maintainer's tools: its `tools` folder only has the optional ClassicAPI installer and
+`AutoSync-Off.cmd` (to undo AutoSync if an older version had it on). The Master switch and Sync now only appear on
+the maintainer's own characters; players see a status bar only while raid times are arriving.
 
 **Optional:** [ClassicAPI](#classicapi-optional) (copy links straight to the clipboard, faster consume scans, "running
 out" warnings, `/reload` picks up updates). It's a DLL, so it needs installing: close WoW and double-click

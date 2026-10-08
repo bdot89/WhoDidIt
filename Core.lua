@@ -697,7 +697,10 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi fame|r - Hall of Fame: the biggest heroes and the Hall of Shame over every fight, best plays and worst blunders")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
-	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - (maintainer only) feed the Chronicle raid times to every WhoDidIt user on the realm,  " .. c .. "/wdi feed on|off|r - use the master's feed")
+	if W.Board and W.Board.CanMaster and W.Board.CanMaster() then
+		DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - (you're a master) feed the Chronicle raid times to every WhoDidIt user on the realm")
+	end
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi feed on|off|r - take the raid times from the master feed,  " .. c .. "/wdi master list|r - whose times you take")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi banter kills|clears [on|off]|r - fun kill / clear time announcements,  " .. c .. "/wdi banter test|r - preview one")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi loot|r - master looting with RollFor (built in): soft-res, rolls, winners and a step-by-step guide")

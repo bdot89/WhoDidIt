@@ -1560,7 +1560,14 @@ function B.MasterList()
 	return out
 end
 B.Trusted = trusted
-function B.CanMaster() return trusted(UnitName("player")) end
+-- Being the master (sending) is only for the maintainer's characters built in
+-- above: a name a player adds with /wdi master add only changes whose times
+-- THEY accept, it never lets anyone send.
+function B.CanMaster()
+	local me = UnitName("player")
+	local list = B.MASTERS[B.Realm()]
+	return (list and me and list[me] and trusted(me)) and true or false
+end
 -- the master: one of those characters, /wdi master on, with the sync helper's own file on this PC
 function B.IsMaster() return opts().master and B.CanMaster() and B.chronRaw ~= nil and not B.chronFeed end
 
