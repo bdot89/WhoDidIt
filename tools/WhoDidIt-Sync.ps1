@@ -23,6 +23,7 @@
     Usage (or just double-click WhoDidIt-Sync.cmd):
       WhoDidIt-Sync.ps1                    sync now, then every 30 minutes
       WhoDidIt-Sync.ps1 -NoPublish         don't publish the raid times to the download each week
+      (after every sync it also writes the website export: tools\Website-Export.ps1)
       WhoDidIt-Sync.ps1 -Once              sync once and exit
       WhoDidIt-Sync.ps1 -Server "OctoWoW"  another Chronicle server
       WhoDidIt-Sync.ps1 -Days 30           only raids from the last 30 days
@@ -610,6 +611,13 @@ while ($true) {
     else { $script:St.state = "waiting"; $script:St.what = "Up to date"; $script:St.done = 0; $script:St.total = 0 }
     Write-Status
     if (-not $failed) { try { Publish-Weekly } catch { Log ("Weekly publish failed: " + $_.Exception.Message) } }
+    # every raid time and 5-man run as one JSON file for the website (tools\Website-Export.ps1)
+    if (-not $failed) {
+        try {
+            $out = & (Join-Path $PSScriptRoot "Website-Export.ps1") 6>&1 | Out-String
+            foreach ($l in ($out.Trim() -split "`r?`n")) { if ($l) { Log ("  " + $l) } }
+        } catch { Log ("Website export failed: " + $_.Exception.Message) }
+    }
     if ($Once) { break }
     Log "Next sync in $IntervalMinutes minutes, or click Sync now on WhoDidIt's Rankings tab (close this window to stop)"
     # wait, but start at once when the game asks (Sync now); keep telling the game we're here

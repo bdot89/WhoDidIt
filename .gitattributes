@@ -16,3 +16,5 @@
 /tools/Publish-RaidTimes.ps1 export-ignore
 /tools/WhoDidIt-Sync.cmd export-ignore
 /tools/WhoDidIt-Sync.ps1 export-ignore
+/tools/Website-Export.ps1 export-ignore
+/tools/website.example.json export-ignore

@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "url": "https://www.errorguild.com/api/whodidit/upload",
+  "key": "put the site's upload key here",
+  "site": "https://www.errorguild.com"
+}
