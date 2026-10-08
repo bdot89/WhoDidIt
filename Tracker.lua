@@ -203,7 +203,11 @@ function T:Finish(result)
 	isBoss = {}
 	W.ResetCaches()
 	local dur = fight.tEnd - fight.t0
-	if result ~= "KILL" and dur < (WhoDidItDB.opts.minDuration or 8) then
+	-- a "reset" where nobody hit a boss wasn't an attempt: a boss's adds still
+	-- fighting after it died, a role-play, a stray pull. Not saved.
+	local bossDmg = 0
+	for _, p in pairs(fight.players) do bossDmg = bossDmg + (p.bossDmg or 0) end
+	if (result ~= "KILL" and dur < (WhoDidItDB.opts.minDuration or 8)) or (result == "RESET" and bossDmg <= 0) then
 		if W.UI then W.UI:OnFightEnd() end
 		return
 	end
@@ -218,8 +222,14 @@ function T:CheckKill()
 		end
 		return
 	end
+	local main = false
 	for _, b in pairs(F.bosses) do
-		if not b.dead then return end
+		if b.name == F.enc and b.dead then main = true end
+	end
+	for _, b in pairs(F.bosses) do
+		-- the boss the encounter is named after is dead: what's left (images, adds
+		-- that despawn instead of dying) doesn't keep the fight going
+		if not b.dead and not main then return end
 	end
 	F.killedAt = GetTime()
 end
@@ -1122,6 +1132,38 @@ end)
 -- leaving the world mid-fight: keep what we have
 W:On("PLAYER_LEAVING_WORLD", function()
 	if F then T:Finish("RESET") end
+end)
+
+-- once (1.23.4): fights saved as RESET by mistake. One whose boss is seen dying in
+-- its timeline (an encounter with images or adds that despawn) was a kill; one where
+-- nobody hit a boss (adds after the boss died, a role-play) wasn't a fight.
+W:On("PLAYER_ENTERING_WORLD", function()
+	local db = WhoDidItDB
+	if not db or db.resetFix then return end
+	db.resetFix = 1
+	local fixed, dropped = 0, 0
+	for i = getn(db.fights or {}), 1, -1 do
+		local rec = db.fights[i]
+		if rec.result == "RESET" and not rec.demo then
+			local bossDmg = 0
+			for _, p in pairs(rec.players or {}) do bossDmg = bossDmg + (p.boss or 0) end
+			local died = false
+			for j = 1, getn(rec.timeline or {}) do
+				local l = rec.timeline[j]
+				if l.k == "kill" and l.x == (rec.enc .. " dies") then died = true end
+			end
+			if died then
+				rec.result = "KILL"
+				fixed = fixed + 1
+			elseif bossDmg <= 0 then
+				tremove(db.fights, i)
+				dropped = dropped + 1
+			end
+		end
+	end
+	if fixed + dropped > 0 then
+		W.Print("Tidied up your saved fights: " .. fixed .. " marked RESET were kills, " .. dropped .. " that weren't fights (nobody hit the boss) removed.")
+	end
 end)
 
 ------------------------------------------------------------------ timers

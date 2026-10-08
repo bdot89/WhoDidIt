@@ -33,7 +33,8 @@ zone("Molten Core", {
 	["Lucifron"] = {}, ["Magmadar"] = {}, ["Gehennas"] = {}, ["Garr"] = {},
 	["Shazzrah"] = { noAggro = true }, ["Baron Geddon"] = {},
 	["Golemagg the Incinerator"] = {}, ["Sulfuron Harbinger"] = {},
-	["Majordomo Executus"] = { noDeath = true }, ["Ragnaros"] = {},
+	-- (Ragnaros: the raid can drop combat for a few seconds around his submerge / emerge)
+	["Majordomo Executus"] = { noDeath = true }, ["Ragnaros"] = { idleGrace = 20 },
 })
 
 zone("Onyxia's Lair", {
