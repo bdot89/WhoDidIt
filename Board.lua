@@ -210,6 +210,8 @@ function B:LoadChronicle()
 		end
 	end
 	B.chron = data
+	-- the master notes which times are new or changed, so updates send only those
+	if fromFile and B.NoteMasterLines then B.NoteMasterLines(s, data.synced) end
 	return true
 end
 
@@ -1475,6 +1477,8 @@ local feedSent, feedTotal = 0, 0    -- master: the stream going out
 local pendingSince                   -- master: an update stream to start (lowest "since" asked)
 local pendingFull                    -- master: someone needs a full copy
 local lastStream, lastFull = 0, -1000
+-- updates (only what changed) go out at most once an hour; a full copy at most every 30 min
+local lastUpdate, UPDATE_GAP = -10000, 3600
 local curSince                       -- master: "since" of the stream going out
 -- Anyone may ask (A, Q), and asking makes the master talk, so asking is
 -- rationed: per character one ask every 5 minutes and 6 boss lists every 10
@@ -1650,10 +1654,48 @@ end
 
 ------------------------------------------------------------------ master side
 
+-- a time line's identity and what can change in it: C|realm|instance|guild|...,
+-- K|realm|instance|boss|guild|... (C2 / K2 the same, since the raid scaling change)
+local function lineKey(line)
+	local p = splitBar(line)
+	local t = p[1]
+	if t == "C" or t == "C2" then
+		return t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or ""), (p[6] or "") .. "|" .. (p[7] or "") .. "|" .. (p[9] or ""), tonumber(p[7]) or 0
+	elseif t == "K" or t == "K2" then
+		return t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or "") .. "|" .. (p[5] or ""), (p[7] or "") .. "|" .. (p[8] or "") .. "|" .. (p[10] or ""), tonumber(p[8]) or 0
+	end
+end
+
+-- The master remembers when it first saw each time (the helper's sync it came
+-- in with), so an update sends only what's new or changed since the asker's copy,
+-- not everything from the last two weeks. The first time, a line counts from its
+-- raid's date. Only on the master's characters; lines that went away are dropped.
+function B.NoteMasterLines(text, synced)
+	if not (B.CanMaster and B.CanMaster()) or not WhoDidItDB or not synced then return end
+	local first = (WhoDidItDB.masterSeen == nil)
+	local ms = WhoDidItDB.masterSeen or { sig = {}, at = {} }
+	WhoDidItDB.masterSeen = ms
+	local present = {}
+	for line in string.gfind(text, "[^\n]+") do
+		local key, sig, ended = lineKey(line)
+		if key then
+			present[key] = true
+			if ms.sig[key] ~= sig then
+				ms.at[key] = first and ended or synced
+				ms.sig[key] = sig
+			end
+		end
+	end
+	for k in pairs(ms.sig) do
+		if not present[k] then ms.sig[k] = nil; ms.at[k] = nil end
+	end
+end
+
 -- pack the master's lines newer than "since" into a stream
 local function buildStream(since)
 	local raw = B.chronRaw
 	if not raw then return end
+	local ms = WhoDidItDB and WhoDidItDB.masterSeen
 	local sid = b36(time())
 	local dict, n, out, buf, names = {}, 0, {}, {}, {}
 	local recs = 0
@@ -1693,7 +1735,10 @@ local function buildStream(since)
 			local p = {}
 			for part in string.gfind(line .. "|", "(.-)|") do tinsert(p, part) end
 			local ended = tonumber(t == "C|" and p[7] or p[8]) or 0
-			if since == 0 or ended >= since - FEED_MARGIN then
+			-- what changed since the asker's copy (when the master noted it), else by raid date
+			local key = lineKey(line)
+			local seen = key and ms and ms.at[key]
+			if since == 0 or (seen and seen > since) or (not seen and ended >= since - FEED_MARGIN) then
 				local rec
 				if t == "C|" then
 					-- C|realm|instance|guild|faction|secs|ended|players|slug
@@ -1944,9 +1989,10 @@ W:Every(1, function()
 			if pendingFull and now - lastFull > FULL_GAP then
 				pendingFull, pendingSince = nil, nil
 				buildStream(0)
-			elseif pendingSince then
+			elseif pendingSince and now - lastUpdate > UPDATE_GAP then
 				local since = pendingSince
 				pendingSince = nil
+				lastUpdate = now
 				buildStream(since)
 			end
 		end
@@ -1954,7 +2000,8 @@ W:Every(1, function()
 		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
 		want = nil
 		-- the master answers one ask per 10 minutes: don't ask more than every 5
-		if B.master and B.master.synced > mine and now - lastAsk > 300 then
+		-- the master sends updates once an hour: asking every 20 minutes is plenty
+		if B.master and B.master.synced > mine and now - lastAsk > 1200 then
 			lastAsk = now
 			feedSend("A~" .. mine)
 		end

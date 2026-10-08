@@ -1547,19 +1547,15 @@ local function syncTip()
 			"online, within minutes. Nothing to install or run." }
 	end
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
-		"WoW addons can't go online, so a small helper does it: |cffffd100tools\\WhoDidIt-Sync.cmd|r",
-		"in the WhoDidIt folder. Leave its window open while you play: it syncs every 10 minutes.",
+		"Your sync helper fetches them in the background (AutoSync) every 10 minutes.",
+		"|cffffd100Sync now|r asks it to sync straight away.",
 		" ",
-		"The first sync reads every raid on the server from the last 90 days (about 45 minutes);",
-		"times appear here as it goes. Later syncs only fetch new uploads (a minute or two).",
+		"|cffffd100Master on:|r while you're online, everyone's WhoDidIt gets them from you.",
+		"Updates go out at most once an hour and carry only the times that changed;",
+		"a full copy (only for players without the built-in times) at most every 30 minutes.",
 		" ",
-		"|cffffd100Sync now|r asks the helper to sync straight away (it has to be running).",
-		" ",
-		"|cffffd100Two ways to get them:|r",
-		"- |cff66ccffNothing to install:|r a WhoDidIt user who runs the helper with Master on feeds",
-		"  everyone on the realm in game (you get them while they're online, and keep them).",
-		"- |cff66ccffRun the helper yourself:|r fresher, and Sync now works. |cffffd100tools\\AutoSync-On.cmd|r",
-		"  makes it start by itself (minimised) with Windows; AutoSync-Off.cmd undoes it." }
+		"|cffffd100Publish-RaidTimes.cmd|r now and then puts them into the download,",
+		"so fresh installs start with them." }
 	return l
 end
 tooltip(syncBtn, "Sync now", syncTip, "ANCHOR_TOP")

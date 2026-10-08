@@ -259,7 +259,8 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
   master being online, your WhoDidIt asks for what's newer, which is a short update (seconds to a few minutes).
   Only without those built-in times (an old copy of WhoDidIt) is the first copy everything: about 530 messages, one
   every 1.6 seconds or so, about 15 minutes (if one went out just before you logged in, up to half an hour). It comes in quietly in the
-  background while you play. After that only what changed is sent (seconds), and one send serves everyone listening.
+  background while you play. After that the master sends an update at most once an hour, with only the times that are new or changed
+  (usually a few lines), and one send serves everyone listening.
 - **While you wait:** the top of the Rankings tab says what's happening: "Receiving them from Upsilon" with a progress
   bar, the % and the minutes left; "Upsilon is online… your WhoDidIt is asking for them"; or "Waiting for Upsilon to
   come online" (nothing to do). Under it, **How the sharing works** explains what arrives and what doesn't. Chat says
