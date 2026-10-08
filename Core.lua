@@ -618,6 +618,9 @@ function W:SaveFight(rec)
 	if W.UI and W.UI.selIdx and W.UI.selIdx > getn(db.fights) then W.UI.selIdx = getn(db.fights) end
 	-- the all-time Hall of Fame tally (missing until a restart after the update)
 	if W.Career then W.Career:Add(rec) end
+	-- the guild's Hall of Fame (GuildFame.lua): fights where at least half the group is one guild
+	if not rec.demo and W.Board and W.Board.RaidGuild then rec.guild = rec.guild or W.Board.RaidGuild() end
+	if W.GuildFame then W.GuildFame:OnFight(rec) end
 
 	local mode = db.opts.announce
 	if mode ~= "off" then

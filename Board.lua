@@ -458,6 +458,9 @@ local function raidGuild()
 	return nil, n
 end
 
+-- (the guild's Hall of Fame: which guild a fight belongs to)
+function B.RaidGuild() return (raidGuild()) end
+
 local function currentRun()
 	if type(WhoDidItDB.runs) ~= "table" then WhoDidItDB.runs = {} end
 	return WhoDidItDB.runs[charKey()]

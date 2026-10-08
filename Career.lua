@@ -142,6 +142,8 @@ end
 -- the real tally and the test one together, for showing and posting:
 -- { since, fights, testFights, players, moments, blunders }
 function C.View()
+	-- the guild's Hall of Fame (GuildFame.lua), when that's what's shown
+	if C.scope == "guild" and W.GuildFame and W.GuildFame.Guild() then return W.GuildFame:View() end
 	local real, test = db(), WhoDidItDB.careerTest
 	local v = { since = real.since, fights = real.fights, testFights = test and test.fights or 0, players = {}, moments = {}, blunders = {} }
 	for n, p in pairs(real.players) do v.players[n] = p end
@@ -196,7 +198,7 @@ C.Classes = classes
 function C:BoardLines(kind, perFight, n)
 	local d = C.View()
 	local list = C:Board(kind, perFight)
-	local title = (kind == "hero") and "HALL OF FAME HEROES" or "HALL OF SHAME"
+	local title = ((kind == "hero") and "HALL OF FAME HEROES" or "HALL OF SHAME") .. (d.guild and (" of " .. d.guild) or "")
 	local out = { "[WhoDidIt] " .. title .. ": since " .. d.since .. ", " .. d.fights .. " fights" .. ((d.testFights > 0) and (" + " .. d.testFights .. " test") or "")
 		.. (perFight and " (points per fight, 3+ fights)" or "") }
 	if getn(list) == 0 then

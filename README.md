@@ -656,7 +656,8 @@ The bottom of the left column is laid out the same way on every tab. Hover any b
 
 ## Hall of Fame
 
-**Hall of Fame** (top right of the title bar, or `/wdi fame`) keeps score over every fight you record, not just the last 25:
+**Hall of Fame** (top right of the title bar, or `/wdi fame`) keeps score over every fight, not just the last 25. In a
+guild it shows **the guild's Hall of Fame**: every fight any member recorded, also raids you weren't in (see below).
 
 - **Heroes**: everyone's hero points from every fight (clutch heals, shields, taunts, battle res, dispels, interrupts,
   surviving...), their number of plays, fights, the kind of play they make most ("mostly Heal x12") and how often
@@ -675,6 +676,21 @@ The bottom of the left column is laid out the same way on every tab. Hover any b
 Every saved fight is added once. The tally stays even after the fights themselves are deleted, and fights saved
 before this existed are added the first time you log in. **Reset tally** starts the real tally again from zero (it asks
 first).
+
+### The guild's Hall of Fame
+
+- **Everyone in the guild sees the same tally.** Every fight a guild member with WhoDidIt records adds to it: a raid
+  led by someone else, while you were offline, still counts. **Showing: guild / mine** (bottom left) switches between
+  the guild's and only the fights your own WhoDidIt recorded.
+- **Nothing to run.** Members swap fights on a hidden guild addon channel whenever they're online together: a little
+  after login, after every fight, and when you click **Share with guild**. Each WhoDidIt compares what it has and the
+  others send what it's missing, so the tally fills up over the evenings as people log in.
+- **Counted once.** A fight recorded by several members counts once, and every PC picks the same copy, so everyone's
+  tally matches.
+- **Your guild's.** Change guild and you see that guild's Hall of Fame, as its members share it.
+- **Asked once.** Your own fights are only sent after you say yes (the first time you're asked, or **Share with
+  guild**). Say no and nothing is sent from your PC; you still see the guild's.
+- It keeps 800 fights per guild in full; older ones are added up into the totals and their details dropped.
 
 **Test data:** demo fights count too, so you can try it out, but in a separate test tally. Everything from them is
 marked **(test)** in blue (on the boards, the raider list and in posts), and **Clear test data** (bottom left) removes
@@ -910,9 +926,10 @@ WhoDidIt is built so it can't get you into trouble in chat, and so nothing about
 | Every WhoDidIt user (sharing on) | Their guild's best kill and clear times: guild name, faction, boss or instance, time, date and raid size |
 | The master | Chronicle's times: guild names, raid and boss names, times, dates, raid sizes and Chronicle log links |
 | Anyone asking the master | Only "send me what's new since …" |
+| Guild members, on the hidden **guild** addon channel (Hall of Fame sharing on) | Each fight they recorded: who was in it and their classes, deaths, hero and blame points by kind, the MVP and most to blame, the two best plays and worst blunders. Only to the guild. |
 | One member of a 5-man group (5-man sharing on) | The group's finished run: group name, the members' names and classes, dungeon, time, date, deaths, faction and boss splits |
 
-Never sent: character names (except a 5-man group's members, in its run), gear, chat, where you are, or anything from your PC. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
+Never sent: character names (except a 5-man group's members in its run, and to your guild the players in its Hall of Fame fights), gear, chat, where you are, or anything from your PC. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
 the channel altogether; `/wdi feed off` just ignores the feed.
 
 **What's accepted**

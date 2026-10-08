@@ -1809,7 +1809,42 @@ tooltip(famePerBtn, "Per fight", { "Off: total points (rewards turning up).", "O
 	"(only players with 3 or more fights are listed)." })
 tooltip(fameResetBtn, "Reset tally", { "Clear every real player's Hall of Fame points and start again.", "Asks first. Test data is cleared separately." })
 tooltip(fameTestBtn, "Clear test data", { "Demo fights add to the Hall of Fame as test data, marked |cff33ccff(test)|r,", "so you can try it out. This removes all of it; real fights stay." })
-local fameOnly = { famePostBtn, famePerBtn, fameResetBtn, fameTestBtn }
+-- the guild's Hall of Fame (GuildFame.lua) or only your own fights; Share with guild
+UI.fameScopeBtn = gridButton("Showing: guild", 3, 1)
+UI.fameShareBtn = gridButton("|cff33ff33Share with guild|r", 3, 2)
+UI.fameScopeBtn:SetScript("OnClick", function()
+	UI.fame.scope = (UI.FameScope() == "guild") and "mine" or "guild"
+	UI.fame.who = nil
+	UI:Refresh()
+end)
+UI.fameShareBtn:SetScript("OnClick", function()
+	if W.GuildFame then W.GuildFame:Share() else W.Print(W.RESTART_MSG) end
+	UI:Refresh()
+end)
+tooltip(UI.fameScopeBtn, "Guild or mine", function()
+	local g = W.GuildFame and W.GuildFame.Guild()
+	return { "|cffffd100Guild|r: every fight a member of " .. (g or "your guild") .. " recorded with WhoDidIt,",
+		"also raids you weren't in. The same fight recorded by several members counts once.",
+		"|cffffd100Mine|r: only the fights your own WhoDidIt recorded.",
+		" ",
+		"|cff888888Change guild and the guild view shows that guild's, as its members share it.|r" }
+end, "ANCHOR_TOP")
+tooltip(UI.fameShareBtn, "Share with guild", function()
+	local GF = W.GuildFame
+	local on = GF and GF.On()
+	return { "Sends your new fights to the guild members online and gets theirs:",
+		"every WhoDidIt online compares what it has and sends what the others are missing.",
+		"It also happens by itself a little after you log in, and after every fight.",
+		" ",
+		"Your fights: " .. (on and "|cff33ff33shared|r" or ((WhoDidItDB.opts.gfame == false) and "|cffff9933not shared|r (click to be asked again)" or "|cffffd100not asked yet|r (click)")),
+		"|cff888888Hidden guild addon channel: nothing shows in chat. No programs, nothing in the background.|r" }
+end, "ANCHOR_TOP")
+-- guild when you're in one, unless you picked Mine
+function UI.FameScope()
+	if UI.fame.scope == "mine" or not (W.GuildFame and W.GuildFame.Guild()) then return "mine" end
+	return "guild"
+end
+local fameOnly = { famePostBtn, famePerBtn, fameResetBtn, fameTestBtn, UI.fameScopeBtn, UI.fameShareBtn }
 for i = 1, getn(fameOnly) do fameOnly[i]:Hide() end
 
 -- show the controls that belong to the current mode
@@ -4929,7 +4964,8 @@ function UI:FameBoardRows(kind)
 	local list = C:Board(kind, UI.fame.per)
 	head(rows, (hero and "Hall of Fame - the biggest heroes" or "Hall of Shame - the biggest liabilities") .. (UI.fame.per and "  (points per fight, 3+ fights)" or ""))
 	if getn(list) == 0 then
-		tinsert(rows, row(C_DIM .. ((d.fights + d.testFights) == 0 and "Nothing counted yet. Every fight you save adds to it (demo fights too, marked test)."
+		tinsert(rows, row(C_DIM .. ((d.fights + d.testFights) == 0 and (d.guild and "Nothing from the guild yet. Fights arrive as members with WhoDidIt record them and come online - Share with guild asks now."
+				or "Nothing counted yet. Every fight you save adds to it (demo fights too, marked test).")
 			or "Nobody has " .. (hero and "hero" or "blame") .. " points yet" .. (UI.fame.per and " with 3 or more fights" or "") .. ".") .. "|r"))
 		return rows
 	end
@@ -5003,6 +5039,8 @@ end
 
 function UI:RefreshFame()
 	local C = W.Career
+	local scope = UI.FameScope()
+	C.scope = scope
 	local d = C.View()
 	local v = UI.fame.view
 	-- left: everyone in the tally, click for their record
@@ -5028,12 +5066,24 @@ function UI:RefreshFame()
 	end
 	famePerBtn:SetText("Per fight: " .. (UI.fame.per and "|cff33ff33on|r" or "off"))
 	fameTestBtn:SetText(C.HasTest() and "|cff33ccffClear test data|r" or "|cff777777No test data|r")
+	UI.fameScopeBtn:SetText("Showing: " .. ((scope == "guild") and "|cff33ff33guild|r" or "|cffffd100mine|r"))
+	if scope == "guild" then fameResetBtn:Hide(); fameTestBtn:Hide() else fameResetBtn:Show(); fameTestBtn:Show() end
+	if W.GuildFame and W.GuildFame.Guild() then UI.fameShareBtn:Show() else UI.fameShareBtn:Hide() end
 
 	local titles = { hero = "|cff33ff33Heroes|r", blame = "|cffff5555Hall of Shame|r", plays = "Best plays", blunders = "Worst blunders" }
-	rTitle:SetText("Hall of Fame  " .. (UI.fame.who and W.CName(UI.fame.who, d.players[UI.fame.who] and d.players[UI.fame.who].class) or titles[v]))
-	rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights counted"
-		.. ((d.testFights > 0) and ("  |cff33ccff+ " .. d.testFights .. " test|cffaaaaaa") or "") .. "   |   " .. getn(names) .. " raiders|r")
-	rVerdict:SetText("Every saved fight adds its hero and blame points here, for good - even after the fight itself is deleted.\n|cff888888Demo fights count as |cff33ccfftest|cff888888 data - |cffffd100Clear test data|cff888888 (bottom left) removes them. Click any line to post it.|r")
+	rTitle:SetText("Hall of Fame  " .. (UI.fame.who and W.CName(UI.fame.who, d.players[UI.fame.who] and d.players[UI.fame.who].class) or titles[v])
+		.. ((scope == "guild") and ("  |cff33ff33<" .. d.guild .. ">|r") or "  |cff888888(your fights)|r"))
+	if scope == "guild" then
+		local GF = W.GuildFame
+		rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights from " .. (d.recorders or 0) .. " member(s) with WhoDidIt   |   "
+			.. getn(names) .. " raiders   |   your fights " .. (GF.On() and "shared" or "|cffff9933not shared|cffaaaaaa") .. "|r")
+		rVerdict:SetText("Every fight a guild member records adds here, also raids you weren't in. The same fight counts once.\n"
+			.. "|cff888888Members swap fights when they're online together: at login, after each fight, and with |cff33ff33Share with guild|cff888888.|r")
+	else
+		rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights counted"
+			.. ((d.testFights > 0) and ("  |cff33ccff+ " .. d.testFights .. " test|cffaaaaaa") or "") .. "   |   " .. getn(names) .. " raiders|r")
+		rVerdict:SetText("Every fight your WhoDidIt saved adds its hero and blame points here, for good - even after the fight itself is deleted.\n|cff888888Demo fights count as |cff33ccfftest|cff888888 data - |cffffd100Clear test data|cff888888 (bottom left) removes them. Click any line to post it.|r")
+	end
 	hintText:SetText("Click a line to see it in your chat  -  Ctrl-click: post it  -  right-click a player for their record")
 	hintText:Show()
 
@@ -5044,7 +5094,7 @@ function UI:RefreshFame()
 		head(rows, (v == "plays") and "The biggest game-saving plays of all time" or "The most costly mistakes of all time")
 		momentRows(rows, (v == "plays") and d.moments or d.blunders, v == "blunders")
 	else rows = UI:FameBoardRows(v) end
-	local key = "fame" .. v .. tostring(UI.fame.who) .. tostring(UI.fame.per)
+	local key = "fame" .. scope .. v .. tostring(UI.fame.who) .. tostring(UI.fame.per)
 	mainList:SetData(rows, key == lastModeKey)
 	lastModeKey = key
 end

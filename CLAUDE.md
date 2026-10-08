@@ -80,6 +80,10 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   Channel record "D" (Board.lua hands it to W.Runs:Receive) is only accepted from a member; group names are untrusted
   (R.OkName). Masters write CustomData\WhoDidIt_Runs.txt (R5 lines) for Publish-RaidTimes and tools\Website-Export.ps1
   (JSON for the website; upload off until tools\website.json, which is gitignored).
+- The guild's Hall of Fame (GuildFame.lua, W.GuildFame): each saved fight of the guild (rec.guild = Board's RaidGuild)
+  becomes a card "recorder:n", swapped on SendAddonMessage "WDIG" GUILD (V = have per recorder, C = card chunks,
+  X = card that doesn't count, F = skip). Twin fights (same enc, 5 min, 20 s): the smallest id counts, so every PC
+  agrees. Sending your own needs opts.gfame (asked once). 800 cards / 4000 ids / 300 recorders / 3 guilds kept.
 - RaidTimes.lua (WDI_RAIDTIMES) ships every guild's raid times from the maintainer's sync
   (tools/Publish-RaidTimes.ps1: C/K/C2/K2/L lines only, no PC/PK; refuses [[ ]] in a line, since
   it's a Lua 5.0 long string). B:SeedSnapshot puts it into the saved feed when it's newer, so the
