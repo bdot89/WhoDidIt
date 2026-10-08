@@ -650,14 +650,14 @@ function W:SaveFight(rec)
 	if not rec.demo and W.Board and W.Board.RaidGuild then rec.guild = rec.guild or W.Board.RaidGuild() end
 	if W.GuildFame then W.GuildFame:OnFight(rec) end
 
+	-- after a fight: the full summary in your own chat (Auto summary: me), and at most one
+	-- short post to the channel (Auto summary: on and / or shout-outs) - never several
 	local mode = db.opts.announce
-	if mode ~= "off" then
-		local lines = W.Analyzer:ReportLines(rec, 3)
-		-- automatic posts for demo fights stay in your own chat
-		W:Send(lines, (mode == "channel" and not rec.demo) and nil or "SELF", W.Shout.ClassMap(rec))
+	if mode == "self" then
+		W:Send(W.Analyzer:ReportLines(rec, 3), "SELF", W.Shout.ClassMap(rec))
 		W.Print("Type |cffffd100/wdi|r for the full breakdown.")
 	end
-	W.Shout:Auto(rec)
+	W.Shout:Auto(rec, mode == "channel")
 	-- (missing until the game is restarted after an update adds new files)
 	if W.Board then W.Board:OnFight(rec) end
 	if W.Logs then W.Logs:OnFightEnd(rec) end

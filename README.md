@@ -728,7 +728,7 @@ all of it without touching real fights.
 - *Consume Slacker*: missing the most consumables for their role
 - *Participation Trophy*: DPS under half the raid median
 
-Bonus awards (two picked at random):
+Bonus award (one picked at random):
 - *Living on the Edge*: peaked at 90-99% threat without pulling
 - *Tank Cosplayer*: a non-tank who held the boss the longest
 - *Chew Toy*: the non-tank who took the most damage
@@ -747,9 +747,9 @@ Bonus awards (two picked at random):
 - *Iron Wall*: the tank who never went down
 - *Kick Master / Cleanser / Tranq Sniper*
 - *Never Stops*: the highest activity
-- *Flawless*: everyone who made zero mistakes
+- *Flawless*: who made zero mistakes (just how many, when it's more than 4)
 
-Bonus awards (two picked at random):
+Bonus award (one picked at random):
 - *Biggest Hit* / *Biggest Heal*: the largest single hit or heal, and the spell
 - *Crit Machine*: the highest crit rate (20+ hits)
 - *Boss Specialist*: the most damage on the boss itself
@@ -761,10 +761,23 @@ Bonus awards (two picked at random):
 </table>
 
 **Every award has several names**, picked at random each post, so *Floor Inspector* may turn up as *Carpet Tester*,
-*Dirt Nap Champion* or *Spirit Healer's Regular*, and *Damage King* as *Big Pumper* or *Meter Melter*. Up to two bonus
-awards are added when they apply (Name & Shame posts up to 12 lines, Big Them Up up to 10).
+*Dirt Nap Champion* or *Spirit Healer's Regular*, and *Damage King* as *Big Pumper* or *Meter Melter*. One bonus award is
+added when it applies, and the posts stay short: Name & Shame up to 7 lines, Big Them Up up to 6.
 
-**Auto shout-outs** (left panel) can post them after every fight. `smart` shames on wipes and praises on kills. Lines are sent 0.3 s apart so chat flood protection doesn't kick in.
+**After a fight** (left panel: **Auto summary** and **Shout-outs**) WhoDidIt posts **one short post of two lines**,
+however many of those are on:
+
+```
+[WhoDidIt] Majordomo Executus down in 1:43 - 0 deaths
+MVP Shemp (3 saves)  -  Top DPS Quill 873  -  Top heals Pyx 15%  -  Flawless 33/40
+
+[WhoDidIt] Ragnaros WIPE at 3:10 - 17 deaths  -  Ragnaros went berserk at 2:50 - not enough damage
+Blame: 1. Frostyboi (Meleed to death by Ragnaros - had aggro)  2. Dotsalot (Killed Leafy with Living Bomb)  3. Axeman (Stood in Void Zone)
+```
+
+`smart` / `both`: every fight; `shame`: wipes only; `praise`: kills only. **Name & Shame** and **Big Them Up**
+post the longer versions above when you click them. In a raid only the leader and assistants post. Lines are sent
+0.3 s apart so chat flood protection doesn't kick in.
 
 ### Chat colours
 

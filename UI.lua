@@ -768,9 +768,9 @@ annBtn:SetScript("OnClick", function()
 end)
 tooltip(annBtn, "Auto summary after each fight", function()
 	return {
-		"A short summary after every boss fight: kill or wipe, time, deaths, who's to blame.",
-		"on - posted to " .. W.Shout:ChannelLabel() .. " (the Post to channel)",
-		"me only - in your own chat, nobody else sees it",
+		"A summary after every boss fight: kill or wipe, time, deaths, why, who's to blame.",
+		"on - a short two-line post to " .. W.Shout:ChannelLabel() .. " (one post, even with shout-outs on)",
+		"me - the full summary in your own chat, nobody else sees it",
 
 		"off - nothing",
 		"|cff888888Click to change. Report (bottom right) posts the full report any time.|r",
@@ -783,10 +783,11 @@ autoBtn:SetScript("OnClick", function()
 end)
 tooltip(autoBtn, "Auto shout-outs after each fight", function()
 	return {
-		"Name & Shame or Big Them Up posted by themselves after each fight.",
-		"off - never",
-		"smart - Name & Shame after wipes, Big Them Up after kills",
-		"shame / praise / both - that one (or both) after every fight",
+		"A short post by itself after each fight - two lines:",
+		"after a wipe: why, and the top 3 to blame; after a kill: MVP, top damage and heals.",
+		"off - never   smart / both - every fight   shame - wipes only   praise - kills only",
+		"With Auto summary on as well, it's still one post, not two.",
+		"|cff888888Name & Shame / Big Them Up (above) post the longer versions.|r",
 		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. ". Demo fights only post to your own chat.|r",
 	}
 end)

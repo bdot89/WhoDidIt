@@ -18,8 +18,8 @@ S.LABELS = {
 	OFFICER = "Officer", SAY = "Say", YELL = "Yell", SELF = "Only me",
 }
 
-local MAX_SHAME  = 12   -- header, top 3, up to 8 awards
-local MAX_PRAISE = 10
+local MAX_SHAME  = 7    -- header, top 3, up to 3 awards (chat stays readable)
+local MAX_PRAISE = 6
 
 -- every award has a few names; one is picked at random each post so the
 -- shout-outs stay fresh. Letters, spaces, ' and & only (the title colouring
@@ -74,7 +74,7 @@ end
 local function fill(out, main, extra, max)
 	shuffle(extra)
 	local room = max - getn(out)
-	local nExtra = math.min(getn(extra), 2, math.max(0, room))
+	local nExtra = math.min(getn(extra), 1, math.max(0, room))
 	local nMain = math.min(getn(main), room - nExtra)
 	for i = 1, nMain do tinsert(out, main[i]) end
 	for i = 1, nExtra do tinsert(out, extra[i]) end
@@ -789,8 +789,13 @@ function S:PraiseLines(rec, who)
 		end
 	end
 	table.sort(spotless)
-	if getn(spotless) > 0 then
-		tinsert(main, title("clean") .. " (" .. getn(spotless) .. "): " .. table.concat(spotless, ", "))
+	-- a handful of names, or just how many (40 names is a wall of chat)
+	if getn(spotless) > 0 and getn(spotless) <= 4 then
+		tinsert(main, title("clean") .. ": " .. table.concat(spotless, ", ") .. " - no deaths, no fire, no aggro pulls")
+	elseif getn(spotless) > 4 then
+		local all = 0
+		for _ in pairs(P) do all = all + 1 end
+		tinsert(main, title("clean") .. ": " .. getn(spotless) .. " of " .. all .. " raiders - no deaths, no fire, no aggro pulls")
 	end
 
 	-- extras: two of these, picked at random, when there's room
@@ -829,6 +834,56 @@ function S:PraiseLines(rec, who)
 
 	fill(out, main, extra, MAX_PRAISE)
 	if getn(out) == 1 then tinsert(out, "Everyone tried their best. Probably.") end
+	return out
+end
+
+------------------------------------------------------------------ the automatic post
+
+-- The one post after a fight (Auto summary on and / or shout-outs): two short
+-- lines, the point first. A kill: time, deaths, then MVP, top damage and healing
+-- and how many were flawless. A wipe: when, deaths and why, then the top 3 to
+-- blame with one short reason each. The buttons post the longer versions.
+local function short(s, n)
+	s = s or ""
+	if string.len(s) > n then s = string.sub(s, 1, n - 3) .. "..." end
+	return s
+end
+function S:AutoLines(rec)
+	local P = rec.players
+	local deaths = getn(rec.deaths or {})
+	local tag = rec.demo and "[WhoDidIt DEMO] " or "[WhoDidIt] "
+	local dead = deaths .. " death" .. ((deaths == 1) and "" or "s")
+	local out = {}
+	if rec.result == "KILL" then
+		tinsert(out, tag .. rec.enc .. " down in " .. FmtTime(rec.dur) .. " - " .. dead)
+		local bits = {}
+		local h = rec.heroes and rec.heroes[1]
+		if h and h.pts >= 2 then tinsert(bits, "MVP " .. h.name .. " (" .. getn(h.list) .. " save" .. ((getn(h.list) == 1) and "" or "s") .. ")") end
+		local tDmg, tHeal = totals(rec)
+		local n, p = best(rec, function(q) return q.dmg end)
+		if n then tinsert(bits, "Top DPS " .. n .. " " .. floor(dps(rec, p))) end
+		local hn, hp, hv = best(rec, function(q) return q.heal end)
+		if hn then tinsert(bits, "Top heals " .. hn .. " " .. pct(hv / math.max(1, tHeal))) end
+		local clean, all = 0, 0
+		for _, q in pairs(P) do
+			all = all + 1
+			if (q.deaths or 0) == 0 and (q.avoidHits or 0) == 0 and (q.pulls or 0) == 0 and (q.blame or 0) <= 0 then clean = clean + 1 end
+		end
+		if all > 0 then tinsert(bits, "Flawless " .. clean .. "/" .. all) end
+		if getn(bits) > 0 then tinsert(out, table.concat(bits, "  -  ")) end
+	else
+		tinsert(out, tag .. rec.enc .. " WIPE at " .. FmtTime(rec.dur) .. " - " .. dead .. (rec.verdict and ("  -  " .. short(rec.verdict, 90)) or ""))
+		local parts = {}
+		for i = 1, math.min(3, getn(rec.blame or {})) do
+			local b = rec.blame[i]
+			if b.pts >= 1 then
+				local why = string.gsub(b.reasons[1] or "", "^" .. b.name .. " ", "")
+				why = string.gsub(why, "^died: ", "")
+				tinsert(parts, i .. ". " .. b.name .. " (" .. short(why, 44) .. ")")
+			end
+		end
+		if getn(parts) > 0 then tinsert(out, "Blame: " .. table.concat(parts, "  ")) end
+	end
 	return out
 end
 
@@ -1139,10 +1194,13 @@ function S:Mistakes(rec, channel)
 end
 
 -- automatic shout-outs after a fight (opts.autoShout)
-function S:Auto(rec)
+-- After a fight: at most ONE short post (S:AutoLines), whether it's the auto summary
+-- (summary = true), the shout-outs, or both. smart / both: every fight (blame on a
+-- wipe, the highlights on a kill); shame: wipes only; praise: kills only.
+function S:Auto(rec, summary)
 	local mode = WhoDidItDB.opts.autoShout or "off"
-	if mode == "off" then return end
 	local wipe = rec.result ~= "KILL"
-	if mode == "both" or mode == "shame" or (mode == "smart" and wipe) then S:Shame(rec, nil, nil, true) end
-	if mode == "both" or mode == "praise" or (mode == "smart" and not wipe) then S:Praise(rec, nil, nil, true) end
+	local post = summary or mode == "smart" or mode == "both" or (mode == "shame" and wipe) or (mode == "praise" and not wipe)
+	if not post then return end
+	W:Send(S:AutoLines(rec), demoChannel(rec, nil, true), S.ClassMap(rec))
 end
