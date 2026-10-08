@@ -888,7 +888,6 @@ local TABS = {
 	{ id = "threat",   text = "Threat",   tip = { "Every time the boss changed target, who it went for and their threat %,", "plus each player's highest threat. Keep the boss targeted to record it." } },
 	{ id = "meters",   text = "Meters",   tip = { "Damage, healing, damage taken, activity and utility for the fight.", "Damage and healing also show crit % and the biggest hit.", "Hover a player for every spell: total, share, hits, crit % and biggest.", "Pick one with the buttons at the bottom." } },
 	{ id = "timeline", text = "Timeline", tip = { "Everything that happened, second by second." } },
-	{ id = "consumes", text = "Consumes", tip = { "Each player's flask, elixirs, food and protection potions,", "and every potion, rune and healthstone they used." } },
 }
 local TABW = floor((RW - (getn(TABS) - 1) * 4) / getn(TABS))
 UI.tabButtons = {}
@@ -1050,9 +1049,9 @@ local ACTIONS = {
 		{ "Check raid now", function() W.Cons:Check(IsShiftKeyDown()) end,
 		  "Scan everyone's buffs right now (before the pull) and list who's missing what their role needs. Only you see it - Shift-click to post it. Also runs by itself on every ready check.",
 		  true },
-		{ "Full check", function() W.Cons:OpenFull() end,
-		  "DopingControl's full raid check: every consumable, class buff, debuff, resistance, hit cap and enchant, per player, with icons. Built in - also /dc.",
-		  true, true },
+		{ "Open DopingControl", function() W.Cons:OpenFull() end,
+		  "Opens DopingControl, the full raid check (built in): every consumable, class buff, debuff, resistance, hit cap and enchant, per player, with icons. Also /dc.",
+		  true, true, true },
 	},
 	mistakes = {
 		{ "Post mistakes", function(rec) W.Shout:Mistakes(rec) end,
@@ -1072,8 +1071,14 @@ for tab, list in pairs(ACTIONS) do
 	UI.actionButtons[tab] = {}
 	for i = 1, getn(list) do
 		local a = list[i]
-		local b = button(f, a[1], 112, 20)
-		b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + (i - 1) * 116, PAD)
+		local big = a[6]   -- the one that opens a whole addon: wider, at the right end, green
+		local b = button(f, big and ("|cffffffff" .. a[1] .. "|r") or a[1], big and 150 or 112, 20)
+		if big then
+			b:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD - 4, PAD)
+			UI.Flat(b, { 0.06, 0.24, 0.1, 0.96 }, { 0.25, 0.85, 0.35, 1 })
+		else
+			b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + (i - 1) * 116, PAD)
+		end
 		local fn, live, nopost = a[2], a[4], a[5]
 		b:SetScript("OnClick", function()
 			if live then fn() return end   -- works on the raid right now, not a saved fight
@@ -1122,6 +1127,7 @@ UI.rk = { view = "kills" }   -- rankings state: view, realm, faction, inst, boss
 
 local MODES = {
 	{ id = "fights",   text = "Fights"   },
+	{ id = "consumes", text = "Consumes" },   -- the selected fight's Consumes view (it isn't a fight tab any more)
 	{ id = "rankings", text = "Rankings" },
 	{ id = "logs",     text = "Chronicle Logs" },
 	{ id = "marks",    text = "Auto Marker"   },
@@ -1142,6 +1148,11 @@ for i = 1, getn(MODES) do
 	b.id = m.id
 	b:SetScript("OnClick", function() UI:SetMode(this.id) end)
 	UI.modeButtons[i] = b
+end
+function UI.ModeButton(id)
+	for i = 1, getn(UI.modeButtons) do
+		if UI.modeButtons[i].id == id then return UI.modeButtons[i] end
+	end
 end
 -- all the same width; Hall of Fame on its own at the far right, by the close button
 do
@@ -1166,14 +1177,17 @@ do
 		end
 	end
 end
-tooltip(UI.modeButtons[1], "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
-tooltip(UI.modeButtons[2], "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
-tooltip(UI.modeButtons[3], "Chronicle Logs", { "Chronicle combat logging (built in): start, stop, save, archive and delete", "the log you upload to chronicleclassic.com." })
-tooltip(UI.modeButtons[4], "Auto Marker", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
+tooltip(UI.ModeButton("consumes"), "Consumes", { "Each player's flask, elixirs, food and protection potions in the selected fight,",
+	"and every potion, rune and healthstone they used. Check raid now scans the raid before a pull,",
+	"and |cff33ff33Open DopingControl|r opens the full raid check (buffs, debuffs, resistances, hit, enchants)." })
+tooltip(UI.ModeButton("fights"), "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
+tooltip(UI.ModeButton("rankings"), "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
+tooltip(UI.ModeButton("logs"), "Chronicle Logs", { "Chronicle combat logging (built in): start, stop, save, archive and delete", "the log you upload to chronicleclassic.com." })
+tooltip(UI.ModeButton("marks"), "Auto Marker", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
 	"and quick save - mark mobs in game, click Save marks as pack." })
-tooltip(UI.modeButtons[5], "RollForML", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
+tooltip(UI.ModeButton("loot"), "RollForML", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
 	"see who won what, and a step-by-step guide." })
-tooltip(UI.modeButtons[6], "Hall of Fame", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,",
+tooltip(UI.ModeButton("fame"), "Hall of Fame", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,",
 	"with every clutch play and every mistake, their points, and the best plays and worst blunders ever." })
 
 -- a row of buttons in the tab strip, used by Rankings and Logs
@@ -1687,7 +1701,8 @@ function UI:ApplyMode()
 	local function vis(b, on) if on then b:Show() else b:Hide() end end
 	for i = 1, getn(UI.modeButtons) do
 		local b = UI.modeButtons[i]
-		UI.SkinSelect(b, b.id == UI.mode)
+		local cur = (UI.mode == "fights" and UI.tab == "consumes") and "consumes" or UI.mode
+		UI.SkinSelect(b, b.id == cur)
 	end
 	for i = 1, getn(UI.tabButtons) do vis(UI.tabButtons[i], fights) end
 	for i = 1, getn(UI.rankButtons) do vis(UI.rankButtons[i], UI.mode == "rankings") end
@@ -1720,6 +1735,12 @@ function UI:ApplyMode()
 end
 
 function UI:SetMode(mode)
+	if mode == "consumes" then
+		UI.tab = "consumes"; UI.detail = nil; UI.cause = nil
+		mode = "fights"
+	elseif mode == "fights" and UI.tab == "consumes" then
+		UI.tab = "summary"
+	end
 	UI.mode = mode
 	UI.rk.boss = nil; UI.rk.log = nil
 	if mode == "rankings" and W.Board then W.Board:LoadChronicle() end

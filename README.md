@@ -32,7 +32,7 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - ☠️ **Death recaps.** The last 15 seconds before every death (hits, heals, debuffs, items, health %), with the cause worked out for you.
 - 📋 **Blame board & heroes.** Points for every mistake (standing in fire, pulling aggro, bombing the raid, idling, low DPS) and every game-saving play (clutch heals, shields, taunts, BoP, battle res, dispels).
 - 🎯 **Threat & timeline.** Who the boss attacked and why, with the server's threat %. Click any name to jump to that player's own timeline at that moment.
-- 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check. **Full check** opens DopingControl (built in) for the whole raid matrix: buffs, debuffs, resistances, hit and enchants.
+- 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check. **Open DopingControl** (the green button) opens it (built in) for the whole raid matrix: buffs, debuffs, resistances, hit and enchants.
 - 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
@@ -62,11 +62,11 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
   </tr>
   <tr>
     <td width="50%"><img src="docs/timeline.jpg" alt="Timeline"><br><b>Timeline.</b> Everything that happened, second by second, colour-coded by kind. Click a name in any line for that player's own timeline, focused on that moment.</td>
-    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> A grid like DopingControl's: players grouped by role (gaps first), a column per consumable slot with the buff's icon, a <b>red X</b> where their role needs something they didn't have, ready counts and items used. <b>Check raid now</b> scans the raid before the pull; <b>Full check</b> opens DopingControl itself.</td>
+    <td width="50%"><img src="docs/consumes.jpg" alt="Consumes"><br><b>Consumes.</b> A grid like DopingControl's: players grouped by role (gaps first), a column per consumable slot with the buff's icon, a <b>red X</b> where their role needs something they didn't have, ready counts and items used. <b>Check raid now</b> scans the raid before the pull; <b>Open DopingControl</b> (green, bottom right) opens DopingControl itself.</td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/consumes-casters.jpg" alt="Consumes, casters"><br><b>Consumes, hover and totals.</b> Hover any square for the buff (or why it's empty); click a role header to fold it. <b>Missing per slot</b> at the bottom counts the gaps in each column. <b>Used</b> (top left of the grid) switches to every item used during the fight: mana and healing potions, runes, tea, healthstones, bandages, protection potions and bombs, with counts.</td>
-    <td width="50%"><img src="docs/dopingcontrol.jpg" alt="DopingControl"><br><b>Full check (DopingControl).</b> DopingControl by ShempError, built in exactly as its author made it: consumables, class buffs, debuffs, resistances, hit and equipment enchants for the whole raid. Open it with <b>Full check</b> on the Consumes tab or <code>/dc</code>.</td>
+    <td width="50%"><img src="docs/dopingcontrol.jpg" alt="DopingControl"><br><b>Full check (DopingControl).</b> DopingControl by ShempError, built in exactly as its author made it: consumables, class buffs, debuffs, resistances, hit and equipment enchants for the whole raid. Open it with the green <b>Open DopingControl</b> button on the Consumes tab or <code>/dc</code>.</td>
   </tr>
 </table>
 
@@ -101,7 +101,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
    and the [master feed](#master-feed-nothing-to-install) adds newer ones in game while the maintainer is online.
 
 **Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#chronicle-logs),
-[RollFor](#rollforml-soft-res-master-looting-with-rollfor), [DopingControl](#full-check-dopingcontrol) and the
+[RollFor](#rollforml-soft-res-master-looting-with-rollfor), [DopingControl](#open-dopingcontrol-the-full-raid-check) and the
 [Auto Marker's raid packs](#auto-marker), each at the version the maintainer tested. Raid times arrive in game. The
 download leaves out the maintainer's tools: its `tools` folder only has the optional ClassicAPI installer and
 `AutoSync-Off.cmd` (to undo AutoSync if an older version had it on). The Master switch and Sync now only appear on
@@ -170,7 +170,7 @@ once, in chat, and never again.
 
 ## The window
 
-Across the top: **Fights** · **Rankings** · **Chronicle Logs** · **Auto Marker** · **RollForML**, and **Hall of Fame** on
+Across the top: **Fights** · **Consumes** · **Rankings** · **Chronicle Logs** · **Auto Marker** · **RollForML**, and **Hall of Fame** on
 the far right. The row under it holds the **Auto-loot** button (on / off, click to choose who gets the loot) and the
 lights for Nampower, SuperWoW, threat data and the optional ClassicAPI (hover them for what each does).
 Bottom left, on every tab: **Post to** (where WhoDidIt posts) and that tab's buttons. Hover anything to see what it does.
@@ -186,7 +186,7 @@ Bottom left, on every tab: **Post to** (where WhoDidIt posts) and that tab's but
 | **Threat** | Boss target changes with threat % and a verdict, plus peak threat per player. Click a name (Attacked or Took it from) to open that player's timeline, filtered to them and scrolled to that moment |
 | **Meters** | Damage, Healing, Taken, Activity, Utility (interrupts, dispels, tranqs, items) |
 | **Timeline** | Everything that happened, in order. Click a name in any line (or on the Threat tab) to see that player's timeline, with the moment highlighted; "show everyone" widens it again |
-| **Consumes** | **Buffs**: a grid of every player's consumable buffs by slot, grouped by role, with a red X where their role needs something (the **slacker check**). **Used**: every potion, rune, tea, healthstone, bandage and bomb used in the fight. **Post summary / missing / everyone**, **Check raid now** and **Full check** (DopingControl) buttons |
+| **Consumes** | **Buffs**: a grid of every player's consumable buffs by slot, grouped by role, with a red X where their role needs something (the **slacker check**). **Used**: every potion, rune, tea, healthstone, bandage and bomb used in the fight. **Post summary / missing / everyone**, **Check raid now** and the green **Open DopingControl** button. (Consumes is on the top row, next to Fights.) |
 
 ### Clicking names
 
@@ -527,9 +527,9 @@ The spell IDs, the aura names this server really uses and the per-role idea come
 (MIT licence, [github.com/ShempError/DopingControl](https://github.com/ShempError/DopingControl)).
 With [ClassicAPI](#classicapi-optional), ready checks also list whose flask, elixir or food runs out in under 5 minutes.
 
-### Full check (DopingControl)
+### Open DopingControl (the full raid check)
 
-DopingControl itself is built into WhoDidIt, exactly as its author made it. Click **Full check** on the Consumes tab
+DopingControl itself is built into WhoDidIt, exactly as its author made it. Click the green **Open DopingControl** button (bottom right of the Consumes tab)
 (or type `/dc`) for its window:
 
 - **Consumables**: eleven slots per player (flask, food, attack power, strength, agility, spell power, mana regen,
@@ -931,7 +931,7 @@ without a licence comes out again if its author asks:
 | --- | --- | --- | --- |
 | [ChronicleCompanion](https://github.com/Emyrk/ChronicleCompanion) | Emyrk | the Chronicle Logs tab (`Chronicle\`, shipped) | none stated |
 | [RollFor](https://github.com/sica42/roll-for-vanilla) (1.12 fork) | Obszczymucha, sica42 | RollForML (`RollFor\`, shipped) | none stated |
-| [DopingControl](https://github.com/ShempError/DopingControl) | ShempError | Full check, consume data (`DopingControl\`, shipped) | MIT |
+| [DopingControl](https://github.com/ShempError/DopingControl) | ShempError | Open DopingControl, consume data (`DopingControl\`, shipped) | MIT |
 | [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the raid pack data in `PackData.lua` (GUIDs, packs, marks), included with credit, removed on request; not under WhoDidIt's MIT licence | none stated |
 | [Chronicle External API](https://legacy.chronicleclassic.com/developers/api) | Chronicle | every guild's raid times | API terms |
 | [ClassicAPI](https://github.com/brues-code/ClassicAPI) (optional) | brues-code | extras, see above | GPL-3.0 |
