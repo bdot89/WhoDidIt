@@ -37,6 +37,10 @@ end
 
 -- run one of RollFor's slash commands, e.g. L:Run("SRS") = /srs
 function L:Run(cmd, args)
+	if cmd == "HTR" and not W.CanLead() then
+		local how, looter = L:LootMethod()
+		if not (how == "master" and looter == UnitName("player")) then W.LeadOnly(); W.Print("How to roll: " .. L:HowToRoll()) return end
+	end
 	local f = SlashCmdList and SlashCmdList[cmd]
 	if not f then W.Print("RollFor isn't loaded - see the Loot tab.") return end
 	f(args or "")

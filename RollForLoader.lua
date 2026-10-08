@@ -31,6 +31,30 @@ keep:RegisterEvent("ADDON_LOADED")
 keep:SetScript("OnEvent", function()
 	if arg1 ~= "WhoDidIt" then return end
 	this:UnregisterAllEvents()
+	-- In a raid, RollFor's announcements in raid chat are for the raid leader,
+	-- assistants and the master looter, like everything WhoDidIt posts; anyone
+	-- else sees them in their own chat. (RollFor builds its chat at login, after
+	-- this, so its own files stay as they are.)
+	if not WDI_ROLLFOR_SKIP and RollFor and RollFor.ChatApi and RollFor.ChatApi.new then
+		local newApi = RollFor.ChatApi.new
+		RollFor.ChatApi.new = function()
+			local api = newApi()
+			local send = api.SendChatMessage
+			api.SendChatMessage = function(text, kind, lang, target)
+				local W = WhoDidIt
+				if (kind == "RAID" or kind == "RAID_WARNING") and W and W.CanLead and not W.CanLead() then
+					local how, _, raidMaster = GetLootMethod()
+					if not (how == "master" and raidMaster and GetRaidRosterInfo(raidMaster) == UnitName("player")) then
+						W.LeadOnly()
+						DEFAULT_CHAT_FRAME:AddMessage(tostring(text))
+						return
+					end
+				end
+				return send(text, kind, lang, target)
+			end
+			return api
+		end
+	end
 	if standaloneDb then RollForDb = standaloneDb end
 	if standaloneCharDb then RollForCharDb = standaloneCharDb end
 end)

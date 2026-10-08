@@ -39,6 +39,21 @@ f:SetScript("OnEvent", function()
 		return
 	end
 	this:UnregisterAllEvents()
+	-- in a raid its "Send to raid chat" and its whispers are for the raid leader
+	-- and assistants (WhoDidIt.CanLead), like everything WhoDidIt posts
+	if not WDI_DOPING_SKIP and WhoDidIt.CanLead then
+		if DC_Report and DC_Report.SendDisabled then
+			local sendOff = DC_Report.SendDisabled
+			DC_Report.SendDisabled = function(source) return sendOff(source) or not WhoDidIt.CanLead() end
+		end
+		if DC_Matrix and DC_Matrix.CanWhisper then
+			local canWhisper = DC_Matrix.CanWhisper
+			DC_Matrix.CanWhisper = function(row, now, last)
+				if not WhoDidIt.CanLead() then WhoDidIt.LeadOnly(); return false, nil end
+				return canWhisper(row, now, last)
+			end
+		end
+	end
 	-- only offer to switch it off when the built-in copy is really there
 	if WDI_DOPING_SKIP and WDI_DOPING_VERSION and WhoDidIt.AskHandover then
 		WhoDidIt:AskHandover("DopingControl", "DopingControl (Full check on the Consumes tab)")

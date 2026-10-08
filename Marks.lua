@@ -1005,7 +1005,7 @@ W:On("PLAYER_REGEN_ENABLED", clearTemps)
 
 -- another WhoDidIt marker just skulled a hound: let theirs stand
 W:On("CHAT_MSG_ADDON", function(prefix, msg, channel, sender)
-	if prefix == M.SYNC and msg == "HOUND" and sender ~= UnitName("player") then houndWait = 3 end
+	if prefix == M.SYNC and msg == "HOUND" and sender ~= UnitName("player") and W.CanLead(sender) then houndWait = 3 end
 end)
 
 ------------------------------------------------------------------ marking while solo / not lead

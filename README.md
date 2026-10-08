@@ -309,9 +309,10 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
   and the channel only reaches the sender's own realm, so nobody else can send as them while those characters exist.
   The **Master** button and `/wdi master on|off` only work on those characters; someone editing their own copy only
   fools themselves.
-- **Your own list:** `/wdi master list` shows whose times you take. `/wdi master remove <name>` stops trusting one (for
-  example if a master character were ever deleted or renamed and someone else took the name); `/wdi master add <name>`
-  trusts another character on your realm, such as another guild's own master. Only add someone you trust.
+- **Nobody else can be added.** `/wdi master list` shows whose times you take: only the maintainer's master
+  characters. `/wdi master remove <name>` stops trusting one (for example if a master character were ever deleted or
+  renamed and someone else took the name), and `/wdi master add <name>` trusts it again. No other character can be
+  added, so nobody can talk players into taking raid times from them.
 - **Factions:** custom chat channels are split by faction, so a master only feeds players of its own faction.
 - **Polite by design:** anyone may ask the master, so asking is rationed. Each character can ask once every 5 minutes
   and for 6 raid boss lists every 10 minutes; streams start at least a minute apart, and a full copy goes out at most
@@ -842,7 +843,7 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi 5man name <name>      name the group you're in
 /wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)/wdi share on|off          share your guild's times with WhoDidIt users on the realm (off = leave the hidden channel)
 /wdi feed on|off           take / ignore the raid times from the master feed
-/wdi master list           whose raid times you take (add|remove <name> changes your list)
+/wdi master list           whose raid times you take (remove|add <name>: stop / start trusting one of them)
 /wdi banter kills|clears on|off   fun kill / clear time lines (off by default)
 /wdi banter test           preview a banter line in your own chat
 /wdi logs                  Chronicle log controls
@@ -919,6 +920,11 @@ WhoDidIt is built so it can't get you into trouble in chat, and so nothing about
 
 - **Nothing goes to a public chat by itself** on a fresh install. Banter, rival alerts and fight shout-outs are off
   until you switch them on. A plain click shows things in your own chat; posting needs Ctrl-click or a Post button.
+- **In a raid, only the raid leader and assistants post.** Reports, Name & Shame, Big Them Up, shout-outs, banter,
+  rival taunts, consume checks, standings, Hall of Fame and 5-man boards: from anyone else they show in their own chat
+  instead. The same goes for the built-in DopingControl's raid report and its whispers, and RollFor's raid
+  announcements (the master looter may use those too). Raid marks need lead or assist already; anyone else's marks
+  are only visible to themselves. In a party (no promotions there) anyone may post.
 - **Other guilds' names are never posted automatically.** They come from logs anyone can upload to Chronicle, and
   anything WhoDidIt posts is said in your name, so a guild could pick a name meant to get whoever posts it into trouble.
   Anything that names another guild (Post rivals, Post standings, a rival taunt) shows you the exact text first and
@@ -942,7 +948,7 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 
 **What's accepted**
 
-- The feed only from the master characters (the maintainer's, changed with `/wdi master add|remove`); anyone else
+- The feed only from the maintainer's master characters (`/wdi master remove` stops trusting one); anyone else
   sending feed messages is ignored. Asking the master is rationed (see [Master feed](#master-feed-nothing-to-install)).
 - **A guild's shared times only count from a member of that guild.** The game won't tell an addon a stranger's
   guild, so WhoDidIt remembers the guild of players it sees itself (your raid or party, your guild roster, anyone you

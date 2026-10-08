@@ -369,6 +369,11 @@ function W:Send(lines, channel, classes)
 		local canWarn = inRaid and (IsRaidLeader() or (IsRaidOfficer and IsRaidOfficer()))
 		if not canWarn then kind = "RAID" end
 	end
+	-- in a raid only the leader and assistants post (W.CanLead); anyone else sees it themselves
+	if kind ~= "SELF" and inRaid and not W.CanLead() then
+		W.LeadOnly()
+		kind = "SELF"
+	end
 	if kind == "RAID" and not inRaid then kind = inParty and "PARTY" or "SELF" end
 	if kind == "PARTY" and not inParty then kind = "SELF" end
 	if (kind == "GUILD" or kind == "OFFICER") and not IsInGuild() then kind = "SELF" end

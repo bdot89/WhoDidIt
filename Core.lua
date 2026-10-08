@@ -64,6 +64,33 @@ function W.CName(name, class)
 	return string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, name or "?")
 end
 
+------------------------------------------------------------------ who speaks for the raid
+
+-- In a raid, only the raid leader and assistants post from WhoDidIt (reports,
+-- shout-outs, banter, consume checks, standings...) or steer it for the raid
+-- (marks, DopingControl's report and whispers, RollFor's how to roll).
+-- Everyone else sees the same in their own chat. name = nil: you. Outside a
+-- raid (a party, solo) there's nobody to promote, so anyone may.
+function W.CanLead(name)
+	if GetNumRaidMembers() == 0 then return true end
+	if not name or name == UnitName("player") then
+		return (IsRaidLeader() or (IsRaidOfficer and IsRaidOfficer())) and true or false
+	end
+	for i = 1, GetNumRaidMembers() do
+		local n, rank = GetRaidRosterInfo(i)
+		if n == name then return (rank or 0) >= 1 end
+	end
+	return false
+end
+
+-- say once a session why something went to your own chat instead
+local leadTold
+function W.LeadOnly()
+	if leadTold then return end
+	leadTold = true
+	W.Print("|cffff9933In a raid only the raid leader and assistants post from WhoDidIt|r - you see it in your own chat instead.")
+end
+
 ------------------------------------------------------------------ "type a value" popup
 
 -- W:Prompt("Pack name", "Skull pack", function(text) ... end): one edit box, Enter or Accept saves
@@ -586,6 +613,7 @@ StaticPopupDialogs["WHODIDIT_CONFIRMPOST"] = {
 }
 function W:ConfirmSend(lines, channel, colours)
 	if channel == "SELF" then W:Send(lines, channel, colours) return end
+	if not W.CanLead() then W.LeadOnly(); W:Send(lines, "SELF", colours) return end
 	local plain = {}
 	for i = 1, getn(lines) do
 		local s = string.gsub(string.gsub(lines[i], "|c%x%x%x%x%x%x%x%x", ""), "|r", "")
@@ -814,7 +842,7 @@ local function slash(msg)
 			local l = W.Board.MasterList()
 			W.Print("Raid times are taken from: " .. ((getn(l) > 0) and table.concat(l, ", ") or "nobody on this realm") .. " (" .. W.Board.Realm() .. ")")
 		elseif not W.Board.CanMaster() then
-			W.Print("Usage: /wdi master list | add <name> | remove <name>")
+			W.Print("Usage: /wdi master list | remove <name> | add <name> (only the maintainer's master characters)")
 		elseif sub == "on" or sub == "off" then
 			db.opts.master = (sub == "on")
 			W.Print("Master feed: " .. (db.opts.master and "|cff33ff33on|r - while you're online, every WhoDidIt user on your realm gets your Chronicle raid times (needs the sync helper running on this PC)" or "off"))

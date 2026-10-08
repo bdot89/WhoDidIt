@@ -548,7 +548,8 @@ local claims = {}
 
 function B:Claim(tag, fn)
 	local inRaid = GetNumRaidMembers() > 0
-	if W.Shout:Channel() == "SELF" or (not inRaid and GetNumPartyMembers() == 0) then fn() return end
+	-- (raiders who aren't lead or assist don't take part: theirs shows in their own chat)
+	if W.Shout:Channel() == "SELF" or (not inRaid and GetNumPartyMembers() == 0) or not W.CanLead() then fn() return end
 	local c = claims[tag] or { names = {} }
 	c.at, c.fn = GetTime(), fn
 	c.names[UnitName("player")] = true
@@ -557,7 +558,7 @@ function B:Claim(tag, fn)
 end
 
 W:On("CHAT_MSG_ADDON", function(prefix, msg, channel, sender)
-	if prefix ~= CLAIM or not msg or not sender then return end
+	if prefix ~= CLAIM or not msg or not sender or not W.CanLead(sender) then return end
 	local c = claims[msg]
 	if not c then
 		c = { names = {}, at = GetTime() }
@@ -1527,11 +1528,11 @@ local function unb36(s) return tonumber(s or "", 36) end
 local function clean(s) return (string.gsub(s or "", "[~;,|=\n]", " ")) end
 
 local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
--- the characters allowed to be the master, per realm: the maintainer's, plus
--- any you add yourself (/wdi master add Name), minus any you remove. A name is
--- only as safe as the character behind it: if one of these is ever deleted
--- or renamed and someone else takes the name, /wdi master remove it. Custom
--- channels are split by faction, so a master only feeds its own faction.
+-- the characters allowed to be the master, per realm: only the maintainer's.
+-- A player can stop trusting one (/wdi master remove Name) - if one of these is
+-- ever deleted or renamed and someone else takes the name - and trust it again
+-- (/wdi master add Name), but can't add anyone else. Custom channels are split
+-- by faction, so a master only feeds its own faction.
 B.MASTERS = {
 	["Y'Shaarj"] = { Upsilon = true },
 	["C'Thun"]   = { Upsy = true },
@@ -1543,10 +1544,10 @@ local function myMasters(realm)
 end
 local function trusted(name)
 	if not name then return false end
-	local mine = myMasters()
-	if mine and mine[name] ~= nil then return mine[name] and true or false end   -- true = added, false = removed
 	local list = B.MASTERS[B.Realm()]
-	return list and list[name] and true or false
+	if not (list and list[name]) then return false end   -- only the maintainer's characters, ever
+	local mine = myMasters()
+	return not (mine and mine[name] == false)            -- unless you removed it
 end
 -- /wdi master add|remove Name: your own list of who to take the feed from
 function B.SetMaster(name, on)
@@ -1559,26 +1560,25 @@ function B.SetMaster(name, on)
 	local m = WhoDidItDB.masters[B.Realm()] or {}
 	WhoDidItDB.masters[B.Realm()] = m
 	local builtIn = B.MASTERS[B.Realm()] and B.MASTERS[B.Realm()][name]
-	if on then m[name] = (not builtIn) and true or nil
-	else m[name] = builtIn and false or nil end
-	W.Print(name .. (on and " |cff33ff33is trusted|r for raid times on " or " |cffff9933is no longer trusted|r for raid times on ") .. B.Realm()
-		.. (on and ". Only add a character you trust: its raid times go into your Rankings." or "."))
+	if not builtIn then
+		m[name] = nil
+		W.Print("Only the WhoDidIt maintainer's master characters can feed raid times: |cffffd100" .. name .. "|r can't be added. (/wdi master list shows who they are.)")
+		return
+	end
+	m[name] = (not on) and false or nil
+	W.Print(name .. (on and " |cff33ff33is trusted|r for raid times on " or " |cffff9933is no longer trusted|r for raid times on ") .. B.Realm() .. ".")
 end
 function B.MasterList()
 	local out = {}
 	for n in pairs(B.MASTERS[B.Realm()] or {}) do
 		if trusted(n) then tinsert(out, n) end
 	end
-	for n, v in pairs(myMasters() or {}) do
-		if v then tinsert(out, n .. " (added by you)") end
-	end
 	table.sort(out)
 	return out
 end
 B.Trusted = trusted
 -- Being the master (sending) is only for the maintainer's characters built in
--- above: a name a player adds with /wdi master add only changes whose times
--- THEY accept, it never lets anyone send.
+-- above; nobody else's WhoDidIt takes the feed from anyone else.
 function B.CanMaster()
 	local me = UnitName("player")
 	local list = B.MASTERS[B.Realm()]
