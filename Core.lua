@@ -735,7 +735,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi feed on|off|r - take the raid times from the master feed,  " .. c .. "/wdi master list|r - whose times you take")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi banter kills|clears [on|off]|r - fun kill / clear time announcements,  " .. c .. "/wdi banter test|r - preview one")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi logs|r - Chronicle log controls,  " .. c .. "/wdi log start|stop|save|r")
-	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi loot|r - master looting with RollFor (built in): soft-res, rolls, winners and a step-by-step guide")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi loot|r - master looting with RollFor (built in): soft-res, rolls, winners and a step-by-step guide,  " .. c .. "/wdi rollfor on|off|r - switch RollFor off (e.g. for an EPGP loot addon)")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi check|r - who's missing consumables for their role right now (" .. c .. "/wdi check post|r to post it),  " .. c .. "/wdi readycheck on|off|r - run it on every ready check")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi aml|r - auto master looting on/off (or the Auto-loot button),  " .. c .. "/wdi aml to <name>|r,  " .. c .. "/wdi aml backup <name>|r,  " .. c .. "/wdi aml list|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi marks|r - auto marking: saved packs and quick save,  " .. c .. "/wdi mark|r - mark the pack under your mouse,  " .. c .. "/wdi marks help|r - all marking commands")
@@ -884,6 +884,10 @@ local function slash(msg)
 	elseif cmd == "fame" or cmd == "alltime" or cmd == "hof" then
 		if not W.Career then W.Print(W.RESTART_MSG) return end
 		W.UI:SetMode("fame")
+	elseif cmd == "rollfor" then
+		if not W.Loot then W.Print(W.RESTART_MSG) return end
+		if rest == "on" or rest == "off" then W.Loot:SetOff(rest == "off")
+		else W.Print("RollFor (built in): " .. (W.Loot:Off() and "|cffff9933off|r" or "|cff33ff33on|r") .. "  - /wdi rollfor on|off (off: it doesn't start, e.g. for an EPGP loot addon)") end
 	elseif cmd == "loot" or cmd == "ml" then
 		if not W.Loot then W.Print(W.RESTART_MSG) return end
 		W.UI:SetMode("loot")

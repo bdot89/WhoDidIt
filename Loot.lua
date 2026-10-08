@@ -17,6 +17,26 @@ local getn, tinsert = table.getn, table.insert
 
 BINDING_NAME_WHODIDIT_LOOT = "Open the Loot tab (master looting)"
 
+-- RollFor switched off in WhoDidIt (it clashes with EPGP and other loot addons):
+-- it doesn't start at all. The switch takes effect with a UI reload.
+function L:Off() return WDI_ROLLFOR_OFF and true or false end
+function L:WillBeOff() return WhoDidItDB and WhoDidItDB.opts.rollforOff and true or false end
+function L:SetOff(off)
+	WhoDidItDB.opts.rollforOff = off and true or nil
+	local now = L:Off()
+	if (off and now) or (not off and not now) then
+		W.Print("RollFor is " .. (off and "|cffff9933off|r" or "|cff33ff33on|r") .. " (no change needed).")
+		return
+	end
+	StaticPopup_Show("WHODIDIT_ROLLFOR", off and "|cffff9933off|r" or "|cff33ff33on|r")
+end
+StaticPopupDialogs["WHODIDIT_ROLLFOR"] = {
+	text = "RollFor is switched %s.\n\nThat takes effect when the UI reloads (a few seconds). Reload now?\n|cff888888Later: it changes at your next /reload or login.|r",
+	button1 = "Reload now", button2 = "Later",
+	OnAccept = function() ReloadUI() end,
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+
 function L:Available()
 	return RollFor ~= nil and RollFor.key_bindings ~= nil and SlashCmdList and SlashCmdList["RF"] ~= nil
 end
@@ -42,13 +62,13 @@ function L:Run(cmd, args)
 		if not (how == "master" and looter == UnitName("player")) then W.LeadOnly(); W.Print("How to roll: " .. L:HowToRoll()) return end
 	end
 	local f = SlashCmdList and SlashCmdList[cmd]
-	if not f then W.Print("RollFor isn't loaded - see the Loot tab.") return end
+	if not f then W.Print(L:Off() and "RollFor is switched off - /wdi rollfor on (or the RollForML tab) switches it back on." or "RollFor isn't loaded - see the RollForML tab.") return end
 	f(args or "")
 end
 
 function L:Key(name)
 	local kb = RollFor and RollFor.key_bindings
-	if kb and kb[name] then kb[name]() else W.Print("RollFor isn't loaded - see the Loot tab.") end
+	if kb and kb[name] and not L:Off() then kb[name]() else W.Print(L:Off() and "RollFor is switched off - /wdi rollfor on (or the RollForML tab) switches it back on." or "RollFor isn't loaded - see the RollForML tab.") end
 end
 
 local function config()

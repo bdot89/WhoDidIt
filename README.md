@@ -607,6 +607,11 @@ built in, the master-loot roller by Obszczymucha. It's sica42's 1.12 fork (v4.8.
 the 1.12 client; the original RollFor has moved to TBC only. RollFor does the rolling itself: its loot window lists every
 item and who soft-reserved it, it runs the roll, handles ties, and gives the item to the winner when you click **Award**.
 
+**Using another loot addon (EPGP...)?** RollFor replaces the game's loot window, so it clashes with other loot addons.
+Click **RollFor: on** (bottom left of the RollForML tab) or type `/wdi rollfor off`: after a UI reload (it offers one)
+RollFor doesn't start at all, and the game's loot window and master looting are left to the other addon. Switch it back
+on the same way.
+
 **The RollForML tab**
 
 - **raidres.fly.dev** is shown at the top right, with a **Copy link** button (straight to your clipboard with [ClassicAPI](#classicapi-optional), otherwise Ctrl+C in the box that opens), for anyone who doesn't know where soft-res sheets are made.
@@ -878,6 +883,7 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi marks build [yards]   make packs from what was noted
 /wdi marks learn clear     forget the mobs noted in this raid
 /wdi loot                  RollForML tab
+/wdi rollfor on|off        switch the built-in RollFor off / on (off: it doesn't start, e.g. for an EPGP loot addon)
 /wdi aml                   Auto-loot on / off (see Auto-loot for more)
 /wdi classicapi            what the optional ClassicAPI adds, and how to get it
 /wdi handover <addon>      ask again about switching a separate addon off

@@ -1427,6 +1427,12 @@ local srsBtn    = gridButton("SR items", 2, 1)
 local sroBtn    = gridButton("Fix SR names", 2, 2)
 local mlBtn     = gridButton("Auto ML", 1, 1)
 local glBtn     = gridButton("Auto group", 1, 2)
+-- RollFor on / off (it clashes with EPGP loot addons): takes effect with a UI reload
+UI.rfBtn = gridButton("RollFor: on", 4, 1)
+UI.rfBtn:SetScript("OnClick", function() W.Loot:SetOff(not W.Loot:WillBeOff()); UI:Refresh() end)
+tooltip(UI.rfBtn, "RollFor on / off", function()
+	return { "Switch the built-in RollFor off when it clashes with another loot addon", "(an EPGP addon, for example). Off, it doesn't start at all: no loot window", "of its own, no rolls, no /rf, no minimap button. The game's loot window", "and master looting stay as they are, for the other addon.", " ", "Takes effect with a UI reload (it offers one).", "|cff888888Also /wdi rollfor on|off.|r" }
+end, "ANCHOR_TOP")
 finishBtn:SetScript("OnClick", function() W.Loot:Run("FR", "") end)
 cancelBtn:SetScript("OnClick", function() W.Loot:Run("CR", "") end)
 srsBtn:SetScript("OnClick", function() W.Loot:Run("SRS", "") end)
@@ -1440,7 +1446,7 @@ tooltip(sroBtn, "Fix soft-res names", { "Match players whose name on the soft-re
 	"RollFor fixes simple typos by itself." })
 tooltip(mlBtn, "Auto master loot", { "When you target a boss, the raid switches to master loot", "with you as the looter. You must be raid leader." })
 tooltip(glBtn, "Auto group loot", { "When everything in the boss's loot has been given out,", "the raid switches back to group loot for the trash.", "Use it with Auto ML: master loot for bosses, group loot in between." })
-local lootOnly = { finishBtn, cancelBtn, srsBtn, sroBtn, mlBtn, glBtn }
+local lootOnly = { finishBtn, cancelBtn, srsBtn, sroBtn, mlBtn, glBtn, UI.rfBtn }
 for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
 
 -- Rankings tab: banter and rival watch take the place of the fight buttons
@@ -4770,9 +4776,16 @@ function UI:RefreshLoot()
 	fightList:SetData(UI:LootNavRows(), true)
 	mlBtn:SetText("Auto ML: " .. (Lt:Setting("auto_master_loot") ~= false and "|cff33ff33on|r" or "|cffff5555off|r"))
 	glBtn:SetText("Auto group: " .. (Lt:Setting("auto_group_loot") and "|cff33ff33on|r" or "|cffff5555off|r"))
+	local willOff = Lt:WillBeOff()
+	UI.rfBtn:SetText("RollFor: " .. (willOff and "|cffff9933off|r" or "|cff33ff33on|r") .. ((willOff ~= Lt:Off()) and " |cffffd100*|r" or ""))
 
 	local src = Lt:Source()
-	if not src then
+	if Lt:Off() then
+		rTitle:SetText("RollForML  |cffff9933RollFor is switched off|r")
+		rInfo:SetText("|cffaaaaaaSo it doesn't clash with another loot addon (an EPGP addon, for example): it didn't start this session.|r")
+		rVerdict:SetText((willOff and "Click |cffffd100RollFor: off|r (bottom left) or type |cffffd100/wdi rollfor on|r to switch it back on." or "|cffffd100Switched back on|r - it starts after a UI reload.")
+			.. "\n|cff888888The game's loot window and master looting work as usual for the other addon.|r")
+	elseif not src then
 		rTitle:SetText("RollForML  |cffff5555RollFor didn't load|r")
 		rInfo:SetText("|cffaaaaaaIts files are missing: " .. W.SYNC_HOWTO .. "|r")
 		rVerdict:SetText("RollFor ships with WhoDidIt.\n"

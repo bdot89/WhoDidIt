@@ -31,6 +31,13 @@ keep:RegisterEvent("ADDON_LOADED")
 keep:SetScript("OnEvent", function()
 	if arg1 ~= "WhoDidIt" then return end
 	this:UnregisterAllEvents()
+	-- Switched off in WhoDidIt (RollForML tab, or /wdi rollfor off), e.g. because it
+	-- clashes with an EPGP loot addon: RollFor starts on PLAYER_LOGIN, which comes after
+	-- this, so it never starts - no loot window of its own, no events, no /rf, no
+	-- minimap button. The game's loot window stays as it is.
+	local o = WhoDidItDB and WhoDidItDB.opts
+	WDI_ROLLFOR_OFF = (not WDI_ROLLFOR_SKIP and o and o.rollforOff) and true or nil
+	if WDI_ROLLFOR_OFF and RollForFrame then RollForFrame:UnregisterAllEvents() end
 	-- In a raid, RollFor's announcements in raid chat are for the raid leader,
 	-- assistants and the master looter, like everything WhoDidIt posts; anyone
 	-- else sees them in their own chat. (RollFor builds its chat at login, after
