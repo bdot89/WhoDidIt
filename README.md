@@ -419,10 +419,10 @@ at the version the maintainer tested, credited in `Chronicle\WDI_NOTICE.txt`; no
 
 - **It logs nothing until you say yes.** The first time you enter a raid, WhoDidIt asks whether to log your raids
   (or click **Start logging** on the Chronicle Logs tab). Say no and it stays off; switch it on any time.
-- **Switched ChronicleCompanion off?** If you have the separate addon installed but switched off in the AddOns list,
-  WhoDidIt takes that as "no logging" and its built-in copy stays off too.
 - **Already use ChronicleCompanion?** If the separate addon is on, WhoDidIt's copy stands down, so nothing is logged
-  twice, and it asks once whether to switch the separate one off. **No** keeps it with its own settings untouched.
+  twice, and it asks once whether to switch the separate one off. **Yes** switches it off and the built-in copy takes
+  over from the next login; **No** keeps it with its own settings untouched. A separate copy that's switched off or
+  deleted doesn't matter: the built-in one is the logger, and your yes / no above decides whether it logs.
 - **What's changed:** nothing in Chronicle's logging. Its files only run from inside WhoDidIt: they start with
   WhoDidIt, take their version from `Chronicle\wdi_version.lua`, and find their minimap icons in the new folder.
   `/chronicle`, `/chron`, `/clog`, the minimap button, the options panel and the log files are all exactly as before.

@@ -22,14 +22,14 @@
 	off for the next session.
 ----------------------------------------------------------------------]]
 
--- The separate addon is installed but switched off in the AddOns list: the
--- player doesn't want Chronicle logging, so the built-in copy stays off too.
-local function standaloneOff()
-	local ok, name, _, _, enabled = pcall(GetAddOnInfo, "ChronicleCompanion")
-	return ok and name ~= nil and not enabled
-end
-WDI_CHRON_OFF = (not IsAddOnLoaded("ChronicleCompanion") and standaloneOff()) and true or nil
-WDI_CHRON_SKIP = (IsAddOnLoaded("ChronicleCompanion") or WDI_CHRON_OFF) and true or nil
+-- Only a separate ChronicleCompanion that is actually running makes the
+-- built-in copy stand down. One that's switched off (WhoDidIt's hand-over
+-- switches it off) or deleted doesn't: the built-in copy is the logger then.
+-- (It used to stay off as well, which left nobody logging: the WTF folder
+-- still lists "ChronicleCompanion: disabled" after the hand-over or after
+-- the folder is deleted.) Whether anything is logged is the player's own
+-- yes / no (Logs.lua asks once), not this.
+WDI_CHRON_SKIP = IsAddOnLoaded("ChronicleCompanion") and true or nil
 
 -- Both declare Chronicle's saved variables; while the separate addon runs,
 -- give it its own tables back once WhoDidIt's saved copies have loaded.

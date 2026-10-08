@@ -71,8 +71,9 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   ship in the repo at the pins in tools/EmbedUpdate.ps1 (maintainer tool: move a pin, run it,
   review, commit), each with WDI_NOTICE.txt. The sync helper and AutoSync are maintainer-only
   (they refuse to run on a PC without a B.MASTERS character).
-- The built-in Chronicle logger logs nothing until the player says yes (opts.chronUse), and stays
-  off when the separate ChronicleCompanion is installed but disabled (WDI_CHRON_OFF).
+- The built-in Chronicle logger logs nothing until the player says yes (opts.chronUse). It stands
+  down only while a separate ChronicleCompanion is actually loaded. A disabled or deleted one doesn't
+  count: WTF keeps "ChronicleCompanion: disabled" after the hand-over or after the folder is deleted.
 - 5-man rankings (Dungeons.lua, W.Runs): D.DUNGEONS in Data.lua (level-60 dungeons, final bosses, splits, art). A run =
   first pull after zoning in -> final boss death. Members agree on WDI5 (party/raid addon channel): any opt-out
   (opts.no5man) keeps it private; time = the longest anyone timed; the leader (else first name) names and shares it.

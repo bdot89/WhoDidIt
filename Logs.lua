@@ -77,8 +77,6 @@ function L:Use(on)
 		quiet()
 	end
 end
--- the separate ChronicleCompanion is installed but switched off (so nothing logs)
-function L:StandaloneOff() return WDI_CHRON_OFF and true or false end
 
 W:On("ADDON_LOADED", function(name)
 	if name ~= "WhoDidIt" then return end

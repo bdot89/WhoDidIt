@@ -4125,12 +4125,7 @@ function UI:LogRows()
 	local L = W.Logs
 	local rows = {}
 	if not L:Available() then
-		if L:StandaloneOff() then
-			head(rows, "Chronicle logging is off")
-			tinsert(rows, row("You switched the |cffffd100ChronicleCompanion|r addon off in the AddOns list, so WhoDidIt's built-in copy stays off too."))
-			tinsert(rows, row("To log raids: switch ChronicleCompanion back on, or delete it from Interface\\AddOns to use the built-in one."))
-			return rows
-		end
+
 		head(rows, "The Chronicle logger didn't load")
 		tinsert(rows, row("WhoDidIt has Chronicle's logger (|cffffd100ChronicleCompanion|r) built in - it writes the logs you upload to chronicleclassic.com."))
 		tinsert(rows, row("Its files are missing or didn't load: " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
@@ -4196,8 +4191,8 @@ function UI:RefreshLogs()
 		rTitle:SetText("Chronicle Logs  " .. (L:Enabled() and "|cff33ff33ON - logging|r" or "|cffff5555OFF|r"))
 		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. FmtNum(L:Unsaved()) .. " unsaved lines|r")
 	else
-		rTitle:SetText("Chronicle Logs  |cffff5555" .. (L:StandaloneOff() and "off (ChronicleCompanion is switched off)" or "Chronicle logger not found") .. "|r")
-		rInfo:SetText("|cffaaaaaa" .. (L:StandaloneOff() and "Switch ChronicleCompanion on in the AddOns list to log raids" or "Its files are missing: download WhoDidIt again") .. "|r")
+		rTitle:SetText("Chronicle Logs  |cffff5555Chronicle logger not found|r")
+		rInfo:SetText("|cffaaaaaaIts files are missing: download WhoDidIt again|r")
 	end
 	rVerdict:SetText("Upload the log at |cffffd100chronicleclassic.com|r after your raid.\n|cff888888Addons can't reach the internet, so uploading happens on the website.|r")
 	hintText:SetText("Click an option to switch it on or off.  Hover the buttons for details.")
