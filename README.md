@@ -217,7 +217,11 @@ The **Rankings** button (title bar, or `/wdi rankings`) shows kill times and ful
   killed in that raid, in order. For each kill it shows the time, when it happened in the raid, wipes before it, how it
   compares with your guild's best, and where it would rank. There's also a **copy link** to the raid on Chronicle.
   Click a boss there for its leaderboard.
-- **Full clears:** first combat inside the instance to the last required boss, all in one run. Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro) aren't required. A run in progress shows which bosses are down.
+- **Full clears:** first combat inside the instance to the last required boss, all in one run. Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro, Lower Karazhan Halls' Master Blacksmith Rolfen) aren't required. A run in progress shows which bosses are down.
+- **Lower Karazhan Halls** is timed like the other raids: a full clear is Lord Blackwald II, Clawlord Howlfang, Brood
+  Queen Araxxna, Grizikil and Moroes, and it ranks on Chronicle's "Lower Tower of Karazhan" board. Both Karazhan towers
+  call themselves "Tower of Karazhan" in game, so WhoDidIt tells them apart by who's inside: Lower lets 10 players in,
+  Upper 40. More than 10 of the raid in there, or an Upper boss dying, means it's Upper Karazhan, which isn't timed.
 - **Closest to you first:** it opens on your current instance, realm and faction, with your own and your guild's times pinned at the top. **Realm** and **Faction** switch the view.
 - **Every guild on the server:** see [where the raid times come from](#where-the-raid-times-come-from) below.
 

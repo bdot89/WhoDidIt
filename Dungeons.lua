@@ -326,12 +326,12 @@ local function setCur(r)
 	WhoDidItDB.run5[charKey()] = r
 end
 
--- in a dungeon (any instance that isn't one of the timed raids)
+-- in a dungeon (any instance that isn't one of the timed raids or Karazhan's towers)
 local function dungeonZone()
 	local inInst = IsInInstance()
 	if not inInst then return nil end
 	local zone = GetRealZoneText()
-	if not zone or zone == "" or W.Data.clears[zone] then return nil end
+	if not zone or zone == "" or W.Data.clears[zone] or W.Data.sharedZones[zone] then return nil end
 	return zone
 end
 

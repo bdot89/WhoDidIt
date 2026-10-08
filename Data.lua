@@ -95,9 +95,14 @@ zone("Emerald Sanctum", {
 	["Erennius"] = {}, ["Solnius"] = { noAggro = true },
 })
 
-zone("Karazhan", {
+-- Both Karazhan towers say "Tower of Karazhan" in game (D.sharedZones below):
+-- their encounters go by Chronicle's names, which the Rankings boards use.
+zone("Lower Tower of Karazhan", {
 	["Master Blacksmith Rolfen"] = {}, ["Brood Queen Araxxna"] = {}, ["Grizikil"] = {},
 	["Clawlord Howlfang"] = {}, ["Lord Blackwald II"] = {}, ["Moroes"] = {},
+})
+
+zone("Upper Tower of Karazhan", {
 	["Keeper Gnarlmoon"] = {}, ["Ley-Watcher Incantagos"] = {}, ["Anomalus"] = {},
 	["Echo of Medivh"] = {}, ["Sanv Tas'dal"] = {}, ["Kruul"] = {},
 	["Rupturan the Broken"] = {}, ["Mephistroth"] = { noAggro = true },
@@ -111,12 +116,15 @@ end
 ------------------------------------------------------------------ full clears (Rankings)
 -- An instance counts as cleared when every encounter in its list has died
 -- in one run (first combat in the instance -> last required kill).
--- Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro)
--- aren't required.
+-- Optional bosses (ZG's Edge of Madness, AQ40's Bug Trio / Viscidus / Ouro,
+-- Lower Karazhan Halls' Master Blacksmith Rolfen) aren't required.
+-- Lower Karazhan Halls: the five bosses every full run on Chronicle kills
+-- (611 of 630 logs, 8 Oct 2026; Rolfen is in none), in the usual order.
 
 D.clearOrder = {
 	"Molten Core", "Onyxia's Lair", "Blackwing Lair", "Zul'Gurub",
 	"Ruins of Ahn'Qiraj", "Ahn'Qiraj", "Naxxramas", "Emerald Sanctum",
+	"Lower Tower of Karazhan",
 }
 
 D.clears = {
@@ -146,6 +154,18 @@ D.clears = {
 		"Grobbulus", "Gluth", "Thaddius", "Sapphiron", "Kel'Thuzad",
 	},
 	["Emerald Sanctum"] = { "Erennius", "Solnius" },
+	["Lower Tower of Karazhan"] = {
+		"Lord Blackwald II", "Clawlord Howlfang", "Brood Queen Araxxna", "Grizikil", "Moroes",
+	},
+}
+
+-- A zone text two raids share. Both Karazhan towers say "Tower of Karazhan"
+-- (WhoDidIt's fights, RollFor, BigWigs and AutoMarker's data all show it); the
+-- timed one, Lower Karazhan Halls, lets 10 players in and Upper Karazhan 40, so
+-- more than "max" of the raid in that zone is the other tower, and so is a boss
+-- of the other tower dying (Board.lua B.RunZone / B:OnFight).
+D.sharedZones = {
+	["Tower of Karazhan"] = { timed = "Lower Tower of Karazhan", max = 10 },
 }
 
 -- OctoWoW's raid scaling change (patch notes 6 Oct 2026, 04:54 UTC): raids under 30
@@ -222,8 +242,9 @@ end
 D.RUN_MIN, D.RUN_MAX = 120, 4 * 3600   -- a "run" outside this is broken (seconds)
 D.GROUP_MAX = 5                        -- players in a ranked group ("max" above: UBRS allows a 10-man raid)
 
--- Rankings list name for instances whose zone text is short
-D.instanceTitle = { ["Ahn'Qiraj"] = "Temple of Ahn'Qiraj" }
+-- Rankings list name for instances whose zone text is short (or, for Lower
+-- Karazhan Halls, whose Chronicle name isn't what players call it)
+D.instanceTitle = { ["Ahn'Qiraj"] = "Temple of Ahn'Qiraj", ["Lower Tower of Karazhan"] = "Lower Karazhan Halls" }
 
 -- what kind of realm each one is, so banter can say "N'Zoth (PvE)". Chronicle's
 -- data doesn't include it; realms not listed are just called by their name.

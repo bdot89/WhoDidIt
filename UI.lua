@@ -2070,14 +2070,32 @@ end
 
 -- fights (newest first) grouped into raid runs: the same raid, no more than
 -- 3 hours between one fight and the next. Demo fights are one run of their own.
+-- Both Karazhan towers say "Tower of Karazhan" (Data.lua D.sharedZones): a boss
+-- says which tower a fight was in; a fight no boss list knows goes with the fights
+-- around it.
 function UI.FightRuns(fights)
 	local runs, cur = {}, nil
 	for i = 1, getn(fights) do
 		local rec = fights[i]
-		local zone = rec.demo and "Demo" or (rec.zone or "?")
+		local real = rec.demo and "Demo" or (rec.zone or "?")
+		local zone = real
+		if W.Data.sharedZones[real] then
+			local def = W.Data.encounters[rec.enc or ""]
+			if def then
+				zone = def.zone
+			elseif cur and cur.real == real then
+				zone = cur.zone
+			else
+				for j = i + 1, getn(fights) do
+					if fights[j].zone ~= real then break end
+					local d2 = W.Data.encounters[fights[j].enc or ""]
+					if d2 then zone = d2.zone break end
+				end
+			end
+		end
 		local m = UI.FightMinute(rec)
 		if not cur or cur.zone ~= zone or (cur.firstMin - (m + floor((rec.dur or 0) / 60))) > 180 then
-			cur = { zone = zone, idx = {}, firstMin = m, lastMin = m + floor((rec.dur or 0) / 60), demo = rec.demo }
+			cur = { zone = zone, real = real, idx = {}, firstMin = m, lastMin = m + floor((rec.dur or 0) / 60), demo = rec.demo }
 			tinsert(runs, cur)
 		end
 		tinsert(cur.idx, i)
@@ -3732,8 +3750,7 @@ function UI:RefreshRankings()
 	UI.rankButtons[1]:SetText("Kill times")
 	UI.rankButtons[2]:SetText("Full clears")
 	if not UI.rk.inst then
-		local z = GetRealZoneText()
-		UI.rk.inst = W.Data.clears[z] and z or W.Data.clearOrder[1]
+		UI.rk.inst = B.RunZone(GetRealZoneText()) or W.Data.clearOrder[1]
 	end
 	local zone = UI.rk.inst
 	leftHead:SetText("Instances")

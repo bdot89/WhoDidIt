@@ -23,6 +23,10 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
 - math.randomseed is called once at load (Core.lua).
 - Windows Script Host reads a .vbs written as UTF-16 with a BOM, so paths with umlauts
   survive; written as ASCII they turn into "?" (tested with cscript).
+- Both Karazhan towers report GetRealZoneText() "Tower of Karazhan" (WhoDidIt's fights, RollFor,
+  BigWigs, AutoMarker). Chronicle calls them "Lower Tower of Karazhan" (Lower Karazhan Halls,
+  10 players) and "Upper Tower of Karazhan" (40). Data.lua D.sharedZones / Board.lua B.RunZone tell
+  them apart by GetRaidRosterInfo's 7th return (zone); that value isn't checked in game yet.
 
 ## Before every commit
 - Every .lua file must load under a real Lua 5.0 interpreter (syntax check). There is no

@@ -34,15 +34,15 @@ end
 local function current()
 	local zone = GetRealZoneText()
 	local B = W.Board
-	-- a timed raid
-	if B and B.LastRun and W.Data.clears[zone] then
+	-- a timed raid (both Karazhan towers say "Tower of Karazhan": the run knows which it is)
+	if B and B.LastRun and (W.Data.clears[zone] or W.Data.sharedZones[zone]) then
 		local r = B:LastRun()
-		if r and r.zone == zone then
-			local need = W.Data.clears[zone]
+		local need = r and W.Data.clears[r.zone]
+		if need and (r.real or r.zone) == zone then
 			local n = 0
 			for i = 1, getn(need) do if r.kills[need[i]] then n = n + 1 end end
-			return { title = W.Data.instanceTitle[zone] or zone, start = r.start, cs = r.cs, doneAt = r.doneAt,
-				n = n, of = getn(need), kind = "clears", key = zone }
+			return { title = W.Data.instanceTitle[r.zone] or r.zone, start = r.start, cs = r.cs, doneAt = r.doneAt,
+				n = n, of = getn(need), kind = "clears", key = r.zone }
 		end
 		return nil
 	end

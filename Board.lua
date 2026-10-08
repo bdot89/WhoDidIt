@@ -491,17 +491,45 @@ local function setRun(r)
 	WhoDidItDB.runs[charKey()] = r
 end
 
+-- the timed raid a zone text is (Data.lua D.clears), or nil. A zone text two raids
+-- share (D.sharedZones: both Karazhan towers) is the timed one unless more of the raid
+-- is in that zone than it lets in. (Each member's zone from the raid roster, compared
+-- with your own entry there.)
+function B.RunZone(zone)
+	if W.Data.clears[zone] then return zone end
+	local s = W.Data.sharedZones[zone]
+	if not s then return nil end
+	local me, mine, zs = UnitName("player"), nil, {}
+	for i = 1, GetNumRaidMembers() do
+		local name, _, _, _, _, _, z = GetRaidRosterInfo(i)
+		zs[i] = z or false
+		if name and name == me then mine = z end
+	end
+	local n = 0
+	for i = 1, getn(zs) do
+		if zs[i] and zs[i] == (mine or zone) then n = n + 1 end
+	end
+	if n > s.max then return nil end
+	return s.timed
+end
+
 -- a run starts with the first combat inside a raid instance we can time
+-- (the zone text says it's a raid: the instance type isn't checked)
 W:On("PLAYER_REGEN_DISABLED", function()
 	if not WhoDidItDB then return end
-	local inInst, typ = IsInInstance()
-	if not inInst or typ ~= "raid" or GetNumRaidMembers() == 0 then return end
-	local zone = GetRealZoneText()
-	if not W.Data.clears[zone] then return end
+	if not IsInInstance() or GetNumRaidMembers() == 0 then return end
+	local real = GetRealZoneText()
+	local zone = B.RunZone(real)
 	local r = currentRun()
+	if not zone then
+		-- the other raid behind a shared zone text (Upper Karazhan): the run there isn't this
+		-- one. (One with bosses down still is: then the roster is behind, say after a swap.)
+		if r and r.real == real and (r.done or not next(r.kills)) then setRun(nil) end
+		return
+	end
 	local now = time()
 	if r and r.zone == zone and not r.done and now - r.start < RUN_MAX then return end
-	setRun({ zone = zone, start = now, kills = {} })
+	setRun({ zone = zone, real = real, start = now, kills = {} })
 end)
 
 function B:CurrentRun()
@@ -718,10 +746,15 @@ function B:CheckRivals()
 			end
 		end
 	end
-	-- newest first; drop old ones
+	-- newest first; drop old ones (and keep their instance up to date: Karazhan's
+	-- bosses were "Karazhan" before the towers were told apart)
 	local keep = {}
 	for i = 1, getn(db.list) do
-		if now - (db.list[i].d or 0) < RIVAL_DAYS * 86400 then tinsert(keep, db.list[i]) end
+		local e = db.list[i]
+		if now - (e.d or 0) < RIVAL_DAYS * 86400 then
+			e.zone = B:KeyZone(e.kind, e.key) or e.zone
+			tinsert(keep, e)
+		end
 	end
 	table.sort(keep, function(a, b) return (a.d or 0) > (b.d or 0) end)
 	while getn(keep) > 40 do table.remove(keep) end
@@ -872,6 +905,7 @@ function B:OnZone()
 	local inInst, typ = IsInInstance()
 	if not inInst or typ ~= "raid" or GetNumRaidMembers() == 0 then return end
 	local zone = GetRealZoneText()
+	zone = B.RunZone(zone) or zone   -- (Lower Karazhan Halls says "Tower of Karazhan")
 	if lastWatch[zone] and GetTime() - lastWatch[zone] < 1800 then return end
 	local fresh = {}
 	local all = B:Rivals(zone)
@@ -1271,7 +1305,12 @@ function B:OnFight(rec)
 
 	-- full clear?
 	local r = B:CurrentRun()
-	if not r or r.zone ~= def.zone then return end
+	if not r then return end
+	if r.zone ~= def.zone then
+		-- a boss of the other raid behind a shared zone text (Upper Karazhan): not this run
+		if r.real and W.Data.sharedZones[r.real] and r.real == GetRealZoneText() then setRun(nil) end
+		return
+	end
 	r.kills[rec.enc] = true
 	r.last = now
 	local need = W.Data.clears[r.zone]
