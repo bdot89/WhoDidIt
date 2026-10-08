@@ -620,7 +620,7 @@ The bottom of the left column is laid out the same way on every tab. Hover any b
 | | |
 | --- | --- |
 | **Post to: Raid** | Where everything WhoDidIt posts goes. Click for the next channel, right-click for the previous one: Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me (a preview), or a custom channel (`/wdi channel <name>`). |
-| **Fights** | **Name & Shame**, **Big Them Up**, **Auto summary** (on / me only / off), **Auto shout-outs** (off / smart / shame / praise / both), **Track trash**, **Demo fight**, **Delete fight**, **Clear all fights** |
+| **Fights** | **Name & Shame**, **Big Them Up**, **Auto summary** (on / me / off), **Shout-outs** (off / smart / shame / praise / both), **Track trash**, **Demo fight**, **Delete fight**, **Clear all fights** |
 | **Rankings** | **Kill banter**, **Clear banter**, **Rival alerts**, **Test banter**, **Post rivals**, **Post standings** |
 | **Marks / Loot** | That tab's quick actions |
 
