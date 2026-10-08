@@ -776,8 +776,8 @@ however many of those are on:
 [WhoDidIt] Majordomo Executus down in 1:43 - 0 deaths
 MVP Shemp (3 saves)  -  Top DPS Quill 873  -  Top heals Pyx 15%  -  Flawless 33/40
 
-[WhoDidIt] Ragnaros WIPE at 3:10 - 17 deaths  -  Ragnaros went berserk at 2:50 - not enough damage
-Blame: 1. Frostyboi (Meleed to death by Ragnaros - had aggro)  2. Dotsalot (Killed Leafy with Living Bomb)  3. Axeman (Stood in Void Zone)
+[WhoDidIt] Ragnaros WIPE at 3:10 - 17 deaths - Ragnaros went berserk at 2:50
+Blame: Frostyboi 9.5 (died with aggro), Dotsalot 8.3 (Living Bomb killed Leafy), Axeman 8 (died in Void Zone)
 ```
 
 `smart` / `both`: every fight; `shame`: wipes only; `praise`: kills only. **Name & Shame** and **Big Them Up**

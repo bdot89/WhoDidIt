@@ -843,10 +843,38 @@ end
 -- lines, the point first. A kill: time, deaths, then MVP, top damage and healing
 -- and how many were flawless. A wipe: when, deaths and why, then the top 3 to
 -- blame with one short reason each. The buttons post the longer versions.
-local function short(s, n)
+-- a cause's first clause: "Tank Bob died at 0:40 - 2719 taken vs 402 healed in 5s" -> "Tank Bob died at 0:40"
+local function firstClause(s)
 	s = s or ""
-	if string.len(s) > n then s = string.sub(s, 1, n - 3) .. "..." end
-	return s
+	local _, _, head = string.find(s, "^(.-)%s+%- ")
+	s = head or s
+	local _, _, h2 = string.find(s, "^(.-)%s+%(")
+	return h2 or s
+end
+-- a few words for why someone is to blame, from their main reason
+local function blameTag(b)
+	local r = string.gsub(b.reasons and b.reasons[1] or "", "^" .. b.name .. "%s*", "")
+	local _, _, sp, n = string.find(r, "hit by (.-) (%d+)x")
+	if sp then return sp .. " " .. n .. "x" end
+	if string.find(r, "had aggro") then return "died with aggro" end
+	_, _, sp = string.find(r, "^died: Stood in (.+)$")
+	if sp then return "died in " .. sp end
+	_, _, sp = string.find(r, "^died: Died to (.-)%s*%(") ; if not sp then _, _, sp = string.find(r, "^died: Died to (.+)$") end
+	if sp then return "died to " .. sp end
+	if string.find(r, "^died: Tank died") then return "tank died" end
+	if string.find(r, "^died") then return "died" end
+	local v
+	_, _, v, sp = string.find(r, "^Killed (%S+) with (.+)$")
+	if v then return sp .. " killed " .. v end
+	_, _, sp = string.find(r, "^'s (.-) hit %d+")
+	if sp then return sp .. " hit others" end
+	if string.find(r, "pulled aggro") then return "pulled aggro" end
+	if string.find(r, "first aggro") then return "pulled early" end
+	_, _, n, sp = string.find(r, "reached (%d+) stacks of (.+)$")
+	if n then return n .. " stacks of " .. sp end
+	if string.find(r, "DPS") then return "low DPS" end
+	if string.find(r, "threat") then return "high threat" end
+	return "mistakes"
 end
 function S:AutoLines(rec)
 	local P = rec.players
@@ -872,17 +900,21 @@ function S:AutoLines(rec)
 		if all > 0 then tinsert(bits, "Flawless " .. clean .. "/" .. all) end
 		if getn(bits) > 0 then tinsert(out, table.concat(bits, "  -  ")) end
 	else
-		tinsert(out, tag .. rec.enc .. " WIPE at " .. FmtTime(rec.dur) .. " - " .. dead .. (rec.verdict and ("  -  " .. short(rec.verdict, 90)) or ""))
+		-- the cause in a few words ("Tank Bob died at 0:40"), not its whole explanation
+		local why = rec.verdict and firstClause(rec.verdict)
+		if why and string.find(why, "^No single cause") then why = nil end
+		tinsert(out, tag .. rec.enc .. " WIPE at " .. FmtTime(rec.dur) .. " - " .. dead .. (why and (" - " .. why) or ""))
+		-- the top 3 to blame, each with points and a few words; short enough for one chat line
 		local parts = {}
 		for i = 1, math.min(3, getn(rec.blame or {})) do
 			local b = rec.blame[i]
 			if b.pts >= 1 then
-				local why = string.gsub(b.reasons[1] or "", "^" .. b.name .. " ", "")
-				why = string.gsub(why, "^died: ", "")
-				tinsert(parts, i .. ". " .. b.name .. " (" .. short(why, 44) .. ")")
+				local p = b.name .. " " .. b.pts .. " (" .. blameTag(b) .. ")"
+				if string.len("Blame: " .. table.concat(parts, ", ") .. p) > 150 then break end
+				tinsert(parts, p)
 			end
 		end
-		if getn(parts) > 0 then tinsert(out, "Blame: " .. table.concat(parts, "  ")) end
+		if getn(parts) > 0 then tinsert(out, "Blame: " .. table.concat(parts, ", ")) end
 	end
 	return out
 end

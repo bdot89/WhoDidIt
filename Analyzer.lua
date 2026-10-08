@@ -511,12 +511,15 @@ function A:Build(F, final)
 		for spell, r in pairs(list) do
 			local rule = A.AvoidRule(spell, role, F.zone, F.demo)
 			if rule then
-				local tl = tal(name)
-				tl.avoidDmg = tl.avoidDmg + r.dmg
-				tl.avoidHits = tl.avoidHits + r.hits
-				if r.hits > (tl.worstHits or 0) then
-					tl.worstHits = r.hits
-					tl.worstSpell = spell
+				-- (worth 0 points, like fall damage: listed, but not counted against them)
+				if (rule.w or 1) > 0 then
+					local tl = tal(name)
+					tl.avoidDmg = tl.avoidDmg + r.dmg
+					tl.avoidHits = tl.avoidHits + r.hits
+					if r.hits > (tl.worstHits or 0) then
+						tl.worstHits = r.hits
+						tl.worstSpell = spell
+					end
 				end
 				local pts = math.min(6, r.inst * (rule.w or 1))
 				find(r.first, name, "Mechanic", round1(pts),

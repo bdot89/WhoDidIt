@@ -271,7 +271,7 @@ D.avoid = {
 	["Locust Swarm"]     = { notTank = true, w = 0.5, tip = "Run away from Anub'Rekhan during Locust Swarm" },
 	["Holy Wrath"]       = { w = 0.5, tip = "Zeliek's Holy Wrath chains - spread" },
 	-- environment (see Tracker ENV names)
-	["Falling"]          = { tip = "Fell" },
+	["Falling"]          = { w = 0, tip = "Fell - in a boss fight that's nearly always a knockback, so it's shown but worth 0 points" },
 	["Lava"]             = { tip = "Stood in lava" },
 	["Burning ground"]   = { tip = "Stood in fire" },
 	["Fell off the edge"]= { tip = "Fell off the platform" },
