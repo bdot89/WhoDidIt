@@ -520,8 +520,9 @@ version:SetPoint("BOTTOMLEFT", title, "BOTTOMRIGHT", 4, 1)
 version:SetText("v" .. W.version)
 
 local envText = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
-envText:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -36)
-envText:SetJustifyH("RIGHT")
+-- the add-on lights: on the left, under the title
+envText:SetPoint("TOPLEFT", f, "TOPLEFT", PAD + 4, -38)
+envText:SetJustifyH("LEFT")
 
 local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -2, -2)
@@ -530,7 +531,7 @@ close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -2, -2)
 local amlBtn = UI.Skin(CreateFrame("Button", nil, f, "UIPanelButtonTemplate"))
 amlBtn:SetWidth(118)
 amlBtn:SetHeight(18)
-amlBtn:SetPoint("RIGHT", envText, "LEFT", -10, 0)
+-- (placed under Hall of Fame, the same width, once the tab buttons exist - see below)
 if amlBtn.SetTextFontObject then amlBtn:SetTextFontObject(UI.FO("GameFontNormalSmall")) end
 if amlBtn.SetHighlightFontObject then amlBtn:SetHighlightFontObject(UI.FO("GameFontHighlightSmall")) end
 amlBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -1154,6 +1155,10 @@ do
 		b:SetWidth(w)
 		if b.id == "fame" then
 			b:SetPoint("RIGHT", close, "LEFT", -2, 0)
+			-- Auto-loot sits right under Hall of Fame, lined up with it
+			amlBtn:ClearAllPoints()
+			amlBtn:SetPoint("TOPRIGHT", b, "BOTTOMRIGHT", 0, -4)
+			amlBtn:SetWidth(w)
 		elseif i == 1 then
 			b:SetPoint("LEFT", version, "RIGHT", 16, 0)
 		else
