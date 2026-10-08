@@ -1072,12 +1072,13 @@ for tab, list in pairs(ACTIONS) do
 	for i = 1, getn(list) do
 		local a = list[i]
 		local big = a[6]   -- the one that opens a whole addon: wider, at the right end, green
-		local b = button(f, big and ("|cffffffff" .. a[1] .. "|r") or a[1], big and 150 or 112, 20)
+		local b = button(f, big and ("|cffffffff" .. a[1] .. "|r") or a[1], big and 140 or 104, 20)
 		if big then
-			b:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD - 4, PAD)
+			-- left of the Report button (96 wide, at the bottom right corner)
+			b:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD - 96 - 6, PAD)
 			UI.Flat(b, { 0.06, 0.24, 0.1, 0.96 }, { 0.25, 0.85, 0.35, 1 })
 		else
-			b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + (i - 1) * 116, PAD)
+			b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + (i - 1) * 108, PAD)
 		end
 		local fn, live, nopost = a[2], a[4], a[5]
 		b:SetScript("OnClick", function()
