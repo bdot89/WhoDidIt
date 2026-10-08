@@ -2,14 +2,17 @@
 
 # WhoDidIt
 
-**Raid wipe & death analyser for World of Warcraft 1.12**
+**The all-in-one raid addon for World of Warcraft 1.12**
 <br>OctoWoW · Turtle WoW · vanilla
 
-Records every boss fight, then tells you **why** the raid wiped and **who** did it.
+Records every boss fight and tells you **why** the raid wiped and **who** did it, then adds everything else a raid
+needs, in one drag-and-drop folder:
 
-Death recaps · blame &amp; hero boards · threat · meters · consume checks (DopingControl built in) · Hall of Fame
-<br>Every guild's kill &amp; clear times from Chronicle, synced in game · Chronicle logger · Auto Marker · RollForML (soft-res master loot with RollFor) · Auto-loot
-<br>Nothing to install but the addon · nothing posted without you seeing it · nothing from your PC shared
+🔍 Wipe analysis · ☠️ death recaps · 📋 blame &amp; hero boards · 🎯 threat · 📊 meters · ⏱️ second-by-second timeline
+<br>🧪 Consume checks + DopingControl · 🏅 a Hall of Fame shared with your guild · 📣 shout-outs &amp; banter
+<br>🏆 Raid rankings for every guild on the server (from Chronicle, synced in game) · ⚡ 5-man dungeon speedrun rankings
+<br>📝 Chronicle logger · 💀 Auto Marker (~365 raid packs) · 💰 RollFor soft-res master loot · 🎒 Auto-loot
+<br>No programs to run · nothing posted without you seeing it first
 
 ![WoW 1.12.1](https://img.shields.io/badge/WoW-1.12.1-c79c6e?style=flat-square)
 ![Lua 5.0](https://img.shields.io/badge/Lua-5.0-2c2d72?style=flat-square)
@@ -33,7 +36,8 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 📋 **Blame board & heroes.** Points for every mistake (standing in fire, pulling aggro, bombing the raid, idling, low DPS) and every game-saving play (clutch heals, shields, taunts, BoP, battle res, dispels).
 - 🎯 **Threat & timeline.** Who the boss attacked and why, with the server's threat %. Click any name to jump to that player's own timeline at that moment.
 - 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check. **Open DopingControl** (the green button) opens it (built in) for the whole raid matrix: buffs, debuffs, resistances, hit and enchants.
-- 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
+- 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. **Shared with your guild:** every member's fights add up, also raids you weren't in. Post any of it.
+- ⚡ **5-man rankings.** The fastest groups through all 13 level-60 dungeons (Turtle's included), first pull to last boss: name your group, see every run's members, boss splits and deaths, and race the realm.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
 - 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. **5-mans:** the fastest groups through every level-60 dungeon, with their members, boss splits and deaths; name your group. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
 - 📝 **Chronicle Logs.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Built in; logs nothing until you say yes.*
@@ -70,12 +74,16 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
   </tr>
 </table>
 
-### Rankings: kill times and clears
+### Rankings: raids and 5-mans
 
 <table>
   <tr>
     <td width="50%"><img src="docs/rankings.jpg" alt="Kill times"><br><b>Kill times.</b> Every boss: your best, your guild's best, its rank, the gap to #1 and who holds it. A red <b>!</b> marks a boss someone recently beat you on; the <b>Rival watch</b> lists them (click to post a taunt). Bottom left: banter, rival alerts and posting the standings.</td>
     <td width="50%"><img src="docs/clears.jpg" alt="Full clears"><br><b>Full clears.</b> The instance leaderboard with faction, date, raid size, time and how each guild compares with yours. Click any guild's time to open that raid: every boss kill in order, wipes, and a link to the log on Chronicle. <b>Realm</b> switches to the other realms or all of them together.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/fivemans.jpg" alt="5-man rankings"><br><b>5-man rankings.</b> <b>Raids / 5-mans</b> at the top of the list. Every level-60 dungeon with its loading screen; the fastest groups by name, with members in class colours, deaths and time. Click a group for its run: the members, a split for every boss and the deaths. Name your group when it finishes; <b>Your runs</b> lists all of yours.</td>
+    <td width="50%"><b>Every raid and every guild.</b> The left column shows each instance's picture, your guild's clear, its rank (gold / silver / bronze) and a green bar for how close you are to #1. The raid times come with the download and the maintainer's master feed keeps them fresh in game, so there's nothing to install or run. <b>All times / Since 6 Oct</b> splits the times from before and after the raid scaling change.</td>
   </tr>
 </table>
 
@@ -83,7 +91,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/logging.jpg" alt="Chronicle Logs"><br><b>Chronicle Logs.</b> The Chronicle combat logger, built in: start and stop logging, save, archive between lockouts, the automatic options (start in raids, save after every boss), and how to upload the log to chronicleclassic.com.</td>
+    <td width="50%"><img src="docs/logging.jpg" alt="Chronicle Logs"><br><b>Chronicle Logs.</b> The Chronicle combat logger (ChronicleCompanion), built in: whether it's logging, the log file and how much isn't saved yet, start and stop, save, archive between lockouts, the automatic options (start in raids, save after every boss) and how to upload the log to chronicleclassic.com.</td>
     <td width="50%"><img src="docs/marker.jpg" alt="Auto Marker"><br><b>Auto Marker.</b> Every pack in the zone (the built-in raid packs, WhoDidIt's standard ones and yours) with its marks, mob count and how many are in range. Hold Shift + Ctrl over a mob to mark its whole pack, or mark the next pack along the route. Mark mobs yourself and click <b>Save marks as pack</b> to keep them.</td>
   </tr>
   <tr>
