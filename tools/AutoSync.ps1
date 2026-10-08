@@ -4,7 +4,7 @@
 
     For anyone happy to have the helper (WhoDidIt-Sync.ps1) running: it starts
     with no window every time you log into Windows, so new Chronicle raid times
-    keep arriving (every 10 minutes, or straight away with Sync now on
+    keep arriving (every 30 minutes, or straight away with Sync now on
     WhoDidIt's Rankings tab) without you opening anything. The Rankings bar in
     game shows what it's doing.
 

@@ -1547,15 +1547,15 @@ local function syncTip()
 			"online, within minutes. Nothing to install or run." }
 	end
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
-		"Your sync helper fetches them in the background (AutoSync) every 10 minutes.",
+		"Your sync helper fetches them in the background (AutoSync) every 30 minutes,",
+		"and once a week puts them into the download by itself (Publish-RaidTimes).",
 		"|cffffd100Sync now|r asks it to sync straight away.",
 		" ",
 		"|cffffd100Master on:|r while you're online, everyone's WhoDidIt gets them from you.",
 		"Updates go out at most once an hour and carry only the times that changed;",
 		"a full copy (only for players without the built-in times) at most every 30 minutes.",
 		" ",
-		"|cffffd100Publish-RaidTimes.cmd|r now and then puts them into the download,",
-		"so fresh installs start with them." }
+		"So fresh installs start with recent times; |cffffd100Publish-RaidTimes.cmd|r does it now." }
 	return l
 end
 tooltip(syncBtn, "Sync now", syncTip, "ANCHOR_TOP")

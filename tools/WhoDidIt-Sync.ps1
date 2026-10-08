@@ -21,7 +21,8 @@
       Install-ClassicAPI.cmd yourself when you want a new version)
 
     Usage (or just double-click WhoDidIt-Sync.cmd):
-      WhoDidIt-Sync.ps1                    sync now, then every 10 minutes
+      WhoDidIt-Sync.ps1                    sync now, then every 30 minutes
+      WhoDidIt-Sync.ps1 -NoPublish         don't publish the raid times to the download each week
       WhoDidIt-Sync.ps1 -Once              sync once and exit
       WhoDidIt-Sync.ps1 -Server "OctoWoW"  another Chronicle server
       WhoDidIt-Sync.ps1 -Days 30           only raids from the last 30 days
@@ -39,7 +40,7 @@
 param(
     [string]$Server = "OctoWoW",
     [int]$Days = 90,
-    [int]$IntervalMinutes = 10,
+    [int]$IntervalMinutes = 30,
     [switch]$Once,
     [switch]$LoggerOnly,
     [switch]$UpdatesOnly,
@@ -48,6 +49,7 @@ param(
     [switch]$NoDopingUpdate,
     [switch]$NoPackUpdate,           # no longer used (the packs ship with WhoDidIt); kept so old shortcuts work
     [switch]$Force,                  # run even on a PC without a master character
+    [switch]$NoPublish,              # don't publish the raid times to the download each week
     [int]$DetailsPerSync = 150
 )
 
@@ -576,6 +578,28 @@ if ($LoggerOnly -or $UpdatesOnly) {
     return
 }
 
+# Once a week, after a good sync, the raid times go into the download
+# (tools\Publish-RaidTimes.ps1 -Auto: it checks them, and skips if the
+# repository is on another branch or has commits of yours not pushed yet,
+# so it never pushes your work). A failed try is retried a day later.
+function Publish-Weekly {
+    if ($NoPublish) { return }
+    $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    if (-not (Test-Path -LiteralPath (Join-Path $repo ".git"))) { return }
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $last = 0
+    try { $last = [long](git -C $repo log -1 --format=%ct -- RaidTimes.lua 2>$null) } catch { }
+    if ($now - $last -lt 7 * 86400) { return }
+    $tryFile = Join-Path $DataDir "WhoDidIt_PublishTry.txt"
+    $tried = 0
+    if (Test-Path -LiteralPath $tryFile) { try { $tried = [long]([IO.File]::ReadAllText($tryFile).Trim()) } catch { } }
+    if ($now - $tried -lt 86400) { return }
+    [IO.File]::WriteAllText($tryFile, [string]$now)
+    Log "Weekly: putting the raid times into the download (Publish-RaidTimes)"
+    $out = & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "Publish-RaidTimes.ps1") -Auto 2>&1 | Out-String
+    foreach ($l in ($out.Trim() -split "`r?`n")) { if ($l) { Log ("  " + $l) } }
+}
+
 Log "WhoDidIt-Sync for $Server (WoW folder: $WowDir)"
 while ($true) {
     if (Test-Path -LiteralPath $RequestFile) { [IO.File]::Delete($RequestFile) }   # this sync answers any request
@@ -585,6 +609,7 @@ while ($true) {
     if ($failed) { $script:St.state = "error"; $script:St.what = $failed }
     else { $script:St.state = "waiting"; $script:St.what = "Up to date"; $script:St.done = 0; $script:St.total = 0 }
     Write-Status
+    if (-not $failed) { try { Publish-Weekly } catch { Log ("Weekly publish failed: " + $_.Exception.Message) } }
     if ($Once) { break }
     Log "Next sync in $IntervalMinutes minutes, or click Sync now on WhoDidIt's Rankings tab (close this window to stop)"
     # wait, but start at once when the game asks (Sync now); keep telling the game we're here

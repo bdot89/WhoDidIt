@@ -244,7 +244,7 @@ Rankings fills up from three places (hover a row to see which one a time came fr
 | --- | --- | --- |
 | **The download** | Every guild's Chronicle times as of the maintainer's last publish (`RaidTimes.lua`), so a fresh install has full Rankings at once, even with the master offline | just the addon |
 | **[Master feed](#master-feed-nothing-to-install)** | Everything newer, passed on in game by the maintainer's character | just the addon |
-| **[Sync helper](#sync-helper-maintainer-only)** | Where the feed gets them: the maintainer's PC fetches Chronicle's times every 10 minutes | nothing (maintainer only) |
+| **[Sync helper](#sync-helper-maintainer-only)** | Where the feed gets them: the maintainer's PC fetches Chronicle's times every 30 minutes | nothing (maintainer only) |
 | **Other WhoDidIt users** | Each guild's own bests, shared by its members right after the kill: before anyone uploads a log, and from guilds that never upload | just the addon |
 
 
@@ -310,7 +310,8 @@ It writes them to `CustomData\WhoDidIt_Chronicle.txt`, and WhoDidIt reads that f
 `/reload`.
 
 ```
-tools\WhoDidIt-Sync.cmd                    sync now, then every 10 minutes (close the window to stop)
+tools\WhoDidIt-Sync.cmd                    sync now, then every 30 minutes (close the window to stop)
+tools\WhoDidIt-Sync.cmd -NoPublish         don't put the raid times into the download each week
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
@@ -338,9 +339,11 @@ nothing else changes. **`tools\AutoSync-Off.cmd`** removes both and stops the he
 uses a Startup shortcut with a minimised window instead.) Only one copy of the helper ever runs, so the extra starts,
 or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
 
-**Maintainer:** now and then (weekly is plenty), double-click **`tools\Publish-RaidTimes.cmd`**. It puts the helper's
-latest times into the download (`RaidTimes.lua`, about 400 KB; your own characters' personal bests are left out),
-checks them and pushes them, so fresh installs start with them. The older that snapshot, the more the feed has to send.
+**Maintainer:** once a week the helper puts its latest times into the download by itself (`RaidTimes.lua`, about
+400 KB; your own characters' personal bests are left out): it runs `tools\Publish-RaidTimes.ps1`, which checks them
+and commits and pushes just that file. It skips a week (and tries again a day later) if the repository isn't on `main`
+or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
+`tools\Publish-RaidTimes.cmd` publishes now.
 Keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
 characters). Logging into the master character on a realm feeds that realm.
 

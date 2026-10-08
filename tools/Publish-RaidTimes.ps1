@@ -15,8 +15,10 @@
       Publish-RaidTimes.ps1             write, commit and push
       Publish-RaidTimes.ps1 -NoPush     only write RaidTimes.lua
       Publish-RaidTimes.ps1 -Force      publish even if it looks much smaller
+      Publish-RaidTimes.ps1 -Auto       (the sync helper, weekly) skip unless main has nothing
+                                        unpushed of yours - it never pushes your own commits
 #>
-param([switch]$NoPush, [switch]$Force)
+param([switch]$NoPush, [switch]$Force, [switch]$Auto)
 $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $wow = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
@@ -71,6 +73,11 @@ $ErrorActionPreference = "Continue"   # git prints line-ending warnings on stder
 try {
     $branch = (git rev-parse --abbrev-ref HEAD 2>$null)
     if ($branch -ne "main") { throw "The repository is on '$branch', not main - switch to main first." }
+    if ($Auto) {
+        git fetch -q origin main 2>$null
+        $ahead = [int](git rev-list --count origin/main..HEAD 2>$null)
+        if ($ahead -gt 0) { Write-Host "Skipped: main has $ahead commit(s) of yours not pushed yet, and this would push them. Next try in a day."; return }
+    }
     git pull -q --rebase --autostash origin main 2>$null
     if ($LASTEXITCODE -ne 0) { throw "git pull failed - fix that first (nothing was committed)" }
     git add RaidTimes.lua 2>$null
