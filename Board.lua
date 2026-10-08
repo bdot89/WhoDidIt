@@ -1295,6 +1295,12 @@ function B:Share(kind, guild, fac, key, secs, d, n)
 	seen[kind .. SEP .. guild .. SEP .. key] = GetTime()
 end
 
+-- a ready-made message for the channel (Dungeons.lua's 5-man runs)
+function B.QueueOut(msg)
+	if not WhoDidItDB.opts.shareBoard then return end
+	tinsert(outq, msg)
+end
+
 -- ask everyone online for their guild's records
 function B:Ask()
 	if not WhoDidItDB.opts.shareBoard then return end
@@ -1304,6 +1310,8 @@ end
 
 -- answer a query: our own guild's records, unless a guildmate just sent them
 local function answer()
+	-- our 5-man groups' bests (Dungeons.lua), guild or not
+	if W.Runs then W.Runs:Answer() end
 	local guild = B.MyGuild()
 	if not guild then return end
 	local r = B:DB()
@@ -1375,6 +1383,11 @@ function B:Receive(msg, sender)
 		if sender ~= UnitName("player") and (not lastAnswer or GetTime() - lastAnswer > 600) and not respondAt then
 			respondAt = GetTime() + 10 + math.random(30)
 		end
+		return
+	end
+	-- a 5-man run: only taken from someone in that group (Dungeons.lua checks it)
+	if kind == "D" then
+		if W.Runs then W.Runs:Receive(p, sender) end
 		return
 	end
 	if kind ~= "K" and kind ~= "C" then return end

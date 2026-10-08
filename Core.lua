@@ -697,6 +697,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi fame|r - Hall of Fame: the biggest heroes and the Hall of Shame over every fight, best plays and worst blunders")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi 5man|r - 5-man dungeon rankings,  " .. c .. "/wdi 5man name <name>|r - name your group,  " .. c .. "/wdi 5man on|off|r - share your group's runs")
 	if W.Board and W.Board.CanMaster and W.Board.CanMaster() then
 		DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - (you're a master) feed the Chronicle raid times to every WhoDidIt user on the realm")
 	end
@@ -862,7 +863,11 @@ local function slash(msg)
 	elseif cmd == "mark" then
 		W.Marks:MarkGroup()
 	elseif cmd == "rankings" or cmd == "ranks" then
+		W.UI.rk.five = nil
 		W.UI:SetMode("rankings")
+	elseif cmd == "5man" or cmd == "5" or cmd == "dungeons" then
+		if not W.Runs then W.Print(W.RESTART_MSG) return end
+		W.Runs:Slash(rest)
 	elseif cmd == "logs" then
 		W.UI:SetMode("logs")
 	elseif cmd == "log" then

@@ -9,7 +9,7 @@ Records every boss fight, then tells you **why** the raid wiped and **who** did 
 
 Death recaps · blame &amp; hero boards · threat · meters · consume checks (DopingControl built in) · Hall of Fame
 <br>Every guild's kill &amp; clear times from Chronicle, synced in game · Chronicle logger · Auto Marker · RollForML (soft-res master loot with RollFor) · Auto-loot
-<br>Nothing to install but the addon · nothing posted without you seeing it · no character names shared
+<br>Nothing to install but the addon · nothing posted without you seeing it · nothing from your PC shared
 
 ![WoW 1.12.1](https://img.shields.io/badge/WoW-1.12.1-c79c6e?style=flat-square)
 ![Lua 5.0](https://img.shields.io/badge/Lua-5.0-2c2d72?style=flat-square)
@@ -35,11 +35,11 @@ Death recaps · blame &amp; hero boards · threat · meters · consume checks (D
 - 🧪 **Consumes & slackers.** Everyone's flask, elixirs, food and protection potions, every potion and healthstone used, and who's missing what their role needs, at every pull and ready check. **Open DopingControl** (the green button) opens it (built in) for the whole raid matrix: buffs, debuffs, resistances, hit and enchants.
 - 🏅 **Hall of Fame.** A running tally over every fight: the biggest heroes and the Hall of Shame of all time, with every clutch play and mistake counted in points, MVPs, the best plays and the worst blunders ever. Post any of it.
 - 📣 **Shout-outs.** *Name & Shame* (top 3 to blame) and *Big Them Up*, reports, single mistakes or hero moments, posted to any channel in colour.
-- 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
+- 🏆 **Rankings.** Kill and full-clear times against every guild on your realm and the other realms (from Chronicle), a rival watch when someone beats your times, and optional banter after kills. Click any time to open that guild's whole raid. **5-mans:** the fastest groups through every level-60 dungeon, with their members, boss splits and deaths; name your group. *Nothing to install: the times arrive in game from the maintainer's [master feed](#master-feed-nothing-to-install).*
 - 📝 **Chronicle Logs.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Built in; logs nothing until you say yes.*
 - 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *~365 raid packs come with the download (from AutoMarker's data, credited), nothing else needed.*
 - 💰 **RollForML.** Soft-res master looting with RollFor, with a step-by-step guide. *Built in.* **Auto-loot** hands out the trash loot for you.
-- 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and no character names or anything from your PC are shared (with sharing on, just your guild's best times). See [Privacy and security](#privacy-and-security).
+- 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and nothing from your PC is shared (with sharing on: your guild's best times, and your 5-man group's runs with its members' names; `/wdi 5man off` opts out). See [Privacy and security](#privacy-and-security).
 
 ## Screenshots
 
@@ -219,6 +219,29 @@ A kill or clear counts for the raid's majority guild (at least half the raid). P
 other realm. Every leaderboard time is compared with your guild's ("1:38.6 faster" / "3:51.1 slower"). The left column
 shows your guild's clear, its rank (gold / silver / bronze) and a green bar for how close you are to #1.
 
+### 5-man rankings
+
+**Raids / 5-mans** at the top of the list on the Rankings tab (or `/wdi 5man`) switches to the 5-man boards: the 13
+level-60 dungeons (Blackrock Depths, Lower and Upper Blackrock Spire, Stratholme Live and Undead, Scholomance, Dire Maul
+East, West and North, and Turtle's Hateforge Quarry, Karazhan Crypt, The Black Morass and Stormwind Vault), each with
+its loading screen, laid out like the raids.
+
+- **A run** is timed from the group's first pull after zoning in to the death of the dungeon's last boss. Every boss on
+  the way is a split, and deaths are counted. Groups of up to 5 players (Upper Blackrock Spire: 10).
+- **Name your group:** when a group finishes, its leader (or, if the leader hasn't got WhoDidIt, whoever has) is asked
+  once for a name, remembered for the same players. **Name my group** (bottom left) or **rename it** on one of the
+  group's runs changes it.
+- **The board** lists the fastest groups: name, members in class colours, date, deaths and time. Click a group for the
+  whole run: the members, every boss split (against your own best run there) and the deaths. **Your runs** (top) lists
+  every run you've finished. **Post top 3** posts the board's top three (you see the text first).
+- **Sharing:** the finished run goes to the WhoDidIt users on your realm over the hidden channel, so the boards fill up
+  across the realm, and members share their groups' bests again when someone asks. A run is only taken from someone
+  who was in that group. **Sharing: on / off** (or `/wdi 5man off`) stops it: then no run you're in is shared by
+  anyone's WhoDidIt. See [Privacy and security](#privacy-and-security).
+- **In the download:** the maintainer's 5-man boards go into the weekly update with the raid times, so a fresh install
+  has them too.
+- Chat says which boss ended each run. If a Turtle dungeon's last boss turns out to be wrong, tell the maintainer.
+
 ### Times before and after the 6 Oct raid scaling change
 
 OctoWoW changed how raids scale with the number of players on **6 October 2026**
@@ -345,9 +368,16 @@ or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
 400 KB; your own characters' personal bests are left out): it runs `tools\Publish-RaidTimes.ps1`, which checks them
 and commits and pushes just that file. It skips a week (and tries again a day later) if the repository isn't on `main`
 or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
-`tools\Publish-RaidTimes.cmd` publishes now.
+`tools\Publish-RaidTimes.cmd` publishes now. The 5-man boards your WhoDidIt keeps (written to
+`CustomData\WhoDidIt_Runs.txt`) go in with them.
 Keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
 characters). Logging into the master character on a realm feeds that realm.
+
+**Website:** after every sync the helper also writes every raid time and 5-man run to one JSON file,
+`CustomData\WhoDidIt_Website.json` (`tools\Website-Export.ps1`; your characters' personal bests stay out), for a
+website such as www.errorguild.com. Uploading it is **off** until `tools\website.json` (a copy of
+`tools\website.example.json`) has the site's https upload address and key and `"enabled": true`; that file stays on
+your PC. The **Website** button (Rankings > 5-mans, only on the master characters) shows the last export and upload.
 
 ### Banter
 
@@ -784,7 +814,9 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 ```
 /wdi                       open / close the window
 /wdi rankings              kill times & full clears
-/wdi share on|off          share your guild's times with WhoDidIt users on the realm (off = leave the hidden channel)
+/wdi 5man                  5-man dungeon rankings
+/wdi 5man name <name>      name the group you're in
+/wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)/wdi share on|off          share your guild's times with WhoDidIt users on the realm (off = leave the hidden channel)
 /wdi feed on|off           take / ignore the raid times from the master feed
 /wdi master list           whose raid times you take (add|remove <name> changes your list)
 /wdi banter kills|clears on|off   fun kill / clear time lines (off by default)
@@ -878,8 +910,9 @@ WhoDidIt is built so it can't get you into trouble in chat, and so nothing about
 | Every WhoDidIt user (sharing on) | Their guild's best kill and clear times: guild name, faction, boss or instance, time, date and raid size |
 | The master | Chronicle's times: guild names, raid and boss names, times, dates, raid sizes and Chronicle log links |
 | Anyone asking the master | Only "send me what's new since …" |
+| One member of a 5-man group (5-man sharing on) | The group's finished run: group name, the members' names and classes, dungeon, time, date, deaths, faction and boss splits |
 
-Never sent: player or character names, gear, chat, where you are, or anything from your PC. `/wdi share off` leaves
+Never sent: character names (except a 5-man group's members, in its run), gear, chat, where you are, or anything from your PC. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
 the channel altogether; `/wdi feed off` just ignores the feed.
 
 **What's accepted**
@@ -893,7 +926,10 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 - They're also sanity-checked (a real boss, a kill between 5 seconds and an hour, a clear between 2 minutes and 8
   hours, no future dates), capped at 60 records per sender, and each board keeps only the 60 fastest guilds (always
   including yours). Hover a row to see where a time came from.
-
+- **A 5-man run is only taken from someone who was in that group**, and checked the same way: a real dungeon, 2
+  minutes to 4 hours, real class names, a group name of 2-24 characters without colour codes or links, at most 40 runs
+  per sender, 60 groups per dungeon (always including yours). Group names come from other players: they're only shown
+  in your window, and **Post top 3** shows you the exact text before anything is posted.
 **Your PC**
 
 - The addon can't go online. Through Nampower it only reads and writes its own files in `CustomData`.
@@ -902,7 +938,7 @@ the channel altogether; `/wdi feed off` just ignores the feed.
   at a version the maintainer tested, credited to their authors. Code from other repositories only gets in through
   a reviewed commit, never a bot.
 - The **sync helper** (maintainer only, and only on a PC with a master character) *reads* from Chronicle's public
-  API; it uploads nothing. It writes to `CustomData` and Windows' temp folder, needs no admin rights, and runs one
+  API; it uploads nothing unless you set up the website upload (off; to your own site, over https). It writes to `CustomData` and Windows' temp folder, needs no admin rights, and runs one
   copy at a time. **AutoSync** (also maintainer only) adds one scheduled task for the Windows user and a launcher
   script; `AutoSync-Off.cmd` removes both and works for anyone.
 - The **ClassicAPI installer** installs the pinned, tested release, checks its SHA-256 against the pin and backs up

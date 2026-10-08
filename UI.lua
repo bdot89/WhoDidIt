@@ -643,6 +643,30 @@ leftCount:SetJustifyH("RIGHT")
 local fightList = CreateList(left, FROWS, FROWH, LEFTW - 12)
 fightList:SetPoint("TOPLEFT", left, "TOPLEFT", 6, -28)
 
+-- Rankings: Raids or 5-mans, in place of the list's title
+do
+	local w = floor((LEFTW - 20) / 2)
+	UI.kindBtns = {}
+	local defs = {
+		{ false, "Raids", { "Raid rankings: boss kill times and full clears of every guild,", "from WhoDidIt users and Chronicle." } },
+		{ true, "5-mans", { "5-man rankings: the fastest groups through each level-60 dungeon,", "first pull to the last boss. Click a group for its run:", "members, boss splits and deaths. Name your group when it finishes." } },
+	}
+	for i = 1, getn(defs) do
+		local d = defs[i]
+		local b = button(left, d[2], w, 20)
+		b:SetPoint("TOPLEFT", left, "TOPLEFT", 8 + (i - 1) * (w + 4), -5)
+		b.five = d[1]
+		b:SetScript("OnClick", function()
+			UI.rk.five = this.five or nil
+			UI.rk.boss = nil; UI.rk.log = nil; UI.rk.run = nil; UI.rk.web = nil
+			UI:Refresh()
+		end)
+		tooltip(b, d[2], d[3])
+		b:Hide()
+		UI.kindBtns[i] = b
+	end
+end
+
 --[[ the panel under the list - the same on every tab:
 	  [ Post to: Raid                ]   <- where WhoDidIt posts (every tab)
 	  [ row 4 ]  [ row 4 ]               <- this tab's buttons (2 x 4 grid)
@@ -1216,15 +1240,21 @@ local function cycleList(list, cur)
 end
 
 UI.rankButtons = stripButtons({
-	{ "Kill times", function() UI.rk.view = "kills"; UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end,
-	  { "Best kill time on every boss: you, your guild and the realm." } },
-	{ "Full clears", function() UI.rk.view = "clears"; UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end,
-	  { "Fastest full clear of the instance: first combat inside to the last boss.", "Optional bosses aren't required." } },
+	{ "Kill times", function()
+		if UI.rk.five then UI.rk.fv = nil else UI.rk.view = "kills" end
+		UI.rk.boss = nil; UI.rk.log = nil; UI.rk.run = nil; UI.rk.web = nil
+		UI:Refresh()
+	  end },
+	{ "Full clears", function()
+		if UI.rk.five then UI.rk.fv = "mine" else UI.rk.view = "clears" end
+		UI.rk.boss = nil; UI.rk.log = nil; UI.rk.run = nil; UI.rk.web = nil
+		UI:Refresh()
+	  end },
 	{ "Realm", function()
-		local list = W.Board:Realms()
+		local list = UI.rk.five and W.Runs:Realms() or W.Board:Realms()
 		tinsert(list, 2, W.Board.ALL)   -- your realm, then all realms together, then the rest
 		UI.rk.realm = cycleList(list, UI.rk.realm or W.Board.Realm())
-		UI.rk.boss = nil; UI.rk.log = nil
+		UI.rk.boss = nil; UI.rk.log = nil; UI.rk.run = nil
 		UI:Refresh()
 	  end, { "Your realm, then all realms together (compare against every guild), then each other realm." } },
 	{ "Faction", function()
@@ -1234,6 +1264,24 @@ UI.rankButtons = stripButtons({
 		UI:Refresh()
 	  end, { "Your faction first, then everyone, then the other faction." } },
 })
+
+-- the first two say what they do in Raids or in 5-mans
+do
+	local function tip2(b, a, al, c, cl)
+		b:SetScript("OnEnter", function()
+			GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+			GameTooltip:SetText(UI.rk.five and c or a, 1, 0.82, 0)
+			local l = UI.rk.five and cl or al
+			for i = 1, getn(l) do GameTooltip:AddLine(l[i], 0.9, 0.9, 0.9, 1) end
+			GameTooltip:Show()
+		end)
+		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	end
+	tip2(UI.rankButtons[1], "Kill times", { "Best kill time on every boss: you, your guild and the realm." },
+		"Leaderboard", { "The fastest groups through this dungeon: first pull to the last boss.", "Click a group to see its run." })
+	tip2(UI.rankButtons[2], "Full clears", { "Fastest full clear of the instance: first combat inside to the last boss.", "Optional bosses aren't required." },
+		"Your runs", { "Every 5-man run you've finished, newest first (not only the bests)." })
+end
 
 UI.logButtons = stripButtons({
 	{ "Start logging", function()
@@ -1663,6 +1711,74 @@ end)
 local rankOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn, syncBar, syncBtn, masterBtn }
 for i = 1, getn(rankOnly) do rankOnly[i]:Hide() end
 
+-- Rankings > 5-mans: sharing, naming your group, and (the maintainer) the website
+-- export, in place of the raid banter buttons
+do
+	local share = gridButton("Sharing: on", 4, 1)
+	local name = gridButton("Name my group", 4, 2)
+	local web = gridButton("|cff66ccffWebsite|r", 3, 1)
+	local post = gridButton("Post top 3", 3, 2)
+	share:SetScript("OnClick", function()
+		W.Runs:Slash(W.Runs.On() and "off" or "on")
+	end)
+	tooltip(share, "Share 5-man runs", function()
+		return { "On: when your group finishes a dungeon, its run (group name, members",
+			"and classes, time, deaths, boss splits) goes to every WhoDidIt user on",
+			W.Board.Realm() .. ", so the 5-man boards fill up across the realm.",
+			"Off: your runs stay on your PC, and while you're in a group, nobody's",
+			"WhoDidIt shares that group's run.",
+			" ",
+			"Now: " .. (W.Runs.On() and "|cff33ff33on|r" or "|cffff9933off|r") .. "   |cff888888(/wdi 5man on|off)|r" }
+	end, "ANCHOR_TOP")
+	name:SetScript("OnClick", function()
+		local _, gk, n = W.Runs.Group()
+		if not gk or n < 2 then W.Print("Be in a group to name it (or rename a group from one of its runs).") return end
+		W:Prompt("Name your group (2-24 characters)\n|cff888888Remembered for these players; their runs show under it.|r",
+			W.Runs:GroupName(gk) or "", function(text) W.Runs:Rename(gk, text) end)
+	end)
+	tooltip(name, "Name my group", { "Give the group you're in now a name for the 5-man boards.",
+		"It's asked for when your group first finishes a dungeon; this renames it,",
+		"and your group's runs are shared again under the new name." }, "ANCHOR_TOP")
+	web:SetScript("OnClick", function()
+		UI.rk.web = not UI.rk.web or nil
+		UI.rk.run = nil
+		UI:Refresh()
+	end)
+	tooltip(web, "Website export", { "Only on your master characters: what the sync helper exports for",
+		"the website (every raid time and 5-man run, as one JSON file),", "and whether the upload to www.errorguild.com is set up." }, "ANCHOR_TOP")
+	post:SetScript("OnClick", function()
+		local line = W.Runs:TopLine(UI.rk.dg, UI.rk.realm or W.Board.Realm(), UI.rk.faction)
+		if not line then W.Print("No runs on this board yet.") return end
+		-- group names come from other players: you see the exact text before it goes out
+		W:ConfirmSend({ line }, IsControlKeyDown() and "SELF" or nil)
+	end)
+	tooltip(post, "Post top 3", function()
+		return { "Post this dungeon's three fastest groups (you see the text first).",
+			"|cff888888Ctrl-click: only you see it.  Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+	end, "ANCHOR_TOP")
+	local list = { share, name, web, post }
+	for i = 1, getn(list) do list[i]:Hide() end
+	local raidOnly = { banterKillBtn, banterClearBtn, rivalBtn, banterTestBtn, postRivalBtn, postBoardBtn }
+
+	-- (called by ApplyMode) Raids / 5-mans at the top of the list; the buttons that fit the view
+	function UI.ApplyFive()
+		local rk = (UI.mode == "rankings" and W.Board ~= nil and W.Runs ~= nil)
+		local five = rk and UI.rk.five and true or false
+		for i = 1, getn(UI.kindBtns) do
+			local b = UI.kindBtns[i]
+			if rk then b:Show() else b:Hide() end
+			UI.SkinSelect(b, (b.five and true or false) == five)
+		end
+		if rk then leftHead:Hide(); leftCount:Hide() else leftHead:Show(); leftCount:Show() end
+		for i = 1, getn(list) do list[i]:Hide() end
+		if not five then return end
+		for i = 1, getn(raidOnly) do raidOnly[i]:Hide() end
+		share:Show(); name:Show(); post:Show()
+		share:SetText("Sharing: " .. (W.Runs.On() and "|cff33ff33on|r" or "|cffff9933off|r"))
+		if W.Board.CanMaster and W.Board.CanMaster() then web:Show(); UI.SkinSelect(web, UI.rk.web and true or false) end
+	end
+end
+
 -- Hall of Fame: post what's on screen, points per fight, start over
 local famePostBtn  = gridButton("Post this board", 4, 1)
 local famePerBtn   = gridButton("Per fight: off", 4, 2)
@@ -1722,6 +1838,7 @@ function UI:ApplyMode()
 	local fightOnly = { shameBtn, praiseBtn, reportBtn, delBtn, clearBtn, trashBtn, annBtn, autoBtn, demoBtn }
 	for i = 1, getn(fightOnly) do vis(fightOnly[i], fights) end
 	for i = 1, getn(rankOnly) do vis(rankOnly[i], UI.mode == "rankings" and W.Board ~= nil) end
+	UI.ApplyFive()
 	local o = WhoDidItDB.opts
 	banterKillBtn:SetText("Kill banter: " .. (o.banterKills and "|cff33ff33on|r" or "|cffff5555off|r"))
 	banterClearBtn:SetText("Clear banter: " .. (o.banterClears and "|cff33ff33on|r" or "|cffff5555off|r"))
@@ -1743,7 +1860,7 @@ function UI:SetMode(mode)
 		UI.tab = "summary"
 	end
 	UI.mode = mode
-	UI.rk.boss = nil; UI.rk.log = nil
+	UI.rk.boss = nil; UI.rk.log = nil; UI.rk.run = nil; UI.rk.web = nil
 	if mode == "rankings" and W.Board then W.Board:LoadChronicle() end
 	UI:Open()
 end
@@ -1983,6 +2100,12 @@ UI.ART = {
 	["Ruins of Ahn'Qiraj"]      = { LS .. "LoadScreenAhnQiraj20man" },
 	["Ahn'Qiraj"]               = { LS .. "LoadScreenAhnQiraj40man" },
 }
+-- 5-man dungeons by "5:" .. key (Data.lua D.DUNGEONS names each one's loading screen;
+-- the general dungeon one if the game hasn't got it)
+for i = 1, getn(W.Data.DUNGEONS or {}) do
+	local d = W.Data.DUNGEONS[i]
+	UI.ART["5:" .. d.key] = { LS .. d.art, LS .. "LoadScreenDungeon" }
+end
 end
 UI.artOK = {}
 -- the first path the game can load; SetTexture says whether it could
@@ -3521,8 +3644,11 @@ function UI:RankLogRows()
 end
 
 function UI:RefreshRankings()
+	if UI.rk.five and W.Runs then return UI:RefreshRuns() end
 	local B = W.Board
 	local realm, faction = rkRealm(), rkFaction()
+	UI.rankButtons[1]:SetText("Kill times")
+	UI.rankButtons[2]:SetText("Full clears")
 	if not UI.rk.inst then
 		local z = GetRealZoneText()
 		UI.rk.inst = W.Data.clears[z] and z or W.Data.clearOrder[1]
@@ -3629,6 +3755,353 @@ function UI:RefreshRankings()
 	local key = "rk" .. realm .. faction .. zone .. UI.rk.view .. tostring(UI.rk.era) .. tostring(UI.rk.boss) .. (UI.rk.log and (UI.rk.log.guild .. tostring(UI.rk.log.slug)) or "")
 	mainList:SetData(rows, key == lastModeKey)
 	lastModeKey = key
+end
+
+------------------------------------------------------------------ Rankings > 5-mans
+-- The same layout as the raids: dungeons on the left (with their loading
+-- screens), the fastest groups on the right; click a group for its run.
+
+do   -- (a block: UI.lua is near Lua 5.0's 200 file-level locals)
+local RUN_SPEC = { { 24, "RIGHT" }, { 120, "LEFT" }, { 262, "LEFT" }, { 62, "LEFT" }, { 40, "RIGHT" }, { 52, "RIGHT" }, { 56, "RIGHT" } }
+local RUN_SPEC_ALL = { { 24, "RIGHT" }, { 112, "LEFT" }, { 196, "LEFT" }, { 66, "LEFT" }, { 62, "LEFT" }, { 36, "RIGHT" }, { 52, "RIGHT" }, { 52, "RIGHT" } }
+local MEM_SPEC = { { 20, "RIGHT" }, { 150, "LEFT" }, { 90, "LEFT" }, { 300, "LEFT" } }
+local SPLIT_SPEC = { { 20, "RIGHT" }, { 230, "LEFT" }, { 70, "RIGHT" }, { 70, "RIGHT" }, { 130, "RIGHT" } }
+local MINE_SPEC = { { 70, "LEFT" }, { 150, "LEFT" }, { 140, "LEFT" }, { 40, "RIGHT" }, { 56, "RIGHT" }, { 80, "RIGHT" } }
+
+-- "Name, Name, Name" in class colours, and the members
+local function memText(m)
+	local list = W.Runs.Members(m) or {}
+	local out = {}
+	for i = 1, getn(list) do tinsert(out, W.CName(list[i].n, list[i].c)) end
+	return table.concat(out, ", "), list
+end
+
+local function className(c)
+	c = c or "?"
+	return string.upper(string.sub(c, 1, 1)) .. string.lower(string.sub(c, 2))
+end
+
+-- the run in progress, if it's in this dungeon's zone
+local function inProgress(dg)
+	local r = W.Runs:Current()
+	if r and r.zone and string.find(dg.title, r.zone, 1, true) then return r end
+end
+
+local function openRun(key, gk, rec, rlm)
+	UI.rk.run = { key = key, gk = gk, rec = rec, realm = rlm }
+	UI.rk.web = nil
+	UI:Refresh()
+end
+
+function UI:RunNavRows(realm)
+	local R, D = W.Runs, W.Data
+	local rows = {}
+	for i = 1, getn(D.DUNGEONS) do
+		local dg = D.DUNGEONS[i]
+		local key = dg.key
+		local list = R:Board(realm, key, "All")
+		local top = list[1]
+		local mine = R:MyBest(key)
+		local right = ""
+		if inProgress(dg) then
+			right = "|cff33ccffrun|r"
+		elseif mine then
+			local place, of = R:Place(realm, key, mine.t)
+			right = rankTxt(place, "|cff777777/" .. of .. "|r")
+		elseif getn(list) > 0 then
+			right = "|cff777777" .. getn(list) .. "|r"
+		end
+		local line2
+		if mine then
+			line2 = C_GUILD .. R.Fmt(mine.t) .. "|r"
+			if top and top[2].t < mine.t then line2 = line2 .. "  |cff888888#1 " .. R.Fmt(top[2].t) .. "|r" end
+		elseif top then
+			line2 = "|cff888888#1 " .. R.Fmt(top[2].t) .. "  " .. top[2].g .. "|r"
+		else
+			line2 = "|cff555555no runs yet|r"
+		end
+		tinsert(rows, row("|cffffffff" .. dg.title .. "|r\n" .. line2, right,
+			{ sel = (UI.rk.dg == key), art = UI.ZoneArt("5:" .. key),
+			  bar = (mine and top) and (top[2].t / mine.t) or nil, ba = 0.28, cr = 0.15, cg = 0.75, cb = 0.3,
+			  tipTitle = dg.title,
+			  tip = {
+			      "You: " .. (mine and (R.Fmt(mine.t) .. "  with " .. mine.g) or "no run yet"),
+			      "#1: " .. (top and (R.Fmt(top[2].t) .. "  " .. top[2].g) or "-"),
+			      "Groups on the board: " .. getn(list),
+			      "|cff888888Ends when " .. table.concat(dg.final, " or ") .. " dies.|r",
+			  },
+			  click = function() UI.rk.dg = key; UI.rk.run = nil; UI.rk.web = nil; UI.rk.fv = nil; UI:Refresh() end }))
+	end
+	return rows
+end
+
+-- the leaderboard of one dungeon
+function UI:RunBoardRows(realm, faction, key)
+	local R, D = W.Runs, W.Data
+	local dg = D.DUNGEON[key]
+	local rows = {}
+	local mine = R:MyBest(key)
+	tinsert(rows, cells(PIN_SPEC, {
+		C_YOU .. "Your best run|r",
+		mine and (C_TIME .. R.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
+		mine and (rankTxt((R:Place(realm, key, mine.t))) .. C_DIM .. " of " .. getn(R:Board(realm, key, "All")) .. "|r") or "",
+		mine and (C_DIM .. W.Board.Date(mine.d) .. "  with |r|cffffd100" .. mine.g .. "|r") or (C_DIM .. "none yet|r"),
+	}, mine and { tipTitle = "Your best run", tip = { "Click: open that run" },
+		click = function() openRun(key, mine.gk, mine, mine.realm or realm) end } or nil))
+	local r = inProgress(dg)
+	if r then
+		local down = 0
+		for i = 1, getn(dg.bosses) do if r.k[dg.bosses[i]] then down = down + 1 end end
+		tinsert(rows, cells(PIN_SPEC, {
+			"|cff33ccffRun in progress|r",
+			C_TIME .. R.Fmt(time() - r.at) .. "|r",
+			C_TIME .. down .. "|r" .. C_DIM .. " / " .. getn(dg.bosses) .. "|r",
+			C_DIM .. "bosses down, " .. (r.x or 0) .. " death" .. ((r.x == 1) and "" or "s") .. "|r",
+		}))
+	end
+	head(rows, "Fastest groups")
+	local list = R:Board(realm, key, faction)
+	if getn(list) == 0 then
+		tinsert(rows, row(C_DIM .. "No runs yet. A run counts from the first pull after zoning in to " .. table.concat(dg.final, " or ") .. ",|r"))
+		tinsert(rows, row(C_DIM .. "for groups of up to " .. (dg.max or D.GROUP_MAX) .. ". Runs arrive from WhoDidIt users on the realm as they finish.|r"))
+	else
+		local all = (realm == W.Board.ALL)
+		local spec = all and RUN_SPEC_ALL or RUN_SPEC
+		if all then
+			colHead(rows, spec, { "#", "Group", "Members", "Realm", "Date", "Dth", "Time", "vs #1" })
+		else
+			colHead(rows, spec, { "#", "Group", "Members", "Date", "Deaths", "Time", "vs #1" })
+		end
+		local best = list[1][2].t
+		for i = 1, getn(list) do
+			local gk, rec, rlm = list[i][1], list[i][2], list[i][3]
+			local isMine = R.HasMember(rec)
+			local mt = memText(rec.m)
+			local vals = { rankTxt(i), (isMine and "|cffffd100" or ((rec.f == "Horde") and "|cffff7777" or "|cff77aaff")) .. rec.g .. "|r", mt }
+			if all then tinsert(vals, C_DIM .. rlm .. "|r") end
+			tinsert(vals, C_DIM .. W.Board.Date(rec.d) .. "|r")
+			tinsert(vals, ((rec.x or 0) > 0) and ("|cffff7777" .. rec.x .. "|r") or (C_DIM .. "0|r"))
+			tinsert(vals, C_TIME .. R.Fmt(rec.t) .. "|r")
+			tinsert(vals, (i > 1) and (C_DIM .. "+" .. R.Fmt(rec.t - best) .. "|r") or "|cffffd100fastest|r")
+			tinsert(rows, cells(spec, vals,
+				{ sel = isMine, bar = best / rec.t, ba = 0.16, cr = 0.2, cg = 0.6, cb = 1, tipTitle = rec.g,
+				  tip = { mt, " ",
+				          R.Fmt(rec.t) .. " on " .. W.Board.Date(rec.d) .. ", " .. (rec.x or 0) .. " death" .. ((rec.x == 1) and "" or "s") .. ", " .. (rec.n or "?") .. " players",
+				          rec.net and ("Shared by " .. (rec.by or "a WhoDidIt user") .. " (self-reported)") or "Recorded by your WhoDidIt",
+				          "|cff33ff33Click: the whole run - members, boss splits, deaths|r" },
+				  click = function() openRun(key, gk, rec, rlm) end }))
+		end
+	end
+	head(rows, "Bosses  " .. C_DIM .. "(the run ends when " .. table.concat(dg.final, " or ") .. " dies)|r")
+	local line = {}
+	for i = 1, getn(dg.bosses) do
+		local b = dg.bosses[i]
+		local isFinal = D.DUNGEON_FINAL[b] == key
+		local killed = r and r.k[b]
+		tinsert(line, (isFinal and "|cffffd100" or (killed and "|cff33ff33" or "|cffaaaaaa")) .. b .. "|r")
+		if getn(line) == 4 or i == getn(dg.bosses) then
+			tinsert(rows, row(table.concat(line, ", ")))
+			line = {}
+		end
+	end
+	return rows
+end
+
+-- one run: the group, the time, every boss split
+function UI:RunDetailRows()
+	local R, D = W.Runs, W.Data
+	local run = UI.rk.run
+	local rec, key = run.rec, run.key
+	local dg = D.DUNGEON[key]
+	local rows = {}
+	tinsert(rows, row("|cffffd100<< Back to " .. ((UI.rk.fv == "mine") and "your runs" or "the leaderboard") .. "|r", nil,
+		{ head = true, click = function() UI.rk.run = nil; UI:Refresh() end }))
+	local isMine = R.HasMember(rec)
+	head(rows, (isMine and "|cffffd100" or "|cffffffff") .. rec.g .. "|r  |cffffffff" .. dg.title .. "|r  " .. C_DIM .. W.Board.Date(rec.d) .. "|r")
+	local place, of = R:Place(run.realm, key, rec.t)
+	tinsert(rows, row("Time  " .. C_DIM .. "(first pull to " .. table.concat(dg.final, " / ") .. ")|r",
+		C_TIME .. R.Fmt(rec.t) .. "|r  " .. rankTxt(place) .. C_DIM .. " of " .. of .. " on " .. run.realm .. "|r"))
+	tinsert(rows, row("Deaths", ((rec.x or 0) > 0) and ("|cffff7777" .. rec.x .. "|r") or "|cff33ff33none|r"))
+	tinsert(rows, row("Realm  /  faction", "|cffcc99ff" .. W.Board.RealmLabel(run.realm) .. "|r" .. C_DIM .. "  /  |r|cffffffff" .. (rec.f or "?") .. "|r"))
+	tinsert(rows, row("Recorded", C_DIM .. (rec.net and ("shared by " .. (rec.by or "a WhoDidIt user") .. " (self-reported)")
+		or "by your WhoDidIt") .. (rec.priv and " - kept on your PC" or "") .. "|r"))
+	if isMine and run.gk then
+		tinsert(rows, row("Your group", "|cffffd100rename it  >|r",
+			{ tipTitle = "Rename this group", tip = { "Renames it on every board and shares its runs again under the new name." },
+			  click = function()
+				W:Prompt("New name for |cffffd100" .. rec.g .. "|r (2-24 characters)", rec.g, function(text)
+					if W.Runs:Rename(run.gk, text) then UI.rk.run = nil; UI:Refresh() end
+				end)
+			  end }))
+	end
+
+	local _, list = memText(rec.m)
+	head(rows, "The group  " .. C_DIM .. "(" .. getn(list) .. " players)|r")
+	for i = 1, getn(list) do
+		local p = list[i]
+		tinsert(rows, cells(MEM_SPEC, { C_DIM .. i .. ".|r", W.CName(p.n, p.c) .. ((p.n == UnitName("player")) and (C_DIM .. "  (you)|r") or ""),
+			W.CName(className(p.c), p.c), "" }))
+	end
+
+	local splits = R.Splits(rec, key)
+	head(rows, "Boss splits")
+	if getn(splits) == 0 then
+		tinsert(rows, row(C_DIM .. "No splits for this run (they stay home when a run's message would be too long).|r"))
+		return rows
+	end
+	-- against your best run here, boss by boss
+	local myBest = R:MyBest(key)
+	local mySplit = {}
+	if myBest and myBest ~= rec then
+		local ms = R.Splits(myBest, key)
+		for i = 1, getn(ms) do mySplit[ms[i].name] = ms[i].at end
+	end
+	colHead(rows, SPLIT_SPEC, { "#", "Boss", "Into run", "Since last", next(mySplit) and "vs your best" or "" })
+	local prev = 0
+	for i = 1, getn(splits) do
+		local s = splits[i]
+		local cmp = ""
+		local mine = mySplit[s.name]
+		if mine then
+			local d = s.at - mine
+			cmp = (d < 0) and ("|cffff7777" .. R.Fmt(-d) .. " faster|r") or (C_GUILD .. R.Fmt(d) .. " slower|r")
+		end
+		local isFinal = D.DUNGEON_FINAL[s.name] == key
+		tinsert(rows, cells(SPLIT_SPEC, { C_DIM .. i .. ".|r", (isFinal and "|cffffd100" or "|cffffffff") .. s.name .. "|r",
+			C_TIME .. clock(s.at) .. "|r", C_DIM .. "+" .. clock(s.at - prev) .. "|r", cmp }))
+		prev = s.at
+	end
+	return rows
+end
+
+-- every run you've finished, newest first
+function UI:MyRunRows(realm)
+	local R, D = W.Runs, W.Data
+	local rows = {}
+	local mine = R:MyRuns()
+	head(rows, "Your 5-man runs  " .. C_DIM .. "(" .. getn(mine) .. ", newest first - click one for its splits)|r")
+	if getn(mine) == 0 then
+		tinsert(rows, row(C_DIM .. "None yet. Finish a level-60 dungeon (to its last boss) and it shows up here.|r"))
+		return rows
+	end
+	colHead(rows, MINE_SPEC, { "Date", "Dungeon", "Group", "Deaths", "Time", "Rank" })
+	for i = 1, getn(mine) do
+		local e = mine[i]
+		local dg = D.DUNGEON[e.k]
+		if dg then
+			local place, of = R:Place(e.realm or realm, e.k, e.t)
+			tinsert(rows, cells(MINE_SPEC, { C_DIM .. date("%d %b %H:%M", e.d) .. "|r", "|cffffffff" .. dg.title .. "|r", "|cffffd100" .. e.g .. "|r",
+				((e.x or 0) > 0) and ("|cffff7777" .. e.x .. "|r") or (C_DIM .. "0|r"), C_TIME .. R.Fmt(e.t) .. "|r",
+				rankTxt(place) .. C_DIM .. "/" .. of .. "|r" },
+				{ sel = (e.k == UI.rk.dg), tipTitle = dg.title, tip = { (memText(e.m)), "|cff888888Click: the whole run|r" },
+				  click = function() openRun(e.k, e.gk, e, e.realm or realm) end }))
+		end
+	end
+	return rows
+end
+
+-- the master's website export (tools\WhoDidIt-Sync.ps1 writes the status):
+--   WDIWEB|1|<exported>|<raid times>|<5-man runs>|<upload: off|ok|error>|<uploaded>|<message>|<site>
+function UI:WebRows()
+	local rows = {}
+	local R = W.Runs
+	local st
+	if ReadCustomFile then
+		local ok, s = pcall(ReadCustomFile, "WhoDidIt_WebStatus.txt")
+		if ok and type(s) == "string" and string.sub(s, 1, 7) == "WDIWEB|" then
+			local p = {}
+			for part in string.gfind((string.gsub(s, "[\r\n]", "")) .. "|", "([^|]*)|") do tinsert(p, part) end
+			st = { at = tonumber(p[3]), raids = tonumber(p[4]) or 0, runs = tonumber(p[5]) or 0, up = p[6] or "off",
+				upAt = tonumber(p[7]), msg = p[8] or "", site = (p[9] and p[9] ~= "") and p[9] or nil }
+		end
+	end
+	local site = (st and st.site) or "https://www.errorguild.com"
+	head(rows, "Website  " .. C_DIM .. "(only on your master characters)|r")
+	tinsert(rows, row("Every raid time and 5-man run, as one JSON file the website can show.", nil))
+	tinsert(rows, row(C_DIM .. "The sync helper writes it after every sync (every 30 minutes).|r", nil))
+	head(rows, "Export")
+	if not st then
+		tinsert(rows, row("Last export", "|cffff9933none yet|r"))
+		tinsert(rows, row(C_DIM .. "It's written with the next sync.|r", nil))
+	else
+		tinsert(rows, row("Last export", C_TIME .. W.Board.Ago(st.at) .. "|r" .. C_DIM .. "  (" .. date("%d %b %H:%M", st.at or 0) .. ")|r"))
+		tinsert(rows, row("In it", C_TIME .. st.raids .. "|r" .. C_DIM .. " raid times,  |r" .. C_TIME .. st.runs .. "|r" .. C_DIM .. " 5-man runs|r"))
+	end
+	tinsert(rows, row("File", C_DIM .. "WoW\\CustomData\\WhoDidIt_Website.json|r"))
+	tinsert(rows, row("Your 5-man boards for it", "|cffffd100write now  >|r",
+		{ tipTitle = "5-man runs", tip = { "Your WhoDidIt writes its 5-man boards to CustomData\\WhoDidIt_Runs.txt",
+			"5 minutes after they change; the helper puts them in the export and in the",
+			"weekly download update. Click to write them now." },
+		  click = function() R:WriteFile(); W.Print("5-man boards written to CustomData\\WhoDidIt_Runs.txt - in the export after the next sync.") end }))
+	head(rows, "Upload to the website")
+	if not st or st.up == "off" then
+		tinsert(rows, row("Upload", "|cff888888off|r"))
+		tinsert(rows, row(C_DIM .. "When the site is ready: copy tools\\website.example.json to tools\\website.json,|r", nil))
+		tinsert(rows, row(C_DIM .. "put in the site's upload address and key, and set \"enabled\": true. The helper uploads after each sync.|r", nil))
+	elseif st.up == "ok" then
+		tinsert(rows, row("Upload", "|cff33ff33ok|r" .. C_DIM .. "  " .. W.Board.Ago(st.upAt) .. "|r"))
+	else
+		tinsert(rows, row("Upload", "|cffff7777failed|r" .. C_DIM .. "  " .. W.Board.Ago(st.upAt) .. " - retries next sync|r"))
+		if st.msg ~= "" then tinsert(rows, row(C_DIM .. st.msg .. "|r", nil)) end
+	end
+	tinsert(rows, row("Site  " .. C_DIM .. site .. "|r", "|cffffd100copy link  >|r",
+		{ tipTitle = "Website", tip = { "Opens a box with the link selected: press Ctrl+C, then paste it in your browser." },
+		  click = function() W:CopyLink("Website", site) end }))
+	return rows
+end
+
+function UI:RefreshRuns()
+	local R, D = W.Runs, W.Data
+	local realm, faction = rkRealm(), rkFaction()
+	if not D.DUNGEON[UI.rk.dg or ""] then
+		-- the dungeon you're in, else the first
+		UI.rk.dg = D.DUNGEONS[1].key
+		local z = GetRealZoneText() or ""
+		for i = 1, getn(D.DUNGEONS) do
+			if z ~= "" and string.find(D.DUNGEONS[i].title, z, 1, true) then UI.rk.dg = D.DUNGEONS[i].key break end
+		end
+	end
+	local key = UI.rk.dg
+	local dg = D.DUNGEON[key]
+	fightList:SetData(UI:RunNavRows(realm), true)
+
+	UI.rankButtons[1]:SetText("Leaderboard")
+	UI.rankButtons[2]:SetText("Your runs")
+	UI.rankButtons[3]:SetText("Realm: " .. realm)
+	UI.rankButtons[4]:SetText("Faction: " .. faction)
+	UI.SkinSelect(UI.rankButtons[1], UI.rk.fv ~= "mine")
+	UI.SkinSelect(UI.rankButtons[2], UI.rk.fv == "mine")
+	UI:UpdateSync()
+
+	local list = R:Board(realm, key, faction)
+	rTitle:SetText(dg.title .. "  |cff888888" .. ((UI.rk.fv == "mine") and "your runs" or "5-man runs") .. "|r")
+	UI.SetHeaderArt("5:" .. key)
+	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. getn(list) .. " group(s)   |   sharing 5-man runs "
+		.. ((R.On() and WhoDidItDB.opts.shareBoard) and "on" or "|cffff9933off|r") .. "|r")
+	local mine = R:MyBest(key)
+	local verdict
+	if mine then
+		local place, of = R:Place(realm, key, mine.t)
+		verdict = "|cff66ccffYour best:|r |cffffffff" .. R.Fmt(mine.t) .. "|r with |cffffd100" .. mine.g .. "|r  " .. rankTxt(place) .. " of " .. of
+		local top = R:Board(realm, key, "All")[1]
+		if top and top[2].t < mine.t then verdict = verdict .. "  |cffff7777" .. R.Fmt(mine.t - top[2].t) .. " behind|r |cffffffff" .. top[2].g .. "|r" end
+	else
+		verdict = "|cff66ccffYour best:|r none yet."
+	end
+	verdict = verdict .. "\n|cff888888First pull after zoning in to " .. table.concat(dg.final, " / ") .. ", up to " .. (dg.max or D.GROUP_MAX) .. " players.|r"
+	rVerdict:SetText(verdict)
+
+	local rows
+	if UI.rk.web then rows = UI:WebRows()
+	elseif UI.rk.run then rows = UI:RunDetailRows()
+	elseif UI.rk.fv == "mine" then rows = UI:MyRunRows(realm)
+	else rows = UI:RunBoardRows(realm, faction, key) end
+	hintText:SetText("Click a group for its run.  A run: first pull after zoning in to the last boss.  Name your group when it finishes.")
+	hintText:Show()
+	local k = "r5" .. realm .. faction .. key .. tostring(UI.rk.fv) .. tostring(UI.rk.web) .. (UI.rk.run and (tostring(UI.rk.run.gk) .. UI.rk.run.key) or "")
+	mainList:SetData(rows, k == lastModeKey)
+	lastModeKey = k
+end
 end
 
 ------------------------------------------------------------------ Logs view

@@ -160,6 +160,67 @@ D.SCALING = {
 	what = "Raids under 30 players got harder per player; bigger raids a little easier.",
 }
 
+------------------------------------------------------------------ 5-man dungeons
+
+-- The level-60 dungeons with 5-man rankings (Dungeons.lua records the runs).
+-- A run is timed from the group's first combat inside to the death of the
+-- dungeon's final boss (any of "final"); "bosses" are the splits, in the
+-- order Atlas-CFM lists them (Turtle's dungeons too). Dungeons sharing a zone
+-- (Blackrock Spire, Dire Maul, Stratholme) are told apart by their final boss.
+-- "art": the dungeon's loading screen in the client (its file list, 8 Oct 2026).
+-- Turtle's dungeons' last bosses are from Atlas-CFM's maps; The Black Morass's
+-- is unclear, so either of its last two ends a run. Chat says which boss ended
+-- each run, so a wrong one shows up straight away.
+D.DUNGEONS = {
+	{ key = "brd", title = "Blackrock Depths", art = "LoadScreenBlackrockDepths", final = { "Emperor Dagran Thaurissan" },
+	  bosses = { "Lord Roccor", "High Interrogator Gerstahn", "Anub'shiah", "Eviscerator", "Gorosh the Dervish", "Grizzle",
+		"Hedrum the Creeper", "Ok'thor the Breaker", "Houndmaster Grebmar", "Pyromancer Loregrain", "Warder Stilgiss", "Verek",
+		"Watchman Doomgrip", "Fineous Darkvire", "Lord Incendius", "Bael'Gar", "General Angerforge", "Golem Lord Argelmach",
+		"Hurley Blackbreath", "Phalanx", "Plugger Spazzring", "Ribbly Screwspigot", "Ambassador Flamelash", "Panzor the Invincible",
+		"Magmus", "Emperor Dagran Thaurissan" } },
+	{ key = "lbrs", title = "Lower Blackrock Spire", art = "LoadScreenBlackrockSpire", final = { "Overlord Wyrmthalak" },
+	  bosses = { "Highlord Omokk", "Shadow Hunter Vosh'gajin", "War Master Voone", "Mor Grayhoof", "Bannok Grimaxe", "Mother Smolderweb",
+		"Crystal Fang", "Urok Doomhowl", "Quartermaster Zigris", "Halycon", "Gizrul the Slavener", "Ghok Bashguud", "Overlord Wyrmthalak" } },
+	{ key = "ubrs", title = "Upper Blackrock Spire", art = "LoadScreenBlackrockSpire", final = { "General Drakkisath" }, max = 10,
+	  bosses = { "Pyroguard Emberseer", "Solakar Flamewreath", "Jed Runewatcher", "Goraluk Anvilcrack", "Warchief Rend Blackhand",
+		"Gyth", "The Beast", "Lord Valthalak", "General Drakkisath" } },
+	{ key = "stratlive", title = "Stratholme (Live)", art = "LoadScreenStrathome", final = { "Balnazzar" },
+	  bosses = { "Skul", "Stratholme Courier", "Hearthsinger Forresten", "The Unforgiven", "Timmy the Cruel", "Malor the Zealous",
+		"Cannon Master Willey", "Archivist Galford", "Balnazzar" } },
+	{ key = "stratud", title = "Stratholme (Undead)", art = "LoadScreenStrathome", final = { "Baron Rivendare" },
+	  bosses = { "Magistrate Barthilas", "Stonespine", "Baroness Anastari", "Nerub'enkan", "Maleki the Pallid", "Ramstein the Gorger",
+		"Baron Rivendare" } },
+	{ key = "scholo", title = "Scholomance", art = "LoadScreenScholomance", final = { "Darkmaster Gandling" },
+	  bosses = { "Kirtonos the Herald", "Jandice Barov", "Lord Blackwood", "Rattlegore", "Death Knight Darkreaver", "Marduk Blackpool",
+		"Vectus", "Ras Frostwhisper", "Kormok", "Instructor Malicia", "Doctor Theolen Krastinov", "Lorekeeper Polkelt", "The Ravenian",
+		"Lord Alexei Barov", "Lady Illucia Barov", "Darkmaster Gandling" } },
+	{ key = "dme", title = "Dire Maul (East)", art = "LoadScreenDireMaul", final = { "Alzzin the Wildshaper" },
+	  bosses = { "Pusillin", "Zevrim Thornhoof", "Hydrospawn", "Lethtendris", "Alzzin the Wildshaper" } },
+	{ key = "dmw", title = "Dire Maul (West)", art = "LoadScreenDireMaul", final = { "Prince Tortheldrin" },
+	  bosses = { "Tendris Warpwood", "Illyanna Ravenoak", "Magister Kalendris", "Tsu'zee", "Immol'thar", "Lord Hel'nurath", "Prince Tortheldrin" } },
+	{ key = "dmn", title = "Dire Maul (North)", art = "LoadScreenDireMaul", final = { "King Gordok" },
+	  bosses = { "Guard Mol'dar", "Stomper Kreeg", "Guard Fengus", "Guard Slip'kik", "Captain Kromcrush", "Cho'Rush the Observer", "King Gordok" } },
+	{ key = "hq", title = "Hateforge Quarry", art = "LoadScreenHateforge", final = { "Har'gesh Doomcaller" },
+	  bosses = { "High Foreman Bargul Blackhammer", "Engineer Figgles", "Corrosis", "Hatereaver Annihilator", "Har'gesh Doomcaller" } },
+	{ key = "kc", title = "Karazhan Crypt", art = "LoadscreenKarazhanCrypt", final = { "Alarus" },
+	  bosses = { "Marrowspike", "Hivaxxis", "Corpsemuncher", "Guard Captain Gort", "Archlich Enkhraz", "Commander Andreon", "Alarus" } },
+	{ key = "bm", title = "The Black Morass", art = "LoadScreenCavernsTime", final = { "Antnormi", "Rotmaw" },
+	  bosses = { "Chronar", "Epidamu", "Drifting Avatar of Sand", "Time-Lord Epochronos", "Mossheart", "Antnormi", "Rotmaw" } },
+	{ key = "swv", title = "Stormwind Vault", art = "LoadScreenStormwindStockade", final = { "Volkan Cruelblade" },
+	  bosses = { "Aszosh Grimflame", "Tham'Grarr", "Black Bride", "Damian", "Volkan Cruelblade" } },
+}
+D.DUNGEON = {}        -- key -> dungeon
+D.DUNGEON_FINAL = {}  -- final boss name -> key
+D.DUNGEON_BOSS = {}   -- any boss name -> true
+for i = 1, table.getn(D.DUNGEONS) do
+	local d = D.DUNGEONS[i]
+	D.DUNGEON[d.key] = d
+	for j = 1, table.getn(d.final) do D.DUNGEON_FINAL[d.final[j]] = d.key end
+	for j = 1, table.getn(d.bosses) do D.DUNGEON_BOSS[d.bosses[j]] = true end
+end
+D.RUN_MIN, D.RUN_MAX = 120, 4 * 3600   -- a "run" outside this is broken (seconds)
+D.GROUP_MAX = 5                        -- players in a ranked group ("max" above: UBRS allows a 10-man raid)
+
 -- Rankings list name for instances whose zone text is short
 D.instanceTitle = { ["Ahn'Qiraj"] = "Temple of Ahn'Qiraj" }
 
