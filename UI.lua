@@ -2092,6 +2092,37 @@ function UI.FightRuns(fights)
 	return runs
 end
 
+-- 1:02:03 / 41:23
+function UI.Clock(secs)
+	secs = floor(secs or 0)
+	if secs >= 3600 then return string.format("%d:%02d:%02d", floor(secs / 3600), floor(math.mod(secs, 3600) / 60), math.mod(secs, 60)) end
+	return string.format("%d:%02d", floor(secs / 60), math.mod(secs, 60))
+end
+
+-- "   #3 of 40 since 6 Oct, #9 all time": where a kill (or, clear = true, the run's full
+-- clear) would rank on your realm's board if it were uploaded to Chronicle
+function UI.WouldRankText(rec, clear)
+	local B = W.Board
+	if not B or not B.WouldRank or rec.demo or (not clear and rec.result ~= "KILL") then return "" end
+	local p2, of2, p1, of1
+	if clear then
+		if not rec.clear then return "" end
+		p2, of2, p1, of1 = B:WouldRank("clears", rec.clearZone or rec.zone, rec.clear)
+	else
+		p2, of2, p1, of1 = B:WouldRank("kills", rec.enc, floor((rec.dur or 0) * 10 + 0.5) / 10)
+	end
+	if not p2 then return "" end
+	local s = (of2 > 0) and ("#" .. p2 .. " of " .. of2 .. " since " .. W.Data.SCALING.short) or ""
+	if of1 > 0 then s = s .. ((s ~= "") and ", " or "") .. "#" .. p1 .. " all time" end
+	return "   |cffffd100" .. s .. "|r|cffaaaaaa on " .. B.Realm() .. " if uploaded|r"
+end
+
+-- the last boss of a full clear: the official time and its rank, under the verdict
+function UI.ClearText(rec, newLine)
+	if not rec.clear then return "" end
+	return (newLine and "\n" or "   ") .. "|cff66ccffFull clear " .. UI.Clock(rec.clear) .. "|r" .. UI.WouldRankText(rec, true)
+end
+
 -- the header of one run: the raid, when, bosses down, wipes, how long; click folds it
 function UI.RunHeader(run, open)
 	local fights = WhoDidItDB.fights
@@ -2110,11 +2141,20 @@ function UI.RunHeader(run, open)
 		progress = ((n == getn(need)) and "|cff33ff33" or "|cffffffff") .. n .. "/" .. getn(need) .. "|r  "
 	end
 	local span = (run.lastMin or 0) - (run.firstMin or 0)
+	local clearRec
+	for j = 1, getn(run.idx) do
+		local r = fights[run.idx[j]]
+		if r.clear and (not clearRec or r.clear < clearRec.clear) then clearRec = r end
+	end
 	local title = run.demo and "Demo fights" or (W.Data.instanceTitle[run.zone] or run.zone)
 	local when = string.sub(run.first.date or "", 6, 10) .. " " .. string.sub(run.first.date or "", 12)
 	local line2 = "|cffaaaaaa" .. when .. "|r  " .. progress .. "|cff33ff33" .. kills .. "|r|cffaaaaaa k|r  "
 		.. ((wipes > 0) and ("|cffff5555" .. wipes .. "|r|cffaaaaaa w|r  ") or "")
-		.. ((span > 0) and ("|cffaaaaaa" .. floor(span / 60) .. "h" .. string.format("%02d", math.mod(span, 60)) .. "|r") or "")
+		.. (clearRec and ("|cff66ccff" .. UI.Clock(clearRec.clear) .. "|r")
+			or ((span > 0) and ("|cffaaaaaa" .. floor(span / 60) .. "h" .. string.format("%02d", math.mod(span, 60)) .. "|r") or ""))
+	if clearRec then
+		tinsert(list, 1, "|cff66ccffFull clear in " .. UI.Clock(clearRec.clear) .. "|r (first pull to the last boss)" .. UI.WouldRankText(clearRec, true))
+	end
 	tinsert(list, 1, " ")
 	tinsert(list, " ")
 	tinsert(list, "|cff888888Click to " .. (open and "fold" or "unfold") .. " this run.|r")
@@ -5178,7 +5218,7 @@ function UI:Refresh()
 		return
 	end
 
-	rTitle:SetText(rec.enc .. "  " .. (RESULT[rec.result] or rec.result) .. (rec.demo and "  |cff33ccff(demo)|r" or ""))
+	rTitle:SetText(rec.enc .. "  " .. (RESULT[rec.result] or rec.result) .. (rec.demo and "  |cff33ccff(demo)|r" or "") .. UI.WouldRankText(rec))
 	UI.SetHeaderArt(not rec.demo and rec.zone or nil)
 	local info = { rec.zone or "", rec.date or "", "Duration " .. FmtTime(rec.dur), "Deaths " .. getn(rec.deaths) }
 	if rec.healMana then tinsert(info, "Healer mana at wipe " .. pct(rec.healMana)) end
@@ -5188,7 +5228,7 @@ function UI:Refresh()
 		local b = rec.blame[1]
 		culprit = "\n|cffffd100Most to blame:|r " .. W.CName(b.name, b.class) .. " |cffaaaaaa(" .. b.pts .. " pts)|r"
 	end
-	rVerdict:SetText((rec.result == "KILL" and "|cff33ff33" or "|cffff7777") .. (rec.verdict or "") .. "|r" .. culprit)
+	rVerdict:SetText((rec.result == "KILL" and "|cff33ff33" or "|cffff7777") .. (rec.verdict or "") .. "|r" .. culprit .. UI.ClearText(rec, culprit == ""))
 
 	local rows
 	if UI.tab == "summary" and UI.cause then rows = UI:CauseRows(rec, UI.cause)

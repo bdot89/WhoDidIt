@@ -728,6 +728,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi fame|r - Hall of Fame: the biggest heroes and the Hall of Shame over every fight, best plays and worst blunders")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - the hidden realm channel (raid times from the master, 5-man runs)")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi timer on|off|reset|r - the run timer on screen (first pull to the last boss)")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi 5man|r - 5-man dungeon rankings,  " .. c .. "/wdi 5man name <name>|r - name your group,  " .. c .. "/wdi 5man on|off|r - share your group's runs")
 	if W.Board and W.Board.CanMaster and W.Board.CanMaster() then
 		DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - (you're a master) feed the Chronicle raid times to every WhoDidIt user on the realm")
@@ -884,6 +885,9 @@ local function slash(msg)
 	elseif cmd == "fame" or cmd == "alltime" or cmd == "hof" then
 		if not W.Career then W.Print(W.RESTART_MSG) return end
 		W.UI:SetMode("fame")
+	elseif cmd == "timer" then
+		if not W.RunTimer then W.Print(W.RESTART_MSG) return end
+		W.RunTimer:Slash(rest)
 	elseif cmd == "rollfor" then
 		if not W.Loot then W.Print(W.RESTART_MSG) return end
 		if rest == "on" or rest == "off" then W.Loot:SetOff(rest == "off")

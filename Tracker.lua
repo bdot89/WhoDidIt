@@ -194,7 +194,7 @@ function T:Finish(result)
 	if not F then return end
 	local now = GetTime()
 	F.tEnd = F.killedAt or F.idleSince or now
-	for _, b in pairs(F.bosses) do T:Accrue(b, now) end
+	for _, b in pairs(F.bosses) do T:Accrue(b, F.tEnd) end   -- (boss aggro time stops when the fight did)
 	F.result = result
 	T:Line(result == "KILL" and "kill" or "wipe", result == "KILL" and "Encounter won" or (result == "WIPE" and "Wipe" or "Fight reset"))
 	local fight = F
@@ -259,6 +259,16 @@ function T:CheckEnd()
 	-- some encounters drop combat between phases (Thaddius, C'Thun)
 	local grace = (not wiped and def and def.idleGrace) or 3
 	if now - F.idleSince < grace then return end
+	if not wiped and W.env.superwow then
+		local want = (def and def.final) or F.enc
+		for g, b in pairs(F.bosses) do
+			if b.name == want and not b.dead and UnitExists(g) and UnitIsDead(g) then
+				b.dead = true
+				T:CheckKill()
+			end
+		end
+		if F.killedAt then T:Finish("KILL") return end
+	end
 	if wiped then
 		T:Finish("WIPE")
 	elseif def and def.noDeath then
@@ -766,7 +776,7 @@ function T:Accrue(b, now)
 		local e = W.roster.byGuid[b.holder]
 		if e then
 			local p = F.players[e.name]
-			if p then p.aggroTime = p.aggroTime + (now - b.lastAcc) end
+			if p and now > b.lastAcc then p.aggroTime = p.aggroTime + (now - b.lastAcc) end
 		end
 	end
 	b.lastAcc = now
@@ -1129,9 +1139,37 @@ W:On("CHAT_MSG_COMBAT_HOSTILE_DEATH", function(msg)
 	end
 end)
 
--- leaving the world mid-fight: keep what we have
+-- Leaving the world mid-fight (a /reload, a disconnect, a loading screen) doesn't end
+-- the fight: it's kept (saved, for a /reload) and carried on when we're back in the same
+-- place within two minutes. Otherwise it ends then, as a reset, at the moment we left.
+local RESUME = 120
 W:On("PLAYER_LEAVING_WORLD", function()
-	if F then T:Finish("RESET") end
+	if not F or not WhoDidItDB then return end
+	F.leftAt, F.leftEpoch = GetTime(), time()
+	WhoDidItDB.liveFight = F
+end)
+W:On("PLAYER_ENTERING_WORLD", function()
+	local db = WhoDidItDB
+	if not db then return end
+	local saved = db.liveFight
+	db.liveFight = nil
+	if not F and saved then
+		F = saved
+		T.fight = F
+	end
+	if not F or not F.leftAt then return end
+	-- (the real clock: the game's timer starts again if the PC was restarted)
+	local away = time() - (F.leftEpoch or 0)
+	if away >= 0 and away < RESUME and F.zone == GetRealZoneText() then
+		F.leftAt, F.leftEpoch = nil, nil
+		F.idleSince = nil
+		T:Line("info", "Back after " .. floor(away) .. "s away (reload / disconnect) - the fight carries on")
+		if W.UI then W.UI:OnFightStart() end
+		return
+	end
+	F.idleSince = F.leftAt
+	F.leftAt, F.leftEpoch = nil, nil
+	T:Finish("RESET")
 end)
 
 -- once (1.23.4): fights saved as RESET by mistake. One whose boss is seen dying in

@@ -227,8 +227,20 @@ A kill or clear counts for the raid's majority guild (at least half the raid). P
 other realm. Every leaderboard time is compared with your guild's ("1:38.6 faster" / "3:51.1 slower"). The left column
 shows your guild's clear, its rank (gold / silver / bronze) and a green bar for how close you are to #1.
 
-### 5-man rankings
+### Run timer and where your times would rank
 
+- **Run timer:** a small window on screen while a run is on, in the timed raids and the level-60 dungeons. It starts
+  at the first pull inside (trash too) and stops on the last boss - the official time, the way the rankings count it.
+  While it runs it shows bosses down and the pace to beat (your guild's best, the realm's #1); at the end, the final
+  time and where it would rank if uploaded. Drag it to move it, right-click to hide it (`/wdi timer on|off|reset`).
+- **Where it would rank:** every boss kill in **Fights** shows where its time would finish on your realm's board if
+  the log were uploaded to Chronicle: `#3 of 40 since 6 Oct, #9 all time`. The last boss of a full clear also shows
+  the **official clear time** and its rank, and so does the run's header in the list (instead of the time between the
+  first and last fight).
+- **A /reload or a disconnect mid-fight** no longer splits the fight in two: WhoDidIt carries on with it when you're
+  back in the same place within two minutes.
+
+### 5-man rankings
 **Raids / 5-mans** at the top of the list on the Rankings tab (or `/wdi 5man`) switches to the 5-man boards: the 13
 level-60 dungeons (Blackrock Depths, Lower and Upper Blackrock Spire, Stratholme Live and Undead, Scholomance, Dire Maul
 East, West and North, and Turtle's Hateforge Quarry, Karazhan Crypt, The Black Morass and Stormwind Vault), each with
@@ -864,6 +876,7 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi                       open / close the window
 /wdi rankings              kill times & full clears
 /wdi 5man                  5-man dungeon rankings
+/wdi timer on|off|reset     the run timer on screen (first pull to the last boss)
 /wdi 5man name <name>      name the group you're in
 /wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)
 /wdi share on|off          the hidden realm channel: raid times from the master feed, 5-man runs (off = leave it)

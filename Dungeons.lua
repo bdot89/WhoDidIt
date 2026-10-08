@@ -416,6 +416,7 @@ local function say(text) W.Print("|cff33ccff5-man:|r " .. text) end
 complete = function(key, r, boss)
 	local dg = D().DUNGEON[key]
 	local secs = r.k[boss] or (time() - r.at)
+	r.cs, r.key = secs, key   -- (the run timer shows the final time)
 	local m, gk, n = R.Group()
 	local tail = " |cff888888(" .. boss .. " ended it)|r"
 	if not m then return end

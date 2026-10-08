@@ -509,6 +509,22 @@ function B:CurrentRun()
 	if r and not r.done and time() - r.start < RUN_MAX then return r end
 end
 
+-- the run in progress or just finished (the run timer shows its final time)
+function B:LastRun()
+	local r = currentRun()
+	if r and r.start and time() - r.start < RUN_MAX then return r end
+end
+
+-- where a time would rank on your realm's board if it were uploaded to Chronicle:
+-- since the raid scaling change (the era it's in), and of all time. nil: no board yet
+function B:WouldRank(kind, key, secs)
+	local realm = B.Realm()
+	local p2, of2 = B:Place(realm, kind .. "+", key, secs)
+	local p1, of1 = B:Place(realm, kind, key, secs)
+	if of1 == 0 and of2 == 0 then return nil end
+	return p2, of2, p1, of1
+end
+
 local function announce(text)
 	W.Print("|cff33ccffRankings:|r " .. text)
 end
@@ -1264,6 +1280,9 @@ function B:OnFight(rec)
 	end
 	r.done = true
 	local cs = now - r.start
+	-- the official time: on the run (the run timer) and on the last boss's fight (Fights)
+	r.cs, r.doneAt = cs, now
+	rec.clear, rec.clearZone = cs, r.zone
 	local title = W.Data.instanceTitle[r.zone] or r.zone
 	local oc = pb.clears[r.zone]
 	if not oc or cs < oc.t then
