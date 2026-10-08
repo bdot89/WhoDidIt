@@ -7,10 +7,10 @@
 	    (Data.lua D.clears) killed in the same run
 	The guild of a record is the raid's majority guild (>= half the raid).
 
-	Each guild's bests are shared with other WhoDidIt users on the same
-	realm through a hidden chat channel, so the board fills up with every
-	guild on the server that has at least one WhoDidIt user. Shared records
-	are self-reported - they're sanity-checked but can't be verified.
+	Every guild's times on the boards come only from the maintainer's master
+	feed and the download (Chronicle's logs). A time your own WhoDidIt
+	records is kept on your PC (your own board and personal bests); players
+	don't share raid times with each other.
 ----------------------------------------------------------------------]]
 
 local W = WhoDidIt
@@ -355,6 +355,26 @@ function B.PrePatch(rec)
 	return s and rec and rec.d and rec.d > 0 and rec.d < s.at and true or false
 end
 function B.PostKind(kind) return kind .. "+" end
+
+-- once: raid times other players' WhoDidIt sent before 1.23.1 go, so the boards
+-- hold only the master's (Chronicle) times and your own
+function B:PurgeShared()
+	if not WhoDidItDB or WhoDidItDB.sharedPurged then return end
+	for _, r in pairs(WhoDidItDB.board or {}) do
+		if type(r) == "table" then
+			for kind, keys in pairs(r) do
+				if type(keys) == "table" and (kind == "kills" or kind == "clears" or kind == "kills+" or kind == "clears+") then
+					for _, list in pairs(keys) do
+						for g, rec in pairs(list) do
+							if type(rec) == "table" and rec.net then list[g] = nil end
+						end
+					end
+				end
+			end
+		end
+	end
+	WhoDidItDB.sharedPurged = true
+end
 
 -- once: times recorded before this version that are from since the change
 -- go on the "since" boards too
@@ -1228,7 +1248,6 @@ function B:OnFight(rec)
 	if guild and B:Merge("kills", realm, rec.enc, guild, { t = secs, d = now, f = fac, n = size, by = me }) then
 		local rank, of = B:Rank(realm, "kills", rec.enc, guild, "All")
 		announce("new " .. guild .. " best on " .. rec.enc .. ": |cffffffff" .. B.Fmt(secs) .. "|r (#" .. rank .. " of " .. of .. " on " .. realm .. ")")
-		B:Share("K", guild, fac, rec.enc, secs, now, size)
 	end
 	if guild and WhoDidItDB.opts.banterKills then
 		B:Banter("kill", rec.enc, rec.enc, secs, oldKill, realm, guild, rival)
@@ -1259,14 +1278,12 @@ function B:OnFight(rec)
 	if guild and B:Merge("clears", realm, r.zone, guild, { t = cs, d = now, f = fac, n = size, by = me }) then
 		local rank, of = B:Rank(realm, "clears", r.zone, guild, "All")
 		announce("new " .. guild .. " clear record: #" .. rank .. " of " .. of .. " on " .. realm)
-		B:Share("C", guild, fac, r.zone, cs, now, size)
 	end
 end
 
 ------------------------------------------------------------------ sharing (hidden realm channel)
 
 local outq = {}
-local seen = {}        -- "K~guild~key" -> GetTime() last seen on the channel
 local respondAt, lastAnswer, asked
 
 local function chanId()
@@ -1293,11 +1310,6 @@ function B:Leave()
 	outq = {}
 end
 
-function B:Share(kind, guild, fac, key, secs, d, n)
-	if not WhoDidItDB.opts.shareBoard then return end
-	tinsert(outq, table.concat({ PROTO, kind, guild, fac, key, tostring(secs), tostring(d), tostring(n or 0) }, SEP))
-	seen[kind .. SEP .. guild .. SEP .. key] = GetTime()
-end
 
 -- a ready-made message for the channel (Dungeons.lua's 5-man runs)
 function B.QueueOut(msg)
@@ -1305,33 +1317,17 @@ function B.QueueOut(msg)
 	tinsert(outq, msg)
 end
 
--- ask everyone online for their guild's records
+-- ask everyone online for their 5-man groups' runs
 function B:Ask()
 	if not WhoDidItDB.opts.shareBoard then return end
 	tinsert(outq, PROTO .. SEP .. "Q")
 	asked = GetTime()
 end
 
--- answer a query: our own guild's records, unless a guildmate just sent them
+-- answer a query: our 5-man groups' bests (Dungeons.lua). Raid times only
+-- come from the master, so those aren't sent.
 local function answer()
-	-- our 5-man groups' bests (Dungeons.lua), guild or not
 	if W.Runs then W.Runs:Answer() end
-	local guild = B.MyGuild()
-	if not guild then return end
-	local r = B:DB()
-	local now = GetTime()
-	local sent = 0
-	for _, kind in ipairs({ "kills", "clears" }) do
-		local k = (kind == "kills") and "K" or "C"
-		for key, list in pairs(r[kind]) do
-			local rec = list[guild]
-			local id = k .. SEP .. guild .. SEP .. key
-			if rec and sent < 40 and not (seen[id] and now - seen[id] < 300) then
-				B:Share(k, guild, rec.f or B.Faction(), key, rec.t, rec.d, rec.n)
-				sent = sent + 1
-			end
-		end
-	end
 end
 
 local function split(msg)
@@ -1340,45 +1336,7 @@ local function split(msg)
 	return out
 end
 
-local recvCount = {}   -- records taken from each sender this session
 
--- Whose times count: a guild's times are only taken from a member of that
--- guild, and the game doesn't tell an addon a stranger's guild. So WhoDidIt
--- remembers the guild of every player it sees itself (raid, party, your guild
--- roster, target, mouseover) and takes a guild's times only from someone it
--- has seen in that guild. Times from someone not seen yet wait (in memory,
--- capped) until they are. A made-up time for another guild goes nowhere.
-local guildOf, nGuildOf = {}, 0   -- character -> guild name
-local held, nHeld = {}, 0         -- sender -> { messages waiting }
-local function learnGuild(name, g)
-	if not name or not g or g == "" or guildOf[name] == g then return end
-	if nGuildOf > 3000 then guildOf, nGuildOf = {}, 0 end
-	if not guildOf[name] then nGuildOf = nGuildOf + 1 end
-	guildOf[name] = g
-	local wait = held[name]
-	if wait then
-		held[name] = nil
-		nHeld = nHeld - 1
-		for i = 1, getn(wait) do B:Receive(wait[i], name) end
-	end
-end
-local function learnUnit(unit)
-	if UnitExists(unit) and UnitIsPlayer(unit) then learnGuild(UnitName(unit), (GetGuildInfo(unit))) end
-end
-B.LearnUnit = learnUnit
-W:On("UPDATE_MOUSEOVER_UNIT", function() learnUnit("mouseover") end)
-W:On("PLAYER_TARGET_CHANGED", function() learnUnit("target") end)
-local function learnGroup()
-	for i = 1, GetNumRaidMembers() do learnUnit("raid" .. i) end
-	for i = 1, GetNumPartyMembers() do learnUnit("party" .. i) end
-end
-W:On("RAID_ROSTER_UPDATE", learnGroup)
-W:On("PARTY_MEMBERS_CHANGED", learnGroup)
-W:On("GUILD_ROSTER_UPDATE", function()
-	local g = B.MyGuild()
-	if not g then return end
-	for i = 1, GetNumGuildMembers() do learnGuild((GetGuildRosterInfo(i)), g) end
-end)
 
 function B:Receive(msg, sender)
 	local p = split(msg)
@@ -1394,39 +1352,8 @@ function B:Receive(msg, sender)
 		if W.Runs then W.Runs:Receive(p, sender) end
 		return
 	end
-	if kind ~= "K" and kind ~= "C" then return end
-	local guild, fac, key = p[3], p[4], p[5]
-	local secs, d, n = tonumber(p[6]), tonumber(p[7]), tonumber(p[8])
-	if not okGuild(guild) or not secs or not d then return end
-	-- one sender can't flood the boards
-	recvCount[sender or "?"] = (recvCount[sender or "?"] or 0) + 1
-	if recvCount[sender or "?"] > 60 then return end
-	if fac ~= "Alliance" and fac ~= "Horde" then return end
-	if d > time() + 86400 then return end
-	if kind == "K" then
-		if not W.Data.encounters[key] or secs < KILL_MIN or secs > KILL_MAX then return end
-	else
-		if not W.Data.clears[key] or secs < CLEAR_MIN or secs > CLEAR_MAX then return end
-	end
-	-- only a member of that guild can share its times
-	local sg = (sender == UnitName("player")) and B.MyGuild() or guildOf[sender or ""]
-	if not sg then
-		local wait = held[sender or "?"]
-		if not wait then
-			if nHeld >= 40 then held, nHeld = {}, 0 end   -- the oldest waiting go
-			wait = {}
-			held[sender or "?"] = wait
-			nHeld = nHeld + 1
-		end
-		if getn(wait) < 60 then tinsert(wait, msg) end
-		recvCount[sender or "?"] = recvCount[sender or "?"] - 1   -- counted when it's taken
-		return
-	end
-	if sg ~= guild then return end
-	seen[kind .. SEP .. guild .. SEP .. key] = GetTime()
-	if B:Merge(kind == "K" and "kills" or "clears", B.Realm(), key, guild,
-		{ t = secs, d = d, f = fac, n = n, by = sender, net = true }) then B.rivalsDirty = true end
-	if W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
+	-- K / C (a guild's kill / clear time) from older versions: ignored. Raid
+	-- times only come from the master feed.
 end
 
 W:On("CHAT_MSG_CHANNEL", function(msg, sender, lang, chanFull, target, flags, zoneId, chanNum, chanName)
@@ -1440,6 +1367,7 @@ end)
 local joinAt
 W:On("PLAYER_ENTERING_WORLD", function()
 	if not joinAt then joinAt = GetTime() + 15 end
+	B:PurgeShared()
 	B:SplitEra()
 	B:SeedSnapshot()
 	B:LoadChronicle()
@@ -1453,8 +1381,6 @@ W:Every(2, function()
 	if joinAt and now >= joinAt then
 		joinAt = nil
 		B:Join()
-		-- your guild's roster: whose times count for your guild (see learnGuild)
-		if IsInGuild() and GuildRoster then GuildRoster() end
 		if not asked then B:Ask() end
 	end
 	if respondAt and now >= respondAt then

@@ -648,7 +648,7 @@ do
 	local w = floor((LEFTW - 20) / 2)
 	UI.kindBtns = {}
 	local defs = {
-		{ false, "Raids", { "Raid rankings: boss kill times and full clears of every guild,", "from WhoDidIt users and Chronicle." } },
+		{ false, "Raids", { "Raid rankings: boss kill times and full clears of every guild,", "from Chronicle, through the maintainer's master feed." } },
 		{ true, "5-mans", { "5-man rankings: the fastest groups through each level-60 dungeon,", "first pull to the last boss. Click a group for its run:", "members, boss splits and deaths. Name your group when it finishes." } },
 	}
 	for i = 1, getn(defs) do
@@ -1206,7 +1206,7 @@ tooltip(UI.ModeButton("consumes"), "Consumes", { "Each player's flask, elixirs, 
 	"and every potion, rune and healthstone they used. Check raid now scans the raid before a pull,",
 	"and |cff33ff33Open DopingControl|r opens the full raid check (buffs, debuffs, resistances, hit, enchants)." })
 tooltip(UI.ModeButton("fights"), "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
-tooltip(UI.ModeButton("rankings"), "Rankings", { "Boss kill times and full clears: yours, your guild's, and every guild on your realm that has a WhoDidIt user." })
+tooltip(UI.ModeButton("rankings"), "Rankings", { "Boss kill times and full clears: yours, your guild's and every guild on the server (from Chronicle),", "and 5-man dungeon runs." })
 tooltip(UI.ModeButton("logs"), "Chronicle Logs", { "Chronicle combat logging (built in): start, stop, save, archive and delete", "the log you upload to chronicleclassic.com." })
 tooltip(UI.ModeButton("marks"), "Auto Marker", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
 	"and quick save - mark mobs in game, click Save marks as pack." })
@@ -1490,7 +1490,7 @@ tooltip(banterKillBtn, "Kill banter", banterTip("boss kill"))
 tooltip(banterClearBtn, "Clear banter", banterTip("full clear"))
 tooltip(rivalBtn, "Rival alerts", function()
 	return {
-		"Watches for new times (from the Chronicle sync or WhoDidIt users) that beat",
+		"Watches for new times (from Chronicle, through the master feed) that beat",
 		"our guild's best - on " .. W.Board.Realm() .. " or the fastest on another realm.",
 		"On: when the raid enters that instance, post who beat us and taunt us to win it back.",
 		"Off: they're still listed under Rival watch, but nothing is posted.",
@@ -3328,7 +3328,7 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 			tinsert(rows, row(C_DIM .. "No times since " .. W.Data.SCALING.short .. " yet (" .. W.Data.SCALING.name .. "). Switch to All times at the top.|r"))
 			return
 		end
-		tinsert(rows, row(C_DIM .. "No times yet. They show up when you or a WhoDidIt user on your realm gets one,|r"))
+		tinsert(rows, row(C_DIM .. "No times yet. Yours show up when you get one,|r"))
 		tinsert(rows, row(C_DIM .. "or when the raid times arrive from the master feed.|r"))
 		return
 	end

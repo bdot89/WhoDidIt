@@ -336,7 +336,7 @@ local DEFAULTS = {
 	shoutChannel = "RAID",  -- designated channel for reports & shout-outs ("#name" = custom channel)
 	autoShout   = "off",    -- off / smart (shame wipes, praise kills) / shame / praise / both
 	chatColors  = true,     -- colour names, times and numbers in posted messages
-	shareBoard  = true,     -- share guild kill/clear records with WhoDidIt users on the realm
+	shareBoard  = true,     -- the hidden realm channel: raid times from the master feed, 5-man runs
 	chronStartOnPull = true,  -- start Chronicle logging when a boss is pulled
 	chronSaveOnFight = true,  -- save the Chronicle log after every boss fight
 	banterKills  = false,   -- fun line in the shout channel after every boss kill (the raid leader switches it on)
@@ -727,7 +727,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi trash on|off|r - also track elite trash pulls")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi threat on|off|r - query server threat when TWThreat isn't loaded")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi fame|r - Hall of Fame: the biggest heroes and the Hall of Shame over every fight, best plays and worst blunders")
-	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - share them with WhoDidIt users on your realm")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi rankings|r - kill times & clears,  " .. c .. "/wdi share on|off|r - the hidden realm channel (raid times from the master, 5-man runs)")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi 5man|r - 5-man dungeon rankings,  " .. c .. "/wdi 5man name <name>|r - name your group,  " .. c .. "/wdi 5man on|off|r - share your group's runs")
 	if W.Board and W.Board.CanMaster and W.Board.CanMaster() then
 		DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi master on|off|r - (you're a master) feed the Chronicle raid times to every WhoDidIt user on the realm")
@@ -909,7 +909,7 @@ local function slash(msg)
 	elseif cmd == "share" then
 		db.opts.shareBoard = (rest ~= "off")
 		if db.opts.shareBoard then W.Board:Join() else W.Board:Leave() end
-		W.Print("Sharing kill times with WhoDidIt users on this realm: " .. (db.opts.shareBoard and "on" or "off"))
+		W.Print("WhoDidIt's hidden realm channel (raid times from the master feed, 5-man runs): " .. (db.opts.shareBoard and "on" or "off"))
 	elseif cmd == "demo" or cmd == "test" then
 		W.Demo:Run(rest)
 	elseif cmd == "start" then

@@ -43,7 +43,7 @@ needs, in one drag-and-drop folder:
 - 📝 **Chronicle Logs.** Drives the Chronicle combat logger: start, save, archive and upload your logs. *Built in; logs nothing until you say yes.*
 - 💀 **Auto Marker.** Marks whole packs in one go, smart marks for tricky fights, quick save for your own packs, and **Learn** to build packs from a normal clear. *~365 raid packs come with the download (from AutoMarker's data, credited), nothing else needed.*
 - 💰 **RollForML.** Soft-res master looting with RollFor, with a step-by-step guide. *Built in.* **Auto-loot** hands out the trash loot for you.
-- 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and nothing from your PC is shared (with sharing on: your guild's best times, and your 5-man group's runs with its members' names; `/wdi 5man off` opts out). See [Privacy and security](#privacy-and-security).
+- 🛡️ **Safe by default.** Nothing goes to a public chat by itself, other guilds' names are never posted without you seeing the text first, and nothing from your PC is shared (with sharing on: your 5-man group's runs with its members' names, and your guild's Hall of Fame fights to your guild; both ask or opt out). In a raid only the leader and assistants can post, and raid times come only from the maintainer's master. See [Privacy and security](#privacy-and-security).
 
 ## Screenshots
 
@@ -271,14 +271,15 @@ by the old system. Times from before and after aren't directly comparable, so Ra
   still all-time.
 ### Where the raid times come from
 
-Rankings fills up from three places (hover a row to see which one a time came from):
+Rankings fills up from these (hover a row to see which one a time came from). Every guild's raid times come only from
+the maintainer's master feed and the download; players' WhoDidIt never sends raid times to each other:
 
 | Source | What it brings | You need |
 | --- | --- | --- |
 | **The download** | Every guild's Chronicle times as of the maintainer's last publish (`RaidTimes.lua`), so a fresh install has full Rankings at once, even with the master offline | just the addon |
 | **[Master feed](#master-feed-nothing-to-install)** | Everything newer, passed on in game by the maintainer's character | just the addon |
 | **[Sync helper](#sync-helper-maintainer-only)** | Where the feed gets them: the maintainer's PC fetches Chronicle's times every 30 minutes | nothing (maintainer only) |
-| **Other WhoDidIt users** | Each guild's own bests, shared by its members right after the kill: before anyone uploads a log, and from guilds that never upload | just the addon |
+| **Your own WhoDidIt** | Your raid's kill and clear times, recorded as they happen: on your own board and personal bests, on your PC only | just the addon |
 
 
 
@@ -408,7 +409,7 @@ and preview a line with **Test banter** or `/wdi banter test`.
 
 ### Rival watch
 
-Every minute WhoDidIt checks the new times from Chronicle (feed or helper) and from WhoDidIt users on the realm. Any
+Every minute WhoDidIt checks the new times from Chronicle (the master feed, or the helper on the maintainer's PC). Any
 time that beats our guild's best, and was set after it, goes on the **Rival watch**. On another realm, it counts when
 that realm's fastest guild gets under our time.
 - Rankings marks those instances and bosses with a red **!** and lists them under **Rival watch**. Click one to see
@@ -841,7 +842,8 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 /wdi rankings              kill times & full clears
 /wdi 5man                  5-man dungeon rankings
 /wdi 5man name <name>      name the group you're in
-/wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)/wdi share on|off          share your guild's times with WhoDidIt users on the realm (off = leave the hidden channel)
+/wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)
+/wdi share on|off          the hidden realm channel: raid times from the master feed, 5-man runs (off = leave it)
 /wdi feed on|off           take / ignore the raid times from the master feed
 /wdi master list           whose raid times you take (remove|add <name>: stop / start trusting one of them)
 /wdi banter kills|clears on|off   fun kill / clear time lines (off by default)
@@ -937,7 +939,7 @@ WhoDidIt is built so it can't get you into trouble in chat, and so nothing about
 
 | Who sends | What they send |
 | --- | --- |
-| Every WhoDidIt user (sharing on) | Their guild's best kill and clear times: guild name, faction, boss or instance, time, date and raid size |
+| Every WhoDidIt user (sharing on) | Only "send me the 5-man runs". Players never send raid times: those only come from the master. |
 | The master | Chronicle's times: guild names, raid and boss names, times, dates, raid sizes and Chronicle log links |
 | Anyone asking the master | Only "send me what's new since …" |
 | Guild members, on the hidden **guild** addon channel (Hall of Fame sharing on) | Each fight they recorded: who was in it and their classes, deaths, hero and blame points by kind, the MVP and most to blame, the two best plays and worst blunders. Only to the guild. |
@@ -950,13 +952,10 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 
 - The feed only from the maintainer's master characters (`/wdi master remove` stops trusting one); anyone else
   sending feed messages is ignored. Asking the master is rationed (see [Master feed](#master-feed-nothing-to-install)).
-- **A guild's shared times only count from a member of that guild.** The game won't tell an addon a stranger's
-  guild, so WhoDidIt remembers the guild of players it sees itself (your raid or party, your guild roster, anyone you
-  target or mouse over) and takes a guild's times only from someone it has seen in that guild. Times from someone not
-  seen yet wait until they are. A made-up time for another guild goes nowhere.
-- They're also sanity-checked (a real boss, a kill between 5 seconds and an hour, a clear between 2 minutes and 8
-  hours, no future dates), capped at 60 records per sender, and each board keeps only the 60 fastest guilds (always
-  including yours). Hover a row to see where a time came from.
+- **Raid times only from the master.** Nobody else's WhoDidIt sends raid times, and any that arrive (older versions
+  sent their guild's) are ignored; ones received before 1.23.1 were removed. A made-up time goes nowhere.
+- The master's times are sanity-checked too (a real raid, a kill between 10 seconds and an hour, a clear between 2
+  minutes and 8 hours, no future dates). Hover a row to see where a time came from.
 - **A 5-man run is only taken from someone who was in that group**, and checked the same way: a real dungeon, 2
   minutes to 4 hours, real class names, a group name of 2-24 characters without colour codes or links, at most 40 runs
   per sender, 60 groups per dungeon (always including yours). Group names come from other players: they're only shown

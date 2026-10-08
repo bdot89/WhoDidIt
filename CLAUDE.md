@@ -51,7 +51,7 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   raid chat (master looter allowed) without touching their files.
 - A message kind that is accepted without the trusted-sender check must not make anyone else
   send, store or compute without a cooldown and a cap (A and Q in Board.lua are rationed).
-- A guild's shared times only count from a sender seen in that guild (Board.lua, learnGuild).
+- Raid times only come from the master feed and the download: players never send K / C records, B:Receive ignores them, and B:PurgeShared removed the ones received before 1.23.1. Your own recorded times stay on your PC.
 - Every table keyed by a GUID, a name or an error text needs an eviction rule.
 - Every Lua function may use at most 32 upvalues: check the big ones (FeedReceive, the feed
   ticker in Board.lua) when adding file-level locals they use.
