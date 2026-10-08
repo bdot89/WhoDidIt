@@ -72,8 +72,12 @@ $Instances = @(
 # Besides the all-time bests, each guild's best SINCE then is written too
 # (C2 / K2 lines; the same as C / K). Keep in step with D.SCALING in Data.lua.
 $ScalingCutoff = 1791262440
-$Alliance = @("Human", "Dwarf", "NightElf", "Night Elf", "Gnome", "HighElf", "High Elf", "Draenei")
-$Horde    = @("Orc", "Troll", "Tauren", "Undead", "Scourge", "Goblin", "BloodElf", "Blood Elf")
+# On OctoWoW (as on Turtle WoW) High Elves are Alliance, and Chronicle reports their race
+# as "BloodElf": counted as Horde, two High Elves made any Alliance raid "Mixed". Goblins are Horde.
+$Alliance = @("Human", "Dwarf", "NightElf", "Night Elf", "Gnome", "HighElf", "High Elf", "BloodElf", "Blood Elf", "Draenei")
+$Horde    = @("Orc", "Troll", "Tauren", "Undead", "Scourge", "Goblin")
+# realms where the factions can't raid together: a raid there is never "Mixed" (its majority counts)
+$SingleFaction = @("Y'Shaarj")
 
 # tools -> WhoDidIt -> AddOns -> Interface -> WoW folder
 $WowDir    = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
@@ -169,7 +173,7 @@ function To-Epoch($iso) {
 }
 
 # Alliance / Horde from the raiders' races; Mixed for cross-faction raids
-function Get-Faction($players) {
+function Get-Faction($players, $realm) {
     $a = 0; $h = 0
     if ($players) {
         foreach ($p in $players.PSObject.Properties) {
@@ -180,9 +184,10 @@ function Get-Faction($players) {
     # Mixed when 2+ players of each faction raided together; one odd player
     # (a log glitch) doesn't flip a raid
     if ($a + $h -eq 0) { return "Unknown" }
-    if ($a -ge 2 -and $h -ge 2) { return "Mixed" }
+    if ($SingleFaction -notcontains $realm -and $a -ge 2 -and $h -ge 2) { return "Mixed" }
     if ($a -gt $h) { return "Alliance" }
     if ($h -gt $a) { return "Horde" }
+    if ($SingleFaction -contains $realm) { return "Unknown" }
     return "Mixed"
 }
 
@@ -227,11 +232,11 @@ function Save-Cache($cache) {
 # faction + your characters for one raid (roster only: ~4 KB), cached
 function Get-Attendance($id, $realm, $cache) {
     if (-not $id) { return $null }
-    # fv 3 = faction worked out with the current rule (older entries are read again once)
-    if ($cache.att.ContainsKey($id) -and [int]$cache.att[$id].fv -ge 3) { return $cache.att[$id] }
+    # fv 4 = faction worked out with the current rule (High Elves Alliance; older entries are read again once)
+    if ($cache.att.ContainsKey($id) -and [int]$cache.att[$id].fv -ge 4) { return $cache.att[$id] }
     $i = Get-Api ("/raidlogs/instances/" + $id + "?attendance_only=true")
     if (-not $i) { return $null }
-    $a = @{ faction = (Get-Faction $i.players); mine = (Get-Mine $realm $i.players); fv = 3 }
+    $a = @{ faction = (Get-Faction $i.players $realm); mine = (Get-Mine $realm $i.players); fv = 4 }
     $cache.att[$id] = $a
     return $a
 }
@@ -463,8 +468,8 @@ function Sync {
         $cache.logs[$a.id] = @{
             instance = $a.name; realm = $a.realmName; slug = $a.slug;
             guild = $a.guild.name; guildId = $a.guild.id; players = $a.player_count;
-            faction = (Get-Faction $inst.players); mine = (Get-Mine $a.realmName $inst.players);
-            ended = (To-Epoch $a.ended_at); kills = (Read-LogKills $inst); v = 3
+            faction = (Get-Faction $inst.players $a.realmName); mine = (Get-Mine $a.realmName $inst.players);
+            ended = (To-Epoch $a.ended_at); kills = (Read-LogKills $inst); v = 4
         }
         if ($done % 25 -eq 0 -or $done -eq $todo.Count) {
             Save-Cache $cache
@@ -478,9 +483,9 @@ function Sync {
     #     existed, and best clears older than the look-back, are fetched here, -DetailsPerSync at a time.
     $best = Get-BestKills $cache
     $need = [ordered]@{}
-    foreach ($b in $best.Values) { if ([int]$cache.logs[$b.id].v -lt 3) { $need[$b.id] = $null } }   # v 3 = detail + current faction rule
+    foreach ($b in $best.Values) { if ([int]$cache.logs[$b.id].v -lt 4) { $need[$b.id] = $null } }   # v 4 = detail + current faction rule
     foreach ($c in $clears.Values) {
-        if ($c.id -and (-not $cache.logs.ContainsKey([string]$c.id) -or [int]$cache.logs[[string]$c.id].v -lt 3)) { $need[[string]$c.id] = $c }
+        if ($c.id -and (-not $cache.logs.ContainsKey([string]$c.id) -or [int]$cache.logs[[string]$c.id].v -lt 4)) { $need[[string]$c.id] = $c }
     }
     $left = $need.Count
     if ($left -gt 0) { Log "Raid details to read for the boards: $left (up to $DetailsPerSync now, the rest on later syncs)" }
@@ -495,11 +500,11 @@ function Sync {
         $c = $need[$id]
         if ($old) {
             $cache.logs[$id] = @{ instance = $old.instance; realm = $old.realm; slug = $old.slug; guild = $old.guild; guildId = $old.guildId;
-                players = $old.players; faction = (Get-Faction $inst.players); mine = @($old.mine); ended = $old.ended; kills = (Read-LogKills $inst); v = 3 }
+                players = $old.players; faction = (Get-Faction $inst.players $old.realm); mine = @($old.mine); ended = $old.ended; kills = (Read-LogKills $inst); v = 4 }
         } elseif ($c) {
             $cache.logs[$id] = @{ instance = $c.instance; realm = $c.realm; slug = $c.slug; guild = $c.guild; guildId = $c.guildId;
-                players = $c.players; faction = (Get-Faction $inst.players); mine = (Get-Mine $c.realm $inst.players); ended = $c.ended;
-                kills = (Read-LogKills $inst); v = 3 }
+                players = $c.players; faction = (Get-Faction $inst.players $c.realm); mine = (Get-Mine $c.realm $inst.players); ended = $c.ended;
+                kills = (Read-LogKills $inst); v = 4 }
         }
         if ($n % 25 -eq 0) { Save-Cache $cache; Log "Raid details: $n / $([math]::Min($DetailsPerSync, $left))" }
     }

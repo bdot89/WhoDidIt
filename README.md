@@ -364,7 +364,9 @@ tools\WhoDidIt-Sync.cmd -DetailsPerSync 600  read more raids in full per sync (d
   right after a raid is uploaded.
 - **Rate limit:** the helper stays within Chronicle's limit (about one request a second) and caches what it has read in
   `CustomData\WhoDidIt_ChronicleCache.json`. The API is marked experimental by Chronicle, so it may change.
-- **Faction:** comes from the raiders' races. OctoWoW raids cross-faction, so many guilds show as **M** (mixed).
+- **Faction:** comes from the raiders' races. High Elves count as Alliance (Chronicle reports them as "BloodElf").
+  On cross-faction realms (N'Zoth, C'Thun) a raid with both factions shows as **M** (mixed); on Y'Shaarj, where the
+  factions can't raid together, a raid gets its majority faction.
 
 **Run it in the background:** double-click **`tools\AutoSync-On.cmd`** once. The helper then runs with **no window**
 and keeps itself running: it starts when you log into Windows, when you unlock the PC (also after sleep, for PCs that
