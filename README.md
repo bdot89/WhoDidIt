@@ -66,7 +66,7 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
   </tr>
   <tr>
     <td width="50%"><img src="docs/consumes-casters.jpg" alt="Consumes, casters"><br><b>Consumes, hover and totals.</b> Hover any square for the buff (or why it's empty); click a role header to fold it. <b>Missing per slot</b> at the bottom counts the gaps in each column. <b>Used</b> (top left of the grid) switches to every item used during the fight: mana and healing potions, runes, tea, healthstones, bandages, protection potions and bombs, with counts.</td>
-    <td width="50%"><img src="docs/dopingcontrol.jpg" alt="DopingControl"><br><b>Full check (DopingControl).</b> DopingControl by ShempError, built in exactly as its author made it: consumables, class buffs, debuffs, resistances, hit and equipment enchants for the whole raid. Open it with the green <b>Open DopingControl</b> button on the Consumes tab or <code>/dc</code>.</td>
+    <td width="50%"><img src="docs/dopingcontrol.jpg" alt="DopingControl"><br><b>DopingControl (the full raid check).</b> DopingControl by ShempError, built in exactly as its author made it: consumables, class buffs, debuffs, resistances, hit and equipment enchants for the whole raid. Open it with the green <b>Open DopingControl</b> button on the Consumes tab or <code>/dc</code>.</td>
   </tr>
 </table>
 
