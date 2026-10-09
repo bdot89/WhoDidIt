@@ -2161,12 +2161,12 @@ function UI.RunHeader(run, open)
 		if rec.result == "KILL" then kills = kills + 1; killed[rec.enc] = true else wipes = wipes + 1 end
 		tinsert(list, (string.sub(rec.date or "", 12)) .. "  " .. rec.enc .. "  " .. FmtTime(rec.dur) .. "  " .. (RESULT[rec.result] or rec.result or ""))
 	end
+	-- line 1: the raid and how many of its full-clear bosses are down ("Molten Core  9/10")
 	local need = W.Data.clears[run.zone]
-	local progress = ""
+	local progress, nDown = "", 0
 	if need then
-		local n = 0
-		for i = 1, getn(need) do if killed[need[i]] then n = n + 1 end end
-		progress = ((n == getn(need)) and "|cff33ff33" or "|cffffffff") .. n .. "/" .. getn(need) .. "|r  "
+		for i = 1, getn(need) do if killed[need[i]] then nDown = nDown + 1 end end
+		progress = "  " .. ((nDown == getn(need)) and "|cff33ff33" or "|cffffffff") .. nDown .. "/" .. getn(need) .. "|r"
 	end
 	local span = (run.lastMin or 0) - (run.firstMin or 0)
 	local clearRec
@@ -2176,17 +2176,35 @@ function UI.RunHeader(run, open)
 	end
 	local title = run.demo and "Demo fights" or (W.Data.instanceTitle[run.zone] or run.zone)
 	local when = string.sub(run.first.date or "", 6, 10) .. " " .. string.sub(run.first.date or "", 12)
-	local line2 = "|cffaaaaaa" .. when .. "|r  " .. progress .. "|cff33ff33" .. kills .. "|r|cffaaaaaa k|r  "
-		.. ((wipes > 0) and ("|cffff5555" .. wipes .. "|r|cffaaaaaa w|r  ") or "")
-		.. (clearRec and ("|cff66ccff" .. UI.Clock(clearRec.clear) .. "|r")
-			or ((span > 0) and ("|cffaaaaaa" .. floor(span / 60) .. "h" .. string.format("%02d", math.mod(span, 60)) .. "|r") or ""))
+	-- line 2, in words: when, kills, wipes, and how long (the official clear time when it was one)
+	local long = (span > 0) and ("|cffaaaaaa" .. ((span >= 60) and (floor(span / 60) .. "h " .. string.format("%02d", math.mod(span, 60))) or (span .. " min")) .. "|r") or ""
+	-- (today's runs show the time, older ones the date: the line stays short; both are in the tooltip)
+	local today = string.sub(run.first.date or "", 1, 10) == date("%Y-%m-%d")
+	local shortWhen = today and string.sub(run.first.date or "", 12) or string.sub(run.first.date or "", 6, 10)
+	-- (about 30 characters fit: a full clear shows its time instead of the wipes and the span)
+	local killsTxt = "|cff33ff33" .. kills .. "|r|cffaaaaaa " .. ((kills == 1) and "kill" or "kills") .. "|r"
+	local line2
 	if clearRec then
-		tinsert(list, 1, "|cff66ccffFull clear in " .. UI.Clock(clearRec.clear) .. "|r (first pull to the last boss)" .. UI.WouldRankText(clearRec, true))
+		line2 = "|cffaaaaaa" .. shortWhen .. "|r  |cff66ccffclear " .. UI.Clock(clearRec.clear) .. "|r  " .. killsTxt
+	else
+		line2 = "|cffaaaaaa" .. shortWhen .. "|r  " .. killsTxt
+			.. ((wipes > 0) and (" |cffff5555" .. wipes .. "|r|cffaaaaaa " .. ((wipes == 1) and "wipe" or "wipes") .. "|r") or "")
+			.. "  " .. long
 	end
-	tinsert(list, 1, " ")
+	-- the tooltip says what each number is
+	local key = {}
+	if need then tinsert(key, "|cffffffff" .. nDown .. "/" .. getn(need) .. "|r bosses of the full clear killed") end
+	tinsert(key, "|cff33ff33" .. kills .. "|r boss " .. ((kills == 1) and "kill" or "kills") .. ((wipes > 0) and (", |cffff5555" .. wipes .. "|r " .. ((wipes == 1) and "wipe or reset" or "wipes or resets")) or ""))
+	if clearRec then
+		tinsert(key, "|cff66ccffFull clear in " .. UI.Clock(clearRec.clear) .. "|r (first pull to the last boss)" .. UI.WouldRankText(clearRec, true))
+	elseif span > 0 then
+		tinsert(key, "|cffaaaaaa" .. span .. " min|r from the first boss fight to the last")
+	end
+	tinsert(key, " ")
+	for i = getn(key), 1, -1 do tinsert(list, 1, key[i]) end
 	tinsert(list, " ")
 	tinsert(list, "|cff888888Click to " .. (open and "fold" or "unfold") .. " this run.|r")
-	return row("|cffffd100" .. title .. "|r\n" .. line2, open and "|cffffd100-|r" or "|cffffd100+|r",
+	return row("|cffffd100" .. title .. "|r" .. progress .. "\n" .. line2, open and "|cffffd100-|r" or "|cffffd100+|r",
 		{ head = true, art = UI.ZoneArt(run.zone), tipTitle = title .. "  " .. when, tip = list,
 		  click = function() UI.runOpen[run.key] = not open; UI:Refresh() end })
 end
