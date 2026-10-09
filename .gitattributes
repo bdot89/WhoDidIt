@@ -21,3 +21,5 @@
 /tools/WhoDidIt-Sync.ps1 export-ignore
 /tools/Website-Export.ps1 export-ignore
 /tools/website.example.json export-ignore
+# GitHub's language bar counts only the addon: the maintainer's tools in tools\ are left out
+/tools/** linguist-vendored
