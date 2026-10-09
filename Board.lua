@@ -1709,9 +1709,9 @@ local function lineKey(line)
 	local p = splitBar(line)
 	local t = p[1]
 	if t == "C" or t == "C2" then
-		return t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or ""), (p[6] or "") .. "|" .. (p[7] or "") .. "|" .. (p[9] or ""), tonumber(p[7]) or 0
+		return t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or ""), (p[6] or "") .. "|" .. (p[7] or "") .. "|" .. (p[9] or ""), tonumber(p[7]) or 0, p[5]
 	elseif t == "K" or t == "K2" then
-		return t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or "") .. "|" .. (p[5] or ""), (p[7] or "") .. "|" .. (p[8] or "") .. "|" .. (p[10] or ""), tonumber(p[8]) or 0
+		return t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or "") .. "|" .. (p[5] or ""), (p[7] or "") .. "|" .. (p[8] or "") .. "|" .. (p[10] or ""), tonumber(p[8]) or 0, p[6]
 	end
 end
 
@@ -1724,19 +1724,27 @@ function B.NoteMasterLines(text, synced)
 	local first = (WhoDidItDB.masterSeen == nil)
 	local ms = WhoDidItDB.masterSeen or { sig = {}, at = {} }
 	WhoDidItDB.masterSeen = ms
+	-- (and its faction: a corrected faction - e.g. High Elves counted as Alliance - goes out
+	-- again too; the first time a line's faction is seen it's only noted, so nothing floods)
+	-- (the first time this runs on a master that has been feeding: every line goes out
+	-- once, so factions corrected before now reach everyone too)
+	local upgrade = (ms.fac == nil) and not first
+	ms.fac = ms.fac or {}
 	local present = {}
 	for line in string.gfind(text, "[^\r\n]+") do
-		local key, sig, ended = lineKey(line)
+		local key, sig, ended, fac = lineKey(line)
 		if key then
 			present[key] = true
-			if ms.sig[key] ~= sig then
+			local facChanged = fac and ms.fac[key] and ms.fac[key] ~= fac
+			if ms.sig[key] ~= sig or facChanged or upgrade then
 				ms.at[key] = first and ended or synced
 				ms.sig[key] = sig
 			end
+			ms.fac[key] = fac
 		end
 	end
 	for k in pairs(ms.sig) do
-		if not present[k] then ms.sig[k] = nil; ms.at[k] = nil end
+		if not present[k] then ms.sig[k] = nil; ms.at[k] = nil; ms.fac[k] = nil end
 	end
 end
 
