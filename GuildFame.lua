@@ -173,7 +173,7 @@ function G.Encode(rec, guild)
 	end
 	return table.concat({
 		"1;" .. guild .. ";" .. cleanKind(rec.enc or "?") .. ";" .. ((rec.result == "KILL") and "K" or "W") .. ";" .. floor(at) .. ";" .. floor(rec.dur or 0),
-		table.concat(players, ","), kinds(hk), kinds(bk), mvp .. ";" .. worst .. ";" .. table.concat(roles, ",") .. ";w2", best(saves), best(finds, true),
+		table.concat(players, ","), kinds(hk), kinds(bk), mvp .. ";" .. worst .. ";" .. table.concat(roles, ",") .. ";w3", best(saves), best(finds, true),
 	}, "#")
 end
 
@@ -215,7 +215,10 @@ function G.Decode(raw)
 	local mw = split(sec[5], ";")
 	c.mvp = (mw[1] ~= "" and c.players[mw[1]]) and mw[1] or nil
 	c.worst = (mw[2] and mw[2] ~= "" and c.players[mw[2]]) and mw[2] or nil
-	c.w2 = (mw[4] == "w2")
+	-- the hero weights it was made with: 3 (1.25.3 on), 2 (1.25.0-1.25.2), 1 (older)
+	local _, _, wv = string.find(mw[4] or "", "^w(%d)$")
+	c.wv = tonumber(wv) or 1
+	c.w2 = c.wv >= 2
 	if c.w2 then
 		c.roles = {}
 		for part in string.gfind((mw[3] or "") .. ",", "([^,]*),") do
@@ -274,7 +277,13 @@ local function account(v, c)
 		if when > p.last then p.last = when end
 	end
 	-- a card from before 1.25 has the old hero weights: scaled to the new ones as it's counted
-	local scale = (not c.w2) and W.Data.heroRescale or {}
+	local scale = {}
+	if c.wv < 3 then
+		for kind, f in pairs(W.Data.heroRescale3 or {}) do scale[kind] = f end
+		if c.wv < 2 then
+			for kind, f in pairs(W.Data.heroRescale or {}) do scale[kind] = (scale[kind] or 1) * f end
+		end
+	end
 	for _, side in ipairs({ { c.hero, "hero", "saves", "hk" }, { c.blame, "blame", "mistakes", "mk" } }) do
 		for who, ks in pairs(side[1]) do
 			local p = v.players[who]

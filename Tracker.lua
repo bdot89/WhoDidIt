@@ -89,7 +89,7 @@ function T.NewFight(t0, enc)
 		players = {}, deaths = {}, timeline = {}, aggro = {},
 		avoid = {}, carry = {}, stacks = {},
 		interrupts = {}, casting = {}, lastKick = {},
-		dispelTimes = {}, activeDebuffs = {}, mc = {},
+		dispelTimes = {}, activeDebuffs = {}, mc = {}, debuffAt = {},
 		frenzyOn = {}, frenzies = {}, bossDebuffs = {}, raidFails = {},
 		threat = {}, threatPeak = {}, ffire = {}, taunts = {}, castLines = {},
 		buffs = {},
@@ -554,6 +554,8 @@ function T:Debuff(guid, spellId, stacks)
 	if not ad then ad = {}; F.activeDebuffs[guid] = ad end
 	if not ad[sp] then
 		ad[sp] = now
+		F.debuffAt = F.debuffAt or {}   -- (kept after it's gone: the dispel event may come after the removal)
+		F.debuffAt[guid .. sp] = now
 		push(p, "debuff", nil, sp, stacks)
 		if D.mc[sp] then
 			F.mc[guid] = now
@@ -990,10 +992,16 @@ function T:Dispel(casterGuid, targetGuid, spellId)
 	if n then
 		local p = T:P(n)
 		p.dispels = p.dispels + 1
-		-- freeing someone from mind control is a save
+		-- freeing someone from mind control, or removing a dangerous debuff, is a save -
+		-- worth more the faster it was (seconds since the debuff landed, as amt)
 		local te = targetGuid and W.roster.byGuid[targetGuid]
 		local sp = spellId and W.SpellName(spellId)
-		if te and sp and W.Data.mc[sp] then T:Save("freed", n, te.name, sp) end
+		if te and sp and (W.Data.mc[sp] or W.Data.dispel[sp]) then
+			local ad = F.activeDebuffs[targetGuid]
+			local t0 = (ad and ad[sp]) or (F.debuffAt and F.debuffAt[targetGuid .. sp])
+			local dt = t0 and math.max(0, GetTime() - t0)
+			T:Save(W.Data.mc[sp] and "freed" or "dispel", n, te.name, sp, dt)
+		end
 	end
 end
 

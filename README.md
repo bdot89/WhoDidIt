@@ -859,17 +859,22 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 | Tank taunting the boss off a non-tank who then survives | 1.5 (0.75 without a taunt cast; at most 3 a fight) |
 | Lay on Hands / Blessing of Protection on someone under 35% (or BoP on whoever has aggro) | 2.5 |
 | Battle res (Rebirth) | 3 |
-| Dispelling mind control | 2 |
+| Dispelling mind control | 2 within 3 s, 1 within 6 s, 0.5 slower |
+| Dispelling a dangerous debuff (the bosses' curses, magic, poisons and diseases) | 1 within 2 s, 0.5 within 4 s (slower ones only count in the stats) |
 | Innervate on someone under 30% mana | 1 |
 | Interrupting a dangerous cast | 1 each (max 3) |
 | Tranquilizing a Frenzy within 3s | 1 |
 | Last-second potion / healthstone / Shield Wall etc. under 30% health, and surviving | 1 |
 | The fight's top 3 damage dealers (DPS role, fights of 30 s or more) | 2 / 1.5 / 1 |
+| On a kill, the tank who held the boss longest (20 s or more) and never went down | 1.5 |
 
 Taunting the boss back and topping up someone low are a tank's and a healer's job and happen all fight, so they
-count for less and only up to a cap each fight; the damage dealers earn theirs from damage and interrupts. Totals
-recorded before 1.25.0 (with the old points) were scaled to these once, and so are older guild cards when they're
-counted. **Role** on the Hall of Fame tab compares each role with itself.
+count for less and only up to a cap each fight (taunts 3, saving heals 4.5, dispels 3 points); the damage dealers
+earn theirs from damage, interrupts and fast decurses / cures, the tank of a kill from holding the boss. Every class
+has a way to score: healers by saves and dispels, tanks by holding and rescuing, warriors and rogues by damage and
+kicks, mages and druids also by decursing, hunters by Tranquilizing Shot, paladins, priests and shamans by cures.
+Totals recorded with older points were scaled to these once, and so are older guild cards when they're counted.
+**Role** on the Hall of Fame tab compares each role with itself.
 
 </details>
 

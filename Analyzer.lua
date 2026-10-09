@@ -816,7 +816,7 @@ function A:Build(F, final)
 	-- are the role's job and happen all fight: they count for less, and only up to
 	-- CAP points a fight each, so tanks and healers don't run away with the Hall of
 	-- Fame. Clutch plays (battle res, freeing a mind-controlled raider...) aren't capped.
-	local CAP = { taunt = 3, heal = 4.5 }
+	local CAP = { taunt = 3, heal = 4.5, dispel = 3 }
 	local capped = {}
 	local function hsave(t, who, pts, text, tip, kind)
 		if not who or not players[who] then return end
@@ -849,7 +849,15 @@ function A:Build(F, final)
 		elseif k == "innervate" then
 			hsave(s.t, s.who, 1, s.who .. " innervated " .. s.target .. " at " .. pctS(s.pre) .. " mana", { "Kept a healer going." })
 		elseif k == "freed" then
-			hsave(s.t, s.who, 2, s.who .. " dispelled " .. s.sp .. " from " .. s.target, { "Freed a mind-controlled raider before they could do more damage." })
+			-- the faster, the better: 2 within 3s, 1 within 6s, 0.5 after that
+			local dt = s.amt
+			local pts = (not dt and 1) or (dt <= 3 and 2) or (dt <= 6 and 1) or 0.5
+			hsave(s.t, s.who, pts, s.who .. " dispelled " .. s.sp .. " from " .. s.target .. (dt and (" in " .. string.format("%.1f", dt) .. "s") or ""),
+				{ "Freed a mind-controlled raider before they could do more damage." }, "dispel")
+		elseif k == "dispel" and s.amt and s.amt <= 4 then
+			-- a dangerous debuff removed straight away (1) or quickly (0.5); slower ones only count in the stats
+			hsave(s.t, s.who, (s.amt <= 2) and 1 or 0.5, s.who .. " dispelled " .. s.sp .. " from " .. s.target .. " in " .. string.format("%.1f", s.amt) .. "s",
+				{ "Removed a dangerous debuff " .. ((s.amt <= 2) and "straight away" or "quickly") .. "." }, "dispel")
 		elseif (k == "self" or k == "potion") and survived(s.target, s.t, 8) then
 			hsave(s.t, s.who, 1, s.who .. " survived on " .. pctS(s.pre) .. " health with " .. s.sp, { "Saved themselves with a last-second " .. (k == "potion" and "consumable" or "cooldown") .. "." })
 		end
@@ -898,6 +906,16 @@ function A:Build(F, final)
 		local award = { 2, 1.5, 1 }
 		for i = 1, math.min(3, getn(dl)) do
 			hsave(nil, dl[i].name, award[i], dl[i].name .. " was #" .. i .. " on damage (" .. floor(dl[i].dps) .. " DPS)", { "The fight's top damage dealers earn hero points too." })
+		end
+	end
+	-- the tanks' share: on a kill, the tank who held the boss longest and never went down
+	if F.result == "KILL" then
+		local bt, bv
+		for name, p in pairs(players) do
+			if p._part and p._role == "tank" and (p.aggroTime or 0) >= 20 and survived(name, 0, dur + 1) and (not bv or p.aggroTime > bv) then bt, bv = name, p.aggroTime end
+		end
+		if bt then
+			hsave(nil, bt, 1.5, bt .. " tanked the boss for " .. FmtTime(bv) .. " and never went down", { "Holding the boss without dying is the tank's share of a kill." })
 		end
 	end
 

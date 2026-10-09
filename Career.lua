@@ -275,10 +275,7 @@ end
 -- saved fights from before this existed count too
 -- once (1.25.0): hero points recorded with the old weights (taunts 3, saving heals 2...)
 -- are scaled to the new ones, so the board is fair straight away, not only from now on
-local function rescale()
-	if WhoDidItDB.heroWeights == 2 then return end
-	WhoDidItDB.heroWeights = 2
-	local f = W.Data.heroRescale or {}
+local function rescaleBy(f)
 	local changed = false
 	for _, key in ipairs({ "career", "careerTest" }) do
 		local d = WhoDidItDB[key]
@@ -296,8 +293,37 @@ local function rescale()
 			table.sort(d.moments or {}, function(a, b) return a.pts > b.pts end)
 		end
 	end
+	return changed
+end
+-- fall damage counted as a blunder before 1.23.5 (it's nearly always a knockback)
+local function dropFalling()
+	for _, key in ipairs({ "career", "careerTest" }) do
+		local d = WhoDidItDB[key]
+		for i = getn(d and d.blunders or {}), 1, -1 do
+			local m = d.blunders[i]
+			if string.find(m.text or "", "hit by Falling", 1, true) then
+				local p = d.players[m.who]
+				if p then
+					p.blame = math.max(0, round1(p.blame - m.pts))
+					p.mistakes = math.max(0, p.mistakes - 1)
+					local k = p.mk and p.mk[m.kind or "Mechanic"]
+					if k then k[1] = math.max(0, k[1] - 1); k[2] = math.max(0, round1(k[2] - m.pts)) end
+				end
+				tremove(d.blunders, i)
+			end
+		end
+	end
+end
+local function rescale()
+	local v = WhoDidItDB.heroWeights
+	if v == 3 then return end
+	local changed = false
+	if v ~= 2 then changed = rescaleBy(W.Data.heroRescale or {}) end
+	if rescaleBy(W.Data.heroRescale3 or {}) then changed = true end
+	dropFalling()
+	WhoDidItDB.heroWeights = 3
 	if changed then
-		W.Print("Hall of Fame: hero points now count routine taunts and heals for less, and the top damage dealers in each fight earn points too. Your totals were rescaled to match.")
+		W.Print("Hall of Fame: hero points are balanced across the roles now - routine taunts and heals count for less, the top damage dealers and the tank of a kill earn points, and dispels count by how fast they were. Your totals were rescaled to match.")
 	end
 end
 
