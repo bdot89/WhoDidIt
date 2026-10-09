@@ -14,8 +14,9 @@
 	    remembered for the same five players) and tells the group:
 	  N~key~secs~group name
 	The sharer then puts the run on the realm's hidden WhoDidIt channel
-	(Board.lua's sender), and every member shares their group's bests again
-	when someone asks (Q), so the boards fill up across the realm:
+	(Board.lua's sender), so does every other member with sharing on once the
+	sharer has named it, and members share their group's bests again when
+	someone asks (Q), so the boards fill up across the realm:
 	  WDIB1~D~key~group name~secs~date~deaths~faction~Name:Cl,...~i=secs;...~named
 	A run is only taken from someone who was in it, and is sanity-checked.
 	Group names and player names come from other players: they're checked and
@@ -114,6 +115,17 @@ function R.HasMember(rec, name)
 	return rec and rec.m and string.find("," .. rec.m, "," .. (name or me()) .. ":", 1, true) and true or false
 end
 
+-- rec.ok = "Name,Name": the members this PC saw share the group's runs themselves (their
+-- own vote, or the run sent by them on the realm channel), so they have WhoDidIt with
+-- sharing on. Only their names may go into the published download and the website
+-- export. Never taken from what a message claims. true if the name was new.
+local function addOk(rec, name)
+	if not rec or not name or not R.HasMember(rec, name) then return false end
+	if string.find("," .. (rec.ok or "") .. ",", "," .. name .. ",", 1, true) then return false end
+	rec.ok = (rec.ok and rec.ok ~= "") and (rec.ok .. "," .. name) or name
+	return true
+end
+
 -- "3=125;7=610" (boss number = seconds into the run) -> checked text, or ""
 local function okSplits(s, dg, t)
 	if type(s) ~= "string" or s == "" then return "" end
@@ -144,7 +156,7 @@ end
 -- WhoDidItDB.dungeons[realm][key][group key] = { g = group name, t = secs,
 --   d = date, x = deaths, f = faction, n = size, m = members, s = splits,
 --   nt = when it was named, by = who shared it, net = from the channel,
---   priv = never shared (someone in the group opted out) }
+--   priv = never shared (someone in the group opted out), ok = members seen sharing it }
 -- WhoDidItDB.myRuns = your runs, newest first (every one, not only bests)
 -- WhoDidItDB.groupNames[group key] = { n = name, at = when }
 
@@ -193,6 +205,10 @@ function R:Merge(rlm, key, gk, rec)
 	local old = list[gk]
 	if old and (rec.t > old.t or (rec.t == old.t and (rec.nt or 0) <= (old.nt or 0))) then return false end
 	if old and old.priv and rec.t == old.t then rec.priv = true end
+	-- (the same players: who's been seen sharing stays known)
+	if old and old.ok then
+		for n in string.gfind(old.ok, "[^,]+") do addOk(rec, n) end
+	end
 	list[gk] = rec
 	-- the 60 fastest groups per dungeon; groups you were in always stay
 	local n, slowest, slowT = 0, nil, -1
@@ -466,6 +482,13 @@ local function finish(name, secs, share)
 	local was
 	for i = 1, getn(old) do if old[i][1] == p.gk then was = old[i][2].t end end
 	local better = R:Merge(rl, p.key, p.gk, rec)
+	-- the members who said in their own vote that they share (sharing on)
+	local stored = R:DB(rl)[p.key] and R:DB(rl)[p.key][p.gk]
+	if stored and not p.priv then
+		for who, v in pairs(p.votes or {}) do
+			if not v.opt then addOk(stored, who) end
+		end
+	end
 	local mine = R:MyRuns()
 	tinsert(mine, 1, { k = p.key, gk = p.gk, realm = rl, g = name, t = secs, d = rec.d, x = rec.x, f = rec.f, n = rec.n, m = rec.m, s = rec.s })
 	while getn(mine) > MAX_MINE do tremove(mine) end
@@ -575,7 +598,9 @@ W:On("CHAT_MSG_ADDON", function(prefix, msg, channel, sender)
 	elseif p[1] == "N" and pend and pend.decided and pend.key == p[2] and sender == pend.sharer then
 		local secs = tonumber(p[3])
 		if not secs or secs < D().RUN_MIN or secs > D().RUN_MAX then secs = pend.final end
-		finish(R.OkName(p[4]) and p[4] or (sender .. "'s group"), secs, false)
+		-- every member with sharing on sends it too, so the maintainer's WhoDidIt hears from
+		-- each of them (only then can their name go into the published download)
+		finish(R.OkName(p[4]) and p[4] or (sender .. "'s group"), secs, true)
 	end
 end)
 
@@ -698,15 +723,20 @@ function R:Receive(p, sender)
 		R.dirty = true
 		if W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
 	end
+	-- the sender shares this group's runs themselves (the server says who sent it)
+	local stored = R:DB(realm())[key]
+	stored = stored and stored[gk]
+	if stored and addOk(stored, sender) then R.dirty = true end
 end
 
 ------------------------------------------------------------------ the download's runs, the master's file
--- RaidTimes.lua (the maintainer's publish) can carry the realms' 5-man runs as
+-- RaidTimes.lua (the maintainer's publish) carries the realms' 5-man runs as
 --   R5|realm|key|group|secs|date|deaths|faction|members|splits|named
--- and they go on the boards once per publish. The publish leaves them out for
--- now: the members' names would go into the public repository. The master's
--- WhoDidIt writes its boards to CustomData\WhoDidIt_Runs.txt (same lines) for
--- the website export (tools\Website-Export.ps1, which leaves the names out).
+-- and they go on the boards once per publish. The master's WhoDidIt writes its
+-- boards to CustomData\WhoDidIt_Runs.txt, the same lines plus |ok (rec.ok: the
+-- members it saw share the run themselves). Names are only published for those:
+-- tools\Publish-RaidTimes.ps1 takes a run only when every member is in ok, and
+-- tools\Website-Export.ps1 shows the others by class only.
 
 local function splitBar(line)
 	local out = {}
@@ -729,13 +759,19 @@ function R:Seed()
 				and secs >= D().RUN_MIN and secs <= D().RUN_MAX and (p[8] == "Alliance" or p[8] == "Horde") then
 				R:Merge(p[2], p[3], gk, { g = p[4], t = secs, d = d, x = tonumber(p[7]) or 0, f = p[8], n = getn(list), m = mt,
 					s = okSplits(p[10], dg, secs), nt = tonumber(p[11]) or d, net = true, by = "the WhoDidIt download" })
+				-- the download only carries runs whose members were all seen sharing
+				local stored = R:DB(p[2])[p[3]]
+				stored = stored and stored[gk]
+				if stored then
+					for i = 1, getn(list) do addOk(stored, list[i].n) end
+				end
 			end
 		end
 	end
 end
 W:On("PLAYER_ENTERING_WORLD", function() if WhoDidItDB then R:Seed() end end)
 
--- the master's boards, out to CustomData for the website export
+-- the master's boards, out to CustomData for the publish and the website export
 function R:WriteFile()
 	if not WriteCustomFile or not (W.Board and W.Board.CanMaster and W.Board.CanMaster()) then return end
 	local out = { "WDIRUNS|1|" .. time() }
@@ -744,7 +780,7 @@ function R:WriteFile()
 			for _, rec in pairs(list) do
 				if not rec.priv and R.OkName(rec.g) and D().DUNGEON[key] then
 					tinsert(out, table.concat({ "R5", rl, key, rec.g, tostring(rec.t), tostring(rec.d), tostring(rec.x or 0),
-						rec.f or "?", rec.m or "", rec.s or "", tostring(rec.nt or rec.d) }, "|"))
+						rec.f or "?", rec.m or "", rec.s or "", tostring(rec.nt or rec.d), rec.ok or "" }, "|"))
 				end
 			end
 		end

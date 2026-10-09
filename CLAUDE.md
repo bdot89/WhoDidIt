@@ -86,17 +86,19 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   first pull after zoning in -> final boss death. Members agree on WDI5 (party/raid addon channel): any opt-out
   (opts.no5man) keeps it private; time = the longest anyone timed; the leader (else first name) names and shares it.
   Channel record "D" (Board.lua hands it to W.Runs:Receive) is only accepted from a member; group names are untrusted
-  (R.OkName). Masters write CustomData\WhoDidIt_Runs.txt (R5 lines) for tools\Website-Export.ps1 (JSON for the website,
-  members' classes only; upload off until tools\website.json, which is gitignored). Publish-RaidTimes leaves R5 out.
-- Character names never go into the repository (RaidTimes.lua, DefaultPacks.lua) or an export: they include players
-  without WhoDidIt, who can't opt out, and git history keeps them. Changing that needs the maintainer's decision and
-  a README line that says so.
+  (R.OkName). Masters write CustomData\WhoDidIt_Runs.txt (R5 lines + |ok) for Publish-RaidTimes and
+  tools\Website-Export.ps1 (JSON for the website; upload off until tools\website.json, which is gitignored).
+- Character names in the repository (RaidTimes.lua) or an export: the maintainer chose option (b) of review 3's T1
+  (9 Oct 2026). rec.ok (Dungeons.lua addOk) holds the members this PC saw share a run themselves: their own WDI5 vote,
+  or the run sent by them on the realm channel (the server says who sent it; never what a message claims). Only those
+  are named; Publish-RaidTimes takes a run only when every member is in ok, Website-Export shows the rest by class.
+  Any other place that would publish names needs the maintainer's decision and a README line.
 - The guild's Hall of Fame (GuildFame.lua, W.GuildFame): each saved fight of the guild (rec.guild = Board's RaidGuild)
   becomes a card "recorder:n", swapped on SendAddonMessage "WDIG" GUILD (V = have per recorder, C = card chunks,
   X = card that doesn't count, F = skip). Twin fights (same enc, 5 min, 20 s): the smallest id counts, so every PC
   agrees. Sending your own needs opts.gfame (asked once). 800 cards / 4000 ids / 300 recorders / 3 guilds kept.
 - RaidTimes.lua (WDI_RAIDTIMES) ships every guild's raid times from the maintainer's sync
-  (tools/Publish-RaidTimes.ps1: C/K/C2/K2/L lines only, no PC/PK; refuses [[ ]] in a line, since
+  (tools/Publish-RaidTimes.ps1: C/K/C2/K2/L lines, R5 only when every member is in ok, no PC/PK; refuses [[ ]] in a line, since
   it's a Lua 5.0 long string). B:SeedSnapshot puts it into the saved feed when it's newer, so the
   feed only sends what's newer; FULL_AGE is 21 days so a few-weeks-old snapshot asks for an update.
 - The maintainer's sync helper commits and pushes RaidTimes.lua by itself once a week

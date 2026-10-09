@@ -262,8 +262,10 @@ its loading screen, laid out like the raids.
   across the realm, and members share their groups' bests again when someone asks. A run is only taken from someone
   who was in that group. **Sharing: on / off** (or `/wdi 5man off`) stops it: then no run you're in is shared by
   anyone's WhoDidIt. See [Privacy and security](#privacy-and-security).
-- **Not in the download:** the weekly update carries the raid times only. A 5-man run lists its members by name, also
-  players without WhoDidIt, and the download is a public repository, so the runs stay on the realm channel.
+- **In the download, only with everyone's names agreed:** the download is a public repository, so the weekly update
+  only carries a group's run when every member shares their runs with WhoDidIt (the maintainer's WhoDidIt saw each of
+  them share it themselves). A group with anyone else in it, such as a player without WhoDidIt, stays on the realm
+  channel. When a group finishes, every member with sharing on sends the run, not only the one who names it.
 - Chat says which boss ended each run. If a Turtle dungeon's last boss turns out to be wrong, tell the maintainer.
 
 ### Times before and after the 6 Oct raid scaling change
@@ -400,13 +402,13 @@ or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
 and commits and pushes just that file. It skips a week (and tries again a day later) if the repository isn't on `main`
 or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
 `tools\Publish-RaidTimes.cmd` publishes now. The 5-man boards your WhoDidIt keeps (written to
-`CustomData\WhoDidIt_Runs.txt`) stay out: they carry the members' names.
+`CustomData\WhoDidIt_Runs.txt`) go in only for groups whose members your WhoDidIt all saw share the run themselves.
 Keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
 characters). Logging into the master character on a realm feeds that realm.
 
 **Website:** after every sync the helper also writes every raid time and 5-man run to one JSON file,
-`CustomData\WhoDidIt_Website.json` (`tools\Website-Export.ps1`; your characters' personal bests and the 5-man
-members' names stay out, only their classes go in), for a
+`CustomData\WhoDidIt_Website.json` (`tools\Website-Export.ps1`; your characters' personal bests stay out, and a 5-man
+member is only named if your WhoDidIt saw them share the run themselves, the others show by class), for a
 website such as www.errorguild.com. Uploading it is **off** until `tools\website.json` (a copy of
 `tools\website.example.json`) has the site's https upload address and key and `"enabled": true`; that file stays on
 your PC. The **Website** button (Rankings > 5-mans, only on the master characters) shows the last export and upload.
@@ -990,8 +992,9 @@ WhoDidIt is built so it can't get you into trouble in chat, and so nothing about
 | Guild members, on the hidden **guild** addon channel (Hall of Fame sharing on) | Each fight they recorded: who was in it and their classes, deaths, hero and blame points by kind, the MVP and most to blame, the two best plays and worst blunders. Only to the guild. |
 | One member of a 5-man group (5-man sharing on) | The group's finished run: group name, the members' names and classes, dungeon, time, date, deaths, faction and boss splits |
 
-Never sent: character names (except a 5-man group's members in its run, and to your guild the players in its Hall of Fame fights), gear, chat, where you are, or anything from your PC. The download (`RaidTimes.lua`) and the website export carry no
-player names. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
+Never sent: character names (except a 5-man group's members in its run, and to your guild the players in its Hall of Fame fights), gear, chat, where you are, or anything from your PC. The download (`RaidTimes.lua`) and the website export only name
+5-man members who share their runs with WhoDidIt themselves (seen by the maintainer's WhoDidIt, never taken from a
+message's say-so); the download only carries runs where that's every member. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
 the channel altogether; `/wdi feed off` just ignores the feed.
 
 **What's accepted**
