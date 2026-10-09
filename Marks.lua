@@ -983,10 +983,29 @@ W:On("UPDATE_MOUSEOVER_UNIT", function()
 		M.seen[guid] = UnitName("mouseover")
 		M.nseen = M.nseen + 1
 	end
-	if db().opts.mouseover and IsShiftKeyDown() and (IsControlKeyDown() or IsAltKeyDown()) then
+	if db().opts.mouseover and M.MouseModDown() then
 		M:MarkGroup(true)
 	end
 end)
+
+-- the keys you hold to mark the pack under your mouse (Auto Marker tab > Keys)
+M.MOUSE_MODS = { "shiftctrl", "ctrl", "alt", "ctrlalt" }
+M.MOUSE_MOD_LABEL = { shiftctrl = "Shift + Ctrl (or Alt)", ctrl = "Ctrl", alt = "Alt", ctrlalt = "Ctrl + Alt" }
+function M.MouseModDown()
+	local m = db().opts.mouseMod or "shiftctrl"
+	if m == "ctrl" then return IsControlKeyDown() and true or false end
+	if m == "alt" then return IsAltKeyDown() and true or false end
+	if m == "ctrlalt" then return (IsControlKeyDown() and IsAltKeyDown()) and true or false end
+	return (IsShiftKeyDown() and (IsControlKeyDown() or IsAltKeyDown())) and true or false
+end
+function M.MouseModLabel() return M.MOUSE_MOD_LABEL[db().opts.mouseMod or "shiftctrl"] or "Shift + Ctrl" end
+function M.NextMouseMod()
+	local cur, list = db().opts.mouseMod or "shiftctrl", M.MOUSE_MODS
+	for i = 1, getn(list) do
+		if list[i] == cur then db().opts.mouseMod = list[i + 1] or list[1] return end
+	end
+	db().opts.mouseMod = list[1]
+end
 
 local function onZone()
 	M.zone = GetRealZoneText()

@@ -479,6 +479,9 @@ Every mob has a fixed GUID, so a pack is a list of mobs and the mark each one ge
 
 - Hold **Shift + Ctrl** (or **Shift + Alt**) and move the mouse over a mob to mark its whole pack.
 - Or press a key, or click **Mark target's pack** (the mob under your mouse, else your target).
+- **Keys** (the line at the top of the Auto Marker list): click an action, then press the key you want for it (with
+  Shift / Ctrl / Alt if you like; Esc cancels, Backspace removes the key). The same page switches what you hold for
+  mouseover marking: Shift + Ctrl (or Alt), Ctrl, Alt or Ctrl + Alt.
 - **Mark next pack** works through the zone's packs in route order. **Clear marks** removes them all.
 - Raid lead and assists mark for everyone. Otherwise the marks are only visible to you (SuperWoW local marks), and you can mark solo too.
 

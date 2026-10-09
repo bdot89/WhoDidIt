@@ -4384,7 +4384,7 @@ function UI:MarkNavRows()
 			"|cffffffff" .. z .. "|r" .. (z == here and "  |cff33ff33(here)|r" or "")
 				.. "\n" .. C_DIM .. n .. " pack" .. (n == 1 and "" or "s") .. "|r" .. (yours > 0 and ("  " .. C_GUILD .. yours .. " yours|r") or ""),
 			nil,
-			{ sel = (z == UI.mk.zone), click = function() UI.mk.zone = zz; UI.mk.pack = nil; UI:Refresh() end }))
+			{ sel = (z == UI.mk.zone), click = function() UI.mk.zone = zz; UI.mk.pack = nil; UI.mk.keys = nil; UI:Refresh() end }))
 	end
 	return rows
 end
@@ -4393,6 +4393,9 @@ end
 function UI:ZoneRows(zone)
 	local M = W.Marks
 	local rows = {}
+	tinsert(rows, row("|cffffd100Keys:|r  " .. UI.KeySummary(), "|cffffd100change  >|r",
+		{ tipTitle = "Auto Marker keys", tip = { "Click to change the keys for marking a pack, the next pack,", "saving and clearing marks, and what you hold to mark by mouseover." },
+		  click = function() UI.mk.keys = true; UI:Refresh() end }))
 	if zone == GetRealZoneText() then
 		local cur = M:CurrentMarks()
 		head(rows, "Marked right now")
@@ -4590,14 +4593,114 @@ function UI:RefreshMarks()
 		rVerdict:SetText("|cffff9933The separate AutoMarker addon is still loaded, so WhoDidIt is standing by.|r\n|cff888888It has been switched off - /reload and WhoDidIt takes over.|r")
 	else
 		rVerdict:SetText("|cffffd100Quick save:|r mark the mobs in game, click |cff33ff33Save marks as pack|r, type a name, Enter.\n"
-			.. "|cffffd100Mark a pack:|r hold Shift + Ctrl over a mob, or click |cffffd100Mark target's pack|r.")
+			.. "|cffffd100Mark a pack:|r hold " .. M.MouseModLabel() .. " over a mob" .. UI.KeyHint("WHODIDIT_MARKPACK", ", press ")
+			.. ", or click |cffffd100Mark target's pack|r.")
 	end
 	hintText:SetText(UI.mk.pack and "Click a mob to pick its mark  -  right-click to take it out" or "Click a pack to open it  -  Shift-click a pack to mark it now")
 	hintText:Show()
-	local rows = UI.mk.pack and UI:PackRows(zone, UI.mk.pack) or UI:ZoneRows(zone)
-	local key = "marks|" .. zone .. "|" .. (UI.mk.pack or "")
+	local rows = (UI.mk.keys and UI:MarkKeyRows()) or (UI.mk.pack and UI:PackRows(zone, UI.mk.pack)) or UI:ZoneRows(zone)
+	local key = "marks|" .. zone .. "|" .. (UI.mk.pack or "") .. (UI.mk.keys and "|keys" or "")
 	mainList:SetData(rows, key == lastModeKey)
 	lastModeKey = key
+end
+
+------------------------------------------------------------------ Auto Marker keys
+
+UI.MARK_KEYS = {
+	{ "WHODIDIT_MARKPACK", "Mark the pack under the mouse (or your target's)" },
+	{ "WHODIDIT_MARKNEXT", "Mark the next pack along the route" },
+	{ "WHODIDIT_SAVEMARKS", "Save the current marks as a pack" },
+	{ "WHODIDIT_CLEARMARKS", "Clear all raid marks" },
+}
+-- a binding's key as the game writes it ("Shift-F"), or nil
+function UI.KeyText(binding)
+	local k = GetBindingKey(binding)
+	return k and GetBindingText(k, "KEY_") or nil
+end
+-- ", press F" when the binding has a key, "" when it hasn't
+function UI.KeyHint(binding, before)
+	local k = UI.KeyText(binding)
+	return k and (before .. "|cffffffff" .. k .. "|r") or ""
+end
+function UI.KeySummary()
+	local parts = {}
+	local short = { WHODIDIT_MARKPACK = "pack", WHODIDIT_MARKNEXT = "next", WHODIDIT_SAVEMARKS = "save", WHODIDIT_CLEARMARKS = "clear" }
+	for i = 1, getn(UI.MARK_KEYS) do
+		local b = UI.MARK_KEYS[i][1]
+		local k = UI.KeyText(b)
+		tinsert(parts, short[b] .. " " .. (k and ("|cffffffff" .. k .. "|r") or "|cff666666-|r"))
+	end
+	return table.concat(parts, "  ") .. "   |cff888888mouseover:|r |cffffffff" .. W.Marks.MouseModLabel() .. "|r"
+end
+
+function UI:MarkKeyRows()
+	local rows = {}
+	tinsert(rows, row("|cffffd100<< Back to the packs|r", nil, { head = true, click = function() UI.mk.keys = nil; UI:Refresh() end }))
+	head(rows, "Keys  " .. C_DIM .. "(click one, then press the key you want - with Shift / Ctrl / Alt if you like)|r")
+	for i = 1, getn(UI.MARK_KEYS) do
+		local b, label = UI.MARK_KEYS[i][1], UI.MARK_KEYS[i][2]
+		local k = UI.KeyText(b)
+		tinsert(rows, row(label, k and ("|cffffffff" .. k .. "|r  |cffffd100change|r") or "|cff666666not set|r  |cffffd100set|r",
+			{ tipTitle = label, tip = { "Click, then press the key (Esc: cancel, Backspace: no key).", "Saved like the game's own key bindings (Esc > Key Bindings > WhoDidIt)." },
+			  click = function() UI.CaptureKey(b, label) end }))
+	end
+	head(rows, "Mouseover marking")
+	tinsert(rows, row("Hold this and move the mouse over a mob to mark its whole pack", "|cffffffff" .. W.Marks.MouseModLabel() .. "|r  |cffffd100next|r",
+		{ tipTitle = "Mouseover marking", tip = { "Click to switch: Shift + Ctrl (or Alt), Ctrl, Alt, Ctrl + Alt.", "Mouseover marking itself is switched on and off bottom left." },
+		  click = function() W.Marks.NextMouseMod(); UI:Refresh() end }))
+	tinsert(rows, row(C_DIM .. "A key that did something else before does this now; Esc > Key Bindings puts it back.|r"))
+	return rows
+end
+
+-- wait for one key (with its modifiers) and bind it
+function UI.CaptureKey(binding, label)
+	local cf = UI.keyCapture
+	if not cf then
+		cf = CreateFrame("Frame", "WhoDidItKeyCapture", UIParent)
+		cf:SetWidth(380)
+		cf:SetHeight(64)
+		cf:SetPoint("CENTER", UIParent, "CENTER", 0, 140)
+		cf:SetFrameStrata("DIALOG")
+		UI.Flat(cf, UI.COL.panel, UI.COL.panelEdge)
+		cf:EnableKeyboard(true)
+		cf.text = cf:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormal"))
+		cf.text:SetPoint("CENTER", cf, "CENTER", 0, 0)
+		cf.text:SetWidth(360)
+		cf:SetScript("OnKeyUp", function() UI.KeyCaptured(arg1) end)
+		cf:Hide()
+		UI.keyCapture = cf
+	end
+	cf.binding, cf.label = binding, label
+	cf.text:SetText("Press the key for |cffffffff" .. label .. "|r\n|cff888888(with Shift / Ctrl / Alt if you like)   Esc: cancel   Backspace: no key|r")
+	cf:Show()
+end
+
+function UI.KeyCaptured(key)
+	local cf = UI.keyCapture
+	if not cf or not cf:IsShown() or not key then return end
+	if key == "ALT" or key == "CTRL" or key == "SHIFT" then return end   -- (a modifier on its own: wait for the key)
+	if key == "ESCAPE" then cf:Hide() return end
+	local b = cf.binding
+	local k1, k2 = GetBindingKey(b)
+	if k1 then SetBinding(k1) end
+	if k2 then SetBinding(k2) end
+	if key == "BACKSPACE" then
+		SaveBindings(GetCurrentBindingSet())
+		W.Print(cf.label .. ": no key now.")
+	else
+		local new = (IsAltKeyDown() and "ALT-" or "") .. (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "") .. key
+		if SetBinding(new, b) then
+			SaveBindings(GetCurrentBindingSet())
+			W.Print(cf.label .. ": |cffffd100" .. GetBindingText(new, "KEY_") .. "|r  |cff888888(if that key did something else, it does this now - Esc > Key Bindings puts it back)|r")
+		else
+			if k1 then SetBinding(k1, b) end   -- (couldn't: the old keys stay)
+			if k2 then SetBinding(k2, b) end
+			SaveBindings(GetCurrentBindingSet())
+			W.Print("That key can't be used - " .. cf.label .. " keeps its key.")
+		end
+	end
+	cf:Hide()
+	UI:Refresh()
 end
 
 ------------------------------------------------------------------ Loot view
