@@ -23,9 +23,11 @@
 	receiving and showing the guild's is always on.
 
 	Only your guild's members can send on the guild channel, and each card is
-	checked: names, classes, points and sizes. Cards of a guild other than
-	yours are ignored. Kept: 800 cards per guild (older ones are added up
-	into a total and dropped), 3 guilds.
+	checked: names, classes, points, sizes and its number (1 to 100000; what
+	to send someone comes from the ids held, never a range of numbers). A card
+	isn't tied to who sent it: a member can send one in someone else's name.
+	Cards of a guild other than yours are ignored. Kept: 800 cards per guild
+	(older ones are added up into a total and dropped), 3 guilds.
 ----------------------------------------------------------------------]]
 
 local W = WhoDidIt
@@ -40,6 +42,10 @@ local CHUNK = 200          -- characters of a card per message
 local SEND_GAP = 0.4       -- seconds between messages
 local MAX_TOP = 40         -- best plays / worst blunders kept
 local TWIN_AT, TWIN_DUR = 300, 20   -- the same fight: started within 5 minutes, lasted within 20 seconds
+-- the number in a card id comes from other players: 1 to MAX_ID, and nothing loops over
+-- a range of them (answer() goes through the ids held). A card in your own name moves
+-- your own count on by at most SELF_JUMP.
+local MAX_ID, SELF_JUMP = 100000, 1000
 
 local CLASS = { WARRIOR = "Wa", PALADIN = "Pa", HUNTER = "Hu", ROGUE = "Ro", PRIEST = "Pr",
 	SHAMAN = "Sh", MAGE = "Ma", WARLOCK = "Wl", DRUID = "Dr" }
@@ -371,7 +377,7 @@ end
 -- a card (raw = nil: one that doesn't count) into the guild's store; true if new
 function G:Take(guild, id, enc, at, dur, raw)
 	local rec, n = idParts(id)
-	if not rec or not okName(rec) then return false end
+	if not rec or not okName(rec) or not n or n < 1 or n > MAX_ID then return false end
 	local s = store(guild)
 	if s.meta[id] then return false end
 	-- at most 300 recorders per guild (a guild's members with WhoDidIt)
@@ -380,7 +386,8 @@ function G:Take(guild, id, enc, at, dur, raw)
 		for _ in pairs(s.top) do nr = nr + 1 end
 		if nr >= 300 then return false end
 	end
-	if rec == me() and n > (WhoDidItDB.gfameSeq or 0) then WhoDidItDB.gfameSeq = n end
+	local seq = WhoDidItDB.gfameSeq or 0
+	if rec == me() and n > seq and n <= seq + SELF_JUMP then WhoDidItDB.gfameSeq = n end
 	if s.foldAt and at <= s.foldAt then
 		-- too old to keep: only moves "have" on
 		if n == (s.have[rec] or 0) + 1 then s.have[rec] = n; advance(s, rec) end
@@ -457,6 +464,7 @@ function G:OnFight(rec)
 	local raw = G.Encode(rec, guild)
 	if not raw then return end
 	local seq = (WhoDidItDB.gfameSeq or 0) + 1
+	if seq > MAX_ID then return end
 	WhoDidItDB.gfameSeq = seq
 	local id = me() .. ":" .. seq
 	local c = G.Decode(raw)
@@ -557,21 +565,29 @@ local function answer(sender, list)
 		if rec and okName(rec) then theirs[rec] = tonumber(n) end
 	end
 	local behind = false
+	-- what they're missing, from the ids held here (never a loop over a range of numbers
+	-- someone sent: one card with a made-up number would freeze this PC)
+	local miss = {}
+	for id in pairs(s.meta) do
+		local rec, n = idParts(id)
+		if rec and n and n > (theirs[rec] or 0) then
+			if not miss[rec] then miss[rec] = {} end
+			tinsert(miss[rec], n)
+		end
+	end
 	local ids, mineFirst = {}, {}
-	for rec, top in pairs(s.top) do
-		local from = theirs[rec] or 0
-		local sent, first = 0, nil
-		for n = from + 1, top do
-			if getn(ids) >= PER_ANSWER then break end
-			local id = rec .. ":" .. n
-			if s.meta[id] then
-				first = first or n
+	for rec, list in pairs(miss) do
+		if getn(ids) < PER_ANSWER then
+			table.sort(list)
+			-- the first ones aren't kept here any more: tell them to skip those
+			if list[1] > (theirs[rec] or 0) + 1 then queue("F~" .. rec .. "~" .. list[1]) end
+			for i = 1, getn(list) do
+				if getn(ids) >= PER_ANSWER then break end
+				local id = rec .. ":" .. list[i]
 				tinsert(ids, id)
 				if rec == me() then mineFirst[id] = true end
 			end
 		end
-		-- the first ones aren't kept here any more: tell them to skip those
-		if first and first > from + 1 then queue("F~" .. rec .. "~" .. first) end
 	end
 	for rec, n in pairs(theirs) do
 		if n > (s.have[rec] or 0) then behind = true end
@@ -633,7 +649,7 @@ W:On("CHAT_MSG_ADDON", function(prefix, msg, channel, sender)
 	elseif kind == "F" then
 		local _, _, rec, n = string.find(rest, "^(.-)~(%d+)$")
 		n = tonumber(n)
-		if not rec or not okName(rec) or not n then return end
+		if not rec or not okName(rec) or not n or n > MAX_ID then return end
 		local s = store(G.Guild())
 		if (s.have[rec] or 0) < n - 1 then
 			s.have[rec] = n - 1
@@ -703,9 +719,41 @@ W:Every(60, function()
 	for n, t in pairs(answered) do if now - t > 120 then answered[n] = nil end end
 end)
 
+-- numbers a made-up card id could have saved before 1.24.2 (it froze every PC that
+-- answered): drop such ids, and put each recorder's highest number back to what's held
+local function heal()
+	if not WhoDidItDB or type(WhoDidItDB.gfame) ~= "table" then return end
+	local mine = 0
+	for _, s in pairs(WhoDidItDB.gfame) do
+		if type(s) == "table" and type(s.meta) == "table" and type(s.top) == "table" and type(s.have) == "table" then
+			local high = {}
+			for id in pairs(s.meta) do
+				local rec, n = idParts(id)
+				if not rec or not n or n < 1 or n > MAX_ID then
+					s.meta[id] = nil
+					if s.cards then s.cards[id] = nil end
+					s.nMeta = math.max((s.nMeta or 1) - 1, 0)
+					s.dirty = true
+				elseif n > (high[rec] or 0) then
+					high[rec] = n
+				end
+			end
+			for rec, n in pairs(s.top) do
+				if n > (high[rec] or 0) then s.top[rec] = high[rec] end
+			end
+			for rec, n in pairs(s.have) do
+				if n > MAX_ID then s.have[rec] = 0; advance(s, rec) end
+			end
+			if (high[me()] or 0) > mine then mine = high[me()] end
+		end
+	end
+	if (WhoDidItDB.gfameSeq or 0) > MAX_ID then WhoDidItDB.gfameSeq = mine end
+end
+
 W:On("PLAYER_ENTERING_WORLD", function()
 	if not loginAt and not G.loggedIn then
 		G.loggedIn = true
+		heal()
 		loginAt = GetTime() + 20 + math.random(20)
 		if IsInGuild() and GuildRoster then GuildRoster() end
 	end

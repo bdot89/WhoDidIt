@@ -727,6 +727,9 @@ first).
 - **Asked once.** Your own fights are only sent after you say yes (the first time you're asked, or **Share with
   guild**). Say no and nothing is sent from your PC; you still see the guild's.
 - It keeps 800 fights per guild in full; older ones are added up into the totals and their details dropped.
+- **Trust.** Only guild members can send on the guild channel, and every fight is checked (names, classes, points,
+  sizes, its number) before it counts. A fight isn't tied to who sent it, though: a member could send one in
+  someone else's name. Since 1.24.2 a made-up fight number can't freeze anyone's game (before, one could).
 
 **Test data:** demo fights count too, so you can try it out, but in a separate test tally. Everything from them is
 marked **(test)** in blue (on the boards, the raider list and in posts), and **Clear test data** (bottom left) removes
