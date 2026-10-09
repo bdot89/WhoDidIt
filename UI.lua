@@ -1801,7 +1801,7 @@ famePostBtn:SetScript("OnClick", function()
 	if UI.fame.who then C:Post(C:PlayerLines(UI.fame.who), ch)
 	elseif v == "plays" then C:Post(C:MomentLines(false, 3), ch)
 	elseif v == "blunders" then C:Post(C:MomentLines(true, 3), ch)
-	else C:Post(C:BoardLines(v, UI.fame.per, 5), ch) end
+	else C:Post(C:BoardLines(v, UI.fame.per, 5, UI.fame.role), ch) end
 end)
 famePerBtn:SetScript("OnClick", function() UI.fame.per = not UI.fame.per; UI:Refresh() end)
 fameResetBtn:SetScript("OnClick", function()
@@ -1819,6 +1819,16 @@ tooltip(fameTestBtn, "Clear test data", { "Demo fights add to the Hall of Fame a
 -- the guild's Hall of Fame (GuildFame.lua) or only your own fights; Share with guild
 UI.fameScopeBtn = gridButton("Showing: guild", 3, 1)
 UI.fameShareBtn = gridButton("|cff33ff33Share with guild|r", 3, 2)
+-- the boards for one role at a time: tanks and healers score in their own ways, DPS in theirs
+UI.fameRoleBtn = gridButton("Role: all", 2, 1)
+UI.fameRoleBtn:SetScript("OnClick", function()
+	local nextRole = { tank = "heal", heal = "dps", dps = nil }
+	if UI.fame.role then UI.fame.role = nextRole[UI.fame.role] else UI.fame.role = "tank" end
+	UI.fame.who = nil
+	UI:Refresh()
+end)
+tooltip(UI.fameRoleBtn, "Role", { "Show everyone, or only the tanks, the healers or the DPS", "(the role each player plays most) on the Heroes and Shame boards.",
+	"Tanks and healers earn hero points for taunts and saving heals, DPS for damage", "and interrupts, so each role is easiest to compare with itself." }, "ANCHOR_TOP")
 UI.fameScopeBtn:SetScript("OnClick", function()
 	UI.fame.scope = (UI.FameScope() == "guild") and "mine" or "guild"
 	UI.fame.who = nil
@@ -1851,7 +1861,7 @@ function UI.FameScope()
 	if UI.fame.scope == "mine" or not (W.GuildFame and W.GuildFame.Guild()) then return "mine" end
 	return "guild"
 end
-local fameOnly = { famePostBtn, famePerBtn, fameResetBtn, fameTestBtn, UI.fameScopeBtn, UI.fameShareBtn }
+local fameOnly = { famePostBtn, famePerBtn, fameResetBtn, fameTestBtn, UI.fameScopeBtn, UI.fameShareBtn, UI.fameRoleBtn }
 for i = 1, getn(fameOnly) do fameOnly[i]:Hide() end
 
 -- show the controls that belong to the current mode
@@ -5033,7 +5043,7 @@ function UI:FameBoardRows(kind)
 	local d = C.View()
 	local rows = {}
 	local hero = (kind == "hero")
-	local list = C:Board(kind, UI.fame.per)
+	local list = C:Board(kind, UI.fame.per, nil, UI.fame.role)
 	head(rows, (hero and "Hall of Fame - the biggest heroes" or "Hall of Shame - the biggest liabilities") .. (UI.fame.per and "  (points per fight, 3+ fights)" or ""))
 	if getn(list) == 0 then
 		tinsert(rows, row(C_DIM .. ((d.fights + d.testFights) == 0 and (d.guild and "Nothing from the guild yet. Fights arrive as members with WhoDidIt record them and come online - Share with guild asks now."
@@ -5137,6 +5147,7 @@ function UI:RefreshFame()
 		UI.SkinSelect(b, on)
 	end
 	famePerBtn:SetText("Per fight: " .. (UI.fame.per and "|cff33ff33on|r" or "off"))
+	UI.fameRoleBtn:SetText("Role: " .. (UI.fame.role and ("|cffffd100" .. C.ROLE_LABEL[UI.fame.role] .. "|r") or "all"))
 	fameTestBtn:SetText(C.HasTest() and "|cff33ccffClear test data|r" or "|cff777777No test data|r")
 	UI.fameScopeBtn:SetText("Showing: " .. ((scope == "guild") and "|cff33ff33guild|r" or "|cffffd100mine|r"))
 	if scope == "guild" then fameResetBtn:Hide(); fameTestBtn:Hide() else fameResetBtn:Show(); fameTestBtn:Show() end

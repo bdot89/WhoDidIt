@@ -139,7 +139,8 @@ function G.Encode(rec, guild)
 		local sv = rec.saves[i]
 		if sv.who and rec.players[sv.who] and (sv.pts or 0) > 0 then
 			add(hk, sv.who, cleanKind(W.Career.SaveType(sv.text)), sv.pts)
-			tinsert(saves, sv)
+			-- (a damage award isn't a play: the best plays stay the clutch ones)
+			if W.Career.SaveType(sv.text) ~= "Damage" then tinsert(saves, sv) end
 		end
 	end
 	local function kinds(t)
@@ -164,9 +165,15 @@ function G.Encode(rec, guild)
 	local h, b = rec.heroes and rec.heroes[1], rec.blame and rec.blame[1]
 	local mvp = (h and (h.pts or 0) >= 2 and rec.players[h.name]) and h.name or ""
 	local worst = (b and (b.pts or 0) >= 1 and rec.players[b.name]) and b.name or ""
+	-- tanks and healers (everyone else is DPS), and "w2": the 1.25 hero weights. Both go
+	-- after mvp;worst, where older versions don't look.
+	local roles = {}
+	for name, rp in pairs(rec.players) do
+		if okName(name) and (rp.role == "tank" or rp.role == "heal") then tinsert(roles, name .. "=" .. ((rp.role == "tank") and "t" or "h")) end
+	end
 	return table.concat({
 		"1;" .. guild .. ";" .. cleanKind(rec.enc or "?") .. ";" .. ((rec.result == "KILL") and "K" or "W") .. ";" .. floor(at) .. ";" .. floor(rec.dur or 0),
-		table.concat(players, ","), kinds(hk), kinds(bk), mvp .. ";" .. worst, best(saves), best(finds, true),
+		table.concat(players, ","), kinds(hk), kinds(bk), mvp .. ";" .. worst .. ";" .. table.concat(roles, ",") .. ";w2", best(saves), best(finds, true),
 	}, "#")
 end
 
@@ -208,6 +215,14 @@ function G.Decode(raw)
 	local mw = split(sec[5], ";")
 	c.mvp = (mw[1] ~= "" and c.players[mw[1]]) and mw[1] or nil
 	c.worst = (mw[2] and mw[2] ~= "" and c.players[mw[2]]) and mw[2] or nil
+	c.w2 = (mw[4] == "w2")
+	if c.w2 then
+		c.roles = {}
+		for part in string.gfind((mw[3] or "") .. ",", "([^,]*),") do
+			local _, _, who, r = string.find(part, "^(.-)=([th])$")
+			if who and c.players[who] then c.roles[who] = (r == "t") and "tank" or "heal" end
+		end
+	end
 	for si, key in ipairs({ "mom", "blu" }) do
 		local txt = sec[5 + si]
 		if txt ~= "" then
@@ -231,7 +246,7 @@ local function player(v, name, class)
 	local p = v.players[name]
 	if not p then
 		p = { class = class, fights = 0, kills = 0, deaths = 0, hero = 0, saves = 0, mvp = 0,
-			blame = 0, mistakes = 0, worst = 0, hk = {}, mk = {}, last = "" }
+			blame = 0, mistakes = 0, worst = 0, hk = {}, mk = {}, last = "", roles = {} }
 		v.players[name] = p
 	end
 	return p
@@ -251,19 +266,26 @@ local function account(v, c)
 		local p = player(v, name, cp.class)
 		p.fights = p.fights + 1
 		if c.kill then p.kills = p.kills + 1 end
+		if c.roles then   -- (cards from 1.25 on say who tanked and healed; everyone else was DPS)
+			local r = c.roles[name] or "dps"
+			p.roles[r] = (p.roles[r] or 0) + 1
+		end
 		p.deaths = p.deaths + cp.deaths
 		if when > p.last then p.last = when end
 	end
+	-- a card from before 1.25 has the old hero weights: scaled to the new ones as it's counted
+	local scale = (not c.w2) and W.Data.heroRescale or {}
 	for _, side in ipairs({ { c.hero, "hero", "saves", "hk" }, { c.blame, "blame", "mistakes", "mk" } }) do
 		for who, ks in pairs(side[1]) do
 			local p = v.players[who]
 			for kind, k in pairs(ks) do
-				p[side[2]] = round1(p[side[2]] + k[2])
+				local pts = (side[2] == "hero") and round1(k[2] * (scale[kind] or 1)) or k[2]
+				p[side[2]] = round1(p[side[2]] + pts)
 				p[side[3]] = p[side[3]] + k[1]
 				local t = p[side[4]][kind]
 				if not t then t = { 0, 0 }; p[side[4]][kind] = t end
 				t[1] = t[1] + k[1]
-				t[2] = round1(t[2] + k[2])
+				t[2] = round1(t[2] + pts)
 			end
 		end
 	end
@@ -272,7 +294,8 @@ local function account(v, c)
 	for _, side in ipairs({ { c.mom, v.moments }, { c.blu, v.blunders } }) do
 		for i = 1, getn(side[1]) do
 			local m = side[1][i]
-			tinsert(side[2], { pts = m.pts, who = m.who, class = v.players[m.who].class, text = m.text, enc = c.enc, when = when, kind = m.kind })
+			local pts = (side[2] == v.moments) and round1(m.pts * (scale[m.kind] or 1)) or m.pts
+			tinsert(side[2], { pts = pts, who = m.who, class = v.players[m.who].class, text = m.text, enc = c.enc, when = when, kind = m.kind })
 		end
 	end
 end
@@ -284,7 +307,8 @@ local function copyTally(t)
 	for name, p in pairs(t.players or {}) do
 		local q = {}
 		for k, x in pairs(p) do q[k] = x end
-		q.hk, q.mk = {}, {}
+		q.hk, q.mk, q.roles = {}, {}, {}
+		for k, x in pairs(p.roles or {}) do q.roles[k] = x end
 		for k, x in pairs(p.hk or {}) do q.hk[k] = { x[1], x[2] } end
 		for k, x in pairs(p.mk or {}) do q.mk[k] = { x[1], x[2] } end
 		v.players[name] = q

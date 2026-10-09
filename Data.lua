@@ -599,8 +599,11 @@ D.saveTypes = {
 	{ "absorbed", "Shield" }, { "healed", "Heal" }, { "taunted", "Taunt" }, { "back off", "Taunt" },
 	{ "dispelled", "Dispel" }, { "innervated", "Innervate" }, { "tranquilized", "Tranq" },
 	{ "interrupted", "Interrupt" }, { "Blessing of Protection", "Protect" }, { "Lay on Hands", "Protect" },
-	{ "resurrect", "Battle res" }, { "Rebirth", "Battle res" }, { "survived", "Survival" },
+	{ "resurrect", "Battle res" }, { "Rebirth", "Battle res" }, { "survived", "Survival" }, { "on damage", "Damage" },
 }
+-- What each kind of play was worth before 1.25.0 relative to now (Hall of Fame totals
+-- recorded with the old weights are scaled by this, once / when they're counted)
+D.heroRescale = { Heal = 0.75, Shield = 2 / 3, Taunt = 0.5, Innervate = 2 / 3, Interrupt = 2, Protect = 2.5 / 3, Save = 2.5 / 3 }
 
 D.flaskZones = {
 	["Molten Core"] = true, ["Blackwing Lair"] = true, ["Ahn'Qiraj"] = true, ["Naxxramas"] = true,

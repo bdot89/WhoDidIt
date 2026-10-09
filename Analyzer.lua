@@ -812,8 +812,19 @@ function A:Build(F, final)
 		end
 		return true
 	end
-	local function hsave(t, who, pts, text, tip)
+	-- Routine plays - a tank taunting the boss back, a healer topping up someone low -
+	-- are the role's job and happen all fight: they count for less, and only up to
+	-- CAP points a fight each, so tanks and healers don't run away with the Hall of
+	-- Fame. Clutch plays (battle res, freeing a mind-controlled raider...) aren't capped.
+	local CAP = { taunt = 3, heal = 4.5 }
+	local capped = {}
+	local function hsave(t, who, pts, text, tip, kind)
 		if not who or not players[who] then return end
+		if kind and CAP[kind] then
+			local key = who .. "|" .. kind
+			pts = math.max(0, math.min(pts, CAP[kind] - (capped[key] or 0)))
+			capped[key] = (capped[key] or 0) + pts
+		end
 		tinsert(rec.saves, { t = t, who = who, pts = pts, text = text, tip = tip })
 		local h = hero[who]
 		if not h then h = { pts = 0, list = {} }; hero[who] = h end
@@ -825,18 +836,18 @@ function A:Build(F, final)
 		local s = F.saves[i]
 		local k = s.kind
 		if k == "heal" and survived(s.target, s.t, 8) then
-			hsave(s.t, s.who, 2, s.who .. " healed " .. s.target .. " from " .. pctS(s.pre) .. " health with " .. s.sp .. " (+" .. FmtNum(s.amt) .. ")",
-				{ s.target .. " was about to die - the heal landed and they survived." })
+			hsave(s.t, s.who, 1.5, s.who .. " healed " .. s.target .. " from " .. pctS(s.pre) .. " health with " .. s.sp .. " (+" .. FmtNum(s.amt) .. ")",
+				{ s.target .. " was about to die - the heal landed and they survived." }, "heal")
 		elseif k == "shield" and survived(s.target, s.t, 5) then
-			hsave(s.t, s.who, 3, s.who .. "'s " .. s.sp .. " absorbed a killing blow on " .. s.target .. " (" .. FmtNum(s.amt) .. " absorbed)",
+			hsave(s.t, s.who, 2, s.who .. "'s " .. s.sp .. " absorbed a killing blow on " .. s.target .. " (" .. FmtNum(s.amt) .. " absorbed)",
 				{ "Without the shield that hit would have killed " .. s.target .. "." })
 		elseif k == "cooldown" and survived(s.target, s.t, 8) then
-			hsave(s.t, s.who, 3, s.who .. " used " .. s.sp .. " on " .. s.target .. " at " .. pctS(s.pre) .. " health",
+			hsave(s.t, s.who, 2.5, s.who .. " used " .. s.sp .. " on " .. s.target .. " at " .. pctS(s.pre) .. " health",
 				{ s.target .. " survived thanks to it." })
 		elseif k == "rez" then
 			hsave(s.t, s.who, 3, s.who .. " battle-rezzed " .. s.target .. " with " .. s.sp, { "Got a dead raider back into the fight." })
 		elseif k == "innervate" then
-			hsave(s.t, s.who, 1.5, s.who .. " innervated " .. s.target .. " at " .. pctS(s.pre) .. " mana", { "Kept a healer going." })
+			hsave(s.t, s.who, 1, s.who .. " innervated " .. s.target .. " at " .. pctS(s.pre) .. " mana", { "Kept a healer going." })
 		elseif k == "freed" then
 			hsave(s.t, s.who, 2, s.who .. " dispelled " .. s.sp .. " from " .. s.target, { "Freed a mind-controlled raider before they could do more damage." })
 		elseif (k == "self" or k == "potion") and survived(s.target, s.t, 8) then
@@ -855,16 +866,16 @@ function A:Build(F, final)
 				if tc.who == a.to and tc.t <= a.t + 0.5 and tc.t >= a.t - 3 then taunted = true end
 			end
 			if taunted then
-				hsave(a.t, a.to, 3, a.to .. " taunted " .. a.boss .. " off " .. a.from, { a.from .. " had the boss and survived because of the taunt." })
+				hsave(a.t, a.to, 1.5, a.to .. " taunted " .. a.boss .. " off " .. a.from, { a.from .. " had the boss and survived because of the taunt." }, "taunt")
 			else
-				hsave(a.t, a.to, 1.5, a.to .. " pulled " .. a.boss .. " back off " .. a.from, { a.from .. " had the boss and survived." })
+				hsave(a.t, a.to, 0.75, a.to .. " pulled " .. a.boss .. " back off " .. a.from, { a.from .. " had the boss and survived." }, "taunt")
 			end
 		end
 	end
 
 	for sp, st in pairs(F.interrupts) do
 		for name, c in pairs(st.by) do
-			hsave(nil, name, math.min(3, 0.5 * c), name .. " interrupted " .. sp .. " " .. c .. "x", { "Stopped a dangerous cast." })
+			hsave(nil, name, math.min(3, c), name .. " interrupted " .. sp .. " " .. c .. "x", { "Stopped a dangerous cast." })
 		end
 	end
 
@@ -872,6 +883,21 @@ function A:Build(F, final)
 		local fz = F.frenzies[i]
 		if fz.by and fz.dur <= 3 then
 			hsave(fz.t, fz.by, 1, fz.by .. " tranquilized " .. fz.boss .. "'s Frenzy in " .. string.format("%.1f", fz.dur) .. "s", { "Removed the Frenzy before it hurt the tanks." })
+		end
+	end
+
+	-- the damage dealers' share: the fight's top 3 on damage (DPS role) earn hero points too
+	if dur >= 30 then
+		local dl = {}
+		for name, p in pairs(players) do
+			if p._part and p._role == "dps" and (p.dmg or 0) > 0 then
+				tinsert(dl, { name = name, dps = p.dmg / math.max(1, p._alive or dur) })
+			end
+		end
+		table.sort(dl, function(a, b) return a.dps > b.dps end)
+		local award = { 2, 1.5, 1 }
+		for i = 1, math.min(3, getn(dl)) do
+			hsave(nil, dl[i].name, award[i], dl[i].name .. " was #" .. i .. " on damage (" .. floor(dl[i].dps) .. " DPS)", { "The fight's top damage dealers earn hero points too." })
 		end
 	end
 

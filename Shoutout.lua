@@ -886,7 +886,7 @@ function S:AutoLines(rec)
 		tinsert(out, tag .. rec.enc .. " down in " .. FmtTime(rec.dur) .. " - " .. dead)
 		local bits = {}
 		local h = rec.heroes and rec.heroes[1]
-		if h and h.pts >= 2 then tinsert(bits, "MVP " .. h.name .. " (" .. getn(h.list) .. " save" .. ((getn(h.list) == 1) and "" or "s") .. ")") end
+		if h and h.pts >= 2 then tinsert(bits, "MVP " .. h.name .. " (" .. h.pts .. " pts)") end
 		local tDmg, tHeal = totals(rec)
 		local n, p = best(rec, function(q) return q.dmg end)
 		if n then tinsert(bits, "Top DPS " .. n .. " " .. floor(dps(rec, p))) end

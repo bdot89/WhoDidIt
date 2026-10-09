@@ -708,7 +708,8 @@ guild it shows **the guild's Hall of Fame**: every fight any member recorded, al
 - **A player's record**: right-click anyone (or click a name on the left) for their totals, plays and mistakes by kind,
   and their own best plays and worst blunders.
 - **Per fight** (bottom left) ranks by points per fight instead of totals, so raiders with fewer fights can top it
-  (3 fights or more).
+  (3 fights or more). **Role: all / tanks / healers / DPS** shows only the players who mostly play that role, since
+  each role earns its points in its own way (see the hero points table under "How the verdict works").
 - **Posting**: click any line to see it in your own chat, Ctrl-click to post it. **Post this board** posts the top
   5 (or top 3 plays / blunders, or the open record) to the **Post to** channel, in colour.
 
@@ -853,16 +854,22 @@ The wipe point is when 40 % of the raid is dead. Deaths after it barely count.
 
 | Play | Points |
 | --- | --- |
-| Heal landing on someone under 20% health who then survives | 2 |
-| Power Word: Shield / Ice Barrier soaking a hit that would have killed | 3 |
-| Tank taunting the boss off a non-tank who then survives | 3 (1.5 without a taunt cast) |
-| Lay on Hands / Blessing of Protection on someone under 35% (or BoP on whoever has aggro) | 3 |
+| Heal landing on someone under 20% health who then survives | 1.5 (at most 4.5 a fight) |
+| Power Word: Shield / Ice Barrier soaking a hit that would have killed | 2 |
+| Tank taunting the boss off a non-tank who then survives | 1.5 (0.75 without a taunt cast; at most 3 a fight) |
+| Lay on Hands / Blessing of Protection on someone under 35% (or BoP on whoever has aggro) | 2.5 |
 | Battle res (Rebirth) | 3 |
 | Dispelling mind control | 2 |
-| Innervate on someone under 30% mana | 1.5 |
-| Interrupting a dangerous cast | 0.5 each (max 3) |
+| Innervate on someone under 30% mana | 1 |
+| Interrupting a dangerous cast | 1 each (max 3) |
 | Tranquilizing a Frenzy within 3s | 1 |
 | Last-second potion / healthstone / Shield Wall etc. under 30% health, and surviving | 1 |
+| The fight's top 3 damage dealers (DPS role, fights of 30 s or more) | 2 / 1.5 / 1 |
+
+Taunting the boss back and topping up someone low are a tank's and a healer's job and happen all fight, so they
+count for less and only up to a cap each fight; the damage dealers earn theirs from damage and interrupts. Totals
+recorded before 1.25.0 (with the old points) were scaled to these once, and so are older guild cards when they're
+counted. **Role** on the Hall of Fame tab compares each role with itself.
 
 </details>
 

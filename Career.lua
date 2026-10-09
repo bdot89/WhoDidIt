@@ -50,7 +50,7 @@ local function player(d, name, class)
 	local p = d.players[name]
 	if not p then
 		p = { class = class, fights = 0, kills = 0, deaths = 0, hero = 0, saves = 0, mvp = 0,
-			blame = 0, mistakes = 0, worst = 0, hk = {}, mk = {}, last = "", test = d.isTest }
+			blame = 0, mistakes = 0, worst = 0, hk = {}, mk = {}, last = "", test = d.isTest, roles = {} }
 		d.players[name] = p
 	end
 	if class then p.class = class end
@@ -89,6 +89,10 @@ function C:Add(rec)
 		if rec.result == "KILL" then p.kills = p.kills + 1 end
 		p.deaths = p.deaths + (rp.deaths or 0)
 		p.last = when
+		if rp.role then
+			p.roles = p.roles or {}
+			p.roles[rp.role] = (p.roles[rp.role] or 0) + 1
+		end
 	end
 	-- mistakes (blame points)
 	for i = 1, getn(rec.findings or {}) do
@@ -112,7 +116,10 @@ function C:Add(rec)
 			p.hero = round1(p.hero + s.pts)
 			p.saves = p.saves + 1
 			bump(p.hk, kind, s.pts)
-			keepTop(d.moments, { pts = round1(s.pts), who = s.who, class = rp.class, text = s.text, enc = rec.enc, when = when, kind = kind, test = d.isTest })
+			-- (a damage award isn't a play: the best plays stay the clutch ones)
+			if kind ~= "Damage" then
+				keepTop(d.moments, { pts = round1(s.pts), who = s.who, class = rp.class, text = s.text, enc = rec.enc, when = when, kind = kind, test = d.isTest })
+			end
 		end
 	end
 	-- the fight's top hero and most to blame
@@ -169,12 +176,23 @@ end
 
 -- the board: { { name, p, v }, ... } sorted. kind = "hero" or "blame";
 -- perFight = points per fight (players with fewer than minFights left out)
-function C:Board(kind, perFight, minFights)
+-- the role a player plays most ("tank", "heal", "dps"); nil if not known yet
+function C.MainRole(p)
+	local best, bn
+	for r, n in pairs(p.roles or {}) do
+		if not bn or n > bn then best, bn = r, n end
+	end
+	return best
+end
+C.ROLE_LABEL = { tank = "tanks", heal = "healers", dps = "DPS" }
+
+-- role (optional): only players who mostly play it
+function C:Board(kind, perFight, minFights, role)
 	local d = C.View()
 	local out = {}
 	for name, p in pairs(d.players) do
 		local pts = (kind == "hero") and p.hero or p.blame
-		if pts > 0 and (not perFight or p.fights >= (minFights or 3)) then
+		if pts > 0 and (not perFight or p.fights >= (minFights or 3)) and (not role or C.MainRole(p) == role) then
 			local v = perFight and round1(pts / math.max(1, p.fights)) or pts
 			tinsert(out, { name = name, p = p, v = v })
 		end
@@ -195,10 +213,11 @@ local function classes()
 end
 C.Classes = classes
 
-function C:BoardLines(kind, perFight, n)
+function C:BoardLines(kind, perFight, n, role)
 	local d = C.View()
-	local list = C:Board(kind, perFight)
-	local title = ((kind == "hero") and "HALL OF FAME HEROES" or "HALL OF SHAME") .. (d.guild and (" of " .. d.guild) or "")
+	local list = C:Board(kind, perFight, nil, role)
+	local title = ((kind == "hero") and "HALL OF FAME HEROES" or "HALL OF SHAME") .. (role and (" - " .. string.upper(C.ROLE_LABEL[role] or role)) or "")
+		.. (d.guild and (" of " .. d.guild) or "")
 	local out = { "[WhoDidIt] " .. title .. ": since " .. d.since .. ", " .. d.fights .. " fights" .. ((d.testFights > 0) and (" + " .. d.testFights .. " test") or "")
 		.. (perFight and " (points per fight, 3+ fights)" or "") }
 	if getn(list) == 0 then
@@ -254,9 +273,38 @@ function C:Post(lines, channel)
 end
 
 -- saved fights from before this existed count too
+-- once (1.25.0): hero points recorded with the old weights (taunts 3, saving heals 2...)
+-- are scaled to the new ones, so the board is fair straight away, not only from now on
+local function rescale()
+	if WhoDidItDB.heroWeights == 2 then return end
+	WhoDidItDB.heroWeights = 2
+	local f = W.Data.heroRescale or {}
+	local changed = false
+	for _, key in ipairs({ "career", "careerTest" }) do
+		local d = WhoDidItDB[key]
+		if d then
+			for _, p in pairs(d.players or {}) do
+				local total = 0
+				for kind, k in pairs(p.hk or {}) do
+					k[2] = round1(k[2] * (f[kind] or 1))
+					total = total + k[2]
+				end
+				if p.hero ~= round1(total) then changed = true end
+				p.hero = round1(total)
+			end
+			for _, m in ipairs(d.moments or {}) do m.pts = round1(m.pts * (f[m.kind] or 1)) end
+			table.sort(d.moments or {}, function(a, b) return a.pts > b.pts end)
+		end
+	end
+	if changed then
+		W.Print("Hall of Fame: hero points now count routine taunts and heals for less, and the top damage dealers in each fight earn points too. Your totals were rescaled to match.")
+	end
+end
+
 W:On("PLAYER_ENTERING_WORLD", function()
 	if WhoDidItDB and not C.filled then
 		C.filled = true
+		rescale()
 		C:Backfill()
 	end
 end)
