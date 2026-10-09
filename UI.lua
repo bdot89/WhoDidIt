@@ -590,6 +590,13 @@ local function tooltip(b, titleText, lines, anchor)
 	b:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
+-- "  - 23 online" after the add-on lights (W.Board's count of WhoDidIt users on the realm)
+function UI.OnlineText()
+	local B = W.Board
+	if not (B and B.OnlineCount) or not (WhoDidItDB and WhoDidItDB.opts.shareBoard) then return "" end
+	return "   |cff666666-|r  |cff888888" .. B.OnlineCount() .. " online|r"
+end
+
 -- the add-on lights in the title bar: hover explains them, click = ClassicAPI guide
 do
 	local hover = CreateFrame("Button", nil, f)
@@ -599,7 +606,11 @@ do
 	tooltip(hover, "Add-ons WhoDidIt uses", function()
 		local e = W.env
 		local function st(v, yes, no) return v and ("|cff33ff33" .. yes .. "|r") or no end
+		local B = W.Board
 		local l = {
+			(B and B.OnlineCount) and ("|cffffffff" .. B.OnlineCount() .. "|r WhoDidIt users online on " .. B.Realm() .. " (" .. B.Faction() .. ")"
+				.. "|cff888888 - heard on WhoDidIt's hidden channel in the last 25 min; players with sharing off aren't counted|r") or " ",
+			" ",
 			"Nampower: " .. st(e.nampower, "found", "|cffff5555missing - only deaths are tracked|r"),
 			"SuperWoW: " .. st(e.superwow, "found", "|cffff5555missing - most tracking is off|r"),
 			"Threat: " .. st(e.twthreat or WhoDidItDB.opts.queryThreat, "on", "|cffff5555off|r"),
@@ -5312,7 +5323,7 @@ function UI:Refresh()
 	local e = W.env
 	local function yn(v, n) return (v and "|cff33ff33" or "|cffff3333") .. n .. "|r" end
 	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat")
-		.. "  " .. (e.classicapi and "|cff33ff33ClassicAPI|r" or "|cff777777ClassicAPI?|r"))
+		.. "  " .. (e.classicapi and "|cff33ff33ClassicAPI|r" or "|cff777777ClassicAPI?|r") .. UI.OnlineText())
 	UI:UpdateAML()
 	UI.SetHeaderArt(nil)   -- each tab sets its own
 

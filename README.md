@@ -902,6 +902,7 @@ Totals recorded with older points were scaled to these once, and so are older gu
 /wdi rankings              kill times & full clears
 /wdi 5man                  5-man dungeon rankings
 /wdi timer on|off|reset     the run timer on screen (first pull to the last boss)
+/wdi online                how many WhoDidIt users are online on your realm (also small, next to the add-on lights)
 /wdi 5man name <name>      name the group you're in
 /wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)
 /wdi share on|off          the hidden realm channel: raid times from the master feed, 5-man runs (off = leave it)

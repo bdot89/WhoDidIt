@@ -23,6 +23,7 @@ local floor = math.floor
 local CHANNEL = "WDIBoard"
 local PROTO   = "WDIB1"
 local SEP     = "~"
+local FEED    = "WDIF1"   -- (the master feed's messages; see "master feed" below)
 
 local KILL_MIN, KILL_MAX   = 5, 3600
 local CHRON_KILL_MIN = 10   -- Chronicle logs with a boss "killed" faster than this are broken
@@ -1421,6 +1422,35 @@ W:On("CHAT_MSG_CHANNEL", function(msg, sender, lang, chanFull, target, flags, zo
 	B:Receive(msg, sender)
 end)
 
+-- Who's online with WhoDidIt (a number only): everyone on the hidden channel says
+-- "P" when they join and every 20 minutes; anything heard from a sender counts too.
+-- Someone counts as online for 25 minutes after they were last heard. The channel
+-- is your realm and faction, and only users with sharing on are in it.
+local ONLINE_FOR = 1500
+local online, nOnline = {}, 0     -- sender -> GetTime() last heard (forgotten after 25 min, at most 3000)
+local nextPresence
+W:On("CHAT_MSG_CHANNEL", function(msg, sender, lang, chanFull, target, flags, zoneId, chanNum, chanName)
+	if not msg or not sender then return end
+	local pre = string.sub(msg, 1, 6)
+	if pre ~= PROTO .. SEP and pre ~= FEED .. "~" then return end
+	local name = strlower(chanName or "")
+	if name ~= strlower(CHANNEL) and not string.find(strlower(chanFull or ""), strlower(CHANNEL), 1, true) then return end
+	if not online[sender] then
+		if nOnline >= 3000 then online, nOnline = {}, 0 end
+		nOnline = nOnline + 1
+	end
+	online[sender] = GetTime()
+end)
+-- how many WhoDidIt users are online on your realm and faction right now (you included)
+function B.OnlineCount()
+	local now, n = GetTime(), 0
+	for who, t in pairs(online) do
+		if now - t > ONLINE_FOR then online[who] = nil; nOnline = nOnline - 1 else n = n + 1 end
+	end
+	if WhoDidItDB and WhoDidItDB.opts.shareBoard and not online[UnitName("player") or ""] then n = n + 1 end
+	return n
+end
+
 -- one message every 2s; join late so the default channels keep their numbers
 local joinAt
 W:On("PLAYER_ENTERING_WORLD", function()
@@ -1445,6 +1475,11 @@ W:Every(2, function()
 		respondAt = nil
 		lastAnswer = now
 		answer()
+	end
+	-- "I'm here", for the online count: after joining, then every 20 minutes or so
+	if not joinAt and chanId() and (not nextPresence or now >= nextPresence) then
+		nextPresence = now + 1200 + math.random(120)
+		tinsert(outq, PROTO .. SEP .. "P")
 	end
 	-- (outq is sent by the channel sender at the end of the file, paced with the feed)
 end)
@@ -1471,7 +1506,6 @@ end)
 --   R~sid~rec;rec;...                   records (idx refer to D)
 --   E~sid~total                         stream end
 --   Q~slug / L~slug~i~n~part            a raid's boss list, asked / sent in parts
-local FEED = "WDIF1"
 local FEED_MARGIN = 14 * 86400   -- re-send records this much older than "since" (late uploads)
 local feedq = {}
 local feedSent, feedTotal = 0, 0    -- master: the stream going out

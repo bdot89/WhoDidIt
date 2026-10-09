@@ -885,6 +885,10 @@ local function slash(msg)
 	elseif cmd == "fame" or cmd == "alltime" or cmd == "hof" then
 		if not W.Career then W.Print(W.RESTART_MSG) return end
 		W.UI:SetMode("fame")
+	elseif cmd == "online" then
+		if not (W.Board and W.Board.OnlineCount) then W.Print(W.RESTART_MSG) return end
+		W.Print("|cffffffff" .. W.Board.OnlineCount() .. "|r WhoDidIt users online on " .. W.Board.Realm() .. " (" .. W.Board.Faction() .. ") right now"
+			.. " |cff888888- heard on the hidden channel in the last 25 minutes; players with sharing off aren't counted.|r")
 	elseif cmd == "timer" then
 		if not W.RunTimer then W.Print(W.RESTART_MSG) return end
 		W.RunTimer:Slash(rest)
