@@ -606,6 +606,22 @@ function Publish-Weekly {
     foreach ($l in ($out.Trim() -split "`r?`n")) { if ($l) { Log ("  " + $l) } }
 }
 
+# A GitHub Release (with WhoDidIt.zip) for every new version, so downloads are
+# counted and installers get a folder that's already called WhoDidIt
+# (tools\Publish-Release.ps1 -Auto: it does nothing when the version has one).
+# Checked every 3 hours.
+function Release-New {
+    if ($NoPublish) { return }
+    $f = Join-Path $DataDir "WhoDidIt_ReleaseTry.txt"
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $tried = 0
+    if (Test-Path -LiteralPath $f) { try { $tried = [long]([IO.File]::ReadAllText($f).Trim()) } catch { } }
+    if ($now - $tried -lt 3 * 3600) { return }
+    [IO.File]::WriteAllText($f, [string]$now)
+    $out = & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "Publish-Release.ps1") -Auto 2>&1 | Out-String
+    foreach ($l in ($out.Trim() -split "`r?`n")) { if ($l) { Log ("  " + $l) } }
+}
+
 Log "WhoDidIt-Sync for $Server (WoW folder: $WowDir)"
 while ($true) {
     if (Test-Path -LiteralPath $RequestFile) { [IO.File]::Delete($RequestFile) }   # this sync answers any request
@@ -616,6 +632,7 @@ while ($true) {
     else { $script:St.state = "waiting"; $script:St.what = "Up to date"; $script:St.done = 0; $script:St.total = 0 }
     Write-Status
     if (-not $failed) { try { Publish-Weekly } catch { Log ("Weekly publish failed: " + $_.Exception.Message) } }
+    try { Release-New } catch { Log ("Release check failed: " + $_.Exception.Message) }
     # every raid time and 5-man run as one JSON file for the website (tools\Website-Export.ps1)
     if (-not $failed) {
         try {

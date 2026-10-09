@@ -102,11 +102,18 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 
 ## Install
 
-1. Download the [latest code](https://github.com/bdot89/WhoDidIt/archive/refs/heads/main.zip) (or `git clone`).
-2. Extract it into `Interface/AddOns/` and **rename the folder to `WhoDidIt`**. GitHub names it `WhoDidIt-main`, and the game won't load it under that name.
-3. Make sure **Nampower** and **SuperWoW** are installed (see below), then log in and type `/wdi`.
+1. Download **[WhoDidIt.zip](https://github.com/bdot89/WhoDidIt/releases/latest/download/WhoDidIt.zip)** (the latest
+   release; every version is on the [releases page](https://github.com/bdot89/WhoDidIt/releases)).
+2. Unzip it into `World of Warcraft\Interface\AddOns\`. You get a folder called **`WhoDidIt`**: nothing to rename.
+3. Make sure **Nampower** and **SuperWoW** are installed (see below), then start the game and type `/wdi`.
 4. That's it. Rankings is full straight away: WhoDidIt comes with every guild's raid times as of its last update,
    and the [master feed](#master-feed-nothing-to-install) adds newer ones in game while the maintainer is online.
+
+**Updating:** close the game, delete the old `WhoDidIt` folder and unzip the new one in its place. Your settings,
+fights and Hall of Fame are kept: they're saved in the `WTF` folder, not in the addon.
+
+*Using GitHub's green **Code > Download ZIP** button instead?* It works too, but GitHub names the folder
+`WhoDidIt-main`: rename it to **`WhoDidIt`**, or the game won't load it.
 
 **Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#chronicle-logs),
 [RollFor](#rollforml-soft-res-master-looting-with-rollfor), [DopingControl](#open-dopingcontrol-the-full-raid-check) and the
