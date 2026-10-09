@@ -133,7 +133,7 @@ function B:LoadChronicle()
 	B.chronLines = 0
 
 	local data = { realms = {}, bosses = {}, zones = {}, me = {}, logs = {} }
-	for line in string.gfind(s, "[^\n]+") do
+	for line in string.gfind(s, "[^\r\n]+") do
 		local p = splitBar(line)
 		local t = p[1]
 		if t == "WDICHRON" then
@@ -1617,7 +1617,7 @@ function B:SeedSnapshot()
 	local f = store()
 	f.logAt = f.logAt or {}
 	local n = 0
-	for line in string.gfind(s.text, "[^\n]+") do
+	for line in string.gfind(s.text, "[^\r\n]+") do
 		local p = splitBar(line)
 		local t, key = p[1], nil
 		if t == "C" or t == "C2" then key = t .. "|" .. (p[2] or "") .. "|" .. (p[3] or "") .. "|" .. (p[4] or "")
@@ -1649,6 +1649,14 @@ function B.FeedText()
 	local f = WhoDidItDB and WhoDidItDB.feed
 	local synced = B.FeedSynced()
 	if not f or synced == 0 then return nil end
+	-- once (1.25.1): lines taken from the download before kept a stray carriage return
+	-- (RaidTimes.lua has Windows line ends), which broke a raid's last boss
+	if not f.crFixed then
+		f.crFixed = true
+		for k, line in pairs(f.lines) do f.lines[k] = (string.gsub(line, "\r", "")) end
+		for k, line in pairs(f.logs) do f.logs[k] = (string.gsub(line, "\r", "")) end
+		f.dirty = true
+	end
 	f.text = nil   -- older versions saved this copy too
 	if feedText and not f.dirty then return feedText end
 	local out = { "WDICHRON|2|" .. synced .. "|" .. (f.server or "?") .. "|90|ok" }
@@ -1683,7 +1691,7 @@ function B.NoteMasterLines(text, synced)
 	local ms = WhoDidItDB.masterSeen or { sig = {}, at = {} }
 	WhoDidItDB.masterSeen = ms
 	local present = {}
-	for line in string.gfind(text, "[^\n]+") do
+	for line in string.gfind(text, "[^\r\n]+") do
 		local key, sig, ended = lineKey(line)
 		if key then
 			present[key] = true
@@ -1732,7 +1740,7 @@ local function buildStream(since)
 		if getn(buf) > 0 then tinsert(out, "R~" .. sid .. "~" .. table.concat(buf, ";")) end
 		buf, blen = {}, 0
 	end
-	for line in string.gfind(raw, "[^\n]+") do
+	for line in string.gfind(raw, "[^\r\n]+") do
 		local t = string.sub(line, 1, 2)
 		-- C2 / K2 (bests since the raid scaling change) go out as "c!," / "k!,": a
 		-- WhoDidIt from before them reads "!" as an unknown name and skips them

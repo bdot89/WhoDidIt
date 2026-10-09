@@ -749,7 +749,7 @@ function R:Seed()
 	if type(s) ~= "table" or type(s.text) ~= "string" or not tonumber(s.synced) then return end
 	if (WhoDidItDB.runSeed or 0) >= s.synced then return end
 	WhoDidItDB.runSeed = s.synced
-	for line in string.gfind(s.text, "[^\n]+") do
+	for line in string.gfind(s.text, "[^\r\n]+") do
 		if string.sub(line, 1, 3) == "R5|" then
 			local p = splitBar(line)
 			local dg = D().DUNGEON[p[3] or ""]
