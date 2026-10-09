@@ -701,11 +701,12 @@ function R:Receive(p, sender)
 end
 
 ------------------------------------------------------------------ the download's runs, the master's file
--- RaidTimes.lua (the maintainer's publish) carries the realms' 5-man runs as
+-- RaidTimes.lua (the maintainer's publish) can carry the realms' 5-man runs as
 --   R5|realm|key|group|secs|date|deaths|faction|members|splits|named
--- They go on the boards once per publish. The master's WhoDidIt writes its
--- boards to CustomData\WhoDidIt_Runs.txt (same lines) for that publish and
--- for the website export (tools\WhoDidIt-Sync.ps1).
+-- and they go on the boards once per publish. The publish leaves them out for
+-- now: the members' names would go into the public repository. The master's
+-- WhoDidIt writes its boards to CustomData\WhoDidIt_Runs.txt (same lines) for
+-- the website export (tools\Website-Export.ps1, which leaves the names out).
 
 local function splitBar(line)
 	local out = {}
@@ -734,7 +735,7 @@ function R:Seed()
 end
 W:On("PLAYER_ENTERING_WORLD", function() if WhoDidItDB then R:Seed() end end)
 
--- the master's boards, out to CustomData for the publish and the website
+-- the master's boards, out to CustomData for the website export
 function R:WriteFile()
 	if not WriteCustomFile or not (W.Board and W.Board.CanMaster and W.Board.CanMaster()) then return end
 	local out = { "WDIRUNS|1|" .. time() }

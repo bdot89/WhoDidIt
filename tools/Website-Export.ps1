@@ -6,7 +6,8 @@
       CustomData\WhoDidIt_Chronicle.txt   every guild's raid times (the helper's own file)
       CustomData\WhoDidIt_Runs.txt        the 5-man boards your WhoDidIt writes (master characters)
     and writes
-      CustomData\WhoDidIt_Website.json    the export (no personal bests of your characters)
+      CustomData\WhoDidIt_Website.json    the export (no personal bests of your characters, and
+                                          5-man runs without the members' names)
       CustomData\WhoDidIt_WebStatus.txt   what happened, for WhoDidIt's Website panel
                                           (Rankings > 5-mans > Website)
 
@@ -71,6 +72,7 @@ foreach ($l in (Read-Lines $chronFile)) {
 }
 
 # 5-man runs: R5|realm|key|group|secs|date|deaths|faction|members|splits|named
+# The members' names stay out (players without WhoDidIt can't opt out): only their classes.
 $runs = New-Object System.Collections.Generic.List[object]
 foreach ($l in (Read-Lines $runsFile)) {
     $p = $l -split '\|'
@@ -79,7 +81,7 @@ foreach ($l in (Read-Lines $runsFile)) {
     $members = @()
     foreach ($m in ($p[8] -split ',')) {
         $nc = $m -split ':'
-        if ($nc.Count -eq 2) { $members += [ordered]@{ name = $nc[0]; class = $classes[$nc[1]] } }
+        if ($nc.Count -eq 2 -and $classes.ContainsKey($nc[1])) { $members += $classes[$nc[1]] }
     }
     $splits = @()
     foreach ($s in ($p[9] -split ';')) {
@@ -90,19 +92,19 @@ foreach ($l in (Read-Lines $runsFile)) {
     }
     $splits = @($splits | Sort-Object { $_.at })
     $runs.Add([ordered]@{ realm = $p[1]; dungeon = $p[2]; dungeonTitle = $dg.title; group = $p[3]; seconds = [int]$p[4]; date = [long]$p[5];
-        deaths = [int]$p[6]; faction = $p[7]; members = $members; splits = $splits })
+        deaths = [int]$p[6]; faction = $p[7]; players = $members.Count; classes = $members; splits = $splits })
 }
 
 $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 $dgList = @(); foreach ($d in $dungeons.Values) { $dgList += [ordered]@{ key = $d.key; title = $d.title } }
 $doc = [ordered]@{
     generator = "WhoDidIt (https://github.com/bdot89/WhoDidIt)"
-    format = 1
+    format = 2   # 2: 5-man runs carry players and classes, no member names
     exported = $now
     server = $server
     raidTimesSynced = $synced
     scalingChange = $scaling
-    note = "Raid times from Chronicle (chronicleclassic.com), each guild's best. 5-man runs from WhoDidIt users (self-reported). Times in seconds, dates as Unix time (UTC)."
+    note = "Raid times from Chronicle (chronicleclassic.com), each guild's best. 5-man runs from WhoDidIt users (self-reported), without the members' names. Times in seconds, dates as Unix time (UTC)."
     raids = [ordered]@{ clears = $clears.ToArray(); kills = $kills.ToArray() }
     dungeons = $dgList
     runs = $runs.ToArray()

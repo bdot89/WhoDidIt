@@ -4116,7 +4116,7 @@ function UI:WebRows()
 	end
 	local site = (st and st.site) or "https://www.errorguild.com"
 	head(rows, "Website  " .. C_DIM .. "(only on your master characters)|r")
-	tinsert(rows, row("Every raid time and 5-man run, as one JSON file the website can show.", nil))
+	tinsert(rows, row("Every raid time and 5-man run (no members' names), as one JSON file the website can show.", nil))
 	tinsert(rows, row(C_DIM .. "The sync helper writes it after every sync (every 30 minutes).|r", nil))
 	head(rows, "Export")
 	if not st then
@@ -4129,8 +4129,8 @@ function UI:WebRows()
 	tinsert(rows, row("File", C_DIM .. "WoW\\CustomData\\WhoDidIt_Website.json|r"))
 	tinsert(rows, row("Your 5-man boards for it", "|cffffd100write now  >|r",
 		{ tipTitle = "5-man runs", tip = { "Your WhoDidIt writes its 5-man boards to CustomData\\WhoDidIt_Runs.txt",
-			"5 minutes after they change; the helper puts them in the export and in the",
-			"weekly download update. Click to write them now." },
+			"5 minutes after they change; the helper puts them in the export without the",
+			"members' names. They aren't in the weekly download update. Click to write them now." },
 		  click = function() R:WriteFile(); W.Print("5-man boards written to CustomData\\WhoDidIt_Runs.txt - in the export after the next sync.") end }))
 	head(rows, "Upload to the website")
 	if not st or st.up == "off" then

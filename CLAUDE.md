@@ -86,8 +86,11 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   first pull after zoning in -> final boss death. Members agree on WDI5 (party/raid addon channel): any opt-out
   (opts.no5man) keeps it private; time = the longest anyone timed; the leader (else first name) names and shares it.
   Channel record "D" (Board.lua hands it to W.Runs:Receive) is only accepted from a member; group names are untrusted
-  (R.OkName). Masters write CustomData\WhoDidIt_Runs.txt (R5 lines) for Publish-RaidTimes and tools\Website-Export.ps1
-  (JSON for the website; upload off until tools\website.json, which is gitignored).
+  (R.OkName). Masters write CustomData\WhoDidIt_Runs.txt (R5 lines) for tools\Website-Export.ps1 (JSON for the website,
+  members' classes only; upload off until tools\website.json, which is gitignored). Publish-RaidTimes leaves R5 out.
+- Character names never go into the repository (RaidTimes.lua, DefaultPacks.lua) or an export: they include players
+  without WhoDidIt, who can't opt out, and git history keeps them. Changing that needs the maintainer's decision and
+  a README line that says so.
 - The guild's Hall of Fame (GuildFame.lua, W.GuildFame): each saved fight of the guild (rec.guild = Board's RaidGuild)
   becomes a card "recorder:n", swapped on SendAddonMessage "WDIG" GUILD (V = have per recorder, C = card chunks,
   X = card that doesn't count, F = skip). Twin fights (same enc, 5 min, 20 s): the smallest id counts, so every PC
