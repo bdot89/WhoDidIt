@@ -2,9 +2,11 @@
 *.ps1 text eol=crlf
 *.vbs text eol=crlf
 # left out of the download (GitHub's "Download ZIP" uses git archive): maintainer
-# tools and notes. Players keep Install-ClassicAPI (optional) and AutoSync-Off /
-# AutoSync.ps1 (to undo AutoSync if an older version had it on).
+# tools and notes. Players keep Install-ClassicAPI (optional) and the sync launcher
+# (WhoDidIt-Sync-Hidden.vbs: on their PC it only removes an older version's task).
 /CLAUDE.md export-ignore
+/tools/AutoSync.ps1 export-ignore
+/tools/AutoSync-Off.cmd export-ignore
 /docs export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore

@@ -111,8 +111,8 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 **Drag and drop, nothing to run.** Everything is in the download: the [Chronicle logger](#chronicle-logs),
 [RollFor](#rollforml-soft-res-master-looting-with-rollfor), [DopingControl](#open-dopingcontrol-the-full-raid-check) and the
 [Auto Marker's raid packs](#auto-marker), each at the version the maintainer tested. Raid times arrive in game. The
-download leaves out the maintainer's tools: its `tools` folder only has the optional ClassicAPI installer and
-`AutoSync-Off.cmd` (to undo AutoSync if an older version had it on). The Master switch and Sync now only appear on
+download leaves out the maintainer's tools: its `tools` folder only has the optional ClassicAPI installer and a
+small launcher that removes the background task an older version may have left. The Master switch and Sync now only appear on
 the maintainer's own characters; players see a status bar only while raid times are arriving.
 
 **Optional:** [ClassicAPI](#classicapi-optional) (copy links straight to the clipboard, faster consume scans, "running
@@ -348,8 +348,8 @@ What's in the feed, and what never is, is listed under [Privacy and security](#p
 ### Sync helper (maintainer only)
 
 **Players never need this**: their raid times arrive from the master feed. It's how the maintainer's PC gets them in
-the first place, and it only runs on a PC with one of the master characters (`-Force` runs it anyway, for testing;
-anyone who started it before can stop it with `tools\AutoSync-Off.cmd`).
+the first place, and it only runs on a PC with one of the master characters (`-Force` runs it anyway, for testing).
+A player who had it running from an older version needs to do nothing: the launcher in the download removes its task.
 
 WoW addons can't go online, so a small helper does it for them. `tools\WhoDidIt-Sync.cmd` (PowerShell, built into
 Windows) uses Chronicle's public [External API](https://legacy.chronicleclassic.com/developers/api) to pull:
@@ -1034,7 +1034,8 @@ the channel altogether; `/wdi feed off` just ignores the feed.
 - The **sync helper** (maintainer only, and only on a PC with a master character) *reads* from Chronicle's public
   API; it uploads nothing unless you set up the website upload (off; to your own site, over https). It writes to `CustomData` and Windows' temp folder, needs no admin rights, and runs one
   copy at a time. **AutoSync** (also maintainer only) adds one scheduled task for the Windows user and a launcher
-  script; `AutoSync-Off.cmd` removes both and works for anyone.
+  script; `AutoSync-Off.cmd` removes them. Neither is in the player download: on a player's PC the launcher only
+  removes a task an older version left.
 - The **ClassicAPI installer** installs the pinned, tested release, checks its SHA-256 against the pin and backs up
   `dlls.txt`.
 - **Learn packs** notes mobs and where they stand into your own saved settings (at most 1,500 per raid; `/wdi marks
