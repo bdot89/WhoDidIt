@@ -89,7 +89,7 @@ end
 function S:ChannelLabel(ch)
 	ch = ch or S:Channel()
 	if string.sub(ch, 1, 1) == "#" then return string.sub(ch, 2) end
-	return S.LABELS[ch] or ch
+	return W.L(S.LABELS[ch] or ch)
 end
 
 -- next channel (back = the previous one)

@@ -91,8 +91,7 @@ L.SETTINGS = {
 		  { "When you target a boss, the raid switches to master loot with you as the looter.",
 		    "You have to be the raid leader. Default: on." } },
 		{ "auto_group_loot", "auto-group-loot", "Auto group loot", "Boss looted empty and group loot comes back on.",
-		  { "When everything in a boss's loot window has been given out, the raid switches back",
-		    "to group loot, so trash is rolled as normal. (RollFor doesn't do this in Blackwing Lair.)",
+		  { "When everything in a boss's loot window has been given out, the raid switches back\nto group loot, so trash is rolled as normal. (RollFor doesn't do this in Blackwing Lair.)",
 		    "You have to be the raid leader. Default: off." } },
 		{ "show_ml_warning", "ml", "Master loot warning", "Warns you if you loot a boss without master loot.",
 		  { "Shows a warning when you open a boss's loot and master loot isn't on. Default: off." } },
@@ -100,11 +99,9 @@ L.SETTINGS = {
 	{ title = "Rolling",
 	  items = {
 		{ "auto_raid_roll", "auto-rr", "Auto raid roll", "Nobody rolled? A random raider gets it.",
-		  { "When nobody rolls on an item that isn't soft-reserved, RollFor raid-rolls it:",
-		    "a random raider wins it. Default: off." } },
+		  { "When nobody rolls on an item that isn't soft-reserved, RollFor raid-rolls it:\na random raider wins it. Default: off." } },
 		{ "auto_class_announce", "auto-class-announce", "Name the classes that can roll", "For class-only items like tier tokens.",
-		  { "For items only some classes can use (tier tokens, class books...), the roll message",
-		    "names those classes instead of the plain \"roll for\" message. Default: off." } },
+		  { "For items only some classes can use (tier tokens, class books...), the roll message\nnames those classes instead of the plain \"roll for\" message. Default: off." } },
 		{ "auto_tmog", "auto-tmog", "No transmog rolls on trash", "Trash drops only take main and off spec rolls.",
 		  { "Items from trash mobs can't be rolled for transmog. Default: off." } },
 		{ "show_player_roles", "show-player-roles", "Show specs in the roll window", "Each roller's spec from the soft-res sheet.",
@@ -150,7 +147,7 @@ function L:HowToRoll()
 	for i = 1, getn(L.ROLLS) do
 		local r = L.ROLLS[i]
 		if r.cmd ~= "tmog" or L:TmogOn() then
-			tinsert(parts, L.RollCommand(L:RollNumber(r)) .. " = " .. string.lower(r.label))
+			tinsert(parts, L.RollCommand(L:RollNumber(r)) .. " = " .. W.L(string.lower(r.label)))
 		end
 	end
 	return table.concat(parts, ", ")
@@ -158,7 +155,7 @@ end
 
 -- change one roll number (asks first, checks it, then /rf config <ms|os|tmog> <n>)
 function L:AskRollNumber(r)
-	W:Prompt("Roll number for |cffffd100" .. r.label .. "|r\n|cff888888Raiders type /roll <number>. 100 = plain /roll.|r",
+	W:Prompt(W.LF("Roll number for |cffffd100%s|r", W.L(r.label)) .. "\n" .. W.L("|cff888888Raiders type /roll <number>. 100 = plain /roll.|r"),
 		L:RollNumber(r), function(text)
 			local n = tonumber(text)
 			if not n or n ~= math.floor(n) or n < 2 or n > 10000 then

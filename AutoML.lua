@@ -61,7 +61,7 @@ function A:Target() return WhoDidItDB and db().to end         -- nil = you
 function A:Backup() return WhoDidItDB and db().backup end     -- nil = nobody
 
 function A.Who(name)
-	return name or "you"
+	return name or W.L("you")
 end
 
 local function changed()

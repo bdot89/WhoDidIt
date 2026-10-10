@@ -50,7 +50,7 @@ function B.Fmt(secs)
 end
 
 function B.Date(epoch)
-	return epoch and date("%d %b %Y", epoch) or "?"
+	return epoch and W.LDate("%d %b %Y", epoch) or "?"
 end
 
 function B:DB(realm)
@@ -589,12 +589,12 @@ function B:OtherRealms(kind, key, home)
 end
 
 local function ago(epoch)
-	if not epoch then return "recently" end
+	if not epoch then return W.L("recently") end
 	local s = time() - epoch
-	if s < 3600 then return "within the hour" end
-	if s < 86400 then return floor(s / 3600) .. "h ago" end
+	if s < 3600 then return W.L("within the hour") end
+	if s < 86400 then return W.LF("%sh ago", floor(s / 3600)) end
 	local d = floor(s / 86400)
-	return (d == 1) and "yesterday" or (d .. " days ago")
+	return (d == 1) and W.L("yesterday") or W.LF("%s days ago", d)
 end
 B.Ago = ago
 

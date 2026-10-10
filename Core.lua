@@ -29,8 +29,22 @@ if math.randomseed then pcall(math.randomseed, time() + floor(math.mod(GetTime()
 function W.FontT(name) return (W.UI and W.UI.F) and W.UI.F(name) or name end
 function W.FontO(name) return getglobal(W.FontT(name)) end
 function W.Print(msg)
-	DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Who|cffffd100DidIt|r: " .. tostring(msg))
+	-- (a fixed text in the player's language; Locale.lua loads after this file)
+	msg = tostring(msg)
+	if W.L then msg = W.L(msg) end
+	DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Who|cffffd100DidIt|r: " .. msg)
 end
+
+-- English until Locale.lua replaces these (it isn't loaded after a /reload that
+-- follows an update which added it: the client reads the .toc only at start-up)
+function W.L(s) return s end
+function W.LF(fmt, ...) return string.format(fmt, unpack(arg)) end
+function W.LT(s) return s end
+function W.LTLines(s) return s end
+function W.LDate(fmt, t) return date(fmt, t) end
+function W.Lang() return "en" end
+function W.ShowPopup(which, a1, a2) return StaticPopup_Show(which, a1, a2) end
+W.TT = GameTooltip
 
 function W.FmtTime(s)
 	s = floor(s or 0)
@@ -124,17 +138,17 @@ StaticPopupDialogs["WHODIDIT_PROMPT"] = {
 
 function W:Prompt(text, default, fn)
 	W.prompt = { default = tostring(default or ""), fn = fn }
-	StaticPopup_Show("WHODIDIT_PROMPT", text)
+	W.ShowPopup("WHODIDIT_PROMPT", W.L(text))
 end
 
 -- a link to copy: straight onto the clipboard with ClassicAPI, otherwise a
 -- box with it selected for Ctrl+C
 function W:CopyLink(what, url)
 	if CopyToClipboard and pcall(CopyToClipboard, url) then
-		W.Print(what .. " link copied - paste it with Ctrl+V: |cffffd100" .. url .. "|r")
+		W.Print(W.LF("%s link copied - paste it with Ctrl+V: |cffffd100%s|r", W.L(what), url))
 		return
 	end
-	W:Prompt(what .. "\n|cffffd100" .. url .. "|r\n|cff888888Press Ctrl+C to copy the link, then Esc.|r", url, function() end)
+	W:Prompt(W.L(what) .. "\n|cffffd100" .. url .. "|r\n" .. W.L("|cff888888Press Ctrl+C to copy the link, then Esc.|r"), url, function() end)
 end
 
 ------------------------------------------------------------------ environment
@@ -929,7 +943,19 @@ local function slash(msg)
 	elseif cmd == "stop" then
 		W.Tracker:ManualStop()
 	elseif cmd == "clear" then
-		StaticPopup_Show("WHODIDIT_CLEAR")
+		W.ShowPopup("WHODIDIT_CLEAR")
+	elseif cmd == "lang" or cmd == "language" then
+		-- /wdi lang de: the same as clicking a flag twice (the UI reloads)
+		local Loc = W.Locale
+		if not Loc then
+			W.Print("Languages load after a full restart of WoW (not /reload).")
+		elseif Loc.BY[rest] then
+			Loc.Set(rest)
+		else
+			local list = {}
+			for i = 1, getn(Loc.LANGS) do tinsert(list, Loc.LANGS[i].code .. " = " .. Loc.LANGS[i].name) end
+			W.Print(W.LF("Language: %s. Change it with the flags in the title bar, or /wdi lang <code>: %s", Loc.BY[Loc.lang].name, table.concat(list, ", ")))
+		end
 	elseif cmd == "handover" then
 		local keep = db.opts.keepSeparate or {}
 		keep[rest] = nil

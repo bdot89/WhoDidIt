@@ -187,8 +187,26 @@ once, in chat, and never again.
 
 Across the top: **Fights** · **Consumes** · **Rankings** · **Chronicle Logs** · **Auto Marker** · **RollForML**, and **Hall of Fame** on
 the far right. The row under it holds the **Auto-loot** button (on / off, click to choose who gets the loot) and the
-lights for Nampower, SuperWoW, threat data and the optional ClassicAPI (hover them for what each does).
+lights for Nampower, SuperWoW, threat data and the optional ClassicAPI (hover them for what each does), and the
+language flags.
 Bottom left, on every tab: **Post to** (where WhoDidIt posts) and that tab's buttons. Hover anything to see what it does.
+
+### Languages
+
+WhoDidIt speaks **English, Deutsch, Français, Español, Italiano, Português (Brasil), Русский, 中文 (Chinese, simplified)
+and 한국어 (Korean)**. Click a flag in the title bar (left of Auto-loot): the first click names the language and asks once
+more, in that language; the second click switches and reloads the UI (not during a fight). `/wdi lang <code>` does the same.
+The first time, WhoDidIt starts in your client's language (most private-server clients are English).
+
+- Translated so far: the whole window (tabs, buttons, headers, tooltips, help texts, the boards, Auto Marker, RollForML,
+  Hall of Fame, dates) and the language messages. Still in English for now: the sentences of a fight's analysis (causes,
+  blame reasons, verdicts), chat posts and WhoDidIt's chat messages. They follow in the next updates.
+- Boss, zone, player and guild names stay as the game and Chronicle give them.
+- Chinese and Korean: WhoDidIt's window brings its own font (Noto Sans SC / KR, cut down to the letters it uses), because
+  an English client has no Chinese or Korean letters. Chinese or Korean text in the chat needs a client with such a font.
+- The translations were written with AI help. If a line reads wrong in your language, open an issue (or a pull request)
+  with the line from `Locales\`.
+- Updating to 1.26.0: restart WoW fully once (it has new files; `/reload` doesn't load new files).
 
 **Fights** has one tab per view of the selected fight:
 
@@ -907,6 +925,7 @@ Totals recorded with older points were scaled to these once, and so are older gu
 ```
 /wdi                       open / close the window
 /wdi rankings              kill times & full clears
+/wdi lang [code]           WhoDidIt's language: en de fr es it pt ru zh ko (the same as the flags; reloads the UI)
 /wdi 5man                  5-man dungeon rankings
 /wdi timer on|off|reset     the run timer on screen (first pull to the last boss)
 /wdi online                how many WhoDidIt users are online on your realm (also small, next to the add-on lights)
@@ -1074,4 +1093,6 @@ without a licence comes out again if its author asks:
 | [AutoMarker](https://github.com/MarcelineVQ/AutoMarker) | Weird Vibes (MarcelineVQ) | the raid pack data in `PackData.lua` (GUIDs, packs, marks), included with credit, removed on request; not under WhoDidIt's MIT licence | none stated |
 | [Chronicle External API](https://legacy.chronicleclassic.com/developers/api) | Chronicle | every guild's raid times | API terms |
 | [ClassicAPI](https://github.com/brues-code/ClassicAPI) (optional) | brues-code | extras, see above | GPL-3.0 |
-| [Fira Sans Condensed](https://github.com/google/fonts/tree/main/ofl/firasanscondensed) | The Mozilla Foundation, Telefonica S.A. | the font (`Fonts`) | SIL Open Font Licence 1.1 (`FontsOFL.txt`) |
+| [Fira Sans Condensed](https://github.com/google/fonts/tree/main/ofl/firasanscondensed) | The Mozilla Foundation, Telefonica S.A. | the font (`Fonts\`) | SIL Open Font Licence 1.1 (`Fonts\OFL.txt`) |
+| [Noto Sans SC / KR](https://github.com/notofonts/noto-cjk) | Google, Adobe | the Chinese and Korean font (`Fonts\WDI-NotoSans*.ttf`, cut down to the letters WhoDidIt uses) | SIL Open Font Licence 1.1 (`Fonts\OFL-Noto.txt`) |
+| Flags | WhoDidIt | the language flags (`Flags\`, drawn by `tools\MakeFlags.ps1`) | MIT |

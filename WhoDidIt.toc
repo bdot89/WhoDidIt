@@ -2,7 +2,7 @@
 ## Title: |cffff5555Who|cffffd100DidIt|r
 ## Notes: Raid wipe & death analyser: death recaps, blame and hero boards, threat, meters, consume checks and Hall of Fame. Every guild's raid times from Chronicle, synced in game. Includes the Chronicle logger, an auto marker, RollFor and DopingControl. /wdi
 ## Author: bdot1
-## Version: 1.25.6
+## Version: 1.26.0
 ## SavedVariables: WhoDidItDB, ChronicleCompanionDB, RollForDb, DopingControlDB
 ## SavedVariablesPerCharacter: ChronicleCompanionCharDB, RollForCharDb
 ## OptionalDeps: ChronicleCompanion, AutoMarker, RollFor, AutoMasterLooter, DopingControl, TWThreat
@@ -165,6 +165,13 @@ DopingControl\core\init.lua
 # <<< DopingControl files
 
 Core.lua
+# languages: the flags in the title bar; Locales\ holds the texts (English is in the code)
+Locale.lua
+Locales\Window.lua
+Locales\Controls.lua
+Locales\Tabs.lua
+Locales\Boards.lua
+Locales\Tools.lua
 Data.lua
 Consumes.lua
 Tracker.lua

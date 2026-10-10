@@ -72,9 +72,36 @@ if CreateFont then
 		end
 	end
 end
+-- smaller still, for a translated button label that doesn't fit (UI.Fit)
+if CreateFont then
+	for _, name in ipairs({ "GameFontNormalSmall", "GameFontHighlightSmall", "GameFontDisableSmall" }) do
+		local base = getglobal(UI.FONTS[name] or name)
+		if base and base.GetFont then
+			local p, size, flags = base:GetFont()
+			local fo = CreateFont("WhoDidItTiny" .. name)
+			fo:SetFont(p, (size or 11) - 1.5, flags or "")
+			if base.GetTextColor then
+				local r, g, b = base:GetTextColor()
+				fo:SetTextColor(r or 1, g or 1, b or 1)
+			end
+			UI.FONTS["Tiny" .. name] = "WhoDidItTiny" .. name
+		end
+	end
+end
+-- Fira Sans (Locale.lua swaps UI.FONT for Chinese / Korean; the flags' names keep Fira)
+UI.FIRA = UI.FONT
+-- every button in the window (UI.Fit shrinks a translated label that's too wide)
+UI.allBtns = {}
 -- a font template name / font object: WhoDidIt's copy when there is one
 function UI.F(name) return UI.FONTS[name] or name end
 function UI.FO(name) return getglobal(UI.FONTS[name] or name) end
+
+-- a font string that shows what it's given in the player's language (fixed texts
+-- are translated, anything else stays as it is)
+function UI.SinkText(fs)
+	local setText = fs.SetText
+	fs.SetText = function(self, t) return setText(self, W.L(t)) end
+end
 
 function UI.Flat(fr, bg, edge)
 	fr:SetBackdrop({ bgFile = UI.FLAT, edgeFile = UI.FLAT, tile = false, edgeSize = 1,
@@ -88,6 +115,11 @@ end
 function UI.Skin(b)
 	if not b or b.wdiSkin then return b end
 	b.wdiSkin = true
+	b.wdiLevel = 1
+	tinsert(UI.allBtns, b)
+	-- labels are given in English; the button shows them in the player's language
+	local setText = b.SetText
+	b.SetText = function(self, t) return setText(self, W.L(t)) end
 	local hidden = 0
 	for _, get in ipairs({ "GetNormalTexture", "GetPushedTexture", "GetDisabledTexture" }) do
 		local t = b[get] and b[get](b)
@@ -174,7 +206,7 @@ local function CreateList(parent, nrows, rowh, width)
 		b.l:SetHeight(rowh)
 
 		b:SetScript("OnEnter", function() UI.RowEnter(this) end)
-		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		b:SetScript("OnLeave", function() W.TT:Hide() end)
 		b:SetScript("OnClick", function()
 			local d = this.d
 			if not (d and d.click) then return end
@@ -259,12 +291,12 @@ local function CreateList(parent, nrows, rowh, width)
 						fs:SetPoint("LEFT", b, "LEFT", c[1], 0)
 						fs:SetWidth(c[2])
 						fs:SetJustifyH(c[4] or "LEFT")
-						fs:SetText(c[3] or "")
+						fs:SetText(W.L(c[3] or ""))
 						fs:Show()
 					end
 				else
-					b.r:SetText(d.r or "")
-					b.l:SetText(d.l or "")
+					b.r:SetText(W.L(d.r or ""))
+					b.l:SetText(W.L(d.l or ""))
 					-- d.indent: start the text further in (fights under their raid run)
 					b.l:ClearAllPoints()
 					b.l:SetPoint("LEFT", b, "LEFT", 4 + (d.indent or 0), 0)
@@ -378,12 +410,12 @@ function UI.GridCell(row, size, wheel)
 	c:SetScript("OnEnter", function()
 		local g = this.g
 		if not g then return end
-		GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
-		GameTooltip:SetText(g[4] or "", 1, 0.82, 0)
-		for i = 1, getn(g[5] or {}) do GameTooltip:AddLine(g[5][i], 0.9, 0.9, 0.9, 1) end
-		GameTooltip:Show()
+		W.TT:SetOwner(this, "ANCHOR_RIGHT")
+		W.TT:SetText(W.L(g[4] or ""), 1, 0.82, 0)
+		for i = 1, getn(g[5] or {}) do W.TT:AddLine(W.LT(g[5][i]), 0.9, 0.9, 0.9, 1) end
+		W.TT:Show()
 	end)
-	c:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	c:SetScript("OnLeave", function() W.TT:Hide() end)
 	return c
 end
 
@@ -421,26 +453,26 @@ end
 function UI.RowEnter(b)
 	local d = b.d
 	if not d or not (d.tip or d.link) then return end
-	GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+	W.TT:SetOwner(b, "ANCHOR_RIGHT")
 	if d.link then
 		-- an item: its real tooltip, then our lines under it
-		GameTooltip:SetHyperlink(d.link)
+		W.TT:SetHyperlink(d.link)
 		for i = 1, getn(d.tip or {}) do
-			if type(d.tip[i]) == "string" and d.tip[i] ~= "" then GameTooltip:AddLine(d.tip[i], 0.9, 0.9, 0.9, 1) end
+			if type(d.tip[i]) == "string" and d.tip[i] ~= "" then W.TT:AddLine(W.LT(d.tip[i]), 0.9, 0.9, 0.9, 1) end
 		end
-		GameTooltip:Show()
+		W.TT:Show()
 		return
 	end
-	GameTooltip:SetText(d.tipTitle or d.l or "", 1, 0.82, 0, 1)
+	W.TT:SetText(W.LT(d.tipTitle or d.l or ""), 1, 0.82, 0, 1)
 	for i = 1, getn(d.tip) do
 		local line = d.tip[i]
 		if type(line) == "table" then
-			GameTooltip:AddDoubleLine(line[1], line[2], 0.9, 0.9, 0.9, 1, 1, 1)
+			W.TT:AddDoubleLine(W.LT(line[1]), W.L(line[2]), 0.9, 0.9, 0.9, 1, 1, 1)
 		elseif line and line ~= "" then
-			GameTooltip:AddLine(line, 0.9, 0.9, 0.9, 1)
+			W.TT:AddLine(W.LT(line), 0.9, 0.9, 0.9, 1)
 		end
 	end
-	GameTooltip:Show()
+	W.TT:Show()
 end
 
 ------------------------------------------------------------------ frame
@@ -534,6 +566,7 @@ amlBtn:SetHeight(18)
 -- (placed under Hall of Fame, the same width, once the tab buttons exist - see below)
 if amlBtn.SetTextFontObject then amlBtn:SetTextFontObject(UI.FO("GameFontNormalSmall")) end
 if amlBtn.SetHighlightFontObject then amlBtn:SetHighlightFontObject(UI.FO("GameFontHighlightSmall")) end
+amlBtn.wdiLevel = 2
 amlBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 amlBtn:SetScript("OnClick", function()
 	if not W.AutoML then W.Print(W.RESTART_MSG) return end
@@ -541,24 +574,90 @@ amlBtn:SetScript("OnClick", function()
 end)
 amlBtn:SetScript("OnEnter", function()
 	local A = W.AutoML
-	GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT")
-	GameTooltip:SetText("Auto master looting", 1, 0.82, 0)
-	if not A then GameTooltip:AddLine("Restart WoW to load it.", 1, 0.5, 0.5) GameTooltip:Show() return end
-	GameTooltip:AddLine(A:On() and "|cff33ff33On|r - while you're the master looter, greys, whites and greens are handed out as soon as you open a corpse."
-		or "|cffff5555Off|r - loot is handed out by hand as normal.", 0.9, 0.9, 0.9, 1)
-	GameTooltip:AddLine("Loot goes to: |cffffffff" .. A.Who(A:Target()) .. "|r", 0.9, 0.9, 0.9)
-	GameTooltip:AddLine("If your bags are full: |cffffffff" .. (A:Backup() or "nobody") .. "|r", 0.9, 0.9, 0.9)
-	GameTooltip:AddLine("Epics are never handed out - you get a warning and a sound.", 0.6, 0.6, 0.6, 1)
-	GameTooltip:AddLine("Click: choose who gets the loot   Right-click: on / off", 0.6, 0.6, 0.6)
-	GameTooltip:Show()
+	W.TT:SetOwner(this, "ANCHOR_BOTTOMLEFT")
+	W.TT:SetText(W.L("Auto master looting"), 1, 0.82, 0)
+	if not A then W.TT:AddLine(W.L("Restart WoW to load it."), 1, 0.5, 0.5) W.TT:Show() return end
+	W.TT:AddLine(W.L(A:On() and "|cff33ff33On|r - while you're the master looter, greys, whites and greens are handed out as soon as you open a corpse."
+		or "|cffff5555Off|r - loot is handed out by hand as normal."), 0.9, 0.9, 0.9, 1)
+	W.TT:AddLine(W.LF("Loot goes to: |cffffffff%s|r", A.Who(A:Target())), 0.9, 0.9, 0.9)
+	W.TT:AddLine(W.LF("If your bags are full: |cffffffff%s|r", A:Backup() or W.L("nobody")), 0.9, 0.9, 0.9)
+	W.TT:AddLine(W.L("Epics are never handed out - you get a warning and a sound."), 0.6, 0.6, 0.6, 1)
+	W.TT:AddLine(W.L("Click: choose who gets the loot   Right-click: on / off"), 0.6, 0.6, 0.6)
+	W.TT:Show()
 end)
-amlBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+amlBtn:SetScript("OnLeave", function() W.TT:Hide() end)
 
 function UI:UpdateAML()
 	local A = W.AutoML
-	if not A then amlBtn:SetText("|cff888888Auto-loot: ?|r") return end
+	if not A then amlBtn:SetText(W.L("|cff888888Auto-loot: ?|r")) return end
 	local who = A:Target()
-	amlBtn:SetText(A:On() and ("Auto-loot: |cff33ff33ON|r" .. (who and ("|cffffffff > " .. string.sub(who, 1, 8) .. "|r") or "")) or "Auto-loot: |cff888888off|r")
+	amlBtn:SetText(A:On() and (W.L("Auto-loot: |cff33ff33ON|r") .. (who and ("|cffffffff > " .. string.sub(who, 1, 8) .. "|r") or "")) or W.L("Auto-loot: |cff888888off|r"))
+end
+
+-- the language flags, left of Auto-loot. Hover: the language's name (in its own
+-- font). A click asks once more, in that language; a second click switches it
+-- (the UI reloads: only the chosen language's texts are kept, Locale.lua).
+-- No Locale.lua (updated, then only /reload): no flags until WoW restarts.
+if W.Locale then
+	local Loc = W.Locale
+	local n = getn(Loc.LANGS)
+	local FW, FH, GAP = 18, 12, 4
+	local bar = CreateFrame("Frame", nil, f)
+	bar:SetWidth(n * (FW + GAP) - GAP)
+	bar:SetHeight(FH + 4)
+	bar:SetPoint("RIGHT", amlBtn, "LEFT", -12, 0)
+	local label = bar:CreateFontString(nil, "OVERLAY")
+	label:SetPoint("RIGHT", bar, "LEFT", -8, 0)
+	label:SetJustifyH("RIGHT")
+	UI.flagBar, UI.flagBtns = bar, {}
+	local pending, pendingAt
+	local function say(L, text, r, g, b)
+		label:SetFont(L.font or UI.FIRA, 11, "")
+		label:SetTextColor(r, g, b)
+		label:SetText(text)
+	end
+	-- the chosen flag bright with a gold edge, the others dimmed; its name beside them
+	function UI.FlagIdle()
+		pending = nil
+		for i = 1, getn(UI.flagBtns) do
+			local b = UI.flagBtns[i]
+			local on = (b.lang.code == Loc.lang)
+			b.tex:SetAlpha(on and 1 or 0.45)
+			if on then b.edge:SetTexture(UI.COL.sel[1], UI.COL.sel[2], UI.COL.sel[3], 1) else b.edge:SetTexture(0, 0, 0, 0.9) end
+		end
+		say(Loc.BY[Loc.lang], Loc.BY[Loc.lang].name, 0.55, 0.55, 0.55)
+	end
+	for i = 1, n do
+		local b = CreateFrame("Button", nil, bar)
+		b:SetWidth(FW)
+		b:SetHeight(FH)
+		b:SetPoint("LEFT", bar, "LEFT", (i - 1) * (FW + GAP), 2)
+		b.edge = b:CreateTexture(nil, "BACKGROUND")
+		b.edge:SetPoint("TOPLEFT", b, "TOPLEFT", -1, 1)
+		b.edge:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1)
+		b.tex = b:CreateTexture(nil, "ARTWORK")
+		b.tex:SetAllPoints(b)
+		b.tex:SetTexture(Loc.Flag(Loc.LANGS[i].code))
+		b.lang = Loc.LANGS[i]
+		b:SetScript("OnEnter", function()
+			this.tex:SetAlpha(1)
+			if not pending then say(this.lang, this.lang.name, 1, 1, 1) end
+		end)
+		b:SetScript("OnLeave", function() if not pending then UI.FlagIdle() end end)
+		b:SetScript("OnClick", function()
+			local code = this.lang.code
+			if code == Loc.lang then UI.FlagIdle() return end
+			if pending == code and GetTime() - pendingAt < 8 then Loc.Set(code) return end
+			UI.FlagIdle()
+			pending, pendingAt = code, GetTime()
+			this.tex:SetAlpha(1)
+			say(this.lang, this.lang.confirm, 1, 0.82, 0)
+		end)
+		UI.flagBtns[i] = b
+	end
+	-- a click that wasn't followed by a second one: back to normal after a while
+	W:Every(1, function() if pending and GetTime() - pendingAt > 8 then UI.FlagIdle() end end)
+	UI.FlagIdle()
 end
 
 local function panel(x, y, w, h)
@@ -581,20 +680,23 @@ end
 -- tooltip on hover; lines may be a function returning lines
 local function tooltip(b, titleText, lines, anchor)
 	b:SetScript("OnEnter", function()
-		GameTooltip:SetOwner(this, anchor or "ANCHOR_RIGHT")
-		GameTooltip:SetText(titleText, 1, 0.82, 0)
+		W.TT:SetOwner(this, anchor or "ANCHOR_RIGHT")
+		W.TT:SetText(W.L(titleText), 1, 0.82, 0)
 		local l = (type(lines) == "function") and lines() or lines
-		for i = 1, getn(l) do GameTooltip:AddLine(l[i], 0.9, 0.9, 0.9, 1) end
-		GameTooltip:Show()
+		for i = 1, getn(l) do W.TT:AddLine(W.LT(l[i]), 0.9, 0.9, 0.9, 1) end
+		W.TT:Show()
 	end)
-	b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	b:SetScript("OnLeave", function() W.TT:Hide() end)
 end
+
+-- "Posts to: Raid" for the tooltips
+function UI.PostsTo() return W.LF("|cff888888Posts to: %s|r", W.Shout:ChannelLabel()) end
 
 -- "  - 23 online" after the add-on lights (W.Board's count of WhoDidIt users on the realm)
 function UI.OnlineText()
 	local B = W.Board
 	if not (B and B.OnlineCount) or not (WhoDidItDB and WhoDidItDB.opts.shareBoard) then return "" end
-	return "   |cff666666-|r  |cff888888" .. B.OnlineCount() .. " online|r"
+	return "   |cff666666-|r  |cff888888" .. W.LF("%s online", B.OnlineCount()) .. "|r"
 end
 
 -- the add-on lights in the title bar: hover explains them, click = ClassicAPI guide
@@ -605,15 +707,15 @@ do
 	hover:SetScript("OnClick", function() W:ClassicApiInfo() end)
 	tooltip(hover, "Add-ons WhoDidIt uses", function()
 		local e = W.env
-		local function st(v, yes, no) return v and ("|cff33ff33" .. yes .. "|r") or no end
+		local function st(v, yes, no) return v and ("|cff33ff33" .. W.L(yes) .. "|r") or W.L(no) end
 		local B = W.Board
 		local l = {
-			(B and B.OnlineCount) and ("|cffffffff" .. B.OnlineCount() .. "|r WhoDidIt users online on " .. B.Realm() .. " (" .. B.Faction() .. ")"
-				.. "|cff888888 - heard on WhoDidIt's hidden channel in the last 25 min; players with sharing off aren't counted|r") or " ",
+			(B and B.OnlineCount) and (W.LF("|cffffffff%s|r WhoDidIt users online on %s (%s)", B.OnlineCount(), B.Realm(), W.L(B.Faction()))
+				.. W.L("|cff888888 - heard on WhoDidIt's hidden channel in the last 25 min; players with sharing off aren't counted|r")) or " ",
 			" ",
 			"Nampower: " .. st(e.nampower, "found", "|cffff5555missing - only deaths are tracked|r"),
 			"SuperWoW: " .. st(e.superwow, "found", "|cffff5555missing - most tracking is off|r"),
-			"Threat: " .. st(e.twthreat or WhoDidItDB.opts.queryThreat, "on", "|cffff5555off|r"),
+			W.L("Threat") .. ": " .. st(e.twthreat or WhoDidItDB.opts.queryThreat, "on", "|cffff5555off|r"),
 			"ClassicAPI: " .. st(e.classicapi, "found", "|cff999999not installed (optional)|r"),
 			" ",
 		}
@@ -622,7 +724,7 @@ do
 		else
 			tinsert(l, "|cffffd100Optional - WhoDidIt works fine without it. ClassicAPI would add:|r")
 		end
-		for i = 1, getn(W.CAPI_PERKS) do tinsert(l, "|cff33ff33+|r " .. W.CAPI_PERKS[i]) end
+		for i = 1, getn(W.CAPI_PERKS) do tinsert(l, "|cff33ff33+|r " .. W.L(W.CAPI_PERKS[i])) end
 		if not e.classicapi then
 			tinsert(l, " ")
 			tinsert(l, "|cffffd100To get it:|r exit WoW and double-click tools\\Install-ClassicAPI.cmd in the WhoDidIt folder.")
@@ -659,8 +761,8 @@ do
 	local w = floor((LEFTW - 20) / 2)
 	UI.kindBtns = {}
 	local defs = {
-		{ false, "Raids", { "Raid rankings: boss kill times and full clears of every guild,", "from Chronicle, through the maintainer's master feed." } },
-		{ true, "5-mans", { "5-man rankings: the fastest groups through each level-60 dungeon,", "first pull to the last boss. Click a group for its run:", "members, boss splits and deaths. Name your group when it finishes." } },
+		{ false, "Raids", { "Raid rankings: boss kill times and full clears of every guild,\nfrom Chronicle, through the maintainer's master feed." } },
+		{ true, "5-mans", { "5-man rankings: the fastest groups through each level-60 dungeon,\nfirst pull to the last boss. Click a group for its run:\nmembers, boss splits and deaths. Name your group when it finishes." } },
 	}
 	for i = 1, getn(defs) do
 		local d = defs[i]
@@ -694,6 +796,7 @@ local function smallText(b)
 	if b.SetTextFontObject then b:SetTextFontObject(UI.FO("GameFontNormalSmall")) end
 	if b.SetHighlightFontObject then b:SetHighlightFontObject(UI.FO("GameFontHighlightSmall")) end
 	if b.SetDisabledFontObject then b:SetDisabledFontObject(UI.FO("GameFontDisableSmall")) end
+	b.wdiLevel = 2
 	return b
 end
 
@@ -714,9 +817,8 @@ chanBtn:SetScript("OnClick", function()
 end)
 tooltip(chanBtn, "Post to", function()
 	return {
-		"Where everything WhoDidIt posts goes: fight summaries, Report, Name & Shame,",
-		"Big Them Up, shout-outs, kill and clear banter, and the rival watch.",
-		"Now: |cffffffff" .. W.Shout:ChannelLabel() .. "|r",
+		"Where everything WhoDidIt posts goes: fight summaries, Report, Name & Shame,\nBig Them Up, shout-outs, kill and clear banter, and the rival watch.",
+		W.LF("Now: |cffffffff%s|r", W.Shout:ChannelLabel()),
 		"Click: next channel   Right-click: previous",
 		"Raid, Raid Warning, Party, Guild, Officer, Say, Yell, Only me (a preview just for you).",
 		"|cff888888A custom channel: /wdi channel <name>. If you're not in the group or guild it names, posts show only to you.|r",
@@ -760,11 +862,11 @@ StaticPopupDialogs["WHODIDIT_DELETE"] = {
 }
 delBtn:SetScript("OnClick", function()
 	local rec = UI.selIdx and UI.selIdx > 0 and WhoDidItDB.fights[UI.selIdx]
-	if rec then StaticPopup_Show("WHODIDIT_DELETE", (rec.enc or "?") .. " " .. (rec.result or "") .. "  " .. (rec.date or "")) end
+	if rec then W.ShowPopup("WHODIDIT_DELETE", (rec.enc or "?") .. " " .. W.L(rec.result or "") .. "  " .. (rec.date or "")) end
 end)
 tooltip(delBtn, "Delete fight", { "Delete the fight selected in the list above. Asks first." })
 
-clearBtn:SetScript("OnClick", function() StaticPopup_Show("WHODIDIT_CLEAR") end)
+clearBtn:SetScript("OnClick", function() W.ShowPopup("WHODIDIT_CLEAR") end)
 tooltip(clearBtn, "Clear all fights", { "Delete every saved fight. Asks first." })
 
 trashBtn:SetScript("OnClick", function()
@@ -780,7 +882,7 @@ end)
 tooltip(annBtn, "Auto summary after each fight", function()
 	return {
 		"A summary after every boss fight: kill or wipe, time, deaths, why, who's to blame.",
-		"on - a short two-line post to " .. W.Shout:ChannelLabel() .. " (one post, even with shout-outs on)",
+		W.LF("on - a short two-line post to %s (one post, even with shout-outs on)", W.Shout:ChannelLabel()),
 		"me - the full summary in your own chat, nobody else sees it",
 
 		"off - nothing",
@@ -794,12 +896,11 @@ autoBtn:SetScript("OnClick", function()
 end)
 tooltip(autoBtn, "Auto shout-outs after each fight", function()
 	return {
-		"A short post by itself after each fight - two lines:",
-		"after a wipe: why, and the top 3 to blame; after a kill: MVP, top damage and heals.",
+		"A short post by itself after each fight - two lines:\nafter a wipe: why, and the top 3 to blame; after a kill: MVP, top damage and heals.",
 		"off - never   smart / both - every fight   shame - wipes only   praise - kills only",
 		"With Auto summary on as well, it's still one post, not two.",
 		"|cff888888Name & Shame / Big Them Up (above) post the longer versions.|r",
-		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. ". Demo fights only post to your own chat.|r",
+		W.LF("|cff888888Posts to: %s. Demo fights only post to your own chat.|r", W.Shout:ChannelLabel()),
 	}
 end)
 
@@ -871,9 +972,8 @@ srCopy:SetPoint("TOPRIGHT", header, "TOPRIGHT", -10, -10)
 srCopy:SetScript("OnClick", function()
 	W:CopyLink("Soft-res sheets", SR_SITE)
 end)
-tooltip(srCopy, "raidres.fly.dev", { "The website where you make the soft-res sheet: raiders pick their items there,",
-	"then you use its RollFor export to import the sheet here.",
-	"Click: copies the link (with ClassicAPI straight to your clipboard,", "otherwise a box opens with it selected - press Ctrl+C)." }, "ANCHOR_LEFT")
+tooltip(srCopy, "raidres.fly.dev", { "The website where you make the soft-res sheet: raiders pick their items there,\nthen you use its RollFor export to import the sheet here.",
+	"Click: copies the link (with ClassicAPI straight to your clipboard,\notherwise a box opens with it selected - press Ctrl+C)." }, "ANCHOR_LEFT")
 local srSite = header:CreateFontString(nil, "OVERLAY", UI.F("GameFontNormal"))
 srSite:SetPoint("RIGHT", srCopy, "LEFT", -8, 0)
 srSite:SetText("|cffaaaaaaSoft-res sheets:|r  |cffffd100raidres.fly.dev|r")
@@ -893,11 +993,9 @@ shameBtn:SetScript("OnClick", function()
 end)
 tooltip(shameBtn, "Name & Shame", function()
 	return {
-		"Post this fight's hall of shame: Most to blame, Threat Junkie, Floor Inspector,",
-		"Fire Enthusiast, Bomb Squad, AFK Award, Participation Trophy, plus two bonus awards",
-		"(Glass Cannon, Potion Hoarder, Splattered...). Award names change every post.",
+		"Post this fight's hall of shame: Most to blame, Threat Junkie, Floor Inspector,\nFire Enthusiast, Bomb Squad, AFK Award, Participation Trophy, plus two bonus awards\n(Glass Cannon, Potion Hoarder, Splattered...). Award names change every post.",
 		"Shame one player: Shift-click their name anywhere in the window.",
-		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
+		UI.PostsTo(),
 	}
 end)
 praiseBtn:SetScript("OnClick", function()
@@ -906,22 +1004,20 @@ praiseBtn:SetScript("OnClick", function()
 end)
 tooltip(praiseBtn, "Big Them Up", function()
 	return {
-		"Post this fight's stars: Damage King, Top Healer, Iron Wall, Kick Master,",
-		"Cleanser, Tranq Sniper, Never Stops, everyone who played flawlessly, plus two bonus",
-		"awards (Biggest Hit, Crit Machine, Last One Standing...). Award names change every post.",
+		"Post this fight's stars: Damage King, Top Healer, Iron Wall, Kick Master,\nCleanser, Tranq Sniper, Never Stops, everyone who played flawlessly, plus two bonus\nawards (Biggest Hit, Crit Machine, Last One Standing...). Award names change every post.",
 		"Big up one player: Alt-click their name anywhere in the window.",
-		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
+		UI.PostsTo(),
 	}
 end)
 
 ------------------------------------------------------------------ right: tabs + content
 
 local TABS = {
-	{ id = "summary",  text = "Summary",  tip = { "The short version: why the fight was lost (or how it was won),", "the main causes ranked, the blame board and the top heroes." } },
+	{ id = "summary",  text = "Summary",  tip = { "The short version: why the fight was lost (or how it was won),\nthe main causes ranked, the blame board and the top heroes." } },
 	{ id = "deaths",   text = "Deaths",   tip = { "Every death in order, with what killed them.", "Hover one for the last seconds before it, click it for the full recap." } },
-	{ id = "mistakes", text = "Mistakes", tip = { "Everything WhoDidIt counted against someone: standing in fire,", "pulling aggro, missed interrupts... with the blame points for each." } },
-	{ id = "heroes",   text = "Heroes",   tip = { "The plays that saved someone: clutch heals, shields, taunts,", "battle res, dispels and more." } },
-	{ id = "threat",   text = "Threat",   tip = { "Every time the boss changed target, who it went for and their threat %,", "plus each player's highest threat. Keep the boss targeted to record it." } },
+	{ id = "mistakes", text = "Mistakes", tip = { "Everything WhoDidIt counted against someone: standing in fire,\npulling aggro, missed interrupts... with the blame points for each." } },
+	{ id = "heroes",   text = "Heroes",   tip = { "The plays that saved someone: clutch heals, shields, taunts,\nbattle res, dispels and more." } },
+	{ id = "threat",   text = "Threat",   tip = { "Every time the boss changed target, who it went for and their threat %,\nplus each player's highest threat. Keep the boss targeted to record it." } },
 	{ id = "meters",   text = "Meters",   tip = { "Damage, healing, damage taken, activity and utility for the fight.", "Damage and healing also show crit % and the biggest hit.", "Hover a player for every spell: total, share, hits, crit % and biggest.", "Pick one with the buttons at the bottom." } },
 	{ id = "timeline", text = "Timeline", tip = { "Everything that happened, second by second." } },
 }
@@ -989,12 +1085,12 @@ do
 		b.fs:SetJustifyH("CENTER")
 		b:SetScript("OnEnter", function()
 			if not this.tipTitle then return end
-			GameTooltip:SetOwner(this, "ANCHOR_TOP")
-			GameTooltip:SetText(this.tipTitle, 1, 0.82, 0)
-			for i = 1, getn(this.tip or {}) do GameTooltip:AddLine(this.tip[i], 0.9, 0.9, 0.9, 1) end
-			GameTooltip:Show()
+			W.TT:SetOwner(this, "ANCHOR_TOP")
+			W.TT:SetText(W.L(this.tipTitle), 1, 0.82, 0)
+			for i = 1, getn(this.tip or {}) do W.TT:AddLine(W.LT(this.tip[i]), 0.9, 0.9, 0.9, 1) end
+			W.TT:Show()
 		end)
-		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		b:SetScript("OnLeave", function() W.TT:Hide() end)
 		return b
 	end
 	-- Buffs / Used: which grid the tab shows
@@ -1021,20 +1117,20 @@ function UI.SetGridHead(cols, endA, endB)
 	local h = consList.head
 	local key = UI.consView or "buffs"
 	UI.SkinSelect(h.used, key == "used"); UI.SkinSelect(h.buffs, key ~= "used")
-	h.role.fs:SetText("ROLE")
+	h.role.fs:SetText(W.L("ROLE"))
 	h.role.tipTitle, h.role.tip = "Role", { "Tank, healer, melee, ranged or caster - from what they did in the fight." }
 	for i = 1, getn(h.cols) do
 		local b, c = h.cols[i], cols[i]
 		if c then
-			b.fs:SetText(c[1])
+			b.fs:SetText(W.L(c[1]))
 			b.tipTitle, b.tip = c[2], c[3]
 			b:Show()
 		else
 			b:Hide()
 		end
 	end
-	h.ready.fs:SetText(endA[1]); h.ready.tipTitle, h.ready.tip = endA[2], endA[3]
-	h.usedCol.fs:SetText(endB[1]); h.usedCol.tipTitle, h.usedCol.tip = endB[2], endB[3]
+	h.ready.fs:SetText(W.L(endA[1])); h.ready.tipTitle, h.ready.tip = endA[2], endA[3]
+	h.usedCol.fs:SetText(W.L(endB[1])); h.usedCol.tipTitle, h.usedCol.tip = endB[2], endB[3]
 end
 
 -- the Consumes grid replaces the normal list while that tab is open
@@ -1124,7 +1220,7 @@ for tab, list in pairs(ACTIONS) do
 		end)
 		tooltip(b, a[1], function()
 			if nopost then return { a[3] } end
-			return { a[3], "|cff888888" .. (live and "Shift-click posts to: " or "Posts to: ") .. W.Shout:ChannelLabel() .. "  (coloured, like every WhoDidIt post)|r" }
+			return { a[3], W.LF(live and "|cff888888Shift-click posts to: %s  (coloured, like every WhoDidIt post)|r" or "|cff888888Posts to: %s  (coloured, like every WhoDidIt post)|r", W.Shout:ChannelLabel()) }
 		end, "ANCHOR_TOP")
 		b:Hide()
 		tinsert(UI.actionButtons[tab], b)
@@ -1134,6 +1230,7 @@ end
 local hintText = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
 hintText:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", RX + 4, PAD + 6)
 hintText:SetJustifyH("LEFT")
+for _, fs in ipairs({ leftHead, leftCount, rTitle, rInfo, rVerdict, hintText }) do UI.SinkText(fs) end
 
 local reportBtn = button(f, "Report", 96, 20)
 reportBtn:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, PAD)
@@ -1142,7 +1239,7 @@ reportBtn:SetScript("OnClick", function()
 	if rec then W:Report(rec) end
 end)
 tooltip(reportBtn, "Report", function()
-	return { "Post the fight summary, top causes and blame board.", "|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+	return { "Post the fight summary, top causes and blame board.", UI.PostsTo() }
 end, "ANCHOR_LEFT")
 
 local HINTS = {
@@ -1192,15 +1289,22 @@ function UI.ModeButton(id)
 	end
 end
 -- all the same width; Hall of Fame on its own at the far right, by the close button
-do
+-- (again once the labels are translated: UI.Relabel)
+function UI.LayoutModes()
 	local n, w = getn(UI.modeButtons), 60
-	for i = 1, n do w = math.max(w, floor(UI.modeButtons[i].tw + 24)) end
+	for i = 1, n do
+		local label = getglobal("WhoDidItMode" .. i .. "Text")
+		local tw = label and label:GetStringWidth()
+		if tw and tw >= 10 then UI.modeButtons[i].tw = tw end
+		w = math.max(w, floor(UI.modeButtons[i].tw + 24))
+	end
 	local startX = PAD + 4 + title:GetStringWidth() + 4 + version:GetStringWidth() + 16
 	local room = WIDTH - 36 - startX - 12 - (n - 1) * 4
 	w = math.min(w, floor(room / n))
 	for i = 1, n do
 		local b = UI.modeButtons[i]
 		b:SetWidth(w)
+		b:ClearAllPoints()
 		if b.id == "fame" then
 			b:SetPoint("RIGHT", close, "LEFT", -2, 0)
 			-- Auto-loot sits right under Hall of Fame, lined up with it
@@ -1214,18 +1318,14 @@ do
 		end
 	end
 end
-tooltip(UI.ModeButton("consumes"), "Consumes", { "Each player's flask, elixirs, food and protection potions in the selected fight,",
-	"and every potion, rune and healthstone they used. Check raid now scans the raid before a pull,",
-	"and |cff33ff33Open DopingControl|r opens the full raid check (buffs, debuffs, resistances, hit, enchants)." })
+UI.LayoutModes()
+tooltip(UI.ModeButton("consumes"), "Consumes", { "Each player's flask, elixirs, food and protection potions in the selected fight,\nand every potion, rune and healthstone they used. Check raid now scans the raid before a pull,\nand |cff33ff33Open DopingControl|r opens the full raid check (buffs, debuffs, resistances, hit, enchants)." })
 tooltip(UI.ModeButton("fights"), "Fights", { "Every recorded fight: why it went wrong, deaths, mistakes, heroes, meters, consumes." })
-tooltip(UI.ModeButton("rankings"), "Rankings", { "Boss kill times and full clears: yours, your guild's and every guild on the server (from Chronicle),", "and 5-man dungeon runs." })
-tooltip(UI.ModeButton("logs"), "Chronicle Logs", { "Chronicle combat logging (built in): start, stop, save, archive and delete", "the log you upload to chronicleclassic.com." })
-tooltip(UI.ModeButton("marks"), "Auto Marker", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,",
-	"and quick save - mark mobs in game, click Save marks as pack." })
-tooltip(UI.ModeButton("loot"), "RollForML", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,",
-	"see who won what, and a step-by-step guide." })
-tooltip(UI.ModeButton("fame"), "Hall of Fame", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,",
-	"with every clutch play and every mistake, their points, and the best plays and worst blunders ever." })
+tooltip(UI.ModeButton("rankings"), "Rankings", { "Boss kill times and full clears: yours, your guild's and every guild on the server (from Chronicle),\nand 5-man dungeon runs." })
+tooltip(UI.ModeButton("logs"), "Chronicle Logs", { "Chronicle combat logging (built in): start, stop, save, archive and delete\nthe log you upload to chronicleclassic.com." })
+tooltip(UI.ModeButton("marks"), "Auto Marker", { "Auto marking: every saved pack of mobs and the marks they get, smart marks for tricky fights,\nand quick save - mark mobs in game, click Save marks as pack." })
+tooltip(UI.ModeButton("loot"), "RollForML", { "Soft-res master looting with RollFor (built in): import the soft-res sheet, roll and award items,\nsee who won what, and a step-by-step guide." })
+tooltip(UI.ModeButton("fame"), "Hall of Fame", { "Every fight adds up: the biggest heroes and the Hall of Shame of all time,\nwith every clutch play and every mistake, their points, and the best plays and worst blunders ever." })
 
 -- a row of buttons in the tab strip, used by Rankings and Logs
 local function stripButtons(defs)
@@ -1281,13 +1381,13 @@ UI.rankButtons = stripButtons({
 do
 	local function tip2(b, a, al, c, cl)
 		b:SetScript("OnEnter", function()
-			GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
-			GameTooltip:SetText(UI.rk.five and c or a, 1, 0.82, 0)
+			W.TT:SetOwner(this, "ANCHOR_RIGHT")
+			W.TT:SetText(W.L(UI.rk.five and c or a), 1, 0.82, 0)
 			local l = UI.rk.five and cl or al
-			for i = 1, getn(l) do GameTooltip:AddLine(l[i], 0.9, 0.9, 0.9, 1) end
-			GameTooltip:Show()
+			for i = 1, getn(l) do W.TT:AddLine(W.LT(l[i]), 0.9, 0.9, 0.9, 1) end
+			W.TT:Show()
 		end)
-		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		b:SetScript("OnLeave", function() W.TT:Hide() end)
 	end
 	tip2(UI.rankButtons[1], "Kill times", { "Best kill time on every boss: you, your guild and the realm." },
 		"Leaderboard", { "The fastest groups through this dungeon: first pull to the last boss.", "Click a group to see its run." })
@@ -1351,17 +1451,12 @@ end)
 tooltip(learnBtn, "Learn packs", function()
 	local L = W.Marks and W.Marks.Learn
 	local zone = UI.mk.zone or GetRealZoneText()
-	return { "On: in a raid, every mob you see is noted with where it stands",
-		"(out of combat, so it's where it spawned). Walk through the raid once -",
-		"a normal clear does it - then click Make packs.",
+	return { "On: in a raid, every mob you see is noted with where it stands\n(out of combat, so it's where it spawned). Walk through the raid once -\na normal clear does it - then click Make packs.",
 		" ",
-		"Noted in " .. zone .. ": |cffffffff" .. (L and L:Count(zone) or 0) .. "|r mobs",
+		W.LF("Noted in %s: |cffffffff%s|r mobs", zone, L and L:Count(zone) or 0),
 		"|cff888888Only WhoDidIt's own data: nothing from other addons.|r" }
 end, "ANCHOR_TOP")
-tooltip(buildBtn, "Make packs", { "Groups the mobs noted in this zone into packs: mobs within 12 yards of",
-	"each other are one pack. Marks: healers and casters first, then the toughest -",
-	"skull, cross, square, moon... Saved as your own packs (\"Learned 01 - ...\"),",
-	"replacing earlier learned ones. Change any mark by hand.",
+tooltip(buildBtn, "Make packs", { "Groups the mobs noted in this zone into packs: mobs within 12 yards of\neach other are one pack. Marks: healers and casters first, then the toughest -\nskull, cross, square, moon... Saved as your own packs (\"Learned 01 - ...\"),\nreplacing earlier learned ones. Change any mark by hand.",
 	"|cff888888/wdi marks build 15 uses a 15 yard gap. /wdi marks export writes them for the download.|r" })
 local hereBtn   = gridButton("This zone", 1, 1)
 local kindBtn   = gridButton("Mark same kind", 1, 2)
@@ -1393,8 +1488,7 @@ hereBtn:SetScript("OnClick", function()
 end)
 kindBtn:SetScript("OnClick", function() W.Marks:MarkType() end)
 tooltip(mouseBtn, "Mouseover marking", { "Hold Shift + Ctrl (or Shift + Alt) and move the mouse over a mob to mark its whole pack." })
-tooltip(smartBtn, "Smart marks", { "Automatic marks for fights where fixed packs can't work: adds that respawn with new",
-	"GUIDs, Buru's eggs, the biggest Core Hound, KT's soldiers, Solnius' adds and more.",
+tooltip(smartBtn, "Smart marks", { "Automatic marks for fights where fixed packs can't work: adds that respawn with new\nGUIDs, Buru's eggs, the biggest Core Hound, KT's soldiers, Solnius' adds and more.",
 	"Switch single ones off in the list under each zone." })
 tooltip(hiddenBtn, "Hidden packs", { "Show the built-in packs you've hidden, so you can bring them back." })
 tooltip(findBtn, "Find target's pack", { "Open the pack your target belongs to." })
@@ -1423,9 +1517,9 @@ UI.lootButtons = stripButtons({
 UI.fame = { view = "hero" }   -- view: hero / blame / plays / blunders; who = a player's page
 UI.fameButtons = stripButtons({
 	{ "|cff33ff33Heroes|r", function() UI.fame.view = "hero"; UI.fame.who = nil; UI:Refresh() end,
-	  { "Everyone's hero points from every fight: clutch heals, shields, taunts,", "battle res, dispels, interrupts... and how often they were MVP." } },
+	  { "Everyone's hero points from every fight: clutch heals, shields, taunts,\nbattle res, dispels, interrupts... and how often they were MVP." } },
 	{ "|cffff5555Hall of Shame|r", function() UI.fame.view = "blame"; UI.fame.who = nil; UI:Refresh() end,
-	  { "Everyone's blame points from every fight: standing in fire, pulling aggro,", "bombing the raid, idling... and how often they were most to blame." } },
+	  { "Everyone's blame points from every fight: standing in fire, pulling aggro,\nbombing the raid, idling... and how often they were most to blame." } },
 	{ "Best plays", function() UI.fame.view = "plays"; UI.fame.who = nil; UI:Refresh() end,
 	  { "The biggest single game-saving plays of all time." } },
 	{ "Worst blunders", function() UI.fame.view = "blunders"; UI.fame.who = nil; UI:Refresh() end,
@@ -1443,7 +1537,7 @@ local glBtn     = gridButton("Auto group", 1, 2)
 UI.rfBtn = gridButton("RollFor: on", 4, 1)
 UI.rfBtn:SetScript("OnClick", function() W.Loot:SetOff(not W.Loot:WillBeOff()); UI:Refresh() end)
 tooltip(UI.rfBtn, "RollFor on / off", function()
-	return { "Switch the built-in RollFor off when it clashes with another loot addon", "(an EPGP addon, for example). Off, it doesn't start at all: no loot window", "of its own, no rolls, no /rf, no minimap button. The game's loot window", "and master looting stay as they are, for the other addon.", " ", "Takes effect with a UI reload (it offers one).", "|cff888888Also /wdi rollfor on|off.|r" }
+	return { "Switch the built-in RollFor off when it clashes with another loot addon\n(an EPGP addon, for example). Off, it doesn't start at all: no loot window\nof its own, no rolls, no /rf, no minimap button. The game's loot window\nand master looting stay as they are, for the other addon.", " ", "Takes effect with a UI reload (it offers one).", "|cff888888Also /wdi rollfor on|off.|r" }
 end, "ANCHOR_TOP")
 finishBtn:SetScript("OnClick", function() W.Loot:Run("FR", "") end)
 cancelBtn:SetScript("OnClick", function() W.Loot:Run("CR", "") end)
@@ -1456,8 +1550,8 @@ tooltip(cancelBtn, "Cancel roll", { "Stop the current roll without a winner (/cr
 tooltip(srsBtn, "Soft-reserved items", { "List every soft-reserved item and who reserved it, in chat (/srs)." })
 tooltip(sroBtn, "Fix soft-res names", { "Match players whose name on the soft-res sheet doesn't match their character (/sro).",
 	"RollFor fixes simple typos by itself." })
-tooltip(mlBtn, "Auto master loot", { "When you target a boss, the raid switches to master loot", "with you as the looter. You must be raid leader." })
-tooltip(glBtn, "Auto group loot", { "When everything in the boss's loot has been given out,", "the raid switches back to group loot for the trash.", "Use it with Auto ML: master loot for bosses, group loot in between." })
+tooltip(mlBtn, "Auto master loot", { "When you target a boss, the raid switches to master loot\nwith you as the looter. You must be raid leader." })
+tooltip(glBtn, "Auto group loot", { "When everything in the boss's loot has been given out,\nthe raid switches back to group loot for the trash.", "Use it with Auto ML: master loot for bosses, group loot in between." })
 local lootOnly = { finishBtn, cancelBtn, srsBtn, sroBtn, mlBtn, glBtn, UI.rfBtn }
 for i = 1, getn(lootOnly) do lootOnly[i]:Hide() end
 
@@ -1494,13 +1588,13 @@ end)
 local function banterTip(what)
 	return function()
 		return {
-			"After every " .. what .. ", post one fun line about our time. It picks from:",
+			W.LF("After every %s, post one fun line about our time. It picks from:", W.L(what)),
 			"- our own best (new record, or how much slower)",
-			"- the other guilds on " .. W.Board.RealmLabel(W.Board.Realm()) .. " (passed them, still behind, #1)",
+			W.LF("- the other guilds on %s (passed them, still behind, #1)", W.Board.RealmLabel(W.Board.Realm())),
 			"- the other realms' fastest (\"faster than anyone on N'Zoth (PvE)\")",
 			"- anyone who recently beat us (revenge, or still chasing them)",
 			"It mocks us when we're slow and bigs us up when we're fast.",
-			"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. ". With several WhoDidIt users in the raid only one posts.|r",
+			W.LF("|cff888888Posts to: %s. With several WhoDidIt users in the raid only one posts.|r", W.Shout:ChannelLabel()),
 		}
 	end
 end
@@ -1508,25 +1602,24 @@ tooltip(banterKillBtn, "Kill banter", banterTip("boss kill"))
 tooltip(banterClearBtn, "Clear banter", banterTip("full clear"))
 tooltip(rivalBtn, "Rival alerts", function()
 	return {
-		"Watches for new times (from Chronicle, through the master feed) that beat",
-		"our guild's best - on " .. W.Board.Realm() .. " or the fastest on another realm.",
+		W.LF("Watches for new times (from Chronicle, through the master feed) that beat\nour guild's best - on %s or the fastest on another realm.", W.Board.Realm()),
 		"On: when the raid enters that instance, post who beat us and taunt us to win it back.",
 		"Off: they're still listed under Rival watch, but nothing is posted.",
-		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r",
+		UI.PostsTo(),
 	}
 end)
 tooltip(banterTestBtn, "Test banter", { "Show a random banter line for a made-up kill, in your own chat only." })
 tooltip(postRivalBtn, "Post rivals", function()
-	return { "Post who has beaten our times in " .. (UI.rk.inst or "this instance") .. " recently, with a taunt.",
-		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+	return { W.LF("Post who has beaten our times in %s recently, with a taunt.", UI.rk.inst or W.L("this instance")),
+		UI.PostsTo() }
 end)
 tooltip(postBoardBtn, "Post standings", function()
 	return { "Post what you're looking at:",
 		"- a boss's leaderboard: its top 3 (and our place)",
 		"- Full clears: the instance's top 3 clears",
 		"- Kill times: on how many bosses we're #1, and who has the rest",
-		"|cff888888Uses the Realm button: your realm, or All realms to compare across " .. W.Board.ServerName() .. ".|r",
-		"|cff888888Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+		W.LF("|cff888888Uses the Realm button: your realm, or All realms to compare across %s.|r", W.L(W.Board.ServerName())),
+		UI.PostsTo() }
 end)
 -- Rankings: the sync helper's progress bar, and Sync now
 local syncBar = CreateFrame("Button", nil, left)
@@ -1559,7 +1652,7 @@ local function syncNow()
 	local st = B:SyncStatus()
 	if not (st and st.alive) then
 		if not (B.CanMaster and B.CanMaster()) then
-			W.Print("Your raid times come from " .. (B.chronFrom or (B.master and B.master.name) or "the master") .. "'s feed - they arrive and update by themselves while they're online. Nothing to do.")
+			W.Print(W.LF("Your raid times come from %s's feed - they arrive and update by themselves while they're online. Nothing to do.", B.chronFrom or (B.master and B.master.name) or W.L("the master")))
 		else
 			W.Print("The sync helper isn't running on this PC. Double-click |cffffd100tools\\AutoSync-On.cmd|r once: it then runs in the background and starts by itself with Windows.")
 		end
@@ -1623,9 +1716,7 @@ syncBar:SetScript("OnClick", syncNow)
 local function syncTip()
 	if not (W.Board and W.Board.CanMaster and W.Board.CanMaster()) then
 		return { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
-			"WhoDidIt comes with every guild's times as of its last update, and",
-			"the maintainer's master feed adds newer ones in game while they're",
-			"online, within minutes. Nothing to install or run." }
+			"WhoDidIt comes with every guild's times as of its last update, and\nthe maintainer's master feed adds newer ones in game while they're\nonline, within minutes. Nothing to install or run." }
 	end
 	local l = { "Every guild's kill and clear times come from Chronicle (chronicleclassic.com).",
 		"Your sync helper fetches them in the background (AutoSync) every 30 minutes,",
@@ -1663,8 +1754,8 @@ function UI:UpdateSync()
 	end
 	if fs and not fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.2, 0.55, 1)
-		syncBar.top:SetText("|cff66ccffReceiving raid times|r from " .. (fs.from or "?"))
-		syncBar.bot:SetText(fs.got .. " / " .. fs.total .. " messages - about " .. math.max(1, floor((fs.total - fs.got) * 1.6 / 60 + 0.5)) .. " min")
+		syncBar.top:SetText(W.LF("|cff66ccffReceiving raid times|r from %s", fs.from or "?"))
+		syncBar.bot:SetText(W.LF("%s / %s messages - about %s min", fs.got, fs.total, math.max(1, floor((fs.total - fs.got) * 1.6 / 60 + 0.5))))
 		return
 	elseif fs and fs.master then
 		bar((fs.total > 0) and (fs.got / fs.total) or 0.05, 0.85, 0.65, 0.1)
@@ -1740,13 +1831,10 @@ do
 		W.Runs:Slash(W.Runs.On() and "off" or "on")
 	end)
 	tooltip(share, "Share 5-man runs", function()
-		return { "On: when your group finishes a dungeon, its run (group name, members",
-			"and classes, time, deaths, boss splits) goes to every WhoDidIt user on",
-			W.Board.Realm() .. ", so the 5-man boards fill up across the realm.",
-			"Off: your runs stay on your PC, and while you're in a group, nobody's",
-			"WhoDidIt shares that group's run.",
+		return { W.LF("On: when your group finishes a dungeon, its run (group name, members\nand classes, time, deaths, boss splits) goes to every WhoDidIt user on\n%s, so the 5-man boards fill up across the realm.", W.Board.Realm()),
+			"Off: your runs stay on your PC, and while you're in a group, nobody's\nWhoDidIt shares that group's run.",
 			" ",
-			"Now: " .. (W.Runs.On() and "|cff33ff33on|r" or "|cffff9933off|r") .. "   |cff888888(/wdi 5man on|off)|r" }
+			W.LF("Now: %s", W.L(W.Runs.On() and "|cff33ff33on|r" or "|cffff9933off|r")) .. "   |cff888888(/wdi 5man on|off)|r" }
 	end, "ANCHOR_TOP")
 	name:SetScript("OnClick", function()
 		local _, gk, n = W.Runs.Group()
@@ -1755,8 +1843,7 @@ do
 			W.Runs:GroupName(gk) or "", function(text) W.Runs:Rename(gk, text) end)
 	end)
 	tooltip(name, "Name my group", { "Give the group you're in now a name for the 5-man boards.",
-		"It's asked for when your group first finishes a dungeon; this renames it,",
-		"and your group's runs are shared again under the new name." }, "ANCHOR_TOP")
+		"It's asked for when your group first finishes a dungeon; this renames it,\nand your group's runs are shared again under the new name." }, "ANCHOR_TOP")
 	web:SetScript("OnClick", function()
 		UI.rk.web = not UI.rk.web or nil
 		UI.rk.run = nil
@@ -1772,7 +1859,7 @@ do
 	end)
 	tooltip(post, "Post top 3", function()
 		return { "Post this dungeon's three fastest groups (you see the text first).",
-			"|cff888888Ctrl-click: only you see it.  Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+			W.LF("|cff888888Ctrl-click: only you see it.  Posts to: %s|r", W.Shout:ChannelLabel()) }
 	end, "ANCHOR_TOP")
 	local list = { share, name, web, post }
 	for i = 1, getn(list) do list[i]:Hide() end
@@ -1792,7 +1879,7 @@ do
 		if not five then return end
 		for i = 1, getn(raidOnly) do raidOnly[i]:Hide() end
 		share:Show(); name:Show(); post:Show()
-		share:SetText("Sharing: " .. (W.Runs.On() and "|cff33ff33on|r" or "|cffff9933off|r"))
+		share:SetText(W.LF("Sharing: %s", W.L(W.Runs.On() and "|cff33ff33on|r" or "|cffff9933off|r")))
 		if W.Board.CanMaster and W.Board.CanMaster() then web:Show(); UI.SkinSelect(web, UI.rk.web and true or false) end
 	end
 end
@@ -1820,13 +1907,12 @@ fameResetBtn:SetScript("OnClick", function()
 		function(text) if string.upper(text or "") == "RESET" then W.Career:Reset(); UI:Refresh() end end)
 end)
 tooltip(famePostBtn, "Post this board", function()
-	return { "Post what you're looking at: the top 5 heroes or the Hall of Shame,", "the top 3 plays or blunders, or a player's record.",
-		"|cff888888Ctrl-click: only you see it.  Posts to: " .. W.Shout:ChannelLabel() .. "|r" }
+	return { "Post what you're looking at: the top 5 heroes or the Hall of Shame,\nthe top 3 plays or blunders, or a player's record.",
+		W.LF("|cff888888Ctrl-click: only you see it.  Posts to: %s|r", W.Shout:ChannelLabel()) }
 end)
-tooltip(famePerBtn, "Per fight", { "Off: total points (rewards turning up).", "On: points per fight, so a raider with fewer fights can top it",
-	"(only players with 3 or more fights are listed)." })
+tooltip(famePerBtn, "Per fight", { "Off: total points (rewards turning up).", "On: points per fight, so a raider with fewer fights can top it\n(only players with 3 or more fights are listed)." })
 tooltip(fameResetBtn, "Reset tally", { "Clear every real player's Hall of Fame points and start again.", "Asks first. Test data is cleared separately." })
-tooltip(fameTestBtn, "Clear test data", { "Demo fights add to the Hall of Fame as test data, marked |cff33ccff(test)|r,", "so you can try it out. This removes all of it; real fights stay." })
+tooltip(fameTestBtn, "Clear test data", { "Demo fights add to the Hall of Fame as test data, marked |cff33ccff(test)|r,\nso you can try it out. This removes all of it; real fights stay." })
 -- the guild's Hall of Fame (GuildFame.lua) or only your own fights; Share with guild
 UI.fameScopeBtn = gridButton("Showing: guild", 3, 1)
 UI.fameShareBtn = gridButton("|cff33ff33Share with guild|r", 3, 2)
@@ -1838,8 +1924,8 @@ UI.fameRoleBtn:SetScript("OnClick", function()
 	UI.fame.who = nil
 	UI:Refresh()
 end)
-tooltip(UI.fameRoleBtn, "Role", { "Show everyone, or only the tanks, the healers or the DPS", "(the role each player plays most) on the Heroes and Shame boards.",
-	"Tanks and healers earn hero points for taunts and saving heals, DPS for damage", "and interrupts, so each role is easiest to compare with itself." }, "ANCHOR_TOP")
+tooltip(UI.fameRoleBtn, "Role", { "Show everyone, or only the tanks, the healers or the DPS\n(the role each player plays most) on the Heroes and Shame boards.",
+	"Tanks and healers earn hero points for taunts and saving heals, DPS for damage\nand interrupts, so each role is easiest to compare with itself." }, "ANCHOR_TOP")
 UI.fameScopeBtn:SetScript("OnClick", function()
 	UI.fame.scope = (UI.FameScope() == "guild") and "mine" or "guild"
 	UI.fame.who = nil
@@ -1851,8 +1937,7 @@ UI.fameShareBtn:SetScript("OnClick", function()
 end)
 tooltip(UI.fameScopeBtn, "Guild or mine", function()
 	local g = W.GuildFame and W.GuildFame.Guild()
-	return { "|cffffd100Guild|r: every fight a member of " .. (g or "your guild") .. " recorded with WhoDidIt,",
-		"also raids you weren't in. The same fight recorded by several members counts once.",
+	return { W.LF("|cffffd100Guild|r: every fight a member of %s recorded with WhoDidIt,\nalso raids you weren't in. The same fight recorded by several members counts once.", g or W.L("the guild you're in")),
 		"|cffffd100Mine|r: only the fights your own WhoDidIt recorded.",
 		" ",
 		"|cff888888Change guild and the guild view shows that guild's, as its members share it.|r" }
@@ -1860,11 +1945,10 @@ end, "ANCHOR_TOP")
 tooltip(UI.fameShareBtn, "Share with guild", function()
 	local GF = W.GuildFame
 	local on = GF and GF.On()
-	return { "Sends your new fights to the guild members online and gets theirs:",
-		"every WhoDidIt online compares what it has and sends what the others are missing.",
+	return { "Sends your new fights to the guild members online and gets theirs:\nevery WhoDidIt online compares what it has and sends what the others are missing.",
 		"It also happens by itself a little after you log in, and after every fight.",
 		" ",
-		"Your fights: " .. (on and "|cff33ff33shared|r" or ((WhoDidItDB.opts.gfame == false) and "|cffff9933not shared|r (click to be asked again)" or "|cffffd100not asked yet|r (click)")),
+		W.LF("Your fights: %s", W.L(on and "|cff33ff33shared|r" or ((WhoDidItDB.opts.gfame == false) and "|cffff9933not shared|r (click to be asked again)" or "|cffffd100not asked yet|r (click)"))),
 		"|cff888888Hidden guild addon channel: nothing shows in chat. No programs, nothing in the background.|r" }
 end, "ANCHOR_TOP")
 -- guild when you're in one, unless you picked Mine
@@ -1903,10 +1987,10 @@ function UI:ApplyMode()
 	for i = 1, getn(rankOnly) do vis(rankOnly[i], UI.mode == "rankings" and W.Board ~= nil) end
 	UI.ApplyFive()
 	local o = WhoDidItDB.opts
-	banterKillBtn:SetText("Kill banter: " .. (o.banterKills and "|cff33ff33on|r" or "|cffff5555off|r"))
-	banterClearBtn:SetText("Clear banter: " .. (o.banterClears and "|cff33ff33on|r" or "|cffff5555off|r"))
-	rivalBtn:SetText("Rival alerts: " .. (o.rivalAlerts and "|cff33ff33on|r" or "|cffff5555off|r"))
-	chanBtn:SetText("Post to: |cffffffff" .. W.Shout:ChannelLabel() .. "|r")
+	banterKillBtn:SetText(W.LF("Kill banter: %s", W.L(o.banterKills and "|cff33ff33on|r" or "|cffff5555off|r")))
+	banterClearBtn:SetText(W.LF("Clear banter: %s", W.L(o.banterClears and "|cff33ff33on|r" or "|cffff5555off|r")))
+	rivalBtn:SetText(W.LF("Rival alerts: %s", W.L(o.rivalAlerts and "|cff33ff33on|r" or "|cffff5555off|r")))
+	chanBtn:SetText(W.LF("Post to: |cffffffff%s|r", W.Shout:ChannelLabel()))
 	if not fights then
 		for i = 1, getn(UI.meterButtons) do UI.meterButtons[i]:Hide() end
 		for _, list in pairs(UI.actionButtons) do
@@ -1951,6 +2035,18 @@ local function head(rows, text)
 end
 
 local function pct(v) return floor((v or 0) * 100 + 0.5) .. "%" end
+
+-- a paragraph that takes several rows (rows clip, they don't wrap): one text with
+-- line breaks, so each language breaks its own lines
+function UI.Para(rows, text, colour)
+	for line in string.gfind(W.L(text), "[^\n]+") do tinsert(rows, { l = (colour or "") .. line .. (colour and "|r" or "") }) end
+end
+-- "Flask, Food": each one translated
+function UI.LJoin(list, sep)
+	local out = {}
+	for i = 1, getn(list or {}) do out[i] = W.L(list[i]) end
+	return table.concat(out, sep or ", ")
+end
 
 -- table rows: cells on fixed columns so everything lines up.
 -- spec = { { width, "LEFT" | "RIGHT" | "CENTER" }, ... } (main list: ~570px)
@@ -2024,7 +2120,7 @@ local function momentTip(tip, what)
 	for i = 1, getn(tip or {}) do out[i] = tip[i] end
 	tinsert(out, " ")
 	tinsert(out, "|cff888888Click: see it in your own chat first|r")
-	tinsert(out, "|cff33ff33Ctrl-click: post this " .. what .. " to " .. W.Shout:ChannelLabel() .. "|r")
+	tinsert(out, W.LF("|cff33ff33Ctrl-click: post this %s to %s|r", W.L(what), W.Shout:ChannelLabel()))
 	return out
 end
 
@@ -2035,7 +2131,7 @@ function UI:FightRows()
 	local live = W.Tracker.fight
 	if live then
 		tinsert(rows, row(
-			"|cff33ccffLIVE|r  " .. live.enc .. "\n|cff888888" .. FmtTime(GetTime() - live.t0) .. " so far|r",
+			W.L("|cff33ccffLIVE|r") .. "  " .. live.enc .. "\n|cff888888" .. W.LF("%s so far", FmtTime(GetTime() - live.t0)) .. "|r",
 			"",
 			{ sel = (UI.selIdx == 0), click = function() UI.selIdx = 0; UI.detail = nil; UI.cause = nil; UI.liveRec = nil; UI:Refresh() end }))
 	end
@@ -2057,7 +2153,7 @@ function UI:FightRows()
 				local rec, idx = fights[i], i
 				local nd = getn(rec.deaths or {})
 				tinsert(rows, row(
-					rec.enc .. "\n|cff888888" .. string.sub(rec.date or "", 12) .. "  " .. FmtTime(rec.dur) .. "  " .. nd .. " dead|r",
+					rec.enc .. "\n|cff888888" .. string.sub(rec.date or "", 12) .. "  " .. FmtTime(rec.dur) .. "  " .. W.LF("%s dead", nd) .. "|r",
 					RESULT[rec.result] or rec.result,
 					{ indent = 10, sel = (UI.selIdx == i), click = function() UI.selIdx = idx; UI.detail = nil; UI.cause = nil; UI:Refresh() end,
 					  tip = { rec.zone or "", rec.verdict or "" }, tipTitle = rec.enc }))
@@ -2151,15 +2247,15 @@ function UI.WouldRankText(rec, clear)
 		p2, of2, p1, of1 = B:WouldRank("kills", rec.enc, floor((rec.dur or 0) * 10 + 0.5) / 10)
 	end
 	if not p2 then return "" end
-	local s = (of2 > 0) and ("#" .. p2 .. " of " .. of2 .. " since " .. W.Data.SCALING.short) or ""
-	if of1 > 0 then s = s .. ((s ~= "") and ", " or "") .. "#" .. p1 .. " all time" end
-	return "   |cffffd100" .. s .. "|r|cffaaaaaa on " .. B.Realm() .. " if uploaded|r"
+	local s = (of2 > 0) and W.LF("#%s of %s since %s", p2, of2, W.L(W.Data.SCALING.short)) or ""
+	if of1 > 0 then s = s .. ((s ~= "") and ", " or "") .. W.LF("#%s all time", p1) end
+	return "   |cffffd100" .. s .. "|r|cffaaaaaa" .. W.LF(" on %s if uploaded", B.Realm()) .. "|r"
 end
 
 -- the last boss of a full clear: the official time and its rank, under the verdict
 function UI.ClearText(rec, newLine)
 	if not rec.clear then return "" end
-	return (newLine and "\n" or "   ") .. "|cff66ccffFull clear " .. UI.Clock(rec.clear) .. "|r" .. UI.WouldRankText(rec, true)
+	return (newLine and "\n" or "   ") .. W.LF("|cff66ccffFull clear %s|r", UI.Clock(rec.clear)) .. UI.WouldRankText(rec, true)
 end
 
 -- the header of one run: the raid, when, bosses down, wipes, how long; click folds it
@@ -2170,7 +2266,7 @@ function UI.RunHeader(run, open)
 	for j = getn(run.idx), 1, -1 do   -- oldest first, for the tooltip
 		local rec = fights[run.idx[j]]
 		if rec.result == "KILL" then kills = kills + 1; killed[rec.enc] = true else wipes = wipes + 1 end
-		tinsert(list, (string.sub(rec.date or "", 12)) .. "  " .. rec.enc .. "  " .. FmtTime(rec.dur) .. "  " .. (RESULT[rec.result] or rec.result or ""))
+		tinsert(list, (string.sub(rec.date or "", 12)) .. "  " .. rec.enc .. "  " .. FmtTime(rec.dur) .. "  " .. W.L(RESULT[rec.result] or rec.result or ""))
 	end
 	-- line 1: the raid and how many of its full-clear bosses are down ("Molten Core  9/10")
 	local need = W.Data.clears[run.zone]
@@ -2185,36 +2281,36 @@ function UI.RunHeader(run, open)
 		local r = fights[run.idx[j]]
 		if r.clear and (not clearRec or r.clear < clearRec.clear) then clearRec = r end
 	end
-	local title = run.demo and "Demo fights" or (W.Data.instanceTitle[run.zone] or run.zone)
+	local title = run.demo and W.L("Demo fights") or (W.Data.instanceTitle[run.zone] or run.zone)
 	local when = string.sub(run.first.date or "", 6, 10) .. " " .. string.sub(run.first.date or "", 12)
 	-- line 2, in words: when, kills, wipes, and how long (the official clear time when it was one)
-	local long = (span > 0) and ("|cffaaaaaa" .. ((span >= 60) and (floor(span / 60) .. "h " .. string.format("%02d", math.mod(span, 60))) or (span .. " min")) .. "|r") or ""
+	local long = (span > 0) and ("|cffaaaaaa" .. ((span >= 60) and W.LF("%sh %s", floor(span / 60), string.format("%02d", math.mod(span, 60))) or W.LF("%s min", span)) .. "|r") or ""
 	-- (today's runs show the time, older ones the date: the line stays short; both are in the tooltip)
 	local today = string.sub(run.first.date or "", 1, 10) == date("%Y-%m-%d")
 	local shortWhen = today and string.sub(run.first.date or "", 12) or string.sub(run.first.date or "", 6, 10)
 	-- (about 30 characters fit: a full clear shows its time instead of the wipes and the span)
-	local killsTxt = "|cff33ff33" .. kills .. "|r|cffaaaaaa " .. ((kills == 1) and "kill" or "kills") .. "|r"
+	local killsTxt = W.LF((kills == 1) and "|cff33ff33%s|r|cffaaaaaa kill|r" or "|cff33ff33%s|r|cffaaaaaa kills|r", kills)
 	local line2
 	if clearRec then
-		line2 = "|cffaaaaaa" .. shortWhen .. "|r  |cff66ccffclear " .. UI.Clock(clearRec.clear) .. "|r  " .. killsTxt
+		line2 = "|cffaaaaaa" .. shortWhen .. "|r  |cff66ccff" .. W.LF("clear %s", UI.Clock(clearRec.clear)) .. "|r  " .. killsTxt
 	else
 		line2 = "|cffaaaaaa" .. shortWhen .. "|r  " .. killsTxt
-			.. ((wipes > 0) and (" |cffff5555" .. wipes .. "|r|cffaaaaaa " .. ((wipes == 1) and "wipe" or "wipes") .. "|r") or "")
+			.. ((wipes > 0) and (" " .. W.LF((wipes == 1) and "|cffff5555%s|r|cffaaaaaa wipe|r" or "|cffff5555%s|r|cffaaaaaa wipes|r", wipes)) or "")
 			.. "  " .. long
 	end
 	-- the tooltip says what each number is
 	local key = {}
-	if need then tinsert(key, "|cffffffff" .. nDown .. "/" .. getn(need) .. "|r bosses of the full clear killed") end
-	tinsert(key, "|cff33ff33" .. kills .. "|r boss " .. ((kills == 1) and "kill" or "kills") .. ((wipes > 0) and (", |cffff5555" .. wipes .. "|r " .. ((wipes == 1) and "wipe or reset" or "wipes or resets")) or ""))
+	if need then tinsert(key, W.LF("|cffffffff%s/%s|r bosses of the full clear killed", nDown, getn(need))) end
+	tinsert(key, W.LF((kills == 1) and "|cff33ff33%s|r boss kill" or "|cff33ff33%s|r boss kills", kills) .. ((wipes > 0) and (", " .. W.LF((wipes == 1) and "|cffff5555%s|r wipe or reset" or "|cffff5555%s|r wipes or resets", wipes)) or ""))
 	if clearRec then
-		tinsert(key, "|cff66ccffFull clear in " .. UI.Clock(clearRec.clear) .. "|r (first pull to the last boss)" .. UI.WouldRankText(clearRec, true))
+		tinsert(key, W.LF("|cff66ccffFull clear in %s|r (first pull to the last boss)", UI.Clock(clearRec.clear)) .. UI.WouldRankText(clearRec, true))
 	elseif span > 0 then
-		tinsert(key, "|cffaaaaaa" .. span .. " min|r from the first boss fight to the last")
+		tinsert(key, W.LF("|cffaaaaaa%s min|r from the first boss fight to the last", span))
 	end
 	tinsert(key, " ")
 	for i = getn(key), 1, -1 do tinsert(list, 1, key[i]) end
 	tinsert(list, " ")
-	tinsert(list, "|cff888888Click to " .. (open and "fold" or "unfold") .. " this run.|r")
+	tinsert(list, W.L(open and "|cff888888Click to fold this run.|r" or "|cff888888Click to unfold this run.|r"))
 	return row("|cffffd100" .. title .. "|r" .. progress .. "\n" .. line2, open and "|cffffd100-|r" or "|cffffd100+|r",
 		{ head = true, art = UI.ZoneArt(run.zone), tipTitle = title .. "  " .. when, tip = list,
 		  click = function() UI.runOpen[run.key] = not open; UI:Refresh() end })
@@ -2314,10 +2410,10 @@ local POST_LABEL = {
 local function toggleTank(name)
 	if WhoDidItDB.tanks[name] then
 		WhoDidItDB.tanks[name] = nil
-		W.Print(name .. " is no longer marked as a tank.")
+		W.Print(W.LF("%s is no longer marked as a tank.", name))
 	else
 		WhoDidItDB.tanks[name] = true
-		W.Print(name .. " marked as a tank (applies to new fights).")
+		W.Print(W.LF("%s marked as a tank (applies to new fights).", name))
 	end
 	UI:Refresh()
 end
@@ -2353,8 +2449,8 @@ local function withLegend(lines, kind)
 	local tip = {}
 	for i = 1, getn(lines or {}) do tip[i] = lines[i] end
 	tinsert(tip, " ")
-	tinsert(tip, "|cffffd100Click|r  see " .. POST_LABEL[kind] .. " in your own chat")
-	tinsert(tip, "|cffffd100Ctrl-click|r  post it to " .. W.Shout:ChannelLabel())
+	tinsert(tip, W.LF("|cffffd100Click|r  see %s in your own chat", W.L(POST_LABEL[kind])))
+	tinsert(tip, W.LF("|cffffd100Ctrl-click|r  post it to %s", W.Shout:ChannelLabel()))
 	tinsert(tip, "|cffffd100Shift-click|r  Name & Shame them")
 	tinsert(tip, "|cffffd100Alt-click|r  Big them up")
 	tinsert(tip, "|cffffd100Right-click|r  mark / unmark as a tank")
@@ -2373,7 +2469,7 @@ function UI:SummaryRows(rec)
 		for j = 1, getn(c.tip or {}) do tip[j] = c.tip[j] end
 		tinsert(tip, "|cff888888Click for the full breakdown|r")
 		local idx = i
-		tinsert(rows, row((i == 1 and "|cffff5555" or "|cffff9933") .. c.text .. "|r",
+		tinsert(rows, row((i == 1 and "|cffff5555" or "|cffff9933") .. W.LT(c.text) .. "|r",
 			c.detail and "|cff888888details >|r" or nil,
 			{ tip = tip, tipTitle = "Cause",
 			  click = function() UI.cause = idx; UI:Refresh() end }))
@@ -2388,12 +2484,12 @@ function UI:SummaryRows(rec)
 		local b = rec.blame[i]
 		if shown >= 15 then break end
 		shown = shown + 1
-		local why = string.gsub(b.reasons[1] or "", "^" .. b.name .. " ", "")
-		if getn(b.reasons) > 1 then why = why .. C_DIM .. "  (+" .. (getn(b.reasons) - 1) .. " more)|r" end
+		local why = string.gsub(W.LT(b.reasons[1] or ""), "^" .. b.name .. " ", "")
+		if getn(b.reasons) > 1 then why = why .. C_DIM .. W.LF("  (+%s more)", getn(b.reasons) - 1) .. "|r" end
 		tinsert(rows, cells(BLAME_SPEC,
 			{ C_DIM .. i .. ".|r", W.CName(b.name, b.class), "|cffcccccc" .. why .. "|r", "|cffff7777" .. string.format("%.1f", b.pts) .. "|r" },
 			{ bar = b.pts / maxPts, cr = 0.9, cg = 0.15, cb = 0.15, ba = 0.3,
-			  tip = withLegend(b.reasons, "blame"), tipTitle = b.name .. " - " .. b.pts .. " blame points",
+			  tip = withLegend(b.reasons, "blame"), tipTitle = W.LF("%s - %s blame points", b.name, b.pts),
 			  name = b.name, click = playerClick("blame") }))
 	end
 	if shown == 0 then tinsert(rows, row("|cff33ff33Nobody - well played.|r")) end
@@ -2402,10 +2498,10 @@ function UI:SummaryRows(rec)
 		head(rows, "Heroes (see the Heroes tab)")
 		for i = 1, math.min(3, getn(rec.heroes)) do
 			local h = rec.heroes[i]
-			local why = string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")
+			local why = string.gsub(W.LT(h.list[1] or ""), "^" .. h.name .. " ", "")
 			tinsert(rows, cells(BLAME_SPEC,
 				{ C_DIM .. i .. ".|r", W.CName(h.name, h.class), "|cffcccccc" .. why .. "|r", C_GUILD .. string.format("%.1f", h.pts) .. "|r" },
-				{ tip = withLegend(h.list, "hero"), tipTitle = h.name .. " - hero points",
+				{ tip = withLegend(h.list, "hero"), tipTitle = W.LF("%s - hero points", h.name),
 				  name = h.name, click = playerClick("hero") }))
 		end
 	end
@@ -2414,17 +2510,17 @@ function UI:SummaryRows(rec)
 		head(rows, "Raid notes")
 		for i = 1, getn(rec.notes) do
 			local n = rec.notes[i]
-			tinsert(rows, row("|cffcccccc" .. n.text .. "|r", nil, { tip = n.tip, tipTitle = n.text }))
+			tinsert(rows, row("|cffcccccc" .. W.LT(n.text) .. "|r", nil, { tip = n.tip, tipTitle = n.text }))
 		end
 	end
 
 	head(rows, "Data sources")
 	local e = rec.env or {}
-	local function yn(v) return v and "|cff33ff33on|r" or "|cffff3333off|r" end
-	tinsert(rows, row("Nampower " .. yn(e.nampower) .. "    SuperWoW " .. yn(e.superwow) .. "    Threat data " .. yn(e.threat)))
+	local function yn(v) return W.L(v and "|cff33ff33on|r" or "|cffff3333off|r") end
+	tinsert(rows, row("Nampower " .. yn(e.nampower) .. "    SuperWoW " .. yn(e.superwow) .. "    " .. W.L("Threat data") .. " " .. yn(e.threat)))
 	local tanks = {}
 	for n in pairs(WhoDidItDB.tanks) do tinsert(tanks, n) end
-	tinsert(rows, row("|cff888888Tanks set: " .. (getn(tanks) > 0 and table.concat(tanks, ", ") or "auto-detect") .. "   (/wdi tank <name>, or right-click a name in Meters)|r"))
+	tinsert(rows, row(W.LF("|cff888888Tanks set: %s   (/wdi tank <name>, or right-click a name in Meters)|r", getn(tanks) > 0 and table.concat(tanks, ", ") or W.L("auto-detect"))))
 	return rows
 end
 
@@ -2434,19 +2530,19 @@ function UI:CauseRows(rec, idx)
 	local c = rec.causes[idx]
 	tinsert(rows, row("|cffffd100<< Back to summary|r", nil, { head = true, click = function() UI.cause = nil; UI:Refresh() end }))
 	if not c then return rows end
-	tinsert(rows, row("|cffff7777" .. c.text .. "|r"))
+	tinsert(rows, row("|cffff7777" .. W.LT(c.text) .. "|r"))
 	if not c.detail then
 		tinsert(rows, row("|cff888888No breakdown stored for this fight (it was recorded by an older version).|r"))
-		for j = 1, getn(c.tip or {}) do tinsert(rows, row(c.tip[j])) end
+		for j = 1, getn(c.tip or {}) do tinsert(rows, row(W.LT(c.tip[j]))) end
 		return rows
 	end
 	for j = 1, getn(c.detail) do
 		local src = c.detail[j]
 		-- copy: saved rows must never get functions attached
-		local d = { l = src.l, r = src.r, head = src.head }
+		local d = { l = W.LT(src.l), r = W.LT(src.r), head = src.head }
 		if src.death and rec.deaths[src.death] then
 			local dd = rec.deaths[src.death]
-			d.tip = { "Open " .. dd.name .. "'s death recap" }
+			d.tip = { W.LF("Open %s's death recap", dd.name) }
 			d.click = function()
 				UI.tab = "deaths"
 				UI.cause = nil
@@ -2473,7 +2569,7 @@ function UI.ReadyLines(d)
 	end
 	for i = 1, getn(d.cooling or {}) do
 		local c = d.cooling[i]
-		tinsert(out, "|cff888888On cooldown: " .. c[1] .. (c[3] and (" (used " .. c[3] .. ")") or "") .. ", " .. c[2] .. "s left|r")
+		tinsert(out, "|cff888888" .. W.LF("On cooldown: %s", c[1]) .. (c[3] and (" " .. W.LF("(used %s)", c[3])) or "") .. ", " .. W.LF("%ss left", c[2]) .. "|r")
 	end
 	if getn(out) > 0 then
 		tinsert(out, "|cff888888Not seen used within its cooldown. They may not have had it with them.|r")
@@ -2485,27 +2581,27 @@ local function recapTip(d)
 	local tip = {}
 	for i = 1, getn(d.lines) do
 		local l = d.lines[i]
-		local dt = string.format("%.1fs", l.t - d.t)
+		local dt = W.LF("%.1fs", l.t - d.t)
 		local hp = (l.hp and l.hm and l.hm > 0) and (" |cff888888" .. floor(l.hp / l.hm * 100) .. "%|r") or ""
 		local txt
 		if l.k == "heal" then
 			txt = "|cff33ff33+" .. FmtNum(l.a) .. "|r " .. (l.sp or "") .. " (" .. (l.s or "?") .. ")"
 		elseif l.k == "debuff" then
-			txt = "|cffcc99ffgains " .. (l.sp or "") .. ((l.a and l.a > 1) and (" (" .. l.a .. ")") or "") .. "|r"
+			txt = "|cffcc99ff" .. W.LF("gains %s", l.sp or "") .. ((l.a and l.a > 1) and (" (" .. l.a .. ")") or "") .. "|r"
 		elseif l.k == "item" then
-			txt = "|cff66ccffused " .. (l.sp or "") .. "|r"
+			txt = "|cff66ccff" .. W.LF("used %s", l.sp or "") .. "|r"
 		elseif l.k == "buff" then
-			txt = "|cffffcc66gains " .. (l.sp or "") .. "|r"
+			txt = "|cffffcc66" .. W.LF("gains %s", l.sp or "") .. "|r"
 		else
-			txt = "|cffff5555-" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r " .. (l.sp or "") .. " (" .. (l.s or "?") .. ")" .. (l.x == "crushing" and " |cffff9933crushing|r" or "")
+			txt = "|cffff5555-" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r " .. (l.sp or "") .. " (" .. (l.s or "?") .. ")" .. (l.x == "crushing" and (" |cffff9933" .. W.L("crushing") .. "|r") or "")
 		end
 		tinsert(tip, { dt .. "  " .. txt, hp })
 	end
 	tinsert(tip, " ")
-	tinsert(tip, "5s before death: " .. FmtNum(d.dmg5) .. " taken, " .. FmtNum(d.heal5) .. " healed (" .. (d.nheal or 0) .. " heals)")
-	if d.debuffs and getn(d.debuffs) > 0 then tinsert(tip, "Debuffs: " .. table.concat(d.debuffs, ", ")) end
-	tinsert(tip, "Consumables/items used this fight: " .. (d.cons or 0))
-	if d.hadAggro then tinsert(tip, "Had aggro on " .. d.hadAggro) end
+	tinsert(tip, W.LF("5s before death: %s taken, %s healed (%s heals)", FmtNum(d.dmg5), FmtNum(d.heal5), d.nheal or 0))
+	if d.debuffs and getn(d.debuffs) > 0 then tinsert(tip, W.LF("Debuffs: %s", table.concat(d.debuffs, ", "))) end
+	tinsert(tip, W.LF("Consumables/items used this fight: %s", d.cons or 0))
+	if d.hadAggro then tinsert(tip, W.LF("Had aggro on %s", d.hadAggro)) end
 	local rl = UI.ReadyLines(d)
 	if getn(rl) > 0 then tinsert(tip, " ") end
 	for i = 1, getn(rl) do tinsert(tip, rl[i]) end
@@ -2518,7 +2614,7 @@ function UI:DeathRows(rec)
 	if UI.detail then
 		local d = UI.detail
 		tinsert(rows, row("|cffffd100<< Back to deaths|r", nil, { head = true, click = function() UI.detail = nil; UI:Refresh() end }))
-		tinsert(rows, row(W.CName(d.name, d.class) .. " died at " .. FmtTime(d.t) .. " - " .. d.text, nil, { head = true }))
+		tinsert(rows, row(W.LF("%s died at %s - %s", W.CName(d.name, d.class), FmtTime(d.t), W.LT(d.text)), nil, { head = true }))
 		local rl = UI.ReadyLines(d)
 		for i = 1, getn(rl) do tinsert(rows, row(rl[i])) end
 		colHead(rows, RECAP_SPEC, { "Time", "What happened", "From", "Amount", "Health" })
@@ -2531,18 +2627,18 @@ function UI:DeathRows(rec)
 				from = l.s or "?"
 				amt = C_GUILD .. "+" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r"
 			elseif l.k == "debuff" then
-				what = "|cffcc99ffgains " .. (l.sp or "") .. ((l.a and l.a > 1) and (" (" .. l.a .. ")") or "") .. "|r"
+				what = "|cffcc99ff" .. W.LF("gains %s", l.sp or "") .. ((l.a and l.a > 1) and (" (" .. l.a .. ")") or "") .. "|r"
 			elseif l.k == "item" then
-				what = C_YOU .. "used " .. (l.sp or "") .. "|r"
+				what = C_YOU .. W.LF("used %s", l.sp or "") .. "|r"
 			elseif l.k == "buff" then
-				what = "|cffffcc66gains " .. (l.sp or "") .. "|r"
+				what = "|cffffcc66" .. W.LF("gains %s", l.sp or "") .. "|r"
 			else
-				what = "|cffff7777" .. (l.sp or "") .. "|r" .. (l.x == "crushing" and " |cffff9933crushing|r" or "")
+				what = "|cffff7777" .. (l.sp or "") .. "|r" .. (l.x == "crushing" and (" |cffff9933" .. W.L("crushing") .. "|r") or "")
 				from = l.s or "?"
 				amt = "|cffff5555-" .. FmtNum(l.a) .. (l.c and "*" or "") .. "|r"
 			end
 			tinsert(rows, cells(RECAP_SPEC,
-				{ C_DIM .. string.format("%.1fs", l.t - d.t) .. "|r", what, "|cffcccccc" .. from .. "|r", amt, hpf and (C_TIME .. pct(hpf) .. "|r") or "" },
+				{ C_DIM .. W.LF("%.1fs", l.t - d.t) .. "|r", what, "|cffcccccc" .. from .. "|r", amt, hpf and (C_TIME .. pct(hpf) .. "|r") or "" },
 				{ bar = hpf, cr = 0.1, cg = 0.75, cb = 0.1, ba = 0.3 }))
 		end
 		if getn(d.lines) == 0 then tinsert(rows, row("|cff888888No combat events recorded before this death.|r")) end
@@ -2561,10 +2657,10 @@ function UI:DeathRows(rec)
 		tinsert(rows, cells(DEATH_SPEC,
 			{ C_DIM .. FmtTime(d.t) .. "|r",
 			  W.CName(d.name, d.class),
-			  col .. d.text .. (d.late and " (after wipe)" or "") .. "|r",
+			  col .. W.LT(d.text) .. (d.late and (" " .. W.L("(after wipe)")) or "") .. "|r",
 			  "|cffaaaaaa" .. (d.killer or "") .. "|r",
 			  d.killAmt and ("|cffff5555" .. FmtNum(d.killAmt) .. "|r") or "" },
-			{ tip = recapTip(d), tipTitle = d.name .. " died at " .. FmtTime(d.t),
+			{ tip = recapTip(d), tipTitle = W.LF("%s died at %s", d.name, FmtTime(d.t)),
 			  click = function() UI.detail = dd; UI:Refresh() end }))
 	end
 	return rows
@@ -2585,13 +2681,13 @@ function UI:MistakeRows(rec)
 	end
 	for i = 1, getn(bl) do
 		local b = bl[i]
-		local why = string.gsub(b.reasons[1] or "", "^" .. b.name .. " ", "")
-		if getn(b.reasons) > 1 then why = why .. C_DIM .. "  (+" .. (getn(b.reasons) - 1) .. " more)|r" end
+		local why = string.gsub(W.LT(b.reasons[1] or ""), "^" .. b.name .. " ", "")
+		if getn(b.reasons) > 1 then why = why .. C_DIM .. W.LF("  (+%s more)", getn(b.reasons) - 1) .. "|r" end
 		tinsert(rows, cells(BLAME_SPEC,
 			{ C_DIM .. i .. ".|r", W.CName(b.name, b.class), "|cffdddddd" .. why .. "|r",
 			  "|cffff7777" .. string.format("%.1f", b.pts) .. "|r" },
 			{ bar = b.pts / max, cr = 0.9, cg = 0.15, cb = 0.15, ba = 0.25, tip = withLegend(b.reasons, "blame"),
-			  tipTitle = b.name .. " - " .. b.pts .. " blame points", name = b.name, click = playerClick("blame") }))
+			  tipTitle = W.LF("%s - %s blame points", b.name, b.pts), name = b.name, click = playerClick("blame") }))
 	end
 
 	head(rows, "Mistakes")
@@ -2603,26 +2699,24 @@ function UI:MistakeRows(rec)
 	for i = 1, getn(rec.findings) do
 		local fd = rec.findings[i]
 		local who = fd.who and rec.players[fd.who]
-		local text = "|cffdddddd" .. fd.text .. "|r"
+		local text = "|cffdddddd" .. W.LT(fd.text) .. "|r"
 		if fd.who and who then
 			local s, e = string.find(text, fd.who, 1, true)
 			if s then text = string.sub(text, 1, s - 1) .. W.CName(fd.who, who.class) .. "|cffdddddd" .. string.sub(text, e + 1) end
 		end
 		tinsert(rows, cells(MISTAKE_SPEC,
 			{ fd.t and (C_DIM .. FmtTime(fd.t) .. "|r") or (C_DIM .. "-|r"),
-			  "|cffffd100" .. fd.cat .. "|r",
+			  "|cffffd100" .. W.L(fd.cat) .. "|r",
 			  text,
-			  fd.pts > 0 and ("|cffff7777+" .. fd.pts .. "|r") or (C_DIM .. "info|r") },
+			  fd.pts > 0 and ("|cffff7777+" .. fd.pts .. "|r") or (C_DIM .. W.L("info") .. "|r") },
 			{ tip = momentTip(fd.tip, "mistake"), tipTitle = stripColors(fd.text),
 			  click = function()
-				postMoment(rec, "MISTAKE", fd.t, "[" .. fd.cat .. "] " .. fd.text, (fd.pts > 0) and ("+" .. fd.pts .. " blame points") or nil)
+				postMoment(rec, "MISTAKE", fd.t, "[" .. W.L(fd.cat) .. "] " .. W.LT(fd.text), (fd.pts > 0) and W.LF("+%s blame points", fd.pts) or nil)
 			  end }))
 	end
 
 	head(rows, "What counts")
-	tinsert(rows, row("|cff888888Pulling aggro off the tank, standing in avoidable damage, bombing other raiders with a debuff,|r"))
-	tinsert(rows, row("|cff888888dying to a mechanic, missing interrupts and dispels, low activity or DPS, and opening on the boss|r"))
-	tinsert(rows, row("|cff888888before the tank. Hover a mistake for what to do instead.|r"))
+	UI.Para(rows, "Pulling aggro off the tank, standing in avoidable damage, bombing other raiders with a debuff,\ndying to a mechanic, missing interrupts and dispels, low activity or DPS, and opening on the boss\nbefore the tank. Hover a mistake for what to do instead.", C_DIM)
 	return rows
 end
 
@@ -2652,10 +2746,10 @@ function UI:ThreatRows(rec)
 			  a.from and W.CName(a.from, from and from.class) or (C_DIM .. "-|r"),
 			  a.perc and (((a.perc >= 100) and "|cffff5555" or C_TIME) .. math.floor(a.perc + 0.5) .. "%|r") or "",
 			  VERDICT[a.verdict] or "" },
-				{ tipTitle = a.boss .. " at " .. FmtTime(a.t),
-			  tip = { "Detected by: " .. (a.how == "melee" and "boss melee swing" or "boss target"), a.perc and ("Threat at the time: " .. math.floor(a.perc + 0.5) .. "%") or "No threat reading at the time",
-			          " ", "|cff33ff33Click a name: their timeline, at " .. FmtTime(a.t) .. "|r",
-			          "|cff888888(Attacked = " .. a.to .. (a.from and (", Took it from = " .. a.from) or "") .. ")|r" },
+				{ tipTitle = W.LF("%s at %s", a.boss, FmtTime(a.t)),
+			  tip = { W.LF("Detected by: %s", W.L(a.how == "melee" and "boss melee swing" or "boss target")), a.perc and W.LF("Threat at the time: %s%%", math.floor(a.perc + 0.5)) or "No threat reading at the time",
+			          " ", W.LF("|cff33ff33Click a name: their timeline, at %s|r", FmtTime(a.t)),
+			          "|cff888888(" .. W.LF("Attacked = %s", a.to) .. (a.from and (", " .. W.LF("Took it from = %s", a.from)) or "") .. ")|r" },
 			  click = function(d, btn, x)
 				local col = colAt(AGGRO_SPEC, x)
 				UI:ShowTimeline((col == 4 and a.from) or a.to, a.t)
@@ -2677,7 +2771,7 @@ function UI:ThreatRows(rec)
 		tinsert(rows, cells(PEAK_SPEC,
 			{ C_DIM .. i .. ".|r", W.CName(name, t.class), col .. t.perc .. "%|r", C_DIM .. FmtTime(t.t) .. "|r" },
 			{ bar = t.perc / 130, cr = r, cg = g, cb = b, ba = 0.3, tipTitle = name,
-			  tip = { "Highest threat: " .. t.perc .. "% of the aggro holder, at " .. FmtTime(t.t), "|cff33ff33Click: " .. name .. "'s timeline at that moment|r" },
+			  tip = { W.LF("Highest threat: %s%% of the aggro holder, at %s", t.perc, FmtTime(t.t)), W.LF("|cff33ff33Click: %s's timeline at that moment|r", name) },
 			  click = function() UI:ShowTimeline(name, t.t) end }))
 	end
 	return rows
@@ -2750,7 +2844,7 @@ function UI:MeterRows(rec)
 			end
 			if big and big > 0 then
 				local sp = (mode == "dmg") and p.dMaxSp or p.hMaxSp
-				tinsert(tip, { "Biggest " .. (mode == "heal" and "heal" or "hit"), FmtNum(big) .. (sp and ("  (" .. sp .. ")") or "") })
+				tinsert(tip, { W.L(mode == "heal" and "Biggest heal" or "Biggest hit"), FmtNum(big) .. (sp and ("  (" .. sp .. ")") or "") })
 			end
 			if mode == "dmg" then tinsert(tip, { "Damage to bosses", FmtNum(p.boss) }) end
 		elseif mode == "act" then
@@ -2758,7 +2852,7 @@ function UI:MeterRows(rec)
 			tinsert(vals, ac .. pct(it.v) .. "|r")
 			tinsert(vals, C_DIM .. FmtTime(alive) .. "|r")
 			tinsert(vals, deaths)
-			tip = { "Share of their time alive spent casting / swinging / healing.", "Alive: " .. FmtTime(alive) }
+			tip = { "Share of their time alive spent casting / swinging / healing.", W.LF("Alive: %s", FmtTime(alive)) }
 		else
 			local function n(x, c) return ((x or 0) > 0) and (c .. x .. "|r") or (C_DIM .. "-|r") end
 			tinsert(vals, n(p.kicks, C_TIME))
@@ -2769,8 +2863,8 @@ function UI:MeterRows(rec)
 			for j = 1, getn(p.consList or {}) do tinsert(tip, { p.consList[j][1], p.consList[j][2] .. "x" }) end
 		end
 		tinsert(tip, " ")
-		tinsert(tip, "Role: " .. (p.role or "?") .. (WhoDidItDB.tanks[it.name] and " (marked tank)" or "") .. "   Deaths: " .. (p.deaths or 0))
-		if (p.aggro or 0) > 0 then tinsert(tip, "Held boss aggro for " .. FmtTime(p.aggro)) end
+		tinsert(tip, W.LF("Role: %s", W.L(ROLE_SHORT[p.role] or p.role or "?")) .. (WhoDidItDB.tanks[it.name] and (" " .. W.L("(marked tank)")) or "") .. "   " .. W.LF("Deaths: %s", p.deaths or 0))
+		if (p.aggro or 0) > 0 then tinsert(tip, W.LF("Held boss aggro for %s", FmtTime(p.aggro))) end
 		tip = withLegend(tip, "stats")
 		tinsert(rows, cells(spec, vals,
 			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = it.name, name = it.name, click = playerClick("stats") }))
@@ -2790,14 +2884,14 @@ local function consCell(rec, p, name, c, ctx)
 	local Cons, CG = W.Cons, UI.CG
 	local col = CG.COLS[c]
 	local x = CG.X + (c - 1) * CG.STEP + 4
-	local title = col[2] .. " - " .. W.CName(name, p.class)
+	local title = W.L(col[2]) .. " - " .. W.CName(name, p.class)
 	local X = "|cffff4444X|r"
-	local missing = ctx.missAt[c] and { "|cffff7777Missing|r - a " .. ctx.roleText .. " should have: " .. ctx.missAt[c] }
+	local missing = ctx.missAt[c] and { W.LF("|cffff7777Missing|r - a %s should have: %s", ctx.roleText, W.L(ctx.missAt[c])) }
 	if col[3] == "WPN" then
 		-- the main hand: oil / stone / imbue (read separately from buffs)
 		if p.wpn and ctx.missAt[c] then
-			return { x, "miss", ctx.missIcon[c], title, { "|cffff7777Wrong one|r - a " .. ctx.roleText .. " should have: " .. ctx.missAt[c],
-				"Has: " .. ((type(p.wpn) == "string") and p.wpn or "?") }, X }
+			return { x, "miss", ctx.missIcon[c], title, { W.LF("|cffff7777Wrong one|r - a %s should have: %s", ctx.roleText, W.L(ctx.missAt[c])),
+				W.LF("Has: %s", (type(p.wpn) == "string") and p.wpn or "?") }, X }
 		elseif p.wpn then
 			return { x, "ok", Cons.WeaponIcon(p.wpn), title, { (type(p.wpn) == "string") and p.wpn or "Something on their main hand" } }
 		elseif missing then
@@ -2805,14 +2899,14 @@ local function consCell(rec, p, name, c, ctx)
 		elseif p.wpn == nil and ctx.expected[c] then
 			return { x, "unk", nil, title, { "Couldn't see their weapon (out of range, or no SuperWoW)." }, "|cffcccccc?|r" }
 		end
-		return { x, "na", nil, title, { ctx.expected[c] and "Nothing on their main hand." or ("Not expected for a " .. ctx.roleText .. ".") }, C_DIM .. "-|r" }
+		return { x, "na", nil, title, { ctx.expected[c] and "Nothing on their main hand." or W.LF("Not expected for a %s.", ctx.roleText) }, C_DIM .. "-|r" }
 	end
 	local have = ctx.inCol[c]
 	if have then
 		local tip = {}
 		for k = 1, getn(have) do
 			local bf = have[k]
-			tinsert(tip, "|cff33ff33" .. bf[1] .. "|r  " .. C_DIM .. ((bf[3] and bf[3] > 0) and ("gained " .. FmtTime(bf[3]) .. " into the fight") or "had it at the pull") .. "|r")
+			tinsert(tip, "|cff33ff33" .. bf[1] .. "|r  " .. C_DIM .. ((bf[3] and bf[3] > 0) and W.LF("gained %s into the fight", FmtTime(bf[3])) or W.L("had it at the pull")) .. "|r")
 		end
 		return { x, "ok", W.Cons.Icon(have[1][1]), title, tip }
 	elseif ctx.unread then
@@ -2820,13 +2914,13 @@ local function consCell(rec, p, name, c, ctx)
 	elseif missing then
 		return { x, "miss", ctx.missIcon[c], title, missing, X }
 	end
-	return { x, "na", nil, title, { ctx.expected[c] and "Not needed: they covered it with another buff." or ("Not expected for a " .. ctx.roleText .. ".") }, C_DIM .. "-|r" }
+	return { x, "na", nil, title, { ctx.expected[c] and "Not needed: they covered it with another buff." or W.LF("Not expected for a %s.", ctx.roleText) }, C_DIM .. "-|r" }
 end
 
 function UI:ConsumeRows(rec)
 	local rows = {}
 	if not W.Cons then
-		tinsert(rows, row("|cffff7777To finish updating: " .. W.RESTART_HINT .. ".|r"))
+		tinsert(rows, row(W.LF("|cffff7777To finish updating: %s.|r", W.L(W.RESTART_HINT))))
 		return rows
 	end
 	if UI.consView == "used" then return UI:UsedRows(rec) end
@@ -2859,7 +2953,7 @@ function UI:ConsumeRows(rec)
 		if p.cbuffs then anyBuffs = true end
 		local role = Cons.Role(p) or "other"
 		local needs = Cons.Needs(p, rec.zone)
-		local ctx = { roleText = string.lower(Cons.ROLE_TEXT[role] or "raider"), unread = (needs == nil),
+		local ctx = { roleText = W.L(string.lower(Cons.ROLE_TEXT[role] or "raider")), unread = (needs == nil),
 			inCol = {}, missAt = {}, missIcon = {}, expected = {} }
 		local cb = p.cbuffs or {}
 		for j = 1, getn(cb) do
@@ -2906,14 +3000,14 @@ function UI:ConsumeRows(rec)
 			local u = used[j]
 			nUsed = nUsed + u[2]
 			usedTotals[u[3]] = (usedTotals[u[3]] or 0) + u[2]
-			tinsert(tip, { "used |cff" .. (USED_COL[u[3]] or "ffffff") .. u[1] .. "|r", u[2] .. "x" })
+			tinsert(tip, { W.LF("used %s", "|cff" .. (USED_COL[u[3]] or "ffffff") .. u[1] .. "|r"), u[2] .. "x" })
 		end
 		if ctx.unread then
 			tinsert(tip, 1, C_DIM .. "Out of range at the pull - can't say what they had, so they're not counted as missing anything.|r")
 		elseif met < total then
-			tinsert(tip, 1, "|cffff7777Missing for a " .. ctx.roleText .. ": " .. table.concat(Cons.Missing(p, rec.zone), ", ") .. "|r")
+			tinsert(tip, 1, W.LF("|cffff7777Missing for a %s: %s|r", ctx.roleText, UI.LJoin(Cons.Missing(p, rec.zone))))
 		else
-			tinsert(tip, 1, "|cff33ff33Has everything a " .. ctx.roleText .. " needs.|r")
+			tinsert(tip, 1, W.LF("|cff33ff33Has everything a %s needs.|r", ctx.roleText))
 		end
 		tip = withLegend(tip, "consumes")
 
@@ -2935,11 +3029,11 @@ function UI:ConsumeRows(rec)
 			d = {
 				cols = {
 					{ CG.NAME, 110, W.CName(name, p.class), "LEFT" },
-					{ CG.ROLE, 52, "|cff" .. g[3] .. string.upper(Cons.ROLE_TEXT[role] or "?") .. "|r", "CENTER" },
+					{ CG.ROLE, 52, "|cff" .. g[3] .. W.L(string.upper(Cons.ROLE_TEXT[role] or "?")) .. "|r", "CENTER" },
 					{ CG.READY, 44, ready, "CENTER" },
 					{ CG.USED, 54, (nUsed > 0) and (C_YOU .. nUsed .. "|r") or (C_DIM .. "0|r"), "CENTER" },
 				},
-				grid = grid, tip = tip, tipTitle = name .. " - consumables", name = name, click = playerClick("consumes"),
+				grid = grid, tip = tip, tipTitle = W.LF("%s - consumables", name), name = name, click = playerClick("consumes"),
 			},
 		})
 	end
@@ -2950,20 +3044,19 @@ function UI:ConsumeRows(rec)
 
 	-- the slacker check (click to post) and items used
 	local slack, unknown = Cons.Slackers(rec)
-	local stip = { "Each role's must-haves: flask (big raids), food, the role's elixir and a weapon oil / stone",
-		"(shamans: Rockbiter on tanks, Windfury on melee) - the red X cells below." }
+	local stip = { "Each role's must-haves: flask (big raids), food, the role's elixir and a weapon oil / stone\n(shamans: Rockbiter on tanks, Windfury on melee) - the red X cells below." }
 	if getn(slack) > 0 then
 		tinsert(stip, " ")
 		local order, gr = Cons.ByNeed(slack)
-		for i = 1, getn(order) do tinsert(stip, "|cffff7777No " .. order[i] .. ":|r " .. table.concat(gr[order[i]], ", ")) end
+		for i = 1, getn(order) do tinsert(stip, W.LF("|cffff7777No %s:|r %s", W.L(order[i]), table.concat(gr[order[i]], ", "))) end
 	end
-	if unknown > 0 then tinsert(stip, C_DIM .. unknown .. " out of range at the pull - not counted|r") end
-	tinsert(stip, "|cffffd100Click: see it in your chat   Ctrl-click: post it (" .. W.Shout:ChannelLabel() .. ")|r")
-	tinsert(rows, row("|cffffd100Missing something:|r  "
-		.. ((getn(slack) == 0) and (C_GUILD .. "nobody|r") or ("|cffff7777" .. getn(slack) .. " of " .. nPlayers .. "|r"))
-		.. ((unknown > 0) and (C_DIM .. "  (" .. unknown .. " out of range)|r") or "") .. C_DIM .. "  - click to see, Ctrl-click to post|r",
-		"Used:  |cff" .. USED_COL.Mana .. usedTotals.Mana .. " mana|r   |cff" .. USED_COL.Health .. usedTotals.Health .. " health|r   |cff"
-		.. USED_COL.Protection .. usedTotals.Protection .. " prot|r   |cff" .. USED_COL.Other .. usedTotals.Other .. " other|r",
+	if unknown > 0 then tinsert(stip, C_DIM .. W.LF("%s out of range at the pull - not counted", unknown) .. "|r") end
+	tinsert(stip, W.LF("|cffffd100Click: see it in your chat   Ctrl-click: post it (%s)|r", W.Shout:ChannelLabel()))
+	tinsert(rows, row(W.L("|cffffd100Missing something:|r") .. "  "
+		.. ((getn(slack) == 0) and (C_GUILD .. W.L("nobody") .. "|r") or ("|cffff7777" .. W.LF("%s of %s", getn(slack), nPlayers) .. "|r"))
+		.. ((unknown > 0) and (C_DIM .. "  " .. W.LF("(%s out of range)", unknown) .. "|r") or "") .. C_DIM .. "  " .. W.L("- click to see, Ctrl-click to post") .. "|r",
+		W.L("Used:") .. "  |cff" .. USED_COL.Mana .. W.LF("%s mana", usedTotals.Mana) .. "|r   |cff" .. USED_COL.Health .. W.LF("%s health", usedTotals.Health) .. "|r   |cff"
+		.. USED_COL.Protection .. W.LF("%s prot", usedTotals.Protection) .. "|r   |cff" .. USED_COL.Other .. W.LF("%s other", usedTotals.Other) .. "|r",
 		{ tipTitle = "Slacker check", tip = stip, click = function() W.Shout:Consumes(rec, "missing", (not IsControlKeyDown()) and "SELF" or nil) end }))
 	if not anyBuffs then
 		tinsert(rows, row("|cff888888This fight was recorded by an older version - only items used are available.|r"))
@@ -2977,10 +3070,10 @@ function UI:ConsumeRows(rec)
 			local readable = grp.n - grp.unread
 			local folded = UI.consFold[g[1]]
 			tinsert(rows, { head = true,
-				cols = { { CG.NAME, 600, (folded and "|cffaaaaaa+|r  " or "|cffaaaaaa-|r  ") .. "|cff" .. g[3] .. g[2] .. "|r   "
-					.. ((grp.ready == readable) and "|cff33ff33" or "|cffff7777") .. grp.ready .. "/" .. readable .. " ready|r"
-					.. ((grp.unread > 0) and (C_DIM .. "   - " .. grp.unread .. " out of range|r") or ""), "LEFT" } },
-				tipTitle = g[2], tip = { "Click to " .. (folded and "show" or "hide") .. " this group." },
+				cols = { { CG.NAME, 600, (folded and "|cffaaaaaa+|r  " or "|cffaaaaaa-|r  ") .. "|cff" .. g[3] .. W.L(g[2]) .. "|r   "
+					.. ((grp.ready == readable) and "|cff33ff33" or "|cffff7777") .. W.LF("%s/%s ready", grp.ready, readable) .. "|r"
+					.. ((grp.unread > 0) and (C_DIM .. "   - " .. W.LF("%s out of range", grp.unread) .. "|r") or ""), "LEFT" } },
+				tipTitle = g[2], tip = { W.L(folded and "Click to show this group." or "Click to hide this group.") },
 				click = function() UI.consFold[g[1]] = not UI.consFold[g[1]]; UI:Refresh() end })
 			if not folded then
 				table.sort(grp.list, function(a, b)
@@ -3036,12 +3129,11 @@ function UI:UsedRows(rec)
 	local n = getn(cols)
 	local hdr = {}
 	for i = 1, n do
-		local pats = cols[i][3] and table.concat(cols[i][3], ", ") or "anything not in the other columns"
-		hdr[i] = { cols[i][1], cols[i][2], { "Items whose name has: " .. pats, " ", "The number is how many they used. Hover a square for the items." } }
+		local pats = cols[i][3] and table.concat(cols[i][3], ", ") or W.L("anything not in the other columns")
+		hdr[i] = { cols[i][1], cols[i][2], { W.LF("Items whose name has: %s", pats), " ", "The number is how many they used. Hover a square for the items." } }
 	end
 	UI.SetGridHead(hdr, { "TOTAL", "Total", { "Every item they used during the fight." } },
-		{ "DIED", "Died", { "When they died. The row is frozen at that moment: a |cffffd100yellow !|r square was",
-			"off cooldown and unused - it could have saved them. Hover the name for their class cooldowns too." } })
+		{ "DIED", "Died", { "When they died. The row is frozen at that moment: a |cffffd100yellow !|r square was\noff cooldown and unused - it could have saved them. Hover the name for their class cooldowns too." } })
 	-- each player's first death (the frozen snapshot), and the columns it lights up
 	local deathOf = {}
 	for i = 1, getn(rec.deaths or {}) do
@@ -3077,7 +3169,7 @@ function UI:UsedRows(rec)
 		local dd = deathOf[name]
 		local readyKind, nReady = {}, 0
 		if dd then
-			tinsert(tip, 1, "|cffff5555Died at " .. FmtTime(dd.t) .. "|r - " .. (dd.text or ""))
+			tinsert(tip, 1, W.LF("|cffff5555Died at %s|r - %s", FmtTime(dd.t), W.LT(dd.text or "")))
 			local rl = UI.ReadyLines(dd)
 			for j = 1, getn(rl) do tinsert(tip, 1 + j, rl[j]) end
 			for j = 1, getn(dd.ready or {}) do
@@ -3089,18 +3181,18 @@ function UI:UsedRows(rec)
 		local grid = {}
 		for c = 1, n do
 			local x = CG.X + (c - 1) * CG.STEP + 4
-			local title = cols[c][2] .. " - " .. W.CName(name, p.class)
+			local title = W.L(cols[c][2]) .. " - " .. W.CName(name, p.class)
 			local rk = readyCol[c] and readyKind[readyCol[c]]
 			if per[c] then
 				totals[c] = (totals[c] or 0) + per[c].n
 				local items = per[c].items
 				if rk then
 					items = { unpack(items) }
-					tinsert(items, "|cffffd100Off cooldown again when they died at " .. FmtTime(dd.t) .. ".|r")
+					tinsert(items, W.LF("|cffffd100Off cooldown again when they died at %s.|r", FmtTime(dd.t)))
 				end
 				tinsert(grid, { x, "ok", cols[c][4], title, items, nil, per[c].n })
 			elseif rk then
-				tinsert(grid, { x, "ready", cols[c][4], title, { "|cffffd100Off cooldown when they died at " .. FmtTime(dd.t) .. "|r",
+				tinsert(grid, { x, "ready", cols[c][4], title, { W.LF("|cffffd100Off cooldown when they died at %s|r", FmtTime(dd.t)),
 					(readyCol[c] == "potion") and "No potion used in the 2 minutes before - a healing or protection potion could have saved them."
 						or "No healthstone used in the 2 minutes before - it could have saved them.",
 					C_DIM .. "They may not have had one with them.|r" }, "|cffffd100!|r" })
@@ -3120,11 +3212,11 @@ function UI:UsedRows(rec)
 		tinsert(grp.list, { name = name, sum = sum, d = {
 			cols = {
 				{ CG.NAME, 110, W.CName(name, p.class), "LEFT" },
-				{ CG.ROLE, 52, "|cff" .. g[3] .. string.upper(Cons.ROLE_TEXT[role] or "?") .. "|r", "CENTER" },
+				{ CG.ROLE, 52, "|cff" .. g[3] .. W.L(string.upper(Cons.ROLE_TEXT[role] or "?")) .. "|r", "CENTER" },
 				{ CG.READY, 44, (sum > 0) and (C_YOU .. sum .. "|r") or (C_DIM .. "0|r"), "CENTER" },
 				{ CG.USED, 54, dd and ("|cffff5555" .. FmtTime(dd.t) .. "|r" .. ((nReady > 0) and " |cffffd100!|r" or "")) or "", "CENTER" },
 			},
-			grid = grid, tip = tip, tipTitle = name .. " - used in the fight" .. (dd and " (frozen at death)" or ""), name = name, click = playerClick("consumes"),
+			grid = grid, tip = tip, tipTitle = W.LF("%s - used in the fight", name) .. (dd and (" " .. W.L("(frozen at death)")) or ""), name = name, click = playerClick("consumes"),
 		} })
 	end
 	if nPlayers == 0 then
@@ -3135,11 +3227,11 @@ function UI:UsedRows(rec)
 	-- one line with the raid's totals (click to post the consumes summary)
 	local bits = {}
 	for c = 1, n do
-		if totals[c] then tinsert(bits, "|cffffffff" .. totals[c] .. "|r " .. string.lower(cols[c][2])) end
+		if totals[c] then tinsert(bits, "|cffffffff" .. totals[c] .. "|r " .. W.L(string.lower(cols[c][2]))) end
 	end
-	tinsert(rows, row("|cffffd100Used in the fight:|r  " .. ((all > 0) and table.concat(bits, C_DIM .. ",|r  ") or (C_DIM .. "nothing|r")),
+	tinsert(rows, row(W.L("|cffffd100Used in the fight:|r") .. "  " .. ((all > 0) and table.concat(bits, C_DIM .. ",|r  ") or (C_DIM .. W.L("nothing") .. "|r")),
 		C_DIM .. "click to see, Ctrl-click to post|r", { tipTitle = "Items used", tip = { "Every potion, rune, tea, healthstone, bandage and bomb the raid used.",
-			"|cffffd100Click: the consumes summary in your chat   Ctrl-click: post it (" .. W.Shout:ChannelLabel() .. ")|r" },
+			W.LF("|cffffd100Click: the consumes summary in your chat   Ctrl-click: post it (%s)|r", W.Shout:ChannelLabel()) },
 			click = function() W.Shout:Consumes(rec, "summary", (not IsControlKeyDown()) and "SELF" or nil) end }))
 
 	for gi = 1, getn(CONS_GROUPS) do
@@ -3148,9 +3240,9 @@ function UI:UsedRows(rec)
 		if grp then
 			local folded = UI.consFold[g[1]]
 			tinsert(rows, { head = true,
-				cols = { { CG.NAME, 600, (folded and "|cffaaaaaa+|r  " or "|cffaaaaaa-|r  ") .. "|cff" .. g[3] .. g[2] .. "|r   "
-					.. C_YOU .. grp.sum .. "|r" .. C_DIM .. " items used by " .. grp.n .. "|r", "LEFT" } },
-				tipTitle = g[2], tip = { "Click to " .. (folded and "show" or "hide") .. " this group." },
+				cols = { { CG.NAME, 600, (folded and "|cffaaaaaa+|r  " or "|cffaaaaaa-|r  ") .. "|cff" .. g[3] .. W.L(g[2]) .. "|r   "
+					.. W.LF("|cff66ccff%s|r|cff888888 items used by %s|r", grp.sum, grp.n), "LEFT" } },
+				tipTitle = g[2], tip = { W.L(folded and "Click to show this group." or "Click to hide this group.") },
 				click = function() UI.consFold[g[1]] = not UI.consFold[g[1]]; UI:Refresh() end })
 			if not folded then
 				table.sort(grp.list, function(a, b)
@@ -3214,13 +3306,13 @@ function UI:HeroRows(rec)
 	end
 	for i = 1, getn(hs) do
 		local h = hs[i]
-		local why = string.gsub(h.list[1] or "", "^" .. h.name .. " ", "")
+		local why = string.gsub(W.LT(h.list[1] or ""), "^" .. h.name .. " ", "")
 		if getn(h.list) > 1 then why = why .. C_DIM .. "  (+" .. (getn(h.list) - 1) .. " more)|r" end
 		tinsert(rows, cells(BLAME_SPEC,
 			{ C_DIM .. i .. ".|r", W.CName(h.name, h.class), tint(colorNames(why, rec), "|cffdddddd"),
 			  C_GUILD .. string.format("%.1f", h.pts) .. "|r" },
 			{ bar = h.pts / max, cr = 0.15, cg = 0.8, cb = 0.3, ba = 0.25, tip = withLegend(h.list, "hero"),
-			  tipTitle = h.name .. " - " .. h.pts .. " hero points", name = h.name, click = playerClick("hero") }))
+			  tipTitle = W.LF("%s - %s hero points", h.name, h.pts), name = h.name, click = playerClick("hero") }))
 	end
 
 	head(rows, "Game-saving moments")
@@ -3233,17 +3325,15 @@ function UI:HeroRows(rec)
 		local s = rec.saves[i]
 		tinsert(rows, cells(MISTAKE_SPEC,
 			{ s.t and (C_DIM .. FmtTime(s.t) .. "|r") or (C_DIM .. "-|r"),
-			  C_GUILD .. saveType(s.text) .. "|r",
-			  tint(colorNames(s.text, rec), "|cffdddddd"),
+			  C_GUILD .. W.L(saveType(s.text)) .. "|r",
+			  tint(colorNames(W.LT(s.text), rec), "|cffdddddd"),
 			  C_GUILD .. "+" .. s.pts .. "|r" },
 			{ tip = momentTip(s.tip, "game-saving moment"), tipTitle = "Game-saving moment",
-			  click = function() postMoment(rec, "HERO MOMENT", s.t, s.text, "+" .. s.pts .. " hero points") end }))
+			  click = function() postMoment(rec, "HERO MOMENT", s.t, W.LT(s.text), W.LF("+%s hero points", s.pts)) end }))
 	end
 
 	head(rows, "What counts")
-	tinsert(rows, row("|cff888888Heals that land on someone under 20% who then lives, shields that soak a killing blow, taunts that|r"))
-	tinsert(rows, row("|cff888888rescue a player from the boss, Lay on Hands / BoP, battle res, Innervate on a low-mana healer,|r"))
-	tinsert(rows, row("|cff888888dispelling mind control, interrupts, fast tranqs and last-second potions or cooldowns.|r"))
+	UI.Para(rows, "Heals that land on someone under 20% who then lives, shields that soak a killing blow, taunts that\nrescue a player from the boss, Lay on Hands / BoP, battle res, Innervate on a low-mana healer,\ndispelling mind control, interrupts, fast tranqs and last-second potions or cooldowns.", C_DIM)
 	return rows
 end
 
@@ -3315,8 +3405,8 @@ function UI:TimelineRows(rec)
 	local who = focus and focus.who
 	if focus then
 		local p = who and rec.players[who]
-		local title = who and ("Timeline for " .. W.CName(who, p and p.class) .. (focus.t and (C_DIM .. "  - focused on " .. FmtTime(focus.t) .. "|r") or ""))
-			or ("Everyone" .. (focus.t and (C_DIM .. "  - focused on " .. FmtTime(focus.t) .. "|r") or ""))
+		local at = focus.t and (C_DIM .. "  - " .. W.LF("focused on %s", FmtTime(focus.t)) .. "|r") or ""
+		local title = who and (W.LF("Timeline for %s", W.CName(who, p and p.class)) .. at) or (W.L("Everyone") .. at)
 		tinsert(rows, row("|cffffd100" .. title .. "|r", "|cffffd100" .. (who and "show everyone  >" or "show everything, unfocused  >") .. "|r",
 			{ head = true, click = function()
 				if UI.tl and UI.tl.who then UI.tl.who = nil; UI.tl.scroll = true else UI.tl = nil end
@@ -3328,9 +3418,9 @@ function UI:TimelineRows(rec)
 	for i = 1, getn(tl) do
 		local l = tl[i]
 		if not who or mentions(l.x, who) then
-			local line, t = l.x or "", l.t
+			local line, t = W.LT(l.x or ""), l.t
 			tinsert(rows, cells(TL_SPEC, { C_DIM .. FmtTime(l.t) .. "|r", tint(colorNames(line, rec), KIND_COLOR[l.k] or "|cffffffff") },
-				{ tipTitle = FmtTime(l.t), tip = { line, " ", "|cff33ff33Click a name: that player's full timeline, at " .. FmtTime(l.t) .. "|r" },
+				{ tipTitle = FmtTime(l.t), tip = { line, " ", W.LF("|cff33ff33Click a name: that player's full timeline, at %s|r", FmtTime(l.t)) },
 				  click = function(d, btn, x)
 					-- the text column starts after the time column (4 + 40 + 6)
 					local name = nameAt(line, rec, x and (x - 50))
@@ -3343,7 +3433,7 @@ function UI:TimelineRows(rec)
 		end
 	end
 	if who and best == nil and getn(rows) <= 2 then
-		tinsert(rows, row(C_DIM .. "Nothing on the timeline mentions " .. who .. ". Click \"show everyone\" above.|r"))
+		tinsert(rows, row(C_DIM .. W.LF("Nothing on the timeline mentions %s. Click \"show everyone\" above.", who) .. "|r"))
 	end
 	-- the moment you came for: highlighted, and scrolled into view once
 	if best then
@@ -3402,7 +3492,7 @@ function UI.RkKind(kind) return (UI.rk.era == "post") and (kind .. "+") or kind 
 function UI.PreMark(rec) return (rec and W.Board.PrePatch(rec)) and " |cffff9933*|r" or "" end
 function UI.PreTip(rec)
 	if not (rec and W.Board.PrePatch(rec)) then return " " end
-	return "|cffff9933* Set before " .. W.Data.SCALING.name .. ".|r Raids under 30 now have it harder, so it isn't directly comparable."
+	return W.LF("|cffff9933* Set before %s.|r Raids under 30 now have it harder, so it isn't directly comparable.", W.L(W.Data.SCALING.name))
 end
 
 local RANK_COL = { "|cffffd100", "|cffd0d0d0", "|cffe08a3c" }   -- gold, silver, bronze
@@ -3429,11 +3519,10 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 	local list = B:Board(realm, UI.RkKind(kind), key, faction)
 	if getn(list) == 0 then
 		if UI.rk.era == "post" then
-			tinsert(rows, row(C_DIM .. "No times since " .. W.Data.SCALING.short .. " yet (" .. W.Data.SCALING.name .. "). Switch to All times at the top.|r"))
+			tinsert(rows, row(C_DIM .. W.LF("No times since %s yet (%s). Switch to All times at the top.", W.L(W.Data.SCALING.short), W.L(W.Data.SCALING.name)) .. "|r"))
 			return
 		end
-		tinsert(rows, row(C_DIM .. "No times yet. Yours show up when you get one,|r"))
-		tinsert(rows, row(C_DIM .. "or when the raid times arrive from the master feed.|r"))
+		UI.Para(rows, "No times yet. Yours show up when you get one,\nor when the raid times arrive from the master feed.", C_DIM)
 		return
 	end
 	local home = B.Realm()
@@ -3454,7 +3543,7 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 			cmp = "|cffffd100your guild|r"
 		elseif mine then
 			local d = rec.t - mine.t
-			cmp = (d < 0) and ("|cffff5555" .. B.Fmt(-d) .. " faster|r") or ("|cff33ff33" .. B.Fmt(d) .. " slower|r")
+			cmp = (d < 0) and ("|cffff5555" .. W.LF("%s faster", B.Fmt(-d)) .. "|r") or ("|cff33ff33" .. W.LF("%s slower", B.Fmt(d)) .. "|r")
 		elseif i > 1 then
 			cmp = C_DIM .. "+" .. B.Fmt(rec.t - best) .. "|r"
 		end
@@ -3468,12 +3557,12 @@ local function boardRows(rows, realm, faction, kind, key, myGuild)
 		tinsert(rows, cells(spec, vals,
 			{ sel = isMine, bar = best / rec.t, ba = 0.16, cr = c[1], cg = c[2], cb = c[3], tipTitle = g,
 			  tip = rec.chron and {
-			          "|cffffd100From Chronicle|r (chronicleclassic.com) - " .. B.Date(rec.d),
-			          "Realm: " .. B.RealmLabel(rlm) .. "   Faction: " .. (rec.f or "?") .. ((rec.f == "Mixed") and " (cross-faction raid)" or ""),
+			          W.LF("|cffffd100From Chronicle|r (chronicleclassic.com) - %s", B.Date(rec.d)),
+			          W.LF("Realm: %s   Faction: %s", B.RealmLabel(rlm), W.L(rec.f or "?")) .. ((rec.f == "Mixed") and (" " .. W.L("(cross-faction raid)")) or ""),
 			          "|cff33ff33Click: open this raid - every boss kill, wipes, and the Chronicle link|r",
 			          UI.PreTip(rec),
 			      } or {
-			          "Recorded " .. B.Date(rec.d) .. (rec.by and (" by " .. rec.by) or "") .. "   Realm: " .. (rlm or "?"),
+			          W.LF("Recorded %s", B.Date(rec.d)) .. (rec.by and (" " .. W.LF("by %s", rec.by)) or "") .. "   " .. W.LF("Realm: %s", rlm or "?"),
 			          rec.net and "Shared by a WhoDidIt user (self-reported)" or "Recorded by your WhoDidIt",
 			          "|cff888888Click: what's known about this time|r",
 			          UI.PreTip(rec),
@@ -3492,10 +3581,10 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 	local B = W.Board
 	local mine = B:MyBest(kind, key)
 	tinsert(rows, cells(PIN_SPEC, {
-		C_YOU .. "Your best " .. ((kind == "kills") and "kill" or "clear") .. "|r",
+		C_YOU .. W.L((kind == "kills") and "Your best kill" or "Your best clear") .. "|r",
 		mine and (C_TIME .. B.Fmt(mine.t) .. "|r" .. UI.PreMark(mine)) or (C_DIM .. "-|r"),
 		"",
-		mine and (C_DIM .. B.Date(mine.d) .. ((mine.g and mine.g ~= "") and ("  with " .. mine.g) or "") .. "|r") or (C_DIM .. "none yet|r"),
+		mine and (C_DIM .. B.Date(mine.d) .. ((mine.g and mine.g ~= "") and ("  " .. W.LF("with %s", mine.g)) or "") .. "|r") or (C_DIM .. W.L("none yet") .. "|r"),
 	}, mine and mine.slug and {
 		tipTitle = "Your best", tip = { "Click: open that raid" },
 		click = function() UI.rk.log = { slug = mine.slug, guild = mine.g or "?", realm = B.Realm(), rec = mine, kind = kind, key = key }; UI:Refresh() end } or nil))
@@ -3506,15 +3595,15 @@ local function pinRows(rows, realm, faction, kind, key, guild)
 		local top = B:Board(realm, ek, key, faction)[1]
 		local note = ""
 		if g and top and top[2] ~= g then
-			note = "|cffff7777" .. B.Fmt(g.t - top[2].t) .. " behind|r " .. facName(top[1], top[2].f)
+			note = "|cffff7777" .. W.LF("%s behind", B.Fmt(g.t - top[2].t)) .. "|r " .. facName(top[1], top[2].f)
 		elseif g and rank == 1 then
 			note = "|cffffd100fastest on the board|r"
 		end
 		tinsert(rows, cells(PIN_SPEC, {
 			C_GUILD .. guild .. "|r",
 			g and (C_TIME .. B.Fmt(g.t) .. "|r" .. UI.PreMark(g)) or (C_DIM .. "-|r"),
-			rank and (rankTxt(rank) .. C_DIM .. " of " .. of .. "|r") or (g and (C_DIM .. B.Realm() .. "|r") or ""),
-			g and note or (C_DIM .. "no " .. ((kind == "kills") and "kill" or "clear") .. " yet|r"),
+			rank and (rankTxt(rank) .. C_DIM .. " " .. W.LF("of %s", of) .. "|r") or (g and (C_DIM .. B.Realm() .. "|r") or ""),
+			g and note or (C_DIM .. W.L((kind == "kills") and "no kill yet" or "no clear yet") .. "|r"),
 		}, g and {
 			tipTitle = guild, tip = { "Click: open the raid this time came from" },
 			click = function() UI.rk.log = { slug = g.slug, guild = guild, realm = B.Realm(), rec = g, kind = kind, key = key }; UI:Refresh() end } or nil))
@@ -3526,18 +3615,18 @@ local function rivalRows(rows, zone, kind, key)
 	local B = W.Board
 	if not B.Rivals then return end
 	local list = B:Rivals(zone, kind, key)
-	head(rows, "Rival watch  " .. C_DIM .. "(beat our time in the last 3 weeks - click one to post a taunt)|r")
+	head(rows, W.L("Rival watch") .. "  " .. C_DIM .. W.L("(beat our time in the last 3 weeks - click one to post a taunt)") .. "|r")
 	if getn(list) == 0 then
 		tinsert(rows, row(C_DIM .. "Nobody has beaten our times here recently. New Chronicle times are checked every minute.|r"))
 		return
 	end
 	for i = 1, getn(list) do
 		local e = list[i]
-		local who = facName(e.g, nil) .. ((e.realm ~= B.Realm()) and (C_DIM .. " of " .. B.RealmLabel(e.realm) .. "|r") or "")
-		local what = (e.kind == "clears") and "the clear" or e.key
-		tinsert(rows, row(who .. "  |cffdddddd" .. what .. "|r  " .. C_TIME .. B.Fmt(e.t) .. "|r  " .. C_DIM .. "vs our|r " .. C_GUILD .. B.Fmt(e.cur or e.ours) .. "|r",
-			C_DIM .. B.Ago(e.d) .. "|r  |cffffd100taunt >|r",
-			{ tipTitle = "Rival watch", tip = { B:RivalText(e), " ", "Click: see it in your chat.  Ctrl-click: post it with a taunt to " .. W.Shout:ChannelLabel() .. "." },
+		local who = facName(e.g, nil) .. ((e.realm ~= B.Realm()) and (C_DIM .. W.LF(" of %s", B.RealmLabel(e.realm)) .. "|r") or "")
+		local what = (e.kind == "clears") and W.L("the clear") or e.key
+		tinsert(rows, row(who .. "  |cffdddddd" .. what .. "|r  " .. C_TIME .. B.Fmt(e.t) .. "|r  " .. C_DIM .. W.L("vs our") .. "|r " .. C_GUILD .. B.Fmt(e.cur or e.ours) .. "|r",
+			C_DIM .. B.Ago(e.d) .. "|r  |cffffd100" .. W.L("taunt >") .. "|r",
+			{ tipTitle = "Rival watch", tip = { B:RivalText(e), " ", W.LF("Click: see it in your chat.  Ctrl-click: post it with a taunt to %s.", W.Shout:ChannelLabel()) },
 			  click = function() B:PostRivals(zone, { e }, (not IsControlKeyDown()) and "SELF" or nil) end }))
 	end
 end
@@ -3572,17 +3661,17 @@ function UI:RankNavRows(realm)
 		elseif top then
 			line2 = "|cff888888#1 " .. B.Fmt(top[2].t) .. "|r" .. UI.PreMark(top[2]) .. "  |cff888888" .. top[1] .. "|r"
 		else
-			line2 = "|cff555555no times yet|r"
+			line2 = "|cff555555" .. W.L("no times yet") .. "|r"
 		end
 		tinsert(rows, row("|cffffffff" .. instTitle(zone) .. "|r\n" .. line2, right,
 			{ sel = (UI.rk.inst == zone), art = UI.ZoneArt(zone),
 			  bar = (g and top) and (top[2].t / g.t) or nil, ba = 0.28, cr = 0.15, cg = 0.75, cb = 0.3,
 			  tipTitle = instTitle(zone),
 			  tip = {
-			      "Your guild: " .. (g and (B.Fmt(g.t) .. (rank and ("  #" .. rank .. " of " .. of) or ("  (on " .. home .. ")"))) or "no clear yet"),
-			      "You: " .. (me and B.Fmt(me.t) or "no clear yet"),
+			      W.LF("Your guild: %s", g and (B.Fmt(g.t) .. (rank and ("  #" .. rank .. " " .. W.LF("of %s", of)) or ("  (" .. W.LF("on %s", home) .. ")"))) or W.L("no clear yet")),
+			      W.LF("You: %s", me and B.Fmt(me.t) or W.L("no clear yet")),
 			      "#1: " .. (top and (B.Fmt(top[2].t) .. "  " .. top[1]) or "-"),
-			      (nRivals > 0) and ("|cffff5555! " .. nRivals .. " recent time" .. (nRivals == 1 and "" or "s") .. " beat ours here - see Rival watch|r") or " ",
+			      (nRivals > 0) and ("|cffff5555! " .. W.LF((nRivals == 1) and "%s recent time beat ours here - see Rival watch" or "%s recent times beat ours here - see Rival watch", nRivals) .. "|r") or " ",
 			      "|cff888888The green bar is how close your guild is to #1.|r",
 			  },
 			  click = function() UI.rk.inst = zone; UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end }))
@@ -3632,9 +3721,9 @@ function UI:RankKillRows(realm, faction, zone)
 			  bar = (g and top) and (top[2].t / g.t) or nil, ba = 0.2, cr = 0.15, cg = 0.75, cb = 0.3,
 			  tip = { "you = your best kill (WhoDidIt or Chronicle)",
 			          "guild = your guild's best, its rank and how far behind #1 it is",
-			          "#1 = the fastest guild (" .. realm .. ", " .. faction .. ")",
+			          W.LF("#1 = the fastest guild (%s, %s)", W.L(realm), W.L(faction)),
 			          beaten and ("|cffff5555! " .. B:RivalText(beaten) .. "|r") or " ",
-			          "|cffff9933*|r = set before " .. W.Data.SCALING.name,
+			          W.LF("|cffff9933*|r = set before %s", W.L(W.Data.SCALING.name)),
 			          "|cff888888Click: the full leaderboard (click a guild there to open its raid)|r",
 			          "|cff888888Shift-click: open the #1 guild's raid|r" },
 			  tipTitle = enc }))
@@ -3648,7 +3737,7 @@ function UI:RankBossRows(realm, faction, enc)
 	local rows = {}
 	local guild = B.MyGuild()
 	tinsert(rows, row("|cffffd100<< Back to all bosses|r", nil, { head = true, click = function() UI.rk.boss = nil; UI.rk.log = nil; UI:Refresh() end }))
-	head(rows, enc .. " on " .. realm .. "  |cff888888(" .. faction .. ")|r")
+	head(rows, W.LF("%s on %s", enc, W.L(realm)) .. "  |cff888888(" .. W.L(faction) .. ")|r")
 	pinRows(rows, realm, faction, "kills", enc, guild)
 	head(rows, "Leaderboard")
 	boardRows(rows, realm, faction, "kills", enc, guild)
@@ -3661,7 +3750,7 @@ function UI:RankClearRows(realm, faction, zone)
 	local rows = {}
 	local guild = B.MyGuild()
 	local need = W.Data.clears[zone] or {}
-	head(rows, "Full clears of " .. instTitle(zone))
+	head(rows, W.LF("Full clears of %s", instTitle(zone)))
 	pinRows(rows, realm, faction, "clears", zone, guild)
 	local run = B:CurrentRun()
 	if run and run.zone == zone then
@@ -3709,7 +3798,7 @@ function UI:RankLogRows()
 	local L = UI.rk.log
 	local rec = L.rec or {}
 	local rows = {}
-	local back = UI.rk.boss and ("<< Back to the " .. UI.rk.boss .. " leaderboard") or "<< Back to the leaderboard"
+	local back = UI.rk.boss and W.LF("<< Back to the %s leaderboard", UI.rk.boss) or W.L("<< Back to the leaderboard")
 	tinsert(rows, row("|cffffd100" .. back .. "|r", nil, { head = true, click = function() UI.rk.log = nil; UI:Refresh() end }))
 	local log = B:Log(L.slug)
 	local guild = B.MyGuild()
@@ -3719,30 +3808,30 @@ function UI:RankLogRows()
 
 	head(rows, facName(L.guild, rec.f, mine) .. "  |cffffffff" .. instTitle(zone) .. "|r  " .. C_DIM .. B.Date(rec.d) .. "|r")
 	tinsert(rows, row("Realm", "|cffcc99ff" .. B.RealmLabel(L.realm) .. "|r"))
-	tinsert(rows, row("Faction  /  raid size", "|cffffffff" .. (rec.f or "?") .. "|r" .. C_DIM .. "  /  |r" .. C_TIME .. ((log and log.n) or rec.n or "?") .. "|r players"))
+	tinsert(rows, row("Faction  /  raid size", "|cffffffff" .. W.L(rec.f or "?") .. "|r" .. C_DIM .. "  /  |r" .. C_TIME .. W.LF("%s|r players", (log and log.n) or rec.n or "?")))
 	local place, of = B:Place(L.realm, L.kind, L.key, rec.t or 0)
-	tinsert(rows, row((L.kind == "clears") and "Full clear" or (L.key .. " kill"),
-		C_TIME .. B.Fmt(rec.t) .. "|r  " .. rankTxt(place) .. C_DIM .. " of " .. of .. " on " .. L.realm .. "|r"))
+	tinsert(rows, row((L.kind == "clears") and "Full clear" or W.LF("%s kill", L.key),
+		C_TIME .. B.Fmt(rec.t) .. "|r  " .. rankTxt(place) .. C_DIM .. " " .. W.LF("of %s on %s", of, L.realm) .. "|r"))
 	if L.slug then
 		local url = B.LogURL(L.slug)
-		tinsert(rows, row("Chronicle log  " .. C_DIM .. url .. "|r", "|cffffd100copy link  >|r",
+		tinsert(rows, row(W.L("Chronicle log") .. "  " .. C_DIM .. url .. "|r", "|cffffd100copy link  >|r",
 			{ tipTitle = "Chronicle log", tip = { "Opens a box with the link selected: press Ctrl+C, then paste it in your browser." },
-			  click = function() W:CopyLink("Chronicle log for " .. L.guild, url) end }))
+			  click = function() W:CopyLink(W.LF("Chronicle log for %s", L.guild), url) end }))
 	end
 
 	if not log then
 		head(rows, "Boss kills in this raid")
 		if L.slug then
 			if B.chronFeed and B.master and B:AskLog(L.slug) then
-				tinsert(rows, row(C_DIM .. "Asked " .. B.master.name .. " for this raid's boss list - it appears here in a few seconds.|r"))
+				tinsert(rows, row(C_DIM .. W.LF("Asked %s for this raid's boss list - it appears here in a few seconds.", B.master.name) .. "|r"))
 			elseif B.chronFeed then
-				tinsert(rows, row(C_DIM .. "This raid's boss list comes from " .. (B.chronFrom or "the master") .. " - open it again while they're online.|r"))
+				tinsert(rows, row(C_DIM .. W.LF("This raid's boss list comes from %s - open it again while they're online.", B.chronFrom or W.L("the master")) .. "|r"))
 			else
 				tinsert(rows, row(C_DIM .. "This raid's boss list isn't here yet. It's asked for from the master feed while the master is online.|r"))
 			end
 		else
-			tinsert(rows, row(C_DIM .. (rec.net and ("Shared by a WhoDidIt user" .. (rec.by and (" (" .. rec.by .. ")") or "") .. " - there's no Chronicle log for it.")
-				or "Recorded by your WhoDidIt - there's no Chronicle log for it.") .. "|r"))
+			tinsert(rows, row(C_DIM .. (rec.net and (W.L("Shared by a WhoDidIt user") .. (rec.by and (" (" .. rec.by .. ")") or "") .. W.L(" - there's no Chronicle log for it."))
+				or W.L("Recorded by your WhoDidIt - there's no Chronicle log for it.")) .. "|r"))
 		end
 		return rows
 	end
@@ -3750,8 +3839,8 @@ function UI:RankLogRows()
 	local total, wipes = 0, 0
 	for i = 1, getn(log.kills) do wipes = wipes + (log.kills[i].w or 0) end
 	local last = log.kills[getn(log.kills)]
-	head(rows, "Boss kills in this raid  " .. C_DIM .. "(" .. getn(log.kills) .. " kills" .. ((wipes > 0) and (", " .. wipes .. " wipes") or "")
-		.. ((last and last.a) and (", " .. clock(last.a) .. " start to last kill") or "") .. " - click a boss for its leaderboard)|r")
+	head(rows, W.L("Boss kills in this raid") .. "  " .. C_DIM .. "(" .. W.LF("%s kills", getn(log.kills)) .. ((wipes > 0) and (", " .. W.LF("%s wipes", wipes)) or "")
+		.. ((last and last.a) and (", " .. W.LF("%s start to last kill", clock(last.a))) or "") .. W.L(" - click a boss for its leaderboard") .. ")|r")
 	colHead(rows, LOG_SPEC, { "#", "Boss", "Kill", "Into raid", "Wipes", mine and "vs our best" or "vs our guild", "Rank" })
 	for i = 1, getn(log.kills) do
 		local k = log.kills[i]
@@ -3760,8 +3849,8 @@ function UI:RankLogRows()
 		if ours and k.s then
 			local d = k.s - ours.t
 			if math.abs(d) < 0.05 then cmp = "|cffffd100our best|r"
-			elseif d < 0 then cmp = "|cffff7777" .. B.Fmt(-d) .. " faster|r"
-			else cmp = C_GUILD .. B.Fmt(d) .. " slower|r" end
+			elseif d < 0 then cmp = "|cffff7777" .. W.LF("%s faster", B.Fmt(-d)) .. "|r"
+			else cmp = C_GUILD .. W.LF("%s slower", B.Fmt(d)) .. "|r" end
 		end
 		local kp, kof = B:Place(log.realm or L.realm, "kills", k.n, k.s or 0)
 		local isKey = (L.kind == "kills" and k.n == L.key)
@@ -3772,11 +3861,11 @@ function UI:RankLogRows()
 			  (k.w and k.w > 0) and ("|cffff7777" .. k.w .. "|r") or (C_DIM .. "-|r"),
 			  cmp, rankTxt(kp) .. C_DIM .. "/" .. kof .. "|r" },
 			{ sel = isKey, tipTitle = k.n,
-			  tip = { "Killed in " .. B.Fmt(k.s) .. (k.a and (", " .. clock(k.a) .. " into the raid") or "")
-			            .. ((k.w and k.w > 0) and (" after " .. k.w .. " wipe" .. (k.w == 1 and "" or "s")) or ""),
-			          ours and ("Our guild's best: " .. B.Fmt(ours.t)) or "Our guild has no kill yet",
-			          "That time would be #" .. kp .. " of " .. kof .. " on " .. (log.realm or L.realm),
-			          "|cff888888Click: " .. k.n .. "'s leaderboard|r" },
+			  tip = { W.LF("Killed in %s", B.Fmt(k.s)) .. (k.a and (", " .. W.LF("%s into the raid", clock(k.a))) or "")
+			            .. ((k.w and k.w > 0) and (" " .. W.LF((k.w == 1) and "after %s wipe" or "after %s wipes", k.w)) or ""),
+			          ours and W.LF("Our guild's best: %s", B.Fmt(ours.t)) or "Our guild has no kill yet",
+			          W.LF("That time would be #%s of %s on %s", kp, kof, log.realm or L.realm),
+			          W.LF("|cff888888Click: %s's leaderboard|r", k.n) },
 			  click = function() UI.rk.log = nil; UI.rk.boss = boss; UI:Refresh() end }))
 	end
 	return rows
@@ -3793,11 +3882,11 @@ function UI:RefreshRankings()
 	end
 	local zone = UI.rk.inst
 	leftHead:SetText("Instances")
-	leftCount:SetText(realm)
+	leftCount:SetText(W.L(realm))
 	fightList:SetData(UI:RankNavRows(realm), true)
 
-	UI.rankButtons[3]:SetText("Realm: " .. realm)
-	UI.rankButtons[4]:SetText("Faction: " .. faction)
+	UI.rankButtons[3]:SetText(W.LF("Realm: %s", W.L(realm)))
+	UI.rankButtons[4]:SetText(W.LF("Faction: %s", W.L(faction)))
 	if UI.rk.view == "kills" then
 		UI.SkinSelect(UI.rankButtons[1], true); UI.SkinSelect(UI.rankButtons[2], false)
 	else
@@ -3822,18 +3911,18 @@ function UI:RefreshRankings()
 		chron = "|cff66ccffChronicle syncing (see the bar, bottom left)|r"
 	elseif c and c.synced and B.chronFeed then
 		local mins = floor((time() - c.synced) / 60)
-		chron = "Chronicle via " .. (B.chronFrom or "the master") .. " (" .. (mins < 2 and "just synced" or (mins < 120 and (mins .. " min ago") or (floor(mins / 60) .. " h ago"))) .. ")"
+		chron = W.LF("Chronicle via %s (%s)", B.chronFrom or W.L("the master"), mins < 2 and W.L("just synced") or (mins < 120 and W.LF("%s min ago", mins) or W.LF("%s h ago", floor(mins / 60))))
 	elseif c and c.synced then
 		local mins = floor((time() - c.synced) / 60)
-		chron = "Chronicle " .. ((c.status ~= "ok") and ("|cffffd100" .. (c.status or "") .. "|r") or (mins < 2 and "just synced" or (mins .. " min ago")))
+		chron = "Chronicle " .. ((c.status ~= "ok") and ("|cffffd100" .. (c.status or "") .. "|r") or (mins < 2 and W.L("just synced") or W.LF("%s min ago", mins)))
 	else
-		chron = "|cffff9933Chronicle times: waiting for the master feed|r"
+		chron = W.L("|cffff9933Chronicle times: waiting for the master feed|r")
 	end
 	UI:UpdateSync()
-	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. (UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
+	rTitle:SetText(instTitle(zone) .. "  |cff888888" .. W.L(UI.rk.view == "kills" and "kill times" or "full clears") .. "|r")
 	UI.SetHeaderArt(zone)
-	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. ng .. " guild(s)   |   " .. chron
-		.. "   |   sharing " .. (WhoDidItDB.opts.shareBoard and "on" or "off") .. "|r")
+	rInfo:SetText("|cffaaaaaa" .. W.L(realm) .. "   |   " .. W.L(faction) .. "   |   " .. W.LF("%s guild(s)", ng) .. "   |   " .. chron
+		.. "   |   " .. W.LF("sharing %s", W.L(WhoDidItDB.opts.shareBoard and "on" or "off")) .. "|r")
 	local guild = B.MyGuild()
 	local verdict
 	if guild then
@@ -3841,23 +3930,23 @@ function UI:RefreshRankings()
 		if g then
 			local rank, of = B:Rank(realm, "clears", zone, guild, "All")
 			local top = B:Board(realm, "clears", zone, "All")[1]
-			verdict = "|cff33ff33" .. guild .. "|r best clear |cffffffff" .. B.Fmt(g.t) .. "|r  "
+			verdict = W.LF("|cff33ff33%s|r best clear |cffffffff%s|r", guild, B.Fmt(g.t)) .. "  "
 			if rank then
-				verdict = verdict .. rankTxt(rank) .. " of " .. of .. ((realm == B.ALL) and " on all realms" or (" on " .. realm))
+				verdict = verdict .. rankTxt(rank) .. " " .. ((realm == B.ALL) and W.LF("of %s on all realms", of) or W.LF("of %s on %s", of, realm))
 			else
-				verdict = verdict .. "|cff888888(on " .. B.Realm() .. ")|r"
+				verdict = verdict .. "|cff888888(" .. W.LF("on %s", B.Realm()) .. ")|r"
 			end
 			if top and top[2] ~= g then
-				verdict = verdict .. "  |cffff7777" .. B.Fmt(g.t - top[2].t) .. " behind|r |cffffffff" .. top[1] .. "|r"
+				verdict = verdict .. "  |cffff7777" .. W.LF("%s behind", B.Fmt(g.t - top[2].t)) .. "|r |cffffffff" .. top[1] .. "|r"
 			end
 		else
-			verdict = "|cff33ff33" .. guild .. "|r has no full clear recorded here yet."
+			verdict = W.LF("|cff33ff33%s|r has no full clear recorded here yet.", guild)
 		end
 	else
-		verdict = "You're not in a guild - your own times still count as personal bests."
+		verdict = W.L("You're not in a guild - your own times still count as personal bests.")
 	end
 	local pbc = B:MyBest("clears", zone)
-	verdict = verdict .. "\n|cff66ccffYour best clear:|r " .. (pbc and B.Fmt(pbc.t) or "none yet")
+	verdict = verdict .. "\n" .. W.L("|cff66ccffYour best clear:|r") .. " " .. (pbc and B.Fmt(pbc.t) or W.L("none yet"))
 	rVerdict:SetText(verdict)
 
 	local rows
@@ -3869,14 +3958,15 @@ function UI:RefreshRankings()
 	if not UI.rk.log then
 		local S = W.Data.SCALING
 		local post = (UI.rk.era == "post")
-		tinsert(rows, 1, row("|cffffd100Times:|r  " .. (post and ("|cff888888All times|r  |cffffffff< Since " .. S.short .. " >|r")
-				or ("|cffffffff< All times >|r  |cff888888Since " .. S.short .. "|r")),
-			post and (C_DIM .. "only since " .. S.name .. "|r") or ("|cffff9933*|r " .. C_DIM .. "= before " .. S.name .. "|r"),
-			{ tipTitle = "Raid scaling change, " .. S.short,
-			  tip = { S.what, "Times set before it aren't directly comparable with times since.",
+		local short, sname = W.L(S.short), W.L(S.name)
+		tinsert(rows, 1, row(W.L("|cffffd100Times:|r") .. "  " .. (post and ("|cff888888" .. W.L("All times") .. "|r  |cffffffff< " .. W.LF("Since %s", short) .. " >|r")
+				or ("|cffffffff< " .. W.L("All times") .. " >|r  |cff888888" .. W.LF("Since %s", short) .. "|r")),
+			post and (C_DIM .. W.LF("only since %s", sname) .. "|r") or ("|cffff9933*|r " .. C_DIM .. W.LF("= before %s", sname) .. "|r"),
+			{ tipTitle = W.LF("Raid scaling change, %s", short),
+			  tip = { W.L(S.what), "Times set before it aren't directly comparable with times since.",
 			          " ",
 			          "|cffffd100All times|r: every best, the ones from before marked |cffff9933*|r",
-			          "|cffffd100Since " .. S.short .. "|r: only times set since the change, ranked on their own",
+			          W.LF("|cffffd100Since %s|r: only times set since the change, ranked on their own", short),
 			          " ",
 			          "|cff33ff33Click to switch.|r" },
 			  click = function() UI.rk.era = (UI.rk.era ~= "post") and "post" or nil; UI:Refresh() end }))
@@ -3956,17 +4046,17 @@ function UI:RunNavRows(realm)
 		elseif top then
 			line2 = "|cff888888#1 " .. R.Fmt(top[2].t) .. "  " .. top[2].g .. "|r"
 		else
-			line2 = "|cff555555no runs yet|r"
+			line2 = "|cff555555" .. W.L("no runs yet") .. "|r"
 		end
 		tinsert(rows, row("|cffffffff" .. dg.title .. "|r\n" .. line2, right,
 			{ sel = (UI.rk.dg == key), art = UI.ZoneArt("5:" .. key),
 			  bar = (mine and top) and (top[2].t / mine.t) or nil, ba = 0.28, cr = 0.15, cg = 0.75, cb = 0.3,
 			  tipTitle = dg.title,
 			  tip = {
-			      "You: " .. (mine and (R.Fmt(mine.t) .. "  with " .. mine.g) or "no run yet"),
+			      W.LF("You: %s", mine and (R.Fmt(mine.t) .. "  " .. W.LF("with %s", mine.g)) or W.L("no run yet")),
 			      "#1: " .. (top and (R.Fmt(top[2].t) .. "  " .. top[2].g) or "-"),
-			      "Groups on the board: " .. getn(list),
-			      "|cff888888Ends when " .. table.concat(dg.final, " or ") .. " dies.|r",
+			      W.LF("Groups on the board: %s", getn(list)),
+			      W.LF("|cff888888Ends when %s dies.|r", table.concat(dg.final, W.L(" or "))),
 			  },
 			  click = function() UI.rk.dg = key; UI.rk.run = nil; UI.rk.web = nil; UI.rk.fv = nil; UI:Refresh() end }))
 	end
@@ -3982,8 +4072,8 @@ function UI:RunBoardRows(realm, faction, key)
 	tinsert(rows, cells(PIN_SPEC, {
 		C_YOU .. "Your best run|r",
 		mine and (C_TIME .. R.Fmt(mine.t) .. "|r") or (C_DIM .. "-|r"),
-		mine and (rankTxt((R:Place(realm, key, mine.t))) .. C_DIM .. " of " .. getn(R:Board(realm, key, "All")) .. "|r") or "",
-		mine and (C_DIM .. W.Board.Date(mine.d) .. "  with |r|cffffd100" .. mine.g .. "|r") or (C_DIM .. "none yet|r"),
+		mine and (rankTxt((R:Place(realm, key, mine.t))) .. C_DIM .. " " .. W.LF("of %s", getn(R:Board(realm, key, "All"))) .. "|r") or "",
+		mine and (C_DIM .. W.Board.Date(mine.d) .. "  " .. W.LF("with %s", "|r|cffffd100" .. mine.g) .. "|r") or (C_DIM .. W.L("none yet") .. "|r"),
 	}, mine and { tipTitle = "Your best run", tip = { "Click: open that run" },
 		click = function() openRun(key, mine.gk, mine, mine.realm or realm) end } or nil))
 	local r = inProgress(dg)
@@ -3994,14 +4084,13 @@ function UI:RunBoardRows(realm, faction, key)
 			"|cff33ccffRun in progress|r",
 			C_TIME .. R.Fmt(time() - r.at) .. "|r",
 			C_TIME .. down .. "|r" .. C_DIM .. " / " .. getn(dg.bosses) .. "|r",
-			C_DIM .. "bosses down, " .. (r.x or 0) .. " death" .. ((r.x == 1) and "" or "s") .. "|r",
+			C_DIM .. W.LF((r.x == 1) and "bosses down, %s death" or "bosses down, %s deaths", r.x or 0) .. "|r",
 		}))
 	end
 	head(rows, "Fastest groups")
 	local list = R:Board(realm, key, faction)
 	if getn(list) == 0 then
-		tinsert(rows, row(C_DIM .. "No runs yet. A run counts from the first pull after zoning in to " .. table.concat(dg.final, " or ") .. ",|r"))
-		tinsert(rows, row(C_DIM .. "for groups of up to " .. (dg.max or D.GROUP_MAX) .. ". Runs arrive from WhoDidIt users on the realm as they finish.|r"))
+		UI.Para(rows, W.LF("No runs yet. A run counts from the first pull after zoning in to %s,\nfor groups of up to %s. Runs arrive from WhoDidIt users on the realm as they finish.", table.concat(dg.final, W.L(" or ")), dg.max or D.GROUP_MAX), C_DIM)
 	else
 		local all = (realm == W.Board.ALL)
 		local spec = all and RUN_SPEC_ALL or RUN_SPEC
@@ -4024,13 +4113,13 @@ function UI:RunBoardRows(realm, faction, key)
 			tinsert(rows, cells(spec, vals,
 				{ sel = isMine, bar = best / rec.t, ba = 0.16, cr = 0.2, cg = 0.6, cb = 1, tipTitle = rec.g,
 				  tip = { mt, " ",
-				          R.Fmt(rec.t) .. " on " .. W.Board.Date(rec.d) .. ", " .. (rec.x or 0) .. " death" .. ((rec.x == 1) and "" or "s") .. ", " .. (rec.n or "?") .. " players",
-				          rec.net and ("Shared by " .. (rec.by or "a WhoDidIt user") .. " (self-reported)") or "Recorded by your WhoDidIt",
+				          W.LF((rec.x == 1) and "%s on %s, %s death, %s players" or "%s on %s, %s deaths, %s players", R.Fmt(rec.t), W.Board.Date(rec.d), rec.x or 0, rec.n or "?"),
+				          rec.net and W.LF("Shared by %s (self-reported)", rec.by or W.L("a WhoDidIt user")) or "Recorded by your WhoDidIt",
 				          "|cff33ff33Click: the whole run - members, boss splits, deaths|r" },
 				  click = function() openRun(key, gk, rec, rlm) end }))
 		end
 	end
-	head(rows, "Bosses  " .. C_DIM .. "(the run ends when " .. table.concat(dg.final, " or ") .. " dies)|r")
+	head(rows, W.L("Bosses") .. "  " .. C_DIM .. W.LF("(the run ends when %s dies)", table.concat(dg.final, W.L(" or "))) .. "|r")
 	local line = {}
 	for i = 1, getn(dg.bosses) do
 		local b = dg.bosses[i]
@@ -4052,33 +4141,33 @@ function UI:RunDetailRows()
 	local rec, key = run.rec, run.key
 	local dg = D.DUNGEON[key]
 	local rows = {}
-	tinsert(rows, row("|cffffd100<< Back to " .. ((UI.rk.fv == "mine") and "your runs" or "the leaderboard") .. "|r", nil,
+	tinsert(rows, row("|cffffd100" .. W.L((UI.rk.fv == "mine") and "<< Back to your runs" or "<< Back to the leaderboard") .. "|r", nil,
 		{ head = true, click = function() UI.rk.run = nil; UI:Refresh() end }))
 	local isMine = R.HasMember(rec)
 	head(rows, (isMine and "|cffffd100" or "|cffffffff") .. rec.g .. "|r  |cffffffff" .. dg.title .. "|r  " .. C_DIM .. W.Board.Date(rec.d) .. "|r")
 	local place, of = R:Place(run.realm, key, rec.t)
-	tinsert(rows, row("Time  " .. C_DIM .. "(first pull to " .. table.concat(dg.final, " / ") .. ")|r",
-		C_TIME .. R.Fmt(rec.t) .. "|r  " .. rankTxt(place) .. C_DIM .. " of " .. of .. " on " .. run.realm .. "|r"))
+	tinsert(rows, row(W.L("Time") .. "  " .. C_DIM .. W.LF("(first pull to %s)", table.concat(dg.final, " / ")) .. "|r",
+		C_TIME .. R.Fmt(rec.t) .. "|r  " .. rankTxt(place) .. C_DIM .. " " .. W.LF("of %s on %s", of, run.realm) .. "|r"))
 	tinsert(rows, row("Deaths", ((rec.x or 0) > 0) and ("|cffff7777" .. rec.x .. "|r") or "|cff33ff33none|r"))
-	tinsert(rows, row("Realm  /  faction", "|cffcc99ff" .. W.Board.RealmLabel(run.realm) .. "|r" .. C_DIM .. "  /  |r|cffffffff" .. (rec.f or "?") .. "|r"))
-	tinsert(rows, row("Recorded", C_DIM .. (rec.net and ("shared by " .. (rec.by or "a WhoDidIt user") .. " (self-reported)")
-		or "by your WhoDidIt") .. (rec.priv and " - kept on your PC" or "") .. "|r"))
+	tinsert(rows, row("Realm  /  faction", "|cffcc99ff" .. W.Board.RealmLabel(run.realm) .. "|r" .. C_DIM .. "  /  |r|cffffffff" .. W.L(rec.f or "?") .. "|r"))
+	tinsert(rows, row("Recorded", C_DIM .. (rec.net and W.LF("shared by %s (self-reported)", rec.by or W.L("a WhoDidIt user"))
+		or W.L("by your WhoDidIt")) .. (rec.priv and W.L(" - kept on your PC") or "") .. "|r"))
 	if isMine and run.gk then
 		tinsert(rows, row("Your group", "|cffffd100rename it  >|r",
 			{ tipTitle = "Rename this group", tip = { "Renames it on every board and shares its runs again under the new name." },
 			  click = function()
-				W:Prompt("New name for |cffffd100" .. rec.g .. "|r (2-24 characters)", rec.g, function(text)
+				W:Prompt(W.LF("New name for |cffffd100%s|r (2-24 characters)", rec.g), rec.g, function(text)
 					if W.Runs:Rename(run.gk, text) then UI.rk.run = nil; UI:Refresh() end
 				end)
 			  end }))
 	end
 
 	local _, list = memText(rec.m)
-	head(rows, "The group  " .. C_DIM .. "(" .. getn(list) .. " players)|r")
+	head(rows, W.L("The group") .. "  " .. C_DIM .. "(" .. W.LF("%s players", getn(list)) .. ")|r")
 	for i = 1, getn(list) do
 		local p = list[i]
-		tinsert(rows, cells(MEM_SPEC, { C_DIM .. i .. ".|r", W.CName(p.n, p.c) .. ((p.n == UnitName("player")) and (C_DIM .. "  (you)|r") or ""),
-			W.CName(className(p.c), p.c), "" }))
+		tinsert(rows, cells(MEM_SPEC, { C_DIM .. i .. ".|r", W.CName(p.n, p.c) .. ((p.n == UnitName("player")) and (C_DIM .. "  " .. W.L("(you)") .. "|r") or ""),
+			W.CName(W.L(className(p.c)), p.c), "" }))
 	end
 
 	local splits = R.Splits(rec, key)
@@ -4102,7 +4191,7 @@ function UI:RunDetailRows()
 		local mine = mySplit[s.name]
 		if mine then
 			local d = s.at - mine
-			cmp = (d < 0) and ("|cffff7777" .. R.Fmt(-d) .. " faster|r") or (C_GUILD .. R.Fmt(d) .. " slower|r")
+			cmp = (d < 0) and ("|cffff7777" .. W.LF("%s faster", R.Fmt(-d)) .. "|r") or (C_GUILD .. W.LF("%s slower", R.Fmt(d)) .. "|r")
 		end
 		local isFinal = D.DUNGEON_FINAL[s.name] == key
 		tinsert(rows, cells(SPLIT_SPEC, { C_DIM .. i .. ".|r", (isFinal and "|cffffd100" or "|cffffffff") .. s.name .. "|r",
@@ -4117,7 +4206,7 @@ function UI:MyRunRows(realm)
 	local R, D = W.Runs, W.Data
 	local rows = {}
 	local mine = R:MyRuns()
-	head(rows, "Your 5-man runs  " .. C_DIM .. "(" .. getn(mine) .. ", newest first - click one for its splits)|r")
+	head(rows, W.L("Your 5-man runs") .. "  " .. C_DIM .. W.LF("(%s, newest first - click one for its splits)", getn(mine)) .. "|r")
 	if getn(mine) == 0 then
 		tinsert(rows, row(C_DIM .. "None yet. Finish a level-60 dungeon (to its last boss) and it shows up here.|r"))
 		return rows
@@ -4128,7 +4217,7 @@ function UI:MyRunRows(realm)
 		local dg = D.DUNGEON[e.k]
 		if dg then
 			local place, of = R:Place(e.realm or realm, e.k, e.t)
-			tinsert(rows, cells(MINE_SPEC, { C_DIM .. date("%d %b %H:%M", e.d) .. "|r", "|cffffffff" .. dg.title .. "|r", "|cffffd100" .. e.g .. "|r",
+			tinsert(rows, cells(MINE_SPEC, { C_DIM .. W.LDate("%d %b %H:%M", e.d) .. "|r", "|cffffffff" .. dg.title .. "|r", "|cffffd100" .. e.g .. "|r",
 				((e.x or 0) > 0) and ("|cffff7777" .. e.x .. "|r") or (C_DIM .. "0|r"), C_TIME .. R.Fmt(e.t) .. "|r",
 				rankTxt(place) .. C_DIM .. "/" .. of .. "|r" },
 				{ sel = (e.k == UI.rk.dg), tipTitle = dg.title, tip = { (memText(e.m)), "|cff888888Click: the whole run|r" },
@@ -4206,28 +4295,28 @@ function UI:RefreshRuns()
 
 	UI.rankButtons[1]:SetText("Leaderboard")
 	UI.rankButtons[2]:SetText("Your runs")
-	UI.rankButtons[3]:SetText("Realm: " .. realm)
-	UI.rankButtons[4]:SetText("Faction: " .. faction)
+	UI.rankButtons[3]:SetText(W.LF("Realm: %s", W.L(realm)))
+	UI.rankButtons[4]:SetText(W.LF("Faction: %s", W.L(faction)))
 	UI.SkinSelect(UI.rankButtons[1], UI.rk.fv ~= "mine")
 	UI.SkinSelect(UI.rankButtons[2], UI.rk.fv == "mine")
 	UI:UpdateSync()
 
 	local list = R:Board(realm, key, faction)
-	rTitle:SetText(dg.title .. "  |cff888888" .. ((UI.rk.fv == "mine") and "your runs" or "5-man runs") .. "|r")
+	rTitle:SetText(dg.title .. "  |cff888888" .. W.L((UI.rk.fv == "mine") and "your runs" or "5-man runs") .. "|r")
 	UI.SetHeaderArt("5:" .. key)
-	rInfo:SetText("|cffaaaaaa" .. realm .. "   |   " .. faction .. "   |   " .. getn(list) .. " group(s)   |   sharing 5-man runs "
-		.. ((R.On() and WhoDidItDB.opts.shareBoard) and "on" or "|cffff9933off|r") .. "|r")
+	rInfo:SetText("|cffaaaaaa" .. W.L(realm) .. "   |   " .. W.L(faction) .. "   |   " .. W.LF("%s group(s)", getn(list)) .. "   |   "
+		.. W.LF("sharing 5-man runs %s", W.L((R.On() and WhoDidItDB.opts.shareBoard) and "on" or "|cffff9933off|r")) .. "|r")
 	local mine = R:MyBest(key)
 	local verdict
 	if mine then
 		local place, of = R:Place(realm, key, mine.t)
-		verdict = "|cff66ccffYour best:|r |cffffffff" .. R.Fmt(mine.t) .. "|r with |cffffd100" .. mine.g .. "|r  " .. rankTxt(place) .. " of " .. of
+		verdict = W.LF("|cff66ccffYour best:|r |cffffffff%s|r with |cffffd100%s|r", R.Fmt(mine.t), mine.g) .. "  " .. rankTxt(place) .. " " .. W.LF("of %s", of)
 		local top = R:Board(realm, key, "All")[1]
-		if top and top[2].t < mine.t then verdict = verdict .. "  |cffff7777" .. R.Fmt(mine.t - top[2].t) .. " behind|r |cffffffff" .. top[2].g .. "|r" end
+		if top and top[2].t < mine.t then verdict = verdict .. "  |cffff7777" .. W.LF("%s behind", R.Fmt(mine.t - top[2].t)) .. "|r |cffffffff" .. top[2].g .. "|r" end
 	else
-		verdict = "|cff66ccffYour best:|r none yet."
+		verdict = W.L("|cff66ccffYour best:|r none yet.")
 	end
-	verdict = verdict .. "\n|cff888888First pull after zoning in to " .. table.concat(dg.final, " / ") .. ", up to " .. (dg.max or D.GROUP_MAX) .. " players.|r"
+	verdict = verdict .. "\n|cff888888" .. W.LF("First pull after zoning in to %s, up to %s players.", table.concat(dg.final, " / "), dg.max or D.GROUP_MAX) .. "|r"
 	rVerdict:SetText(verdict)
 
 	local rows
@@ -4245,7 +4334,7 @@ end
 
 ------------------------------------------------------------------ Logs view
 
-local function onOff(v) return v and "|cff33ff33on|r" or "|cff888888off|r" end
+local function onOff(v) return W.L(v and "|cff33ff33on|r" or "|cff888888off|r") end
 
 function UI:LogNavRows()
 	local rows = {}
@@ -4255,7 +4344,7 @@ function UI:LogNavRows()
 	end
 	for i = 1, math.min(12, getn(hist)) do
 		local h = hist[i]
-		tinsert(rows, row(h[3] .. "\n|cff888888" .. h[1] .. "|r", "|cffffffff" .. FmtNum(h[2]) .. "|r lines"))
+		tinsert(rows, row(h[3] .. "\n|cff888888" .. h[1] .. "|r", W.LF("|cffffffff%s|r lines", FmtNum(h[2]))))
 	end
 	return rows
 end
@@ -4267,7 +4356,7 @@ function UI:LogRows()
 
 		head(rows, "The Chronicle logger didn't load")
 		tinsert(rows, row("WhoDidIt has Chronicle's logger (|cffffd100ChronicleCompanion|r) built in - it writes the logs you upload to chronicleclassic.com."))
-		tinsert(rows, row("Its files are missing or didn't load: " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
+		tinsert(rows, row(W.LF("Its files are missing or didn't load: %s, then %s.", W.L(W.SYNC_HOWTO), W.L(W.RESTART_HINT))))
 		return rows
 	end
 	local opts = WhoDidItDB.opts
@@ -4276,25 +4365,25 @@ function UI:LogRows()
 	head(rows, "Status")
 	tinsert(rows, row("Chronicle logging", L:Enabled() and "|cff33ff33ON|r" or "|cffff5555OFF|r"))
 	if src == "builtin" then
-		tinsert(rows, row("Logger", "|cff33ff33built into WhoDidIt|r  |cffffffffv" .. (L:Version() or "?") .. "|r"
+		tinsert(rows, row("Logger", W.L("|cff33ff33built into WhoDidIt|r") .. "  |cffffffffv" .. (L:Version() or "?") .. "|r"
 			.. (WDI_CHRON_DATE and ("  |cff888888" .. WDI_CHRON_DATE .. "|r") or ""),
 			{ tipTitle = "Built-in Chronicle logger", tip = {
 				"ChronicleCompanion by Emyrk, from github.com/Emyrk/ChronicleCompanion.",
 				"Ships with WhoDidIt at the version the maintainer tested; newer ones come with WhoDidIt updates.",
 				(WhoDidItDB.opts.chronUse == true) and "You said yes to logging raids." or "Logs nothing until you say yes (asked in your first raid, or Start logging).",
-				"Commit: " .. string.sub(WDI_CHRON_COMMIT or "?", 1, 7) } }))
+				W.LF("Commit: %s", string.sub(WDI_CHRON_COMMIT or "?", 1, 7)) } }))
 	elseif WDI_CHRON_VERSION then
-		tinsert(rows, row("Logger", "|cffffd100ChronicleCompanion addon|r  |cffffffffv" .. (L:Version() or "?") .. "|r  |cff888888built-in v" .. WDI_CHRON_VERSION .. " takes over after /reload|r"))
+		tinsert(rows, row("Logger", W.L("|cffffd100ChronicleCompanion addon|r") .. "  |cffffffffv" .. (L:Version() or "?") .. "|r  |cff888888" .. W.LF("built-in v%s takes over after /reload", WDI_CHRON_VERSION) .. "|r"))
 	else
-		tinsert(rows, row("Logger", "|cffffd100ChronicleCompanion addon|r  |cffffffffv" .. (L:Version() or "?") .. "|r"))
+		tinsert(rows, row("Logger", W.L("|cffffd100ChronicleCompanion addon|r") .. "  |cffffffffv" .. (L:Version() or "?") .. "|r"))
 	end
-	tinsert(rows, row("Log file", "|cffffffffWoW folder\\CustomData\\" .. file .. "|r"))
+	tinsert(rows, row("Log file", "|cffffffff" .. W.L("WoW folder") .. "\\CustomData\\" .. file .. "|r"))
 	tinsert(rows, row("Lines logged but not saved yet", "|cffffffff" .. FmtNum(L:Unsaved()) .. "|r"))
 	tinsert(rows, row("Saved by WhoDidIt this session",
-		"|cffffffff" .. FmtNum(L.savedLines) .. "|r lines" .. (L.lastSave and ("  |cff888888last " .. L.lastSave .. "|r") or "")))
+		W.LF("|cffffffff%s|r lines", FmtNum(L.savedLines)) .. (L.lastSave and ("  |cff888888" .. W.LF("last %s", L.lastSave) .. "|r") or "")))
 	tinsert(rows, row("File access (Nampower)", WriteCustomFile and "|cff33ff33ok|r" or "|cffff5555missing - logs can't be written|r"))
 
-	head(rows, "Automatic logging  |cff888888(click to switch on / off)|r")
+	head(rows, W.L("Automatic logging") .. "  |cff888888" .. W.L("(click to switch on / off)") .. "|r")
 	local function toggle(label, value, fn, tip)
 		tinsert(rows, row(label, onOff(value), { click = function() fn(); UI:Refresh() end, tip = { tip }, tipTitle = label }))
 	end
@@ -4314,7 +4403,7 @@ function UI:LogRows()
 	head(rows, "Uploading to Chronicle")
 	tinsert(rows, row("1.  After the raid click |cffffd100Stop & save|r (or |cffffd100Save now|r)."))
 	tinsert(rows, row("2.  Open |cffffd100chronicleclassic.com|r and click |cffffd100Upload|r."))
-	tinsert(rows, row("3.  Choose |cffffffffWoW folder\\CustomData\\" .. file .. "|r."))
+	tinsert(rows, row(W.LF("3.  Choose |cffffffffWoW folder\\CustomData\\%s|r.", file)))
 	tinsert(rows, row("4.  Before your next lockout, |cffffd100Archive log|r or |cffffd100Delete log|r so raids don't mix."))
 	tinsert(rows, row("|cff888888Addons can't reach the internet, so the upload itself is done on the website.|r"))
 	return rows
@@ -4327,8 +4416,8 @@ function UI:RefreshLogs()
 	fightList:SetData(UI:LogNavRows(), true)
 	UI.logButtons[1]:SetText(L:Enabled() and "|cffff5555Stop & save|r" or "|cff33ff33Start logging|r")
 	if L:Available() then
-		rTitle:SetText("Chronicle Logs  " .. (L:Enabled() and "|cff33ff33ON - logging|r" or "|cffff5555OFF|r"))
-		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. FmtNum(L:Unsaved()) .. " unsaved lines|r")
+		rTitle:SetText(W.L("Chronicle Logs") .. "  " .. W.L(L:Enabled() and "|cff33ff33ON - logging|r" or "|cffff5555OFF|r"))
+		rInfo:SetText("|cffaaaaaaCustomData\\" .. (L:File() or "?") .. "   |   " .. W.LF("%s unsaved lines", FmtNum(L:Unsaved())) .. "|r")
 	else
 		rTitle:SetText("Chronicle Logs  |cffff5555Chronicle logger not found|r")
 		rInfo:SetText("|cffaaaaaaIts files are missing: download WhoDidIt again|r")
@@ -4392,8 +4481,8 @@ function UI:MarkNavRows()
 		for _ in pairs(mine[z] or {}) do yours = yours + 1 end
 		local zz = z
 		tinsert(rows, row(
-			"|cffffffff" .. z .. "|r" .. (z == here and "  |cff33ff33(here)|r" or "")
-				.. "\n" .. C_DIM .. n .. " pack" .. (n == 1 and "" or "s") .. "|r" .. (yours > 0 and ("  " .. C_GUILD .. yours .. " yours|r") or ""),
+			"|cffffffff" .. z .. "|r" .. (z == here and ("  |cff33ff33" .. W.L("(here)") .. "|r") or "")
+				.. "\n" .. C_DIM .. W.LF((n == 1) and "%s pack" or "%s packs", n) .. "|r" .. (yours > 0 and ("  " .. C_GUILD .. W.LF("%s yours", yours) .. "|r") or ""),
 			nil,
 			{ sel = (z == UI.mk.zone), click = function() UI.mk.zone = zz; UI.mk.pack = nil; UI.mk.keys = nil; UI:Refresh() end }))
 	end
@@ -4404,8 +4493,8 @@ end
 function UI:ZoneRows(zone)
 	local M = W.Marks
 	local rows = {}
-	tinsert(rows, row("|cffffd100Keys:|r  " .. UI.KeySummary(), "|cffffd100change  >|r",
-		{ tipTitle = "Auto Marker keys", tip = { "Click to change the keys for marking a pack, the next pack,", "saving and clearing marks, and what you hold to mark by mouseover." },
+	tinsert(rows, row(W.L("|cffffd100Keys:|r") .. "  " .. UI.KeySummary(), "|cffffd100change  >|r",
+		{ tipTitle = "Auto Marker keys", tip = { "Click to change the keys for marking a pack, the next pack,\nsaving and clearing marks, and what you hold to mark by mouseover." },
 		  click = function() UI.mk.keys = true; UI:Refresh() end }))
 	if zone == GetRealZoneText() then
 		local cur = M:CurrentMarks()
@@ -4418,14 +4507,14 @@ function UI:ZoneRows(zone)
 				tinsert(icons, { 4 + (i - 1) * 15, cur[i][2] })
 				tinsert(parts, cur[i][3])
 			end
-			tinsert(rows, cells(CUR_SPEC, { "", C_GUILD .. "Click to save these " .. getn(cur) .. " as a pack|r  " .. C_DIM .. table.concat(parts, ", ") .. "|r" },
+			tinsert(rows, cells(CUR_SPEC, { "", C_GUILD .. W.LF("Click to save these %s as a pack", getn(cur)) .. "|r  " .. C_DIM .. table.concat(parts, ", ") .. "|r" },
 				{ icons = icons, sel = true, click = function() M:QuickSave() end,
 				  tipTitle = "Save as a pack", tip = { "Saves these mobs with their marks. You'll be asked for a name.", "Use an existing pack's name to update it." } }))
 		end
 	end
 
 	local names = M:PackNames(zone)
-	head(rows, "Packs in " .. zone .. "  " .. C_DIM .. "(click to open  -  Shift-click to mark it now)|r")
+	head(rows, W.LF("Packs in %s", zone) .. "  " .. C_DIM .. W.L("(click to open  -  Shift-click to mark it now)") .. "|r")
 	if getn(names) == 0 then
 		tinsert(rows, row(C_DIM .. "No packs here yet. Mark the mobs of a pack, then click Save marks as pack.|r"))
 	else
@@ -4446,7 +4535,7 @@ function UI:ZoneRows(zone)
 			  SRC_TEXT[src] or "" },
 			{ icons = icons, bar = (near > 0) and (near / total) or nil, cr = 0.2, cg = 0.8, cb = 0.2, ba = 0.14,
 			  tipTitle = name, tip = { "Click: open the pack  -  see every mob and edit it", "Shift-click: mark it now",
-			    (near > 0) and (near .. " of its " .. total .. " mobs are in range") or "None of its mobs are in range" },
+			    (near > 0) and W.LF("%s of its %s mobs are in range", near, total) or "None of its mobs are in range" },
 			  click = function()
 				if IsShiftKeyDown() then
 					M:MarkPack(pack)
@@ -4459,7 +4548,7 @@ function UI:ZoneRows(zone)
 	end
 
 	if UI.mk.showHidden then
-		head(rows, "Hidden built-in packs  " .. C_DIM .. "(click to bring one back)|r")
+		head(rows, W.L("Hidden built-in packs") .. "  " .. C_DIM .. W.L("(click to bring one back)") .. "|r")
 		local all, n = M:PackNames(zone, true), 0
 		for i = 1, getn(all) do
 			local name = all[i]
@@ -4473,25 +4562,25 @@ function UI:ZoneRows(zone)
 
 	local rules = M:RulesFor(zone)
 	local o = WhoDidItDB.marks.opts
-	head(rows, "Smart marks  " .. C_DIM .. "(click to switch on / off)|r" .. ((o.smart and o.enabled) and "" or "  |cffff5555all off|r"))
+	head(rows, W.L("Smart marks") .. "  " .. C_DIM .. W.L("(click to switch on / off)") .. "|r" .. ((o.smart and o.enabled) and "" or ("  |cffff5555" .. W.L("all off") .. "|r")))
 	if getn(rules) == 0 then
 		tinsert(rows, row(C_DIM .. "None in this zone. They run in Naxx, AQ, MC, BWL, ZG, Onyxia, Emerald Sanctum, Karazhan, Timbermaw, BRD, DM and UBRS.|r"))
 	end
 	for i = 1, getn(rules) do
 		local r = rules[i]
 		local key = r.key
-		tinsert(rows, row("|cffffffff" .. r.label .. "|r  " .. C_DIM .. r.desc .. "|r", onOff(WhoDidItDB.marks.smart[key] ~= false),
+		tinsert(rows, row("|cffffffff" .. W.L(r.label) .. "|r  " .. C_DIM .. W.L(r.desc) .. "|r", onOff(WhoDidItDB.marks.smart[key] ~= false),
 			{ tipTitle = r.label, tip = { r.desc }, click = function() M:ToggleRule(key); UI:Refresh() end }))
 	end
 
 	head(rows, "Built-in packs")
 	local info = M.dataInfo
 	if info then
-		tinsert(rows, row("From |cffffd100AutoMarker|r " .. (info.version or "?") .. "  " .. C_DIM .. "(by Weird Vibes, github.com/MarcelineVQ/AutoMarker)|r",
-			C_TIME .. info.packs .. "|r packs, " .. C_TIME .. info.mobs .. "|r mobs  " .. C_DIM .. (info.date or "") .. "|r",
+		tinsert(rows, row(W.LF("From |cffffd100AutoMarker|r %s", info.version or "?") .. "  " .. C_DIM .. W.L("(by Weird Vibes, github.com/MarcelineVQ/AutoMarker)") .. "|r",
+			W.LF("|cffffffff%s|r packs, |cffffffff%s|r mobs", info.packs, info.mobs) .. "  " .. C_DIM .. (info.date or "") .. "|r",
 			{ tipTitle = "Built-in packs", tip = { "They ship with WhoDidIt (PackData.lua): AutoMarker's raid pack data, credited.", "Your own packs are saved separately and never overwritten." } }))
 	else
-		tinsert(rows, row("|cffff7777Missing.|r PackData.lua isn't loaded: " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. ".  " .. C_DIM .. "Your own packs work without it.|r"))
+		tinsert(rows, row(W.LF("|cffff7777Missing.|r PackData.lua isn't loaded: %s, then %s.", W.L(W.SYNC_HOWTO), W.L(W.RESTART_HINT)) .. "  " .. C_DIM .. W.L("Your own packs work without it.") .. "|r"))
 	end
 	return rows
 end
@@ -4500,14 +4589,14 @@ end
 function UI:PackRows(zone, name)
 	local M = W.Marks
 	local rows = {}
-	tinsert(rows, row("|cff66ccff<  Back to all packs in " .. zone .. "|r", nil, { click = function() UI.mk.pack = nil; UI:Refresh() end }))
+	tinsert(rows, row("|cff66ccff" .. W.LF("<  Back to all packs in %s", zone) .. "|r", nil, { click = function() UI.mk.pack = nil; UI:Refresh() end }))
 	local pack, src = M:Pack(zone, name)
 	if not pack then
 		tinsert(rows, row(C_DIM .. "This pack doesn't exist any more.|r"))
 		return rows
 	end
 	local here = (zone == GetRealZoneText())
-	head(rows, name .. "   " .. (SRC_TEXT[src] or ""))
+	head(rows, name .. "   " .. W.L(SRC_TEXT[src] or ""))
 	local function action(label, hint, fn)
 		tinsert(rows, row(label, C_DIM .. hint .. "|r", { click = function() fn(); UI:Refresh() end }))
 	end
@@ -4516,15 +4605,15 @@ function UI:PackRows(zone, name)
 		M.last[zone] = name
 	end)
 	action("|cffffd100Save my current marks into this pack|r", "adds the mobs you've marked, or updates their marks", function()
-		if not here then W.Print("Go to " .. zone .. " first.") return end
+		if not here then W.Print(W.LF("Go to %s first.", zone)) return end
 		M:Save(zone, name, M:CurrentMarks())
 	end)
 	action("|cffffd100Add my target|r", "with the mark it has now (or none)", function()
-		if not here then W.Print("Go to " .. zone .. " first.") return end
+		if not here then W.Print(W.LF("Go to %s first.", zone)) return end
 		M:AddTarget(zone, name)
 	end)
 	action("|cffffffffRename|r", "", function()
-		M:Prompt("Rename pack |cffffd100" .. name .. "|r", name, function(new)
+		M:Prompt(W.LF("Rename pack |cffffd100%s|r", name), name, function(new)
 			if M:Rename(zone, name, new) then UI:ShowPack(zone, string.gsub(new, "^%s*(.-)%s*$", "%1")) end
 		end)
 	end)
@@ -4536,7 +4625,7 @@ function UI:PackRows(zone, name)
 		action("|cffff5555Delete this pack|r", "", function() M:Delete(zone, name); UI.mk.pack = nil end)
 	end
 
-	head(rows, "Mobs  " .. C_DIM .. "(click a mob to pick its mark, right-click to take it out)|r")
+	head(rows, W.L("Mobs") .. "  " .. C_DIM .. W.L("(click a mob to pick its mark, right-click to take it out)") .. "|r")
 	colHead(rows, MOB_SPEC, { "", "Mark", "Mob", "NPC", "Status", "GUID" })
 	local list = {}
 	for g, m in pairs(pack.mobs) do tinsert(list, { g, m, M:MobName(pack, g) }) end
@@ -4588,24 +4677,24 @@ function UI:RefreshMarks()
 	leftHead:SetText("Zones")
 	leftCount:SetText("")
 	fightList:SetData(UI:MarkNavRows(), true)
-	UI.markButtons[5]:SetText("Auto marking: " .. (o.enabled and "|cff33ff33on|r" or "|cffff5555off|r"))
-	mouseBtn:SetText("Mouseover: " .. (o.mouseover and "|cff33ff33on|r" or "|cffff5555off|r"))
-	learnBtn:SetText("Learn: " .. (o.learn and "|cff33ff33on|r" or "off"))
-	smartBtn:SetText("Smart: " .. (o.smart and "|cff33ff33on|r" or "|cffff5555off|r"))
-	hiddenBtn:SetText("Hidden: " .. (UI.mk.showHidden and "shown" or "off"))
+	UI.markButtons[5]:SetText(W.LF("Auto marking: %s", W.L(o.enabled and "|cff33ff33on|r" or "|cffff5555off|r")))
+	mouseBtn:SetText(W.LF("Mouseover: %s", W.L(o.mouseover and "|cff33ff33on|r" or "|cffff5555off|r")))
+	learnBtn:SetText(W.LF("Learn: %s", W.L(o.learn and "|cff33ff33on|r" or "off")))
+	smartBtn:SetText(W.LF("Smart: %s", W.L(o.smart and "|cff33ff33on|r" or "|cffff5555off|r")))
+	hiddenBtn:SetText(W.LF("Hidden: %s", W.L(UI.mk.showHidden and "shown" or "off")))
 
 	local names = M:PackNames(zone)
 	local yours = 0
 	for _ in pairs(WhoDidItDB.marks.packs[zone] or {}) do yours = yours + 1 end
-	rTitle:SetText("Auto Marker  |cffffffff" .. zone .. "|r")
+	rTitle:SetText(W.L("Auto Marker") .. "  |cffffffff" .. zone .. "|r")
 	UI.SetHeaderArt(zone)
-	rInfo:SetText((MODE_TEXT[M:MarkMode()] or "") .. "   |cff888888|   " .. getn(names) .. " packs" .. (yours > 0 and (", " .. yours .. " yours") or "") .. "|r")
+	rInfo:SetText(W.L(MODE_TEXT[M:MarkMode()] or "") .. "   |cff888888|   " .. W.LF("%s packs", getn(names)) .. (yours > 0 and (", " .. W.LF("%s yours", yours)) or "") .. "|r")
 	if M.standDown then
 		rVerdict:SetText("|cffff9933The separate AutoMarker addon is still loaded, so WhoDidIt is standing by.|r\n|cff888888It has been switched off - /reload and WhoDidIt takes over.|r")
 	else
-		rVerdict:SetText("|cffffd100Quick save:|r mark the mobs in game, click |cff33ff33Save marks as pack|r, type a name, Enter.\n"
-			.. "|cffffd100Mark a pack:|r hold " .. M.MouseModLabel() .. " over a mob" .. UI.KeyHint("WHODIDIT_MARKPACK", ", press ")
-			.. ", or click |cffffd100Mark target's pack|r.")
+		rVerdict:SetText(W.L("|cffffd100Quick save:|r mark the mobs in game, click |cff33ff33Save marks as pack|r, type a name, Enter.") .. "\n"
+			.. W.LF("|cffffd100Mark a pack:|r hold %s over a mob", W.L(M.MouseModLabel())) .. UI.KeyHint("WHODIDIT_MARKPACK", W.L(", press "))
+			.. W.L(", or click |cffffd100Mark target's pack|r."))
 	end
 	hintText:SetText(UI.mk.pack and "Click a mob to pick its mark  -  right-click to take it out" or "Click a pack to open it  -  Shift-click a pack to mark it now")
 	hintText:Show()
@@ -4639,24 +4728,24 @@ function UI.KeySummary()
 	for i = 1, getn(UI.MARK_KEYS) do
 		local b = UI.MARK_KEYS[i][1]
 		local k = UI.KeyText(b)
-		tinsert(parts, short[b] .. " " .. (k and ("|cffffffff" .. k .. "|r") or "|cff666666-|r"))
+		tinsert(parts, W.L(short[b]) .. " " .. (k and ("|cffffffff" .. k .. "|r") or "|cff666666-|r"))
 	end
-	return table.concat(parts, "  ") .. "   |cff888888mouseover:|r |cffffffff" .. W.Marks.MouseModLabel() .. "|r"
+	return table.concat(parts, "  ") .. "   |cff888888" .. W.L("mouseover:") .. "|r |cffffffff" .. W.L(W.Marks.MouseModLabel()) .. "|r"
 end
 
 function UI:MarkKeyRows()
 	local rows = {}
 	tinsert(rows, row("|cffffd100<< Back to the packs|r", nil, { head = true, click = function() UI.mk.keys = nil; UI:Refresh() end }))
-	head(rows, "Keys  " .. C_DIM .. "(click one, then press the key you want - with Shift / Ctrl / Alt if you like)|r")
+	head(rows, W.L("Keys") .. "  " .. C_DIM .. W.L("(click one, then press the key you want - with Shift / Ctrl / Alt if you like)") .. "|r")
 	for i = 1, getn(UI.MARK_KEYS) do
-		local b, label = UI.MARK_KEYS[i][1], UI.MARK_KEYS[i][2]
+		local b, label = UI.MARK_KEYS[i][1], W.L(UI.MARK_KEYS[i][2])
 		local k = UI.KeyText(b)
-		tinsert(rows, row(label, k and ("|cffffffff" .. k .. "|r  |cffffd100change|r") or "|cff666666not set|r  |cffffd100set|r",
+		tinsert(rows, row(label, k and ("|cffffffff" .. k .. "|r  |cffffd100" .. W.L("change") .. "|r") or ("|cff666666" .. W.L("not set") .. "|r  |cffffd100" .. W.L("set") .. "|r"),
 			{ tipTitle = label, tip = { "Click, then press the key (Esc: cancel, Backspace: no key).", "Saved like the game's own key bindings (Esc > Key Bindings > WhoDidIt)." },
 			  click = function() UI.CaptureKey(b, label) end }))
 	end
 	head(rows, "Mouseover marking")
-	tinsert(rows, row("Hold this and move the mouse over a mob to mark its whole pack", "|cffffffff" .. W.Marks.MouseModLabel() .. "|r  |cffffd100next|r",
+	tinsert(rows, row("Hold this and move the mouse over a mob to mark its whole pack", "|cffffffff" .. W.L(W.Marks.MouseModLabel()) .. "|r  |cffffd100" .. W.L("next") .. "|r",
 		{ tipTitle = "Mouseover marking", tip = { "Click to switch: Shift + Ctrl (or Alt), Ctrl, Alt, Ctrl + Alt.", "Mouseover marking itself is switched on and off bottom left." },
 		  click = function() W.Marks.NextMouseMod(); UI:Refresh() end }))
 	tinsert(rows, row(C_DIM .. "A key that did something else before does this now; Esc > Key Bindings puts it back.|r"))
@@ -4682,7 +4771,7 @@ function UI.CaptureKey(binding, label)
 		UI.keyCapture = cf
 	end
 	cf.binding, cf.label = binding, label
-	cf.text:SetText("Press the key for |cffffffff" .. label .. "|r\n|cff888888(with Shift / Ctrl / Alt if you like)   Esc: cancel   Backspace: no key|r")
+	cf.text:SetText(W.LF("Press the key for |cffffffff%s|r", label) .. "\n" .. W.L("|cff888888(with Shift / Ctrl / Alt if you like)   Esc: cancel   Backspace: no key|r"))
 	cf:Show()
 end
 
@@ -4697,17 +4786,17 @@ function UI.KeyCaptured(key)
 	if k2 then SetBinding(k2) end
 	if key == "BACKSPACE" then
 		SaveBindings(GetCurrentBindingSet())
-		W.Print(cf.label .. ": no key now.")
+		W.Print(W.LF("%s: no key now.", cf.label))
 	else
 		local new = (IsAltKeyDown() and "ALT-" or "") .. (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "") .. key
 		if SetBinding(new, b) then
 			SaveBindings(GetCurrentBindingSet())
-			W.Print(cf.label .. ": |cffffd100" .. GetBindingText(new, "KEY_") .. "|r  |cff888888(if that key did something else, it does this now - Esc > Key Bindings puts it back)|r")
+			W.Print(cf.label .. ": |cffffd100" .. GetBindingText(new, "KEY_") .. "|r  " .. W.L("|cff888888(if that key did something else, it does this now - Esc > Key Bindings puts it back)|r"))
 		else
 			if k1 then SetBinding(k1, b) end   -- (couldn't: the old keys stay)
 			if k2 then SetBinding(k2, b) end
 			SaveBindings(GetCurrentBindingSet())
-			W.Print("That key can't be used - " .. cf.label .. " keeps its key.")
+			W.Print(W.LF("That key can't be used - %s keeps its key.", cf.label))
 		end
 	end
 	cf:Hide()
@@ -4725,18 +4814,23 @@ local ROLL_TEXT = { MainSpec = "main spec", OffSpec = "off spec", Transmog = "tr
 
 local function itemText(id)
 	local name, _, quality = GetItemInfo(id or 0)
-	if not name then return C_DIM .. "item " .. tostring(id) .. "|r" end
+	if not name then return C_DIM .. W.LF("item %s", tostring(id)) .. "|r" end
 	return (QUALITY_COL[quality] or "|cffffffff") .. name .. "|r"
 end
 
 -- one step of the guide: a number, its lines (rows clip, so lines stay short), and optionally something to click
 local function step(rows, n, lines, click, hint)
 	local d = click and function() click(); UI:Refresh() end
+	-- (a line may break into more rows in another language: "\n" in its translation)
+	local all = {}
 	for i = 1, getn(lines) do
+		for part in string.gfind(W.L(lines[i]), "[^\n]+") do tinsert(all, part) end
+	end
+	for i = 1, getn(all) do
 		local first = (i == 1)
-		tinsert(rows, row((first and ("|cffffd100" .. n .. ".|r  ") or "      ") .. lines[i],
-			(first and hint) and (C_GUILD .. hint .. "  >|r") or nil,
-			d and { click = d, tipTitle = "Step " .. n, tip = { "Click to " .. hint .. "." } } or nil))
+		tinsert(rows, row((first and ("|cffffd100" .. n .. ".|r  ") or "      ") .. all[i],
+			(first and hint) and (C_GUILD .. W.L(hint) .. "  >|r") or nil,
+			d and { click = d, tipTitle = W.LF("Step %s", n), tip = { W.LF("Click to %s.", W.L(hint)) } } or nil))
 	end
 end
 
@@ -4759,7 +4853,7 @@ function UI:LootGuideRows()
 	step(rows, 6, { "Be raid leader. With |cffffd100Auto ML|r on, targeting a boss turns on master loot (you).",
 		"With |cffffd100Auto group|r on, it goes back to group loot once the boss is looted empty." },
 		function() UI.lt.section = "settings" end, "settings")
-	step(rows, 7, { "Tell the raid how to roll: |cffffffff" .. Lt:HowToRoll() .. "|r" },
+	step(rows, 7, { W.LF("Tell the raid how to roll: |cffffffff%s|r", Lt:HowToRoll()) },
 		function() Lt:Run("HTR", "") end, "post it")
 	step(rows, 8, { "Want different numbers, e.g. transmog on |cffffffff/roll 69|r? Change them in Settings." },
 		function() UI.lt.section = "settings" end, "settings")
@@ -4768,15 +4862,14 @@ function UI:LootGuideRows()
 	step(rows, 9, { "Loot the boss. RollFor's loot window lists every item and who reserved it." })
 	step(rows, 10, { "Click an item, then |cffffd100Roll|r. Soft-reserved: only those players roll.",
 		"Not reserved: everyone rolls, and main spec beats off spec." })
-	step(rows, 11, { "Ties re-roll by themselves. When it's done, click |cffffd100Award|r next to",
-		"the winner and confirm - the item goes straight to them." })
+	step(rows, 11, { "Ties re-roll by themselves. When it's done, click |cffffd100Award|r next to\nthe winner and confirm - the item goes straight to them." })
 	step(rows, 12, { "Two of the same item? Both are rolled together; the top two rolls win." })
 	step(rows, 13, { "Trash and greens: |cffffd100Raid roll|r gives the item to a random raider." })
 	step(rows, 14, { "Gave it to the wrong person? Trade it on - RollFor updates its winners." })
 	step(rows, 15, { "Everything given out is on the |cffffd100Loot given|r page." },
 		function() UI.lt.section = "given" end, "show it")
 
-	head(rows, "Commands  " .. C_DIM .. "(shift-click an item into chat after the command)|r")
+	head(rows, W.L("Commands") .. "  " .. C_DIM .. W.L("(shift-click an item into chat after the command)") .. "|r")
 	local cmds = {
 		{ "/rf <item> [secs]", "roll an item (from the loot window or your bags)" },
 		{ "/rf 2x<item>", "roll two of the same item - the top two rolls win" },
@@ -4806,8 +4899,8 @@ function UI:LootSoftResRows()
 	local roster = Lt:Roster()
 	local inGroup = GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0
 	local reserved = {}
-	head(rows, "Soft-res sheet " .. (sr.id and ("|cffffffff" .. sr.id .. "|r ") or "") .. C_DIM .. "(" .. table.concat(sr.instances, ", ") .. ")|r   "
-		.. C_TIME .. getn(sr.players) .. "|r players, " .. C_TIME .. sr.items .. "|r items")
+	head(rows, W.L("Soft-res sheet") .. " " .. (sr.id and ("|cffffffff" .. sr.id .. "|r ") or "") .. C_DIM .. "(" .. table.concat(sr.instances, ", ") .. ")|r   "
+		.. W.LF("|cffffffff%s|r players, |cffffffff%s|r items", getn(sr.players), sr.items))
 	colHead(rows, SR_SPEC, { "Player", "Spec", "Reserved", "In raid" })
 	for i = 1, getn(sr.players) do
 		local p = sr.players[i]
@@ -4816,11 +4909,11 @@ function UI:LootSoftResRows()
 		local names, tip = {}, {}
 		for j = 1, getn(p.items) do tinsert(names, itemText(p.items[j])) end
 		tinsert(tip, " ")
-		tinsert(tip, "Reserved by |cffffffff" .. p.name .. "|r" .. (p.role ~= "" and (" (" .. Lt.RoleText(p.role) .. ")") or ""))
-		if getn(p.items) > 1 then tinsert(tip, "Also: " .. table.concat(names, ", ", 2)) end
+		tinsert(tip, W.LF("Reserved by |cffffffff%s|r", p.name) .. (p.role ~= "" and (" (" .. W.L(Lt.RoleText(p.role)) .. ")") or ""))
+		if getn(p.items) > 1 then tinsert(tip, W.LF("Also: %s", table.concat(names, ", ", 2))) end
 		tinsert(rows, cells(SR_SPEC,
 			{ here and W.CName(here.name, here.class) or ("|cffdddddd" .. p.name .. "|r"),
-			  C_DIM .. Lt.RoleText(p.role) .. "|r",
+			  C_DIM .. W.L(Lt.RoleText(p.role)) .. "|r",
 			  table.concat(names, ", "),
 			  here and (C_GUILD .. "yes|r") or (inGroup and "|cffff7777not here|r" or C_DIM .. "-|r") },
 			{ tipTitle = p.name, tip = tip, link = Lt.ItemLink(p.items[1]) }))
@@ -4831,7 +4924,7 @@ function UI:LootSoftResRows()
 			if not reserved[key] then tinsert(missing, W.CName(who.name, who.class)) end
 		end
 		table.sort(missing)
-		head(rows, "In the raid without a soft-res  " .. C_DIM .. "(" .. getn(missing) .. ")|r")
+		head(rows, W.L("In the raid without a soft-res") .. "  " .. C_DIM .. "(" .. getn(missing) .. ")|r")
 		if getn(missing) == 0 then
 			tinsert(rows, row(C_GUILD .. "Everyone has soft-reserved.|r"))
 		else
@@ -4854,7 +4947,7 @@ function UI:LootGivenRows()
 	local Lt = W.Loot
 	local rows = {}
 	local list = Lt:Awarded()
-	head(rows, "Loot given  " .. C_DIM .. "(newest first, from RollFor - the Winners window has filters)|r")
+	head(rows, W.L("Loot given") .. "  " .. C_DIM .. W.L("(newest first, from RollFor - the Winners window has filters)") .. "|r")
 	if getn(list) == 0 then
 		tinsert(rows, row(C_DIM .. "Nothing awarded yet. Items you award with RollFor show up here.|r"))
 		return rows
@@ -4866,10 +4959,10 @@ function UI:LootGivenRows()
 		local item = name and ((QUALITY_COL[quality or a.quality] or "|cffffffff") .. name .. "|r") or (a.item_link or itemText(a.item_id))
 		tinsert(rows, cells(AWARD_SPEC,
 			{ C_DIM .. i .. ".|r", item, W.CName(a.player_name or "?", a.player_class),
-			  "|cffdddddd" .. (ROLL_TEXT[a.roll_type or ""] or ROLL_TEXT[a.rolling_strategy or ""] or (a.roll_type or "awarded")) .. "|r"
+			  "|cffdddddd" .. W.L(ROLL_TEXT[a.roll_type or ""] or ROLL_TEXT[a.rolling_strategy or ""] or (a.roll_type or "awarded")) .. "|r"
 			    .. ((a.plus_one and (" " .. C_GUILD .. "+1|r")) or ""),
 			  a.winning_roll and (C_TIME .. a.winning_roll .. "|r") or (C_DIM .. "-|r") },
-			{ link = Lt.ItemLink(a.item_link) or Lt.ItemLink(a.item_id), tip = { " ", "Given to |cffffffff" .. (a.player_name or "?") .. "|r" } }))
+			{ link = Lt.ItemLink(a.item_link) or Lt.ItemLink(a.item_id), tip = { " ", W.LF("Given to |cffffffff%s|r", a.player_name or "?") } }))
 	end
 	return rows
 end
@@ -4879,21 +4972,22 @@ function UI:LootSettingsRows()
 	local rows = {}
 	local function add(label, value, summary, tipTitle, tip, click)
 		local extra = { tipTitle = tipTitle, tip = tip, click = function() click(); UI:Refresh() end }
-		tinsert(rows, row("|cffffffff" .. label .. "|r", value, extra))
+		tinsert(rows, row("|cffffffff" .. W.L(label) .. "|r", value, extra))
 		if summary then
-			tinsert(rows, row("      " .. C_DIM .. summary .. "|r", nil, { tipTitle = tipTitle, tip = tip, click = extra.click }))
+			tinsert(rows, row("      " .. C_DIM .. W.L(summary) .. "|r", nil, { tipTitle = tipTitle, tip = tip, click = extra.click }))
 		end
 	end
 
 	-- the numbers raiders type
-	head(rows, "Roll numbers  " .. C_DIM .. "(click one to change it)|r")
+	head(rows, W.L("Roll numbers") .. "  " .. C_DIM .. W.L("(click one to change it)") .. "|r")
 	for i = 1, getn(Lt.ROLLS) do
 		local r = Lt.ROLLS[i]
 		local n = Lt:RollNumber(r)
 		local off = (r.cmd == "tmog" and not Lt:TmogOn())
-		add(r.label .. " roll", off and (C_DIM .. "off|r") or ("|cffffd100" .. Lt.RollCommand(n) .. "|r"),
-			"Raiders type " .. Lt.RollCommand(n) .. " (1 to " .. n .. ")" .. (n ~= r.default and ("  -  normally " .. Lt.RollCommand(r.default)) or ""),
-			r.label .. " roll", { "The number raiders roll to " .. string.lower(r.label) .. ": they type " .. Lt.RollCommand(n) .. ".",
+		local title = W.LF("%s roll", W.L(r.label))
+		add(title, off and (C_DIM .. W.L("off") .. "|r") or ("|cffffd100" .. Lt.RollCommand(n) .. "|r"),
+			W.LF("Raiders type %s (1 to %s)", Lt.RollCommand(n), n) .. (n ~= r.default and ("  -  " .. W.LF("normally %s", Lt.RollCommand(r.default))) or ""),
+			title, { W.LF("The number raiders roll to %s: they type %s.", W.L(string.lower(r.label)), Lt.RollCommand(n)),
 				"Click to change it, e.g. transmog on /roll 69.", "Each roll type needs its own number.",
 				C_DIM .. "/rf config " .. r.cmd .. " <number>|r" },
 			function() Lt:AskRollNumber(r) end)
@@ -4901,17 +4995,17 @@ function UI:LootSettingsRows()
 	add("Transmog rolls", onOff(Lt:TmogOn()), "Let raiders roll for transmog as well as main and off spec.",
 		"Transmog rolls", { "On: raiders can roll for an item's look (lowest priority).", "Off: only main spec and off spec rolls.",
 			C_DIM .. "/rf config tmog|r" }, function() Lt:ToggleTmog() end)
-	add("Roll time", "|cffffd100" .. Lt:RollTime() .. " sec|r", "How long raiders get to roll (4 to 15 seconds).",
+	add("Roll time", "|cffffd100" .. W.LF("%s sec", Lt:RollTime()) .. "|r", "How long raiders get to roll (4 to 15 seconds).",
 		"Roll time", { "How long each roll stays open. You can always end it early with Finish roll.",
 			C_DIM .. "/rf config default-rolling-time <seconds>|r" }, function() Lt:AskRollTime() end)
-	tinsert(rows, row(C_DIM .. "Raiders see: " .. Lt:HowToRoll() .. "|r", "|cffffd100reset to 100 / 99 / 98  >|r",
+	tinsert(rows, row(C_DIM .. W.LF("Raiders see: %s", Lt:HowToRoll()) .. "|r", "|cffffd100reset to 100 / 99 / 98  >|r",
 		{ tipTitle = "Reset roll numbers", tip = { "Back to /roll for main spec, /roll 99 off spec, /roll 98 transmog." },
 		  click = function() Lt:ResetRollNumbers(); UI:Refresh() end }))
 
 	-- on / off settings, in groups
 	for g = 1, getn(Lt.SETTINGS) do
 		local group = Lt.SETTINGS[g]
-		head(rows, group.title .. "  " .. C_DIM .. "(click to switch on / off)|r")
+		head(rows, W.L(group.title) .. "  " .. C_DIM .. W.L("(click to switch on / off)") .. "|r")
 		for i = 1, getn(group.intro or {}) do tinsert(rows, row("|cffdddddd" .. group.intro[i] .. "|r")) end
 		for i = 1, getn(group.items) do
 			local s = group.items[i]
@@ -4926,7 +5020,7 @@ function UI:LootSettingsRows()
 	head(rows, "For your raiders")
 	local ptip = { "When you start a roll, raiders with RollFor (or WhoDidIt) get a window to roll from.",
 		"Off - nobody gets it", "Eligible - only players who may roll on the item", "Always - everyone", C_DIM .. "Click to change.|r" }
-	add("Roll window for raiders", "|cffffd100" .. Lt:RollPopup() .. "|r", "Raiders with RollFor or WhoDidIt get a window to roll from.",
+	add("Roll window for raiders", "|cffffd100" .. W.L(Lt:RollPopup()) .. "|r", "Raiders with RollFor or WhoDidIt get a window to roll from.",
 		"Roll window for raiders", ptip, function() Lt:CycleRollPopup() end)
 	add("Who has RollFor?", "|cffffd100check  >|r", "Ask the raid who has RollFor or WhoDidIt, and which version.",
 		"Who has RollFor", { "Lists everyone in the raid with RollFor (or WhoDidIt) and their version, in chat." },
@@ -4957,12 +5051,12 @@ function UI:LootNavRows()
 		local s = LOOT_SECTIONS[i]
 		local sub = s[3]
 		if s[1] == "softres" then
-			sub = sr and (getn(sr.players) .. " players, " .. sr.items .. " items") or "nothing imported yet"
+			sub = sr and W.LF("%s players, %s items", getn(sr.players), sr.items) or "nothing imported yet"
 		elseif s[1] == "given" then
-			sub = given .. " item" .. (given == 1 and "" or "s") .. " awarded"
+			sub = W.LF((given == 1) and "%s item awarded" or "%s items awarded", given)
 		end
 		local id = s[1]
-		tinsert(rows, row("|cffffffff" .. s[2] .. "|r\n" .. C_DIM .. sub .. "|r", nil,
+		tinsert(rows, row("|cffffffff" .. W.L(s[2]) .. "|r\n" .. C_DIM .. W.L(sub) .. "|r", nil,
 			{ sel = (UI.lt.section == id), click = function() UI.lt.section = id; UI:Refresh() end }))
 	end
 	return rows
@@ -4975,38 +5069,38 @@ function UI:RefreshLoot()
 	leftHead:SetText("RollForML")
 	leftCount:SetText("")
 	fightList:SetData(UI:LootNavRows(), true)
-	mlBtn:SetText("Auto ML: " .. (Lt:Setting("auto_master_loot") ~= false and "|cff33ff33on|r" or "|cffff5555off|r"))
-	glBtn:SetText("Auto group: " .. (Lt:Setting("auto_group_loot") and "|cff33ff33on|r" or "|cffff5555off|r"))
+	mlBtn:SetText(W.LF("Auto ML: %s", W.L(Lt:Setting("auto_master_loot") ~= false and "|cff33ff33on|r" or "|cffff5555off|r")))
+	glBtn:SetText(W.LF("Auto group: %s", W.L(Lt:Setting("auto_group_loot") and "|cff33ff33on|r" or "|cffff5555off|r")))
 	local willOff = Lt:WillBeOff()
-	UI.rfBtn:SetText("RollFor: " .. (willOff and "|cffff9933off|r" or "|cff33ff33on|r") .. ((willOff ~= Lt:Off()) and " |cffffd100*|r" or ""))
+	UI.rfBtn:SetText(W.LF("RollFor: %s", W.L(willOff and "|cffff9933off|r" or "|cff33ff33on|r")) .. ((willOff ~= Lt:Off()) and " |cffffd100*|r" or ""))
 
 	local src = Lt:Source()
 	if Lt:Off() then
 		rTitle:SetText("RollForML  |cffff9933RollFor is switched off|r")
 		rInfo:SetText("|cffaaaaaaSo it doesn't clash with another loot addon (an EPGP addon, for example): it didn't start this session.|r")
-		rVerdict:SetText((willOff and "Click |cffffd100RollFor: off|r (bottom left) or type |cffffd100/wdi rollfor on|r to switch it back on." or "|cffffd100Switched back on|r - it starts after a UI reload.")
-			.. "\n|cff888888The game's loot window and master looting work as usual for the other addon.|r")
+		rVerdict:SetText(W.L(willOff and "Click |cffffd100RollFor: off|r (bottom left) or type |cffffd100/wdi rollfor on|r to switch it back on." or "|cffffd100Switched back on|r - it starts after a UI reload.")
+			.. "\n" .. W.L("|cff888888The game's loot window and master looting work as usual for the other addon.|r"))
 	elseif not src then
 		rTitle:SetText("RollForML  |cffff5555RollFor didn't load|r")
-		rInfo:SetText("|cffaaaaaaIts files are missing: " .. W.SYNC_HOWTO .. "|r")
-		rVerdict:SetText("RollFor ships with WhoDidIt.\n"
-			.. (WDI_ROLLFOR_VERSION and ("|cffff7777v" .. WDI_ROLLFOR_VERSION .. " is there: " .. W.RESTART_HINT .. ".|r") or "|cff888888The guide below works without it.|r"))
+		rInfo:SetText("|cffaaaaaa" .. W.LF("Its files are missing: %s", W.L(W.SYNC_HOWTO)) .. "|r")
+		rVerdict:SetText(W.L("RollFor ships with WhoDidIt.") .. "\n"
+			.. (WDI_ROLLFOR_VERSION and ("|cffff7777" .. W.LF("v%s is there: %s.", WDI_ROLLFOR_VERSION, W.L(W.RESTART_HINT)) .. "|r") or W.L("|cff888888The guide below works without it.|r")))
 	else
 		rTitle:SetText("RollForML  |cffffffffRollFor v" .. (Lt:Version() or "?") .. "|r  "
-			.. (src == "builtin" and "|cff33ff33built in|r" or "|cffffd100separate addon|r"))
+			.. W.L(src == "builtin" and "|cff33ff33built in|r" or "|cffffd100separate addon|r"))
 		local inGroup = GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0
 		local method, looter = Lt:LootMethod()
 		local me = UnitName("player")
 		local info
 		if not inGroup then
-			info = "|cffaaaaaaNot in a group|r"
+			info = W.L("|cffaaaaaaNot in a group|r")
 		elseif method == "master" then
-			info = "Master loot: " .. ((looter == me) and "|cff33ff33you|r" or ("|cffffffff" .. (looter or "?") .. "|r"))
+			info = W.LF("Master loot: %s", (looter == me) and W.L("|cff33ff33you|r") or ("|cffffffff" .. (looter or "?") .. "|r"))
 		else
-			info = "|cffff9933" .. (METHOD_TEXT[method or ""] or (method or "?")) .. "|r - not master loot"
+			info = "|cffff9933" .. W.L(METHOD_TEXT[method or ""] or (method or "?")) .. "|r" .. W.L(" - not master loot")
 		end
 		local sr = Lt:SoftRes()
-		info = info .. "   |cff888888|   soft-res: " .. (sr and (getn(sr.players) .. " players") or "none") .. "|r"
+		info = info .. "   |cff888888|   " .. W.LF("soft-res: %s", sr and W.LF("%s players", getn(sr.players)) or W.L("none")) .. "|r"
 		rInfo:SetText(info)
 		local nextStep
 		if WDI_ROLLFOR_SKIP then
@@ -5019,11 +5113,11 @@ function UI:RefreshLoot()
 			nextStep = Lt:IsLeader() and "|cffffd100Next:|r target a boss - Auto master loot turns master loot on."
 				or "|cffffd100Next:|r ask the raid leader for master loot, with you as looter."
 		elseif looter ~= me then
-			nextStep = "|cffaaaaaa" .. (looter or "Someone") .. " is master looter - you roll from the roll window.|r"
+			nextStep = "|cffaaaaaa" .. W.LF("%s is master looter - you roll from the roll window.", looter or W.L("Someone")) .. "|r"
 		else
 			nextStep = "|cff33ff33Ready.|r Loot a boss - RollFor's loot window does the rest."
 		end
-		rVerdict:SetText(nextStep .. "\n|cff888888Raiders roll: " .. Lt:HowToRoll() .. ".|r")
+		rVerdict:SetText(W.L(nextStep) .. "\n|cff888888" .. W.LF("Raiders roll: %s.", Lt:HowToRoll()) .. "|r")
 	end
 	hintText:SetText("Hover anything to see what it does  -  click gold lines and values to use or change them")
 	hintText:Show()
@@ -5090,29 +5184,29 @@ function UI:FeedPanel()
 		-- seconds per message as they're really arriving (the master paces itself for the server's chat limit)
 		local per = (fs.t0 and fs.got >= 10) and ((GetTime() - fs.t0) / fs.got) or 1.6
 		local left = math.max(1, floor((fs.total - fs.got) * per / 60 + 0.5))
-		tinsert(rows, row("|cff66ccffReceiving them from " .. (fs.from or "?") .. "|r - the boards fill in when it's done.",
-			C_TIME .. floor(fs.got / fs.total * 100) .. "%|r  " .. C_DIM .. "about " .. left .. " min left|r",
+		tinsert(rows, row(W.LF("|cff66ccffReceiving them from %s|r - the boards fill in when it's done.", fs.from or "?"),
+			C_TIME .. floor(fs.got / fs.total * 100) .. "%|r  " .. C_DIM .. W.LF("about %s min left", left) .. "|r",
 			{ bar = fs.got / fs.total, cr = 0.2, cg = 0.55, cb = 1, ba = 0.45 }))
-		tinsert(rows, row(C_DIM .. fs.got .. " of " .. fs.total .. " messages. Keep playing as normal - it comes in quietly in the background.|r"))
+		tinsert(rows, row(C_DIM .. W.LF("%s of %s messages. Keep playing as normal - it comes in quietly in the background.", fs.got, fs.total) .. "|r"))
 	elseif m then
-		tinsert(rows, row("|cff33ff33" .. m.name .. " is online|r with times from " .. B.Ago(m.synced) .. ". Your WhoDidIt is asking for them.",
+		tinsert(rows, row(W.LF("|cff33ff33%s is online|r with times from %s. Your WhoDidIt is asking for them.", m.name, B.Ago(m.synced)),
 			C_DIM .. "starts within a minute|r"))
 		tinsert(rows, row(C_DIM .. "The first copy takes about 15 minutes; after that only changes are sent (seconds). If a full copy went out just before you logged in, the next one can take up to half an hour.|r"))
 	elseif who then
-		tinsert(rows, row("Waiting for |cffffd100" .. who .. "|r to come online on " .. realm .. ".",
+		tinsert(rows, row(W.LF("Waiting for |cffffd100%s|r to come online on %s.", who, realm),
 			C_DIM .. "nothing to do|r"))
 		tinsert(rows, row(C_DIM .. "The raid times come from their WhoDidIt. When they log in, yours notices within a minute and they arrive by themselves.|r"))
 	else
-		tinsert(rows, row("No master on " .. realm .. " yet, so the raid times can't arrive in game here.",
+		tinsert(rows, row(W.LF("No master on %s yet, so the raid times can't arrive in game here.", realm),
 			C_DIM .. "or run the helper|r"))
 	end
 
 	head(rows, "How the sharing works")
-	local function info(a, b) tinsert(rows, row("|cffffd100" .. a .. "|r  " .. C_DIM .. b .. "|r")) end
+	local function info(a, b) tinsert(rows, row("|cffffd100" .. W.L(a) .. "|r  " .. C_DIM .. W.L(b) .. "|r")) end
 	info("What arrives:", "guild names, raid and boss names, kill and clear times, dates, raid sizes and Chronicle log links.")
 	info("", "Nothing about any player - no characters, no gear, nothing personal.")
 	info("What you send:", "only a short request (\"send me what's new since ...\"). Nothing about you, your character or your PC.")
-	info("Who from:", "only " .. (who or "the WhoDidIt maintainer's characters") .. ". Anyone else trying to send times is ignored.")
+	info("Who from:", W.LF("only %s. Anyone else trying to send times is ignored.", who or W.L("the WhoDidIt maintainer's characters")))
 	info("Where it goes:", "saved with your WhoDidIt settings on your PC, so Rankings is full next login, even when they're offline.")
 	info("Never posted:", "other guilds' names never go into chat by themselves; anything you post shows you the text first.")
 	info("Live:", "after the first copy, new times arrive within minutes of being uploaded to Chronicle, while they're online.")
@@ -5135,14 +5229,14 @@ local function kindLines(t, colour)
 	table.sort(list, function(a, b) return a[3] > b[3] end)
 	local out = {}
 	for i = 1, getn(list) do
-		tinsert(out, { colour .. list[i][1] .. "|r", list[i][2] .. "x   " .. list[i][3] .. " pts" })
+		tinsert(out, { colour .. W.L(list[i][1]) .. "|r", list[i][2] .. "x   " .. W.LF("%s pts", list[i][3]) })
 	end
 	return out
 end
 
 -- a moment without its player's name in front ("healed X..." not "Bob healed X...")
 local function momentText(m)
-	return (string.gsub(m.text or "", "^" .. (m.who or "") .. " ", ""))
+	return (string.gsub(W.LT(m.text or ""), "^" .. (m.who or "") .. " ", ""))
 end
 
 local function momentRows(rows, list, blunder, who)
@@ -5155,11 +5249,11 @@ local function momentRows(rows, list, blunder, who)
 			shown = shown + 1
 			local col = blunder and "|cffff7777" or "|cff33ff33"
 			tinsert(rows, cells(MOMENT_SPEC,
-				{ C_DIM .. shown .. ".|r", col .. (blunder and "-" or "+") .. m.pts .. "|r", W.CName(m.who or "?", m.class) .. (m.test and " |cff33ccff(test)|r" or ""),
+				{ C_DIM .. shown .. ".|r", col .. (blunder and "-" or "+") .. m.pts .. "|r", W.CName(m.who or "?", m.class) .. (m.test and (" |cff33ccff" .. W.L("(test)") .. "|r") or ""),
 				  momentText(m), "|cffffd100" .. (m.enc or "?") .. "|r " .. C_DIM .. (m.when or "") .. "|r" },
-				{ tipTitle = (blunder and "Blunder" or "Play") .. ": " .. (m.kind or ""), tip = { m.text or "", " ",
+				{ tipTitle = W.L(blunder and "Blunder" or "Play") .. ": " .. W.L(m.kind or ""), tip = { m.text or "", " ",
 					(m.enc or "?") .. ", " .. (m.when or "?"), "|cffffd100Click|r  see it in your chat   |cffffd100Ctrl-click|r  post it",
-					"|cffffd100Right-click|r  " .. (m.who or "their") .. "'s record" },
+					W.LF("|cffffd100Right-click|r  %s's record", m.who or "?") },
 				  click = function(d, button)
 					if button == "RightButton" then UI.fame.who = m.who; UI:Refresh() return end
 					C:Post({ C:MomentLine(m, nil, blunder) }, (not IsControlKeyDown()) and "SELF" or nil)
@@ -5176,11 +5270,12 @@ function UI:FameBoardRows(kind)
 	local rows = {}
 	local hero = (kind == "hero")
 	local list = C:Board(kind, UI.fame.per, nil, UI.fame.role)
-	head(rows, (hero and "Hall of Fame - the biggest heroes" or "Hall of Shame - the biggest liabilities") .. (UI.fame.per and "  (points per fight, 3+ fights)" or ""))
+	head(rows, W.L(hero and "Hall of Fame - the biggest heroes" or "Hall of Shame - the biggest liabilities") .. (UI.fame.per and ("  " .. W.L("(points per fight, 3+ fights)")) or ""))
 	if getn(list) == 0 then
-		tinsert(rows, row(C_DIM .. ((d.fights + d.testFights) == 0 and (d.guild and "Nothing from the guild yet. Fights arrive as members with WhoDidIt record them and come online - Share with guild asks now."
+		tinsert(rows, row(C_DIM .. ((d.fights + d.testFights) == 0 and W.L(d.guild and "Nothing from the guild yet. Fights arrive as members with WhoDidIt record them and come online - Share with guild asks now."
 				or "Nothing counted yet. Every fight you save adds to it (demo fights too, marked test).")
-			or "Nobody has " .. (hero and "hero" or "blame") .. " points yet" .. (UI.fame.per and " with 3 or more fights" or "") .. ".") .. "|r"))
+			or W.L(hero and (UI.fame.per and "Nobody has hero points yet with 3 or more fights." or "Nobody has hero points yet.")
+				or (UI.fame.per and "Nobody has blame points yet with 3 or more fights." or "Nobody has blame points yet."))) .. "|r"))
 		return rows
 	end
 	colHead(rows, FAME_SPEC, { "#", "Player", "Points", hero and "Plays" or "Errors", "Fights", "Mostly", hero and "MVP" or "Worst", "Last seen" })
@@ -5191,11 +5286,11 @@ function UI:FameBoardRows(kind)
 		local r, g, b = W.ClassRGB(p.class)
 		local top = C.TopKind(hero and p.hk or p.mk)
 		local tip = {
-			{ "Fights", p.fights .. "  (" .. p.kills .. " kills, " .. p.deaths .. " deaths)" },
-			{ "Hero", p.hero .. " pts from " .. p.saves .. " plays" .. ((p.mvp > 0) and (", MVP " .. p.mvp .. "x") or "") },
-			{ "Shame", p.blame .. " pts from " .. p.mistakes .. " mistakes" .. ((p.worst > 0) and (", most to blame " .. p.worst .. "x") or "") },
+			{ "Fights", p.fights .. "  (" .. W.LF("%s kills, %s deaths", p.kills, p.deaths) .. ")" },
+			{ "Hero", W.LF("%s pts from %s plays", p.hero, p.saves) .. ((p.mvp > 0) and (", " .. W.LF("MVP %sx", p.mvp)) or "") },
+			{ "Shame", W.LF("%s pts from %s mistakes", p.blame, p.mistakes) .. ((p.worst > 0) and (", " .. W.LF("most to blame %sx", p.worst)) or "") },
 			" ",
-			"|cffffd100" .. (hero and "Plays" or "Mistakes") .. " by kind|r",
+			"|cffffd100" .. W.L(hero and "Plays by kind" or "Mistakes by kind") .. "|r",
 		}
 		local kl = kindLines(hero and p.hk or p.mk, hero and "|cff33ff33" or "|cffff7777")
 		for j = 1, getn(kl) do tinsert(tip, kl[j]) end
@@ -5204,12 +5299,12 @@ function UI:FameBoardRows(kind)
 		tinsert(tip, "|cffffd100Right-click|r  open their record")
 		local name = it.name
 		tinsert(rows, cells(FAME_SPEC,
-			{ C_DIM .. i .. ".|r", W.CName(name, p.class) .. (p.test and " |cff33ccff(test)|r" or ""), pc .. it.v .. "|r",
+			{ C_DIM .. i .. ".|r", W.CName(name, p.class) .. (p.test and (" |cff33ccff" .. W.L("(test)") .. "|r") or ""), pc .. it.v .. "|r",
 			  C_TIME .. (hero and p.saves or p.mistakes) .. "|r", C_DIM .. p.fights .. "|r",
-			  top and ("|cffcccccc" .. top .. "|r") or (C_DIM .. "-|r"),
+			  top and ("|cffcccccc" .. W.L(top) .. "|r") or (C_DIM .. "-|r"),
 			  ((hero and p.mvp or p.worst) > 0) and (C_YOU .. (hero and p.mvp or p.worst) .. "x|r") or (C_DIM .. "-|r"),
 			  C_DIM .. (p.last or "") .. "|r" },
-			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = name .. (p.test and " (test - from a demo fight)" or "") .. " - Hall of Fame", name = name,
+			{ bar = it.v / max, cr = r, cg = g, cb = b, ba = 0.3, tip = tip, tipTitle = name .. (p.test and (" " .. W.L("(test - from a demo fight)")) or "") .. " - " .. W.L("Hall of Fame"), name = name,
 			  click = function(dd, button)
 				if button == "RightButton" then UI.fame.who = name; UI:Refresh() return end
 				C:Post(C:PlayerLines(name), (not IsControlKeyDown()) and "SELF" or nil)
@@ -5225,16 +5320,16 @@ function UI:FamePlayerRows(name)
 	local rows = {}
 	tinsert(rows, row("|cffffd100< Back to the board|r", nil, { click = function() UI.fame.who = nil; UI:Refresh() end }))
 	if not p then
-		tinsert(rows, row(C_DIM .. name .. " has no all-time record yet.|r"))
+		tinsert(rows, row(C_DIM .. W.LF("%s has no all-time record yet.", name) .. "|r"))
 		return rows
 	end
 	local function per(v) return floor(v / math.max(1, p.fights) * 10 + 0.5) / 10 end
-	head(rows, W.CName(name, p.class) .. (p.test and " |cff33ccff(test)|r" or "") .. "|cffffd100's record  -  " .. p.fights .. " fights, " .. p.kills .. " kills, " .. p.deaths .. " deaths|r")
-	tinsert(rows, row(C_GUILD .. "Hero|r   " .. p.hero .. " pts from " .. p.saves .. " plays" .. ((p.mvp > 0) and ("   - MVP of " .. p.mvp .. " fights") or ""),
-		C_DIM .. per(p.hero) .. " a fight|r", { tipTitle = "Hero", tip = { "Points for game-saving plays: clutch heals, shields, taunts,", "battle res, dispels, interrupts, surviving..." } }))
-	tinsert(rows, row("|cffff7777Shame|r   " .. p.blame .. " pts from " .. p.mistakes .. " mistakes" .. ((p.worst > 0) and ("   - most to blame in " .. p.worst .. " fights") or ""),
-		C_DIM .. per(p.blame) .. " a fight|r", { tipTitle = "Shame", tip = { "Points for mistakes: standing in fire, pulling aggro,", "bombing the raid, idling, low DPS..." } }))
-	tinsert(rows, row("|cffffd100Click here to see this record in your chat|r " .. C_DIM .. "(Ctrl-click: post it)|r", nil,
+	head(rows, "|cffffd100" .. W.LF("%s's record  -  %s fights, %s kills, %s deaths", W.CName(name, p.class) .. (p.test and (" |cff33ccff" .. W.L("(test)") .. "|r") or "") .. "|cffffd100", p.fights, p.kills, p.deaths) .. "|r")
+	tinsert(rows, row(C_GUILD .. W.L("Hero") .. "|r   " .. W.LF("%s pts from %s plays", p.hero, p.saves) .. ((p.mvp > 0) and ("   - " .. W.LF("MVP of %s fights", p.mvp)) or ""),
+		C_DIM .. W.LF("%s a fight", per(p.hero)) .. "|r", { tipTitle = "Hero", tip = { "Points for game-saving plays: clutch heals, shields, taunts,\nbattle res, dispels, interrupts, surviving..." } }))
+	tinsert(rows, row("|cffff7777" .. W.L("Shame") .. "|r   " .. W.LF("%s pts from %s mistakes", p.blame, p.mistakes) .. ((p.worst > 0) and ("   - " .. W.LF("most to blame in %s fights", p.worst)) or ""),
+		C_DIM .. W.LF("%s a fight", per(p.blame)) .. "|r", { tipTitle = "Shame", tip = { "Points for mistakes: standing in fire, pulling aggro,\nbombing the raid, idling, low DPS..." } }))
+	tinsert(rows, row(W.L("|cffffd100Click here to see this record in your chat|r") .. " " .. C_DIM .. W.L("(Ctrl-click: post it)") .. "|r", nil,
 		{ click = function() C:Post(C:PlayerLines(name), (not IsControlKeyDown()) and "SELF" or nil) end }))
 	head(rows, "Plays by kind")
 	local hk = kindLines(p.hk, "|cff33ff33")
@@ -5266,8 +5361,8 @@ function UI:RefreshFame()
 	local left = {}
 	for i = 1, getn(names) do
 		local name, p = names[i], d.players[names[i]]
-		tinsert(left, { l = W.CName(name, p.class) .. (p.test and " |cff33ccff(test)|r" or ""), r = C_GUILD .. p.hero .. "|r " .. C_DIM .. "/|r |cffff7777" .. p.blame .. "|r",
-			sel = (UI.fame.who == name), tipTitle = name, tip = { "Hero " .. p.hero .. " pts  /  Shame " .. p.blame .. " pts", "Click: open their record" },
+		tinsert(left, { l = W.CName(name, p.class) .. (p.test and (" |cff33ccff" .. W.L("(test)") .. "|r") or ""), r = C_GUILD .. p.hero .. "|r " .. C_DIM .. "/|r |cffff7777" .. p.blame .. "|r",
+			sel = (UI.fame.who == name), tipTitle = name, tip = { W.LF("Hero %s pts  /  Shame %s pts", p.hero, p.blame), "Click: open their record" },
 			click = function() UI.fame.who = name; UI:Refresh() end })
 	end
 	if getn(left) == 0 then left = { { l = C_DIM .. "Nobody yet|r" } } end
@@ -5278,25 +5373,25 @@ function UI:RefreshFame()
 		local on = (not UI.fame.who) and ((i == 1 and v == "hero") or (i == 2 and v == "blame") or (i == 3 and v == "plays") or (i == 4 and v == "blunders"))
 		UI.SkinSelect(b, on)
 	end
-	famePerBtn:SetText("Per fight: " .. (UI.fame.per and "|cff33ff33on|r" or "off"))
-	UI.fameRoleBtn:SetText("Role: " .. (UI.fame.role and ("|cffffd100" .. C.ROLE_LABEL[UI.fame.role] .. "|r") or "all"))
+	famePerBtn:SetText(W.LF("Per fight: %s", W.L(UI.fame.per and "|cff33ff33on|r" or "off")))
+	UI.fameRoleBtn:SetText(W.LF("Role: %s", UI.fame.role and ("|cffffd100" .. W.L(C.ROLE_LABEL[UI.fame.role]) .. "|r") or W.L("all")))
 	fameTestBtn:SetText(C.HasTest() and "|cff33ccffClear test data|r" or "|cff777777No test data|r")
-	UI.fameScopeBtn:SetText("Showing: " .. ((scope == "guild") and "|cff33ff33guild|r" or "|cffffd100mine|r"))
+	UI.fameScopeBtn:SetText(W.LF("Showing: %s", W.L((scope == "guild") and "|cff33ff33guild|r" or "|cffffd100mine|r")))
 	if scope == "guild" then fameResetBtn:Hide(); fameTestBtn:Hide() else fameResetBtn:Show(); fameTestBtn:Show() end
 	if W.GuildFame and W.GuildFame.Guild() then UI.fameShareBtn:Show() else UI.fameShareBtn:Hide() end
 
 	local titles = { hero = "|cff33ff33Heroes|r", blame = "|cffff5555Hall of Shame|r", plays = "Best plays", blunders = "Worst blunders" }
-	rTitle:SetText("Hall of Fame  " .. (UI.fame.who and W.CName(UI.fame.who, d.players[UI.fame.who] and d.players[UI.fame.who].class) or titles[v])
-		.. ((scope == "guild") and ("  |cff33ff33<" .. d.guild .. ">|r") or "  |cff888888(your fights)|r"))
+	rTitle:SetText(W.L("Hall of Fame") .. "  " .. (UI.fame.who and W.CName(UI.fame.who, d.players[UI.fame.who] and d.players[UI.fame.who].class) or W.L(titles[v]))
+		.. ((scope == "guild") and ("  |cff33ff33<" .. d.guild .. ">|r") or ("  |cff888888" .. W.L("(your fights)") .. "|r")))
 	if scope == "guild" then
 		local GF = W.GuildFame
-		rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights from " .. (d.recorders or 0) .. " member(s) with WhoDidIt   |   "
-			.. getn(names) .. " raiders   |   your fights " .. (GF.On() and "shared" or "|cffff9933not shared|cffaaaaaa") .. "|r")
-		rVerdict:SetText("Every fight a guild member records adds here, also raids you weren't in. The same fight counts once.\n"
-			.. "|cff888888Members swap fights when they're online together: at login, after each fight, and with |cff33ff33Share with guild|cff888888.|r")
+		rInfo:SetText("|cffaaaaaa" .. W.LF("Since %s", d.since) .. "   |   " .. W.LF("%s fights from %s member(s) with WhoDidIt", d.fights, d.recorders or 0) .. "   |   "
+			.. W.LF("%s raiders", getn(names)) .. "   |   " .. W.LF("your fights %s", GF.On() and W.L("shared") or ("|cffff9933" .. W.L("not shared") .. "|cffaaaaaa")) .. "|r")
+		rVerdict:SetText(W.L("Every fight a guild member records adds here, also raids you weren't in. The same fight counts once.") .. "\n"
+			.. W.L("|cff888888Members swap fights when they're online together: at login, after each fight, and with |cff33ff33Share with guild|cff888888.|r"))
 	else
-		rInfo:SetText("|cffaaaaaaSince " .. d.since .. "   |   " .. d.fights .. " fights counted"
-			.. ((d.testFights > 0) and ("  |cff33ccff+ " .. d.testFights .. " test|cffaaaaaa") or "") .. "   |   " .. getn(names) .. " raiders|r")
+		rInfo:SetText("|cffaaaaaa" .. W.LF("Since %s", d.since) .. "   |   " .. W.LF("%s fights counted", d.fights)
+			.. ((d.testFights > 0) and ("  |cff33ccff" .. W.LF("+ %s test", d.testFights) .. "|cffaaaaaa") or "") .. "   |   " .. W.LF("%s raiders", getn(names)) .. "|r")
 		rVerdict:SetText("Every fight your WhoDidIt saved adds its hero and blame points here, for good - even after the fight itself is deleted.\n|cff888888Demo fights count as |cff33ccfftest|cff888888 data - |cffffd100Clear test data|cff888888 (bottom left) removes them. Click any line to post it.|r")
 	end
 	hintText:SetText("Click a line to see it in your chat  -  Ctrl-click: post it  -  right-click a player for their record")
@@ -5315,14 +5410,19 @@ function UI:RefreshFame()
 end
 
 local lastTab
+-- refresh, then shrink any translated button label that doesn't fit
 function UI:Refresh()
+	UI:RefreshNow()
+	if W.Locale and W.Locale.lang ~= "en" then UI.FitAll() end
+end
+function UI:RefreshNow()
 	if not f:IsVisible() then return end
 	UI.ShowGrid(false)   -- only the Consumes tab uses the grid
 	local db = WhoDidItDB
 
 	local e = W.env
 	local function yn(v, n) return (v and "|cff33ff33" or "|cffff3333") .. n .. "|r" end
-	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, "Threat")
+	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, W.L("Threat"))
 		.. "  " .. (e.classicapi and "|cff33ff33ClassicAPI|r" or "|cff777777ClassicAPI?|r") .. UI.OnlineText())
 	UI:UpdateAML()
 	UI.SetHeaderArt(nil)   -- each tab sets its own
@@ -5340,12 +5440,12 @@ function UI:Refresh()
 	lastModeKey = nil
 	leftHead:SetText("Encounters")
 
-	trashBtn:SetText("Track trash: " .. (db.opts.trackTrash and "|cff33ff33on|r" or "off"))
+	trashBtn:SetText(W.LF("Track trash: %s", W.L(db.opts.trackTrash and "|cff33ff33on|r" or "off")))
 	local ann = db.opts.announce
-	annBtn:SetText("Auto summary: " .. (ann == "channel" and "|cff33ff33on|r" or (ann == "self" and "me" or "off")))
-	autoBtn:SetText("Shout-outs: " .. ((db.opts.autoShout or "off") == "off" and "off" or ("|cff33ff33" .. db.opts.autoShout .. "|r")))
+	annBtn:SetText(W.LF("Auto summary: %s", W.L(ann == "channel" and "|cff33ff33on|r" or (ann == "self" and "me" or "off"))))
+	autoBtn:SetText(W.LF("Shout-outs: %s", (db.opts.autoShout or "off") == "off" and W.L("off") or ("|cff33ff33" .. W.L(db.opts.autoShout) .. "|r")))
 	local n = getn(db.fights)
-	leftCount:SetText(n .. " saved")
+	leftCount:SetText(W.LF("%s saved", n))
 
 	fightList:SetData(UI:FightRows(), true)
 
@@ -5379,17 +5479,17 @@ function UI:Refresh()
 		return
 	end
 
-	rTitle:SetText(rec.enc .. "  " .. (RESULT[rec.result] or rec.result) .. (rec.demo and "  |cff33ccff(demo)|r" or "") .. UI.WouldRankText(rec))
+	rTitle:SetText(rec.enc .. "  " .. W.L(RESULT[rec.result] or rec.result) .. (rec.demo and ("  |cff33ccff" .. W.L("(demo)") .. "|r") or "") .. UI.WouldRankText(rec))
 	UI.SetHeaderArt(not rec.demo and rec.zone or nil)
-	local info = { rec.zone or "", rec.date or "", "Duration " .. FmtTime(rec.dur), "Deaths " .. getn(rec.deaths) }
-	if rec.healMana then tinsert(info, "Healer mana at wipe " .. pct(rec.healMana)) end
+	local info = { rec.zone or "", rec.date or "", W.LF("Duration %s", FmtTime(rec.dur)), W.LF("Deaths %s", getn(rec.deaths)) }
+	if rec.healMana then tinsert(info, W.LF("Healer mana at wipe %s", pct(rec.healMana))) end
 	rInfo:SetText("|cffaaaaaa" .. table.concat(info, "   |   ") .. "|r")
 	local culprit = ""
 	if rec.culprit then
 		local b = rec.blame[1]
-		culprit = "\n|cffffd100Most to blame:|r " .. W.CName(b.name, b.class) .. " |cffaaaaaa(" .. b.pts .. " pts)|r"
+		culprit = "\n" .. W.L("|cffffd100Most to blame:|r") .. " " .. W.CName(b.name, b.class) .. " |cffaaaaaa(" .. W.LF("%s pts", b.pts) .. ")|r"
 	end
-	rVerdict:SetText((rec.result == "KILL" and "|cff33ff33" or "|cffff7777") .. (rec.verdict or "") .. "|r" .. culprit .. UI.ClearText(rec, culprit == ""))
+	rVerdict:SetText((rec.result == "KILL" and "|cff33ff33" or "|cffff7777") .. W.LT(rec.verdict or "") .. "|r" .. culprit .. UI.ClearText(rec, culprit == ""))
 
 	local rows
 	if UI.tab == "summary" and UI.cause then rows = UI:CauseRows(rec, UI.cause)
@@ -5454,21 +5554,21 @@ function UI:EmptyRows()
 	tinsert(rows, row(" "))
 	head(rows, "Before your first raid")
 	tinsert(rows, row("Mark your main tanks:  |cffffd100/wdi tank <name>|r  (or right-click a name in Meters)"))
-	tinsert(rows, row("Pick where shout-outs go with the |cffffd100To:|r button (top-right), or |cffffd100/wdi channel <name>|r"))
+	tinsert(rows, row("Pick where posts go with the |cffffd100Post to|r button (bottom left), or |cffffd100/wdi channel <name>|r"))
 	tinsert(rows, row("Keep the boss targeted during the fight so threat % gets recorded."))
 	tinsert(rows, row(" "))
 	head(rows, "Your setup")
 	local e = W.env
-	local function yn(v) return v and "|cff33ff33found|r" or "|cffff3333missing|r" end
-	tinsert(rows, row("Nampower: " .. yn(e.nampower) .. "     SuperWoW: " .. yn(e.superwow) .. "     TWThreat: " .. (e.twthreat and "|cff33ff33found|r" or "|cff888888not loaded (server queries used)|r")))
+	local function yn(v) return W.L(v and "|cff33ff33found|r" or "|cffff3333missing|r") end
+	tinsert(rows, row("Nampower: " .. yn(e.nampower) .. "     SuperWoW: " .. yn(e.superwow) .. "     TWThreat: " .. W.L(e.twthreat and "|cff33ff33found|r" or "|cff888888not loaded (server queries used)|r")))
 	local miss = W.MissingExtras()
 	if getn(miss) > 0 then
-		tinsert(rows, row("|cffff9933Missing from your WhoDidIt folder:|r " .. table.concat(miss, ", ")))
-		tinsert(rows, row("   To fix it, " .. W.SYNC_HOWTO .. ", then " .. W.RESTART_HINT .. "."))
+		tinsert(rows, row(W.L("|cffff9933Missing from your WhoDidIt folder:|r") .. " " .. UI.LJoin(miss)))
+		tinsert(rows, row("   " .. W.LF("To fix it, %s, then %s.", W.L(W.SYNC_HOWTO), W.L(W.RESTART_HINT))))
 	else
-		tinsert(rows, row("Built in (raid packs, Chronicle logger, RollFor, DopingControl): |cff33ff33all there|r  " .. C_DIM .. "raid times come from the master feed|r"))
+		tinsert(rows, row(W.L("Built in (raid packs, Chronicle logger, RollFor, DopingControl): |cff33ff33all there|r") .. "  " .. C_DIM .. W.L("raid times come from the master feed") .. "|r"))
 	end
-	tinsert(rows, row("ClassicAPI: " .. (e.classicapi and "|cff33ff33found|r" or "|cff999999not installed - optional extra, /wdi classicapi shows what it adds and how to get it|r"),
+	tinsert(rows, row("ClassicAPI: " .. W.L(e.classicapi and "|cff33ff33found|r" or "|cff999999not installed - optional extra, /wdi classicapi shows what it adds and how to get it|r"),
 		nil, { click = function() W:ClassicApiInfo() end }))
 	tinsert(rows, row("|cff888888All commands: /wdi help|r"))
 	return rows
@@ -5491,6 +5591,61 @@ function UI:OnFightEnd()
 end
 
 f:SetScript("OnShow", function() UI:Refresh() end)
+
+-- The window is built in English while the files load; the language is only known
+-- at ADDON_LOADED (Locale.lua), which calls this: every label and button gets its
+-- translation, the mode buttons are laid out again and the flags show the language.
+function UI.Relabel()
+	local function walk(fr)
+		local kind = fr.GetObjectType and fr:GetObjectType()
+		if kind == "Button" and fr.GetText then
+			local t = fr:GetText()
+			if t then fr:SetText(W.L(t)) end
+		end
+		local regions = { fr:GetRegions() }
+		for i = 1, getn(regions) do
+			local r = regions[i]
+			if r.GetObjectType and r:GetObjectType() == "FontString" then
+				local t = r:GetText()
+				if t then r:SetText(W.L(t)) end
+			end
+		end
+		local kids = { fr:GetChildren() }
+		for i = 1, getn(kids) do walk(kids[i]) end
+	end
+	walk(f)
+	UI.LayoutModes()
+	UI.FlagIdle()
+end
+
+-- a translated label wider than its button: the next smaller font, then the
+-- smallest (English labels fit; this only runs for the other languages)
+UI.FIT = {
+	{ "GameFontNormal", "GameFontHighlight", "GameFontDisable" },
+	{ "GameFontNormalSmall", "GameFontHighlightSmall", "GameFontDisableSmall" },
+	{ "TinyGameFontNormalSmall", "TinyGameFontHighlightSmall", "TinyGameFontDisableSmall" },
+}
+function UI.Fit(b)
+	if not (b.GetTextWidth and b.SetTextFontObject) then return end
+	local room = b:GetWidth() - 8
+	for lv = b.wdiLevel or 1, 3 do
+		local set = UI.FIT[lv]
+		local fo = UI.FONTS[set[1]] and getglobal(UI.FONTS[set[1]])
+		if fo then
+			b:SetTextFontObject(fo)
+			if b.SetHighlightFontObject then b:SetHighlightFontObject(UI.FO(set[2])) end
+			if b.SetDisabledFontObject then b:SetDisabledFontObject(UI.FO(set[3])) end
+			if (b:GetTextWidth() or 0) <= room then return end
+		end
+	end
+end
+function UI.FitAll()
+	if not f:IsVisible() then return end
+	for i = 1, getn(UI.allBtns) do
+		local b = UI.allBtns[i]
+		if b:IsVisible() then UI.Fit(b) end
+	end
+end
 
 -- live view: rebuild the in-progress report every 1.5s while it's on screen
 W:Every(1.5, function()

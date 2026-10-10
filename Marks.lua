@@ -45,8 +45,8 @@ function M.IconCoords(i)
 end
 
 function M.MarkText(i)
-	if not i or i < 1 or i > 8 then return "|cff888888no mark|r" end
-	return M.COLORS[i] .. M.NAMES[i] .. "|r"
+	if not i or i < 1 or i > 8 then return "|cff888888" .. W.L("no mark") .. "|r" end
+	return M.COLORS[i] .. W.L(M.NAMES[i]) .. "|r"
 end
 
 -- 0xF130 003E68 0158F6 -> "003E68" (the NPC id, in hex)

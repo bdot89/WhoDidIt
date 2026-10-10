@@ -104,3 +104,24 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
 - The maintainer's sync helper commits and pushes RaidTimes.lua by itself once a week
   (Publish-RaidTimes.ps1 -Auto; it skips when main has unpushed commits). Pull --rebase before
   pushing; never stage RaidTimes.lua with other changes.
+
+## Languages (Locale.lua, Locales\*.lua)
+- English is written in the code and is what WhoDidIt saves and sends: fights, boards, the feed,
+  addon messages. Text is translated only when it's shown, never before it's stored or sent.
+- New text a player sees: W.L("text"), W.LF("format %s", v) (string.format after translating),
+  W.LT(sentence) for a sentence a fight saved in English (matched against S(...) patterns).
+  Button SetText (UI.Skin), header labels (UI.SinkText), W.Print, W:Prompt, W.ShowPopup and the
+  tooltip helpers already translate; W.L of a translated or unknown text returns it unchanged.
+- Then add a T("English", de, fr, es, it, pt, ru, zh, ko) line to the matching Locales file (9 strings,
+  "" = English). Placeholders the same and in the same order, or numbered (%1$s, %2$d). Keys must be
+  the exact English, escapes included ("\n", "\\"), colour codes too (or translate the inner text:
+  W.L unwraps one "|cffxxxxxx...|r").
+- Locale.lua loads after Core.lua, which has English stand-ins (W.L etc.), so a /reload after an
+  update that adds files still works (in English, without flags) until WoW restarts.
+- The language is known at ADDON_LOADED: UI.Relabel translates the window built in English, then
+  UI.FitAll shrinks labels that don't fit. Changing language = ReloadUI (Loc.Set, not in combat).
+- Chinese / Korean use Fonts\WDI-NotoSansSC.ttf / KR.ttf, subsets with only the characters the zh / ko
+  columns use: run tools\FontSubset.ps1 after changing those translations (it stops when a character
+  is missing). WoW's own tooltip and pop-ups use the client font: WhoDidIt uses W.TT and W.ShowPopup.
+- Chat: a translated line can be longer (Chinese / Korean letters are 3 bytes in UTF-8); split at 255
+  bytes on a character boundary.

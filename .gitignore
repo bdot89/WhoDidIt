@@ -9,3 +9,5 @@
 /Marks/
 # the website's upload address and key (tools\Website-Export.ps1): this PC only
 /tools/website.json
+# the Noto fonts tools\FontSubset.ps1 downloads (the subsets it makes are in Fonts\)
+/tools/.fontcache/
