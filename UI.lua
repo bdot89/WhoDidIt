@@ -519,6 +519,119 @@ f:Hide()
 UI.frame = f
 tinsert(UISpecialFrames, "WhoDidItFrame")
 
+-- Scaling: drag the grip in the bottom-right corner to scale the whole window
+-- (everything inside it scales with it); right-click the grip to go back to 100%.
+-- The top-left corner stays put while you drag. Scale and place are kept in
+-- WhoDidItDB.opts (uiScale, uiPos), the place in UIParent units so it survives
+-- a change of the game's own UI scale.
+-- (all inside one function: UI.lua is near Lua 5.0's 200 top-level locals limit)
+function UI.BuildScaleGrip()
+	local SCALE_MIN, SCALE_MAX = 0.5, 2.0
+
+	local function savePos()
+		local o = WhoDidItDB and WhoDidItDB.opts
+		if not o or not f:GetLeft() then return end
+		local s = f:GetEffectiveScale() / UIParent:GetEffectiveScale()
+		o.uiPos = { f:GetLeft() * s, f:GetTop() * s }
+	end
+
+	-- put the window's top-left at x, y (UIParent units) at the scale it has now
+	local function placeAt(x, y)
+		local s = UIParent:GetEffectiveScale() / f:GetEffectiveScale()
+		f:ClearAllPoints()
+		f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x * s, y * s)
+	end
+
+	function UI.SetScale(scale)
+		scale = math.max(SCALE_MIN, math.min(SCALE_MAX, scale or 1))
+		local x, y
+		if f:GetLeft() then
+			local s = f:GetEffectiveScale() / UIParent:GetEffectiveScale()
+			x, y = f:GetLeft() * s, f:GetTop() * s
+		end
+		f:SetScale(scale)
+		if x then placeAt(x, y) end
+		if WhoDidItDB and WhoDidItDB.opts then
+			WhoDidItDB.opts.uiScale = (scale ~= 1) and scale or nil
+		end
+		savePos()
+	end
+
+	-- once, the first time the window opens: the saved scale and place
+	local scaleApplied
+	function UI.ApplySavedScale()
+		if scaleApplied then return end
+		local o = WhoDidItDB and WhoDidItDB.opts
+		if not o then return end
+		scaleApplied = true
+		f:SetScale(o.uiScale or 1)
+		if o.uiPos then placeAt(o.uiPos[1], o.uiPos[2]) end
+	end
+
+	f:SetScript("OnDragStop", function() this:StopMovingOrSizing() savePos() end)
+
+	local grip = CreateFrame("Button", nil, f)
+	grip:SetWidth(16)
+	grip:SetHeight(16)
+	grip:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -2, 2)
+	grip:SetFrameLevel(f:GetFrameLevel() + 10)
+	grip:RegisterForClicks("RightButtonUp")
+	-- the size grabber art (Textures\SizeGrabber-*.tga, 16x16)
+	local TEX = "Interface\\AddOns\\WhoDidIt\\Textures\\SizeGrabber-"
+	grip:SetNormalTexture(TEX .. "Up")
+	grip:SetPushedTexture(TEX .. "Down")
+	grip:SetHighlightTexture(TEX .. "Highlight", "ADD")
+
+	grip:SetScript("OnEnter", function()
+		if this.sizing then return end
+		W.TT:SetOwner(this, "ANCHOR_BOTTOMRIGHT")
+		W.TT:SetText(W.L("Scale"), 1, 0.82, 0)
+		W.TT:AddLine(W.LF("Now: |cffffffff%d%%|r", floor(f:GetScale() * 100 + 0.5)), 0.9, 0.9, 0.9)
+		W.TT:AddLine(W.L("Drag: scale the window   Right-click: back to 100%"), 0.6, 0.6, 0.6)
+		W.TT:Show()
+	end)
+	grip:SetScript("OnLeave", function() W.TT:Hide() end)
+	grip:SetScript("OnClick", function()
+		UI.SetScale(1)
+		W.Print(W.L("Window scale back to 100%."))
+	end)
+
+	grip:SetScript("OnMouseDown", function()
+		if arg1 ~= "LeftButton" then return end
+		W.TT:Hide()
+		local es = f:GetEffectiveScale()
+		local cx, cy = GetCursorPosition()
+		this.L, this.T = f:GetLeft() * es, f:GetTop() * es      -- screen pixels
+		this.d0 = (cx - this.L) + (this.T - cy)                -- how far from the top-left
+		this.s0 = f:GetScale()
+		if this.d0 < 20 then return end
+		this.sizing = true
+		this:SetButtonState("PUSHED", 1)   -- stays pressed while dragging, even off the icon
+		this:SetScript("OnUpdate", function()
+			local x, y = GetCursorPosition()
+			local d = (x - this.L) + (this.T - y)
+			local ns = this.s0 * d / this.d0
+			ns = math.max(SCALE_MIN, math.min(SCALE_MAX, ns))
+			ns = floor(ns * 100 + 0.5) / 100
+			if ns ~= f:GetScale() then
+				f:SetScale(ns)
+				local e = f:GetEffectiveScale()
+				f:ClearAllPoints()
+				f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", this.L / e, this.T / e)
+			end
+		end)
+	end)
+	grip:SetScript("OnMouseUp", function()
+		if not this.sizing then return end
+		this.sizing = nil
+		this:SetScript("OnUpdate", nil)
+		this:SetButtonState("NORMAL")
+		UI.SetScale(f:GetScale())
+	end)
+	UI.scaleGrip = grip
+end
+UI.BuildScaleGrip()
+
 local titleBar = f:CreateTexture(nil, "ARTWORK")
 titleBar:SetTexture(UI.FLAT)
 if titleBar.SetGradientAlpha then
@@ -5620,7 +5733,7 @@ function UI:OnFightEnd()
 	UI:Refresh()
 end
 
-f:SetScript("OnShow", function() UI:Refresh() end)
+f:SetScript("OnShow", function() UI.ApplySavedScale() UI:Refresh() end)
 
 -- The window is built in English while the files load; the language is only known
 -- at ADDON_LOADED (Locale.lua), which calls this: every label and button gets its
