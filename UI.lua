@@ -4420,6 +4420,8 @@ function UI:LogRows()
 	head(rows, "Uploading to Chronicle")
 	tinsert(rows, row("1.  After the raid click |cffffd100Stop & save|r (or |cffffd100Save now|r)."))
 	tinsert(rows, row("2.  Open |cffffd100chronicleclassic.com|r and click |cffffd100Upload|r."))
+	-- (a Log Format left on "WoW Forever" fails with "no realm info found in log (format v22-cleu)")
+	tinsert(rows, row("     Server |cffffd100OctoWoW|r, Log Format |cffffd1001.12a · ChronicleCompanion|r, not WoW Forever (it then says |cffffffffUploading as 1.12a-cc-addon|r)."))
 	tinsert(rows, row(W.LF("3.  Choose |cffffffffWoW folder\\CustomData\\%s|r.", file)))
 	if L:SplitOn() then
 		tinsert(rows, row("4.  Every raid and 5-man run has its own numbered file (below), so nothing needs archiving."))

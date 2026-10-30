@@ -510,7 +510,9 @@ The **Chronicle Logs** button (or `/wdi logs`) drives it from the WhoDidIt windo
 - Chronicle's auto-logging settings (raids, dungeons, save after combat, one file per realm)
 - WhoDidIt extras: **start logging when a boss is pulled** and **save after every boss fight**
 - Live status: logging on/off, the log file, unsaved lines, and what was saved this session
-- Step-by-step upload instructions. The upload itself is done on the website.
+- Step-by-step upload instructions. The upload itself is done on the website: pick the server **OctoWoW** and the
+  Log Format **1.12a · ChronicleCompanion**. The site remembers the format in your browser, and a log uploaded as
+  "WoW Forever · Blizzard Combat Log" fails with *no realm info found in log (format v22-cleu)*.
 
 ## Auto Marker
 
