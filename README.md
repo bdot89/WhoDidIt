@@ -683,7 +683,14 @@ It replaces the AutoMasterLooter addon (by balake).
 
 ## Auto invite
 
-`/wdi inv` switches auto invite on or off (`/wdi inv on|off` works too).
+The **Invite** button in the window's header (left of the language flags) shows whether auto invite is on.
+**Click** it (or type `/wdi inv`) for the auto invite panel: a big on / off toggle, the guild line again, and **who
+gets invited**. **Right-click** turns it on or off; `/wdi inv on|off` works too.
+- **Guild ranks:** the panel lists your guild's own ranks. Pick one and that rank and every rank above it are invited.
+  Pick Raider, for example, and Raiders, Officers and the Guild Master get in, Members and below don't, nor does anyone
+  outside the guild. Someone the guild list doesn't know yet (they just joined) is checked again once WoW sends a fresh
+  list. **Anyone who asks** (the default) invites everyone, guild or not. With a rank picked, the guild line says so
+  ("Raid invites are open for Raider and above").
 - **While it's on,** everyone who whispers you `+`, or types it in guild chat, gets a raid invite. Any number of plus
   signs works (`+`, `+++`, `+ ++`). A line with anything else in it, like `+1 please`, doesn't count.
 - **The raid makes itself:** solo, the first player to accept makes a party, and WhoDidIt turns it into a raid
@@ -971,7 +978,7 @@ Totals recorded with older points were scaled to these once, and so are older gu
 /wdi lang [code]           WhoDidIt's language: en de fr es it pt ru zh ko (the same as the flags; reloads the UI)
 /wdi 5man                  5-man dungeon rankings
 /wdi timer on|off|reset     the run timer on screen (first pull to the last boss)
-/wdi inv [on|off|post]      auto invite: + in a whisper or guild chat gets a raid invite
+/wdi inv [on|off|post]      auto invite panel (no word) / on / off / the guild line again
 /wdi online                how many WhoDidIt users are online on your realm (also small, next to the add-on lights)
 /wdi 5man name <name>      name the group you're in
 /wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)
