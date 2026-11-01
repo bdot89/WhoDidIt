@@ -622,6 +622,18 @@ function Release-New {
     foreach ($l in ($out.Trim() -split "`r?`n")) { if ($l) { Log ("  " + $l) } }
 }
 
+# An update to the helper's own scripts (a new commit, a pull) takes effect by itself: while
+# it waits between syncs it checks them once a minute, and when one changed it starts the
+# new copy through the same launcher AutoSync's task uses, and stops. (If that fails, the
+# task starts it within 15 minutes anyway.)
+function Get-ScriptStamp {
+    $m = (Get-ChildItem -LiteralPath $PSScriptRoot -Filter "*.ps1" -File -ErrorAction SilentlyContinue | Measure-Object LastWriteTimeUtc -Maximum).Maximum
+    if ($m) { return $m.Ticks } else { return 0 }
+}
+$script:Stamp = Get-ScriptStamp
+$script:StampAt = Get-Date
+$script:Restart = $false
+
 Log "WhoDidIt-Sync for $Server (WoW folder: $WowDir)"
 while ($true) {
     if (Test-Path -LiteralPath $RequestFile) { [IO.File]::Delete($RequestFile) }   # this sync answers any request
@@ -647,8 +659,22 @@ while ($true) {
     while ((Get-Date) -lt $next) {
         if (Test-Path -LiteralPath $RequestFile) { Log "Sync requested from the game"; break }
         if (((Get-Date) - $script:LastBeat).TotalSeconds -ge 30) { Write-Status }
+        if (((Get-Date) - $script:StampAt).TotalSeconds -ge 60) {
+            $script:StampAt = Get-Date
+            if ((Get-ScriptStamp) -ne $script:Stamp) { $script:Restart = $true; break }
+        }
         Start-Sleep -Seconds 3
     }
+    if ($script:Restart) { Log "The helper's scripts were updated: starting the new copy"; break }
 }
 $script:St.state = "stopped"
 Write-Status
+if ($script:Restart) {
+    # let go of "only one helper", then the launcher starts the new one (hidden, as the task does)
+    try { if ($mine) { $script:Single.ReleaseMutex() } } catch { }
+    $vbs = Join-Path $PSScriptRoot "WhoDidIt-Sync-Hidden.vbs"
+    try {
+        if (Test-Path -LiteralPath $vbs) { Start-Process -FilePath (Join-Path $env:WINDIR "System32\wscript.exe") -ArgumentList "`"$vbs`"" -WorkingDirectory $PSScriptRoot }
+        else { Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Minimized -File `"$PSCommandPath`"" -WorkingDirectory $PSScriptRoot }
+    } catch { Log ("Couldn't start the new copy (the scheduled task will): " + $_.Exception.Message) }
+}

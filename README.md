@@ -433,7 +433,9 @@ WhoDidIt: on a PC without the helper (any player's, since the helper isn't in th
 instead, so a task left over from an older version disappears by itself after an update, with no "Can not find
 script file" message. (`AutoSync.ps1 -Minimised`
 uses a Startup shortcut with a minimised window instead.) Only one copy of the helper ever runs, so the extra starts,
-or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
+or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm. **Updates apply by themselves:** when one of the
+helper's scripts changes (a new commit, a pull), the running helper notices within a minute between syncs, starts the
+new copy and stops, so there's nothing to restart.
 
 **Maintainer:** once a day the helper puts its latest times into the download by itself (`RaidTimes.lua`, about
 400 KB; your own characters' personal bests are left out): it runs `tools\Publish-RaidTimes.ps1`, which checks them
