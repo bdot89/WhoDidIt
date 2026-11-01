@@ -347,6 +347,9 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
   every 1.6 seconds or so, about 15 minutes (if one went out just before you logged in, up to half an hour). It comes in quietly in the
   background while you play. After that the master sends an update at most once an hour, with only the times that are new or changed
   (usually a few lines), and one send serves everyone listening.
+- **You're told:** the first time a session hears the master, a chat line says it's online. When your times are behind,
+  that line also shows on screen ("Upsy (the raid times master) is online - your raid times are syncing"), followed by
+  how many came in once the sync is done. Once a session.
 - **While you wait:** the top of the Rankings tab says what's happening: "Receiving them from Upsilon" with a progress
   bar, the % and the minutes left; "Upsilon is online… your WhoDidIt is asking for them"; or "Waiting for Upsilon to
   come online" (nothing to do). Under it, **How the sharing works** explains what arrives and what doesn't. Chat says
