@@ -102,6 +102,20 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 
 ## Install
 
+### With the Octo launcher (updates itself)
+
+1. In the launcher, open **Addons** and click **Add custom git addon**.
+2. Paste **`https://github.com/bdot89/WhoDidIt`** and click **Install**. It makes the `WhoDidIt` folder itself (about
+   16 MB, a few seconds).
+3. Make sure **Nampower** and **SuperWoW** are installed (the launcher's mods), then start the game and type `/wdi`.
+
+**Updates:** the launcher shows **Update** for WhoDidIt whenever there's something new (**Check for updates**, then
+**Update** or **Update all**). That includes fresh raid times every day. Your settings, fights and Hall of Fame are in
+the `WTF` folder and are kept. Installed from the zip before? Add it in the launcher anyway: it replaces the folder,
+and from then on it updates itself. (Paste the page's address above, not the zip's download link.)
+
+### By hand
+
 1. Download **[WhoDidIt.zip](https://github.com/bdot89/WhoDidIt/releases/latest/download/WhoDidIt.zip)** (the latest
    release; every version is on the [releases page](https://github.com/bdot89/WhoDidIt/releases)).
 2. Unzip it into `World of Warcraft\Interface\AddOns\`. You get a folder called **`WhoDidIt`**: nothing to rename.

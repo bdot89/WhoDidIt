@@ -88,6 +88,13 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   NPCList.lua (Weird Vibes) at the pin in tools/MarkDataUpdate.ps1, data only, credited in the
   file and README, not under WhoDidIt's MIT licence, removed if the author asks. Rebuild it only
   with that script from the real upstream file, never from edited copies.
+- The Octo launcher installs WhoDidIt from https://github.com/bdot89/WhoDidIt ("Add custom git addon"): isomorphic-git
+  clones main in full into Interface\Addons\WhoDidIt (folder = repo name, WhoDidIt.toc at the root), and updates
+  with checkout --force origin/main, then pull. So: never rewrite or force-push main, keep the repo name and the root
+  .toc, and nothing may write into the addon folder at run time (any changed or new file there makes the launcher
+  show "update available" for good). Checked 1 Nov 2026 with the launcher's own isomorphic-git from its app.asar
+  (ELECTRON_RUN_AS_NODE): install 15 s, up to date, an old copy catches up. The maintainer's own working copy always
+  looks out of date to it (local files); don't press Update there with uncommitted work: it checks out --force.
 - Players install WhoDidIt by drag and drop only: nothing may tell them to run a CMD/PowerShell
   file (ClassicAPI, a DLL, is the one optional exception). Chronicle\, RollFor\ and DopingControl\
   ship in the repo at the pins in tools/EmbedUpdate.ps1 (maintainer tool: move a pin, run it,
