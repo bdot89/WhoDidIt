@@ -110,19 +110,20 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   (WhoDidItDB.runsWithdrawn) makes R:Merge refuse that run for good, so it can't come back from members' PCs, older
   versions or the download. Record "W" (key~secs~names) only from a member, 5 per sender per 10 min, 200 kept per realm
   (yours always, ones that took a run off before ones that never did); taking one makes nobody send, members re-send
-  theirs in R:Answer. Masters write W5 lines; Publish-RaidTimes publishes them under the R5 ok rule and R:Seed applies
+  theirs in R:Answer. Masters write W5 lines; Publish-RaidTimes publishes them (all of them) and R:Seed applies
   them. Older clients ignore W (B:Receive drops unknown kinds) and keep sharing the run until they update.
-- Character names in the repository (RaidTimes.lua) or an export: the maintainer chose option (b) of review 3's T1
-  (9 Oct 2026). rec.ok (Dungeons.lua addOk) holds the members this PC saw share a run themselves: their own WDI5 vote,
-  or the run sent by them on the realm channel (the server says who sent it; never what a message claims). Only those
-  are named; Publish-RaidTimes takes a run only when every member is in ok, Website-Export shows the rest by class.
-  Any other place that would publish names needs the maintainer's decision and a README line.
+- Character names in the repository (RaidTimes.lua) or an export: on 1 Nov 2026 the maintainer dropped review 3's
+  T1 option (b) (9 Oct) so times spread to every realm: Publish-RaidTimes publishes every R5 / W5 line with the
+  members' names and Website-Export names everyone. The README says so (5-man rankings, Privacy). Runs a member opted
+  out of (priv) are still never written. rec.ok (Dungeons.lua addOk: members seen sharing a run themselves) is still
+  kept and written as R5's 12th field, but nothing filters on it now. Any other place that would publish names needs
+  the maintainer's decision and a README line.
 - The guild's Hall of Fame (GuildFame.lua, W.GuildFame): each saved fight of the guild (rec.guild = Board's RaidGuild)
   becomes a card "recorder:n", swapped on SendAddonMessage "WDIG" GUILD (V = have per recorder, C = card chunks,
   X = card that doesn't count, F = skip). Twin fights (same enc, 5 min, 20 s): the smallest id counts, so every PC
   agrees. Sending your own needs opts.gfame (asked once). 800 cards / 4000 ids / 300 recorders / 3 guilds kept.
 - RaidTimes.lua (WDI_RAIDTIMES) ships every guild's raid times from the maintainer's sync
-  (tools/Publish-RaidTimes.ps1: C/K/C2/K2/L lines, R5 only when every member is in ok, no PC/PK; refuses [[ ]] in a line, since
+  (tools/Publish-RaidTimes.ps1: C/K/C2/K2/L lines, R5 / W5 (5-man runs, members by name), no PC/PK; refuses [[ ]] in a line, since
   it's a Lua 5.0 long string). B:SeedSnapshot puts it into the saved feed when it's newer, so the
   feed only sends what's newer; FULL_AGE is 21 days so a few-weeks-old snapshot asks for an update.
 - The maintainer's sync helper commits and pushes RaidTimes.lua by itself once a day (Publish-RaidTimes.ps1 -Auto;

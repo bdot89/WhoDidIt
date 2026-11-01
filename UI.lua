@@ -4268,9 +4268,8 @@ function UI:WebRows()
 	tinsert(rows, row("File", C_DIM .. "WoW\\CustomData\\WhoDidIt_Website.json|r"))
 	tinsert(rows, row("Your 5-man boards for it", "|cffffd100write now  >|r",
 		{ tipTitle = "5-man runs", tip = { "Your WhoDidIt writes its 5-man boards to CustomData\\WhoDidIt_Runs.txt",
-			"5 minutes after they change. Only members seen sharing a run themselves are",
-			"named: in the export the others show by class, and the weekly download update",
-			"only takes runs whose members all were. Click to write them now." },
+			"5 minutes after they change. The export and the daily download update take",
+			"every run, with the members' names. Click to write them now." },
 		  click = function() R:WriteFile(); W.Print("5-man boards written to CustomData\\WhoDidIt_Runs.txt - in the export after the next sync.") end }))
 	head(rows, "Upload to the website")
 	if not st or st.up == "off" then

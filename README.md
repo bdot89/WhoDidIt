@@ -289,10 +289,10 @@ its loading screen, laid out like the raids.
   across the realm, and members share their groups' bests again when someone asks. A run is only taken from someone
   who was in that group. **Sharing: on / off** (or `/wdi 5man off`) stops it: then no run you're in is shared by
   anyone's WhoDidIt. See [Privacy and security](#privacy-and-security).
-- **In the download, only with everyone's names agreed:** the download is a public repository, so the daily update
-  only carries a group's run when every member shares their runs with WhoDidIt (the maintainer's WhoDidIt saw each of
-  them share it themselves). A group with anyone else in it, such as a player without WhoDidIt, stays on the realm
-  channel. When a group finishes, every member with sharing on sends the run, not only the one who names it.
+- **In the download, from every realm:** the daily update carries every 5-man run the maintainer's WhoDidIt has heard,
+  on any realm, with the group's name and its members' names and classes, so the boards of every realm reach everyone
+  (pick the realm on the 5-man boards). The download is a public repository on GitHub, so those names are public and
+  stay in its history. A run someone in the group opted out of (`/wdi 5man off`) is never shared, so it's never in it.
 - **A wrong time? Withdraw it.** If the timer got a run wrong (1.26.0 could lose a run's start after a death and a
   run-back), anyone who was in the group can take it off the boards: click the run (on the board or in **Your runs**),
   click **withdraw this run** next to **Wrong time?** and say **Yes**. It goes off your boards and best times (**Your
@@ -437,13 +437,13 @@ and commits and pushes just that file, and then `tools\Publish-Release.ps1` puts
 `v<version>-times-<date>`), so the download link always has the newest times. It skips (and tries again 3 hours
 later) if the repository isn't on `main` or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
 `tools\Publish-RaidTimes.cmd` publishes now. The 5-man boards your WhoDidIt keeps (written to
-`CustomData\WhoDidIt_Runs.txt`) go in only for groups whose members your WhoDidIt all saw share the run themselves.
+`CustomData\WhoDidIt_Runs.txt`) go in with them, from every realm your characters have heard them on.
 Keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
 characters). Logging into the master character on a realm feeds that realm.
 
 **Website:** after every sync the helper also writes every raid time and 5-man run to one JSON file,
-`CustomData\WhoDidIt_Website.json` (`tools\Website-Export.ps1`; your characters' personal bests stay out, and a 5-man
-member is only named if your WhoDidIt saw them share the run themselves, the others show by class), for a
+`CustomData\WhoDidIt_Website.json` (`tools\Website-Export.ps1`; your characters' personal bests stay out, the 5-man
+runs go in with their members' names), for a
 website such as www.errorguild.com. Uploading it is **off** until `tools\website.json` (a copy of
 `tools\website.example.json`) has the site's https upload address and key and `"enabled": true`; that file stays on
 your PC. The **Website** button (Rankings > 5-mans, only on the master characters) shows the last export and upload.
@@ -1075,9 +1075,9 @@ WhoDidIt is built so it can't get you into trouble in chat, and so nothing about
 | Guild members, on the hidden **guild** addon channel (Hall of Fame sharing on) | Each fight they recorded: who was in it and their classes, deaths, hero and blame points by kind, the MVP and most to blame, the two best plays and worst blunders. Only to the guild. |
 | One member of a 5-man group (5-man sharing on) | The group's finished run: group name, the members' names and classes, dungeon, time, date, deaths, faction and boss splits. If a member withdraws a run: the dungeon, its time and the members' names |
 
-Never sent: character names (except a 5-man group's members in its run, and to your guild the players in its Hall of Fame fights), gear, chat, where you are, or anything from your PC. The download (`RaidTimes.lua`) and the website export only name
-5-man members who share their runs with WhoDidIt themselves (seen by the maintainer's WhoDidIt, never taken from a
-message's say-so); the download only carries runs where that's every member. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
+Never sent: character names (except a 5-man group's members in its run, and to your guild the players in its Hall of Fame fights), gear, chat, where you are, or anything from your PC. The download (`RaidTimes.lua`, a public GitHub repository)
+and the website export carry the shared 5-man runs with their members' names and classes, also of members without
+WhoDidIt. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
 the channel altogether; `/wdi feed off` just ignores the feed.
 
 **What's accepted**

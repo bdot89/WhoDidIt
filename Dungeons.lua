@@ -1025,7 +1025,7 @@ function R:Seed()
 				and secs >= D().RUN_MIN and secs <= D().RUN_MAX and (p[8] == "Alliance" or p[8] == "Horde") then
 				R:Merge(p[2], p[3], gk, { g = p[4], t = secs, d = d, x = tonumber(p[7]) or 0, f = p[8], n = getn(list), m = mt,
 					s = okSplits(p[10], dg, secs), nt = tonumber(p[11]) or d, net = true, by = "the WhoDidIt download" })
-				-- the download only carries runs whose members were all seen sharing
+				-- (runs from the download: the maintainer's published boards)
 				local stored = R:DB(p[2])[p[3]]
 				stored = stored and stored[gk]
 				if stored then
