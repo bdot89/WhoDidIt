@@ -1555,11 +1555,28 @@ local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
 -- A player can stop trusting one (/wdi master remove Name) - if one of these is
 -- ever deleted or renamed and someone else takes the name - and trust it again
 -- (/wdi master add Name), but can't add anyone else. Custom channels are split
--- by faction, so a master only feeds its own faction.
+-- by faction, so a master only feeds its own faction. Since 1.29.1 every character
+-- of the maintainer's accounts BLACKLEGEND1989 and BDOT898989 (and N'Zoth's Upsi),
+-- so whichever one is logged in feeds that realm. A deleted or renamed character
+-- must come off this list: someone else could take the name.
+-- (tools\WhoDidIt-Sync.ps1 and AutoSync.ps1 read this table: keep "Name = true".)
 B.MASTERS = {
-	["Y'Shaarj"] = { Upsilon = true },
-	["C'Thun"]   = { Upsy = true },
-	["N'Zoth"]   = { Upsi = true },
+	["Y'Shaarj"] = {
+		Able = true, Accidental = true, Agro = true, Clunge = true, Cornershop = true, Deified = true, Did = true,
+		Downsilon = true, Flexible = true, Girth = true, Ible = true, Invis = true, Ira = true, Ispeed = true,
+		Itscominhome = true, Iwin = true, Johnsnow = true, Jokes = true, Mclovin = true, Mybad = true, Nessingwary = true,
+		Purpose = true, Shiitake = true, Squirter = true, Stabyou = true, Themountain = true, Tush = true, Twogirls = true,
+		Upsi = true, Upsillon = true, Upsilon = true, Upsilonii = true, Upsirogue = true, Upsis = true, Upsy = true,
+		Wabbit = true, Youloose = true,
+	},
+	["C'Thun"] = {
+		Deified = true, Did = true, Flexible = true, Ira = true, Johnsnow = true, Mybad = true, Nessingwary = true,
+		Themountain = true, Upsy = true, Wabbit = true,
+	},
+	["N'Zoth"] = {
+		Accidental = true, Agro = true, Downsilon = true, Ispeed = true, Purpose = true, Shiitake = true, Stabyou = true,
+		Upsi = true, Upsillon = true, Upsilonii = true, Upsirogue = true, Upsis = true,
+	},
 }
 local function myMasters(realm)
 	local m = WhoDidItDB and WhoDidItDB.masters

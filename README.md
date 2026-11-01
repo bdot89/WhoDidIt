@@ -361,7 +361,8 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
 - **All realms:** the master sends every realm's times (C'Thun, N'Zoth and Y'Shaarj in one). A chat channel only
   reaches players on its own realm, so there's a master character on each realm.
 - **Only the maintainer can be the master.** The master characters are written into the addon (`B.MASTERS` in
-  `Board.lua`), and every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm
+  `Board.lua`): since 1.29.1 every character of the maintainer's on every realm, so whichever one is logged in feeds
+  that realm and faction. Every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm
   and the channel only reaches the sender's own realm, so nobody else can send as them while those characters exist.
   The **Master** button and `/wdi master on|off` only work on those characters; someone editing their own copy only
   fools themselves.

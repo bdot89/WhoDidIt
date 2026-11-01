@@ -5203,6 +5203,8 @@ function UI:FeedPanel()
 	local realm = B.Realm()
 	local names = B.MasterList and B.MasterList() or {}
 	local who = (getn(names) > 0) and table.concat(names, " / ") or nil
+	-- (the maintainer has dozens of characters: a few names and how many more)
+	if getn(names) > 4 then who = names[1] .. " / " .. names[2] .. " / " .. names[3] .. " " .. W.LF("+%d more", getn(names) - 3) end
 	local fs = B.FeedStatus and B:FeedStatus()
 	local m = B.master and (GetTime() - B.master.at) < 150 and B.master or nil
 

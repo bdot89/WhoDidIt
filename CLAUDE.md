@@ -52,7 +52,10 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   characters, and never repeat it in a public channel automatically. Other guilds' names
   only go out after the player has seen the exact text (W:ConfirmSend).
 - The master feed is only accepted from the characters in B.MASTERS (Board.lua). A player can
-  only remove (and re-add) those; nobody else can be added.
+  only remove (and re-add) those; nobody else can be added. Since 1.29.1 the list is every character of the
+  maintainer's accounts BLACKLEGEND1989 and BDOT898989 (plus N'Zoth's Upsi), taken from the WTF folder on 1 Nov 2026
+  with their OK. A deleted or renamed one must come off (someone else could take the name). Keep the "Name = true"
+  form: tools\WhoDidIt-Sync.ps1 and AutoSync.ps1 parse the table.
 - In a raid only the leader and assistants post or steer the raid (W.CanLead in Core.lua). W:Send
   sends anyone else's posts to their own chat (W.LeadOnly says why, once), claims for automatic
   posts only count leaders, and the loaders wrap DopingControl's report / whispers and RollFor's

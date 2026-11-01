@@ -325,4 +325,6 @@ T("%s (the raid times master) is online - your raid times are syncing.", "%s (de
 T("%s (the raid times master) is online - your raid times are up to date.", "%s (der Master für die Raidzeiten) ist online - deine Raidzeiten sind aktuell.", "%s (le maître des temps de raid) est en ligne - vos temps de raid sont à jour.", "%s (el maestro de los tiempos de banda) está conectado: tus tiempos de banda están al día.", "%s (il master dei tempi d'incursione) è online: i tuoi tempi sono aggiornati.", "%s (o mestre dos tempos de raide) está online - seus tempos de raide estão em dia.", "%s (мастер времён рейдов) в сети - ваши времена рейдов актуальны.", "%s（团队时间主数据）在线 - 你的团队时间已是最新。", "%s (공격대 기록 마스터) 접속 중 - 공격대 기록이 최신입니다.")
 T("Raid times synced from %s: %d new or changed.", "Raidzeiten von %s abgeglichen: %d neu oder geändert.", "Temps de raid synchronisés depuis %s : %d nouveaux ou modifiés.", "Tiempos de banda sincronizados desde %s: %d nuevos o cambiados.", "Tempi d'incursione sincronizzati da %s: %d nuovi o cambiati.", "Tempos de raide sincronizados de %s: %d novos ou alterados.", "Времена рейдов синхронизированы от %s: %d новых или изменённых.", "已从 %s 同步团队时间：%d 条新增或变更。", "%s에게서 공격대 기록 동기화: %d개 새로 추가 또는 변경.")
 
+T("+%d more", "+%d weitere", "+%d autres", "+%d más", "+%d altri", "+%d outros", "+%d ещё", "另外 %d 个", "외 %d명")
+
 end)
