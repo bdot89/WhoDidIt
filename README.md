@@ -289,7 +289,7 @@ its loading screen, laid out like the raids.
   across the realm, and members share their groups' bests again when someone asks. A run is only taken from someone
   who was in that group. **Sharing: on / off** (or `/wdi 5man off`) stops it: then no run you're in is shared by
   anyone's WhoDidIt. See [Privacy and security](#privacy-and-security).
-- **In the download, only with everyone's names agreed:** the download is a public repository, so the weekly update
+- **In the download, only with everyone's names agreed:** the download is a public repository, so the daily update
   only carries a group's run when every member shares their runs with WhoDidIt (the maintainer's WhoDidIt saw each of
   them share it themselves). A group with anyone else in it, such as a player without WhoDidIt, stays on the realm
   channel. When a group finishes, every member with sharing on sends the run, not only the one who names it.
@@ -398,7 +398,7 @@ It writes them to `CustomData\WhoDidIt_Chronicle.txt`, and WhoDidIt reads that f
 
 ```
 tools\WhoDidIt-Sync.cmd                    sync now, then every 30 minutes (close the window to stop)
-tools\WhoDidIt-Sync.cmd -NoPublish         don't put the raid times into the download each week
+tools\WhoDidIt-Sync.cmd -NoPublish         don't put the raid times into the download each day
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
@@ -431,10 +431,11 @@ script file" message. (`AutoSync.ps1 -Minimised`
 uses a Startup shortcut with a minimised window instead.) Only one copy of the helper ever runs, so the extra starts,
 or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
 
-**Maintainer:** once a week the helper puts its latest times into the download by itself (`RaidTimes.lua`, about
+**Maintainer:** once a day the helper puts its latest times into the download by itself (`RaidTimes.lua`, about
 400 KB; your own characters' personal bests are left out): it runs `tools\Publish-RaidTimes.ps1`, which checks them
-and commits and pushes just that file. It skips a week (and tries again a day later) if the repository isn't on `main`
-or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
+and commits and pushes just that file, and then `tools\Publish-Release.ps1` puts out a release with them (tag
+`v<version>-times-<date>`), so the download link always has the newest times. It skips (and tries again 3 hours
+later) if the repository isn't on `main` or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
 `tools\Publish-RaidTimes.cmd` publishes now. The 5-man boards your WhoDidIt keeps (written to
 `CustomData\WhoDidIt_Runs.txt`) go in only for groups whose members your WhoDidIt all saw share the run themselves.
 Keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master

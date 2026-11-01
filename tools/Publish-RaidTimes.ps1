@@ -13,12 +13,12 @@
     public repository), writes RaidTimes.lua and commits and pushes it.
     Needs git with push access to the repository.
 
-    Run it now and then (weekly is plenty): the older the snapshot, the more
+    The sync helper runs it daily (-Auto): the older the snapshot, the more
     the feed has to send a fresh install.
       Publish-RaidTimes.ps1             write, commit and push
       Publish-RaidTimes.ps1 -NoPush     only write RaidTimes.lua
       Publish-RaidTimes.ps1 -Force      publish even if it looks much smaller
-      Publish-RaidTimes.ps1 -Auto       (the sync helper, weekly) skip unless main has nothing
+      Publish-RaidTimes.ps1 -Auto       (the sync helper, daily) skip unless main has nothing
                                         unpushed of yours - it never pushes your own commits
 #>
 param([switch]$NoPush, [switch]$Force, [switch]$Auto)
@@ -119,7 +119,7 @@ try {
     if ($Auto) {
         git fetch -q origin main 2>$null
         $ahead = [int](git rev-list --count origin/main..HEAD 2>$null)
-        if ($ahead -gt 0) { Write-Host "Skipped: main has $ahead commit(s) of yours not pushed yet, and this would push them. Next try in a day."; return }
+        if ($ahead -gt 0) { Write-Host "Skipped: main has $ahead commit(s) of yours not pushed yet, and this would push them. Next try in 3 hours."; return }
     }
     git pull -q --rebase --autostash origin main 2>$null
     if ($LASTEXITCODE -ne 0) { throw "git pull failed - fix that first (nothing was committed)" }

@@ -2170,3 +2170,22 @@ if UIErrorsFrame and UIErrorsFrame.AddMessage then
 	end
 end
 W:On("CHAT_MSG_SYSTEM", function(text) throttled(text) end)
+
+------------------------------------------------------------------ old raid times
+-- The download carries fresh raid times every day (the maintainer's helper publishes a
+-- release with them). Five minutes after login (time for the master feed, if the master is
+-- online on this realm), raid times older than 3 days get one line in your own chat, at most
+-- once a day. Not on the master characters: they make the times.
+local staleAt
+W:On("PLAYER_ENTERING_WORLD", function() if not staleAt then staleAt = GetTime() + 300 end end)
+W:Every(30, function()
+	if not staleAt or staleAt < 0 or GetTime() < staleAt or not WhoDidItDB then return end
+	staleAt = -1
+	if B.CanMaster() then return end
+	local synced = (B.chron and B.chron.synced) or B.FeedSynced()
+	if not synced or synced <= 0 or time() - synced < 3 * 86400 then return end
+	local today = date("%Y-%m-%d")
+	if WhoDidItDB.opts.staleTold == today then return end
+	WhoDidItDB.opts.staleTold = today
+	W.Print(W.LF("Your raid times were last updated %s. The WhoDidIt download has new ones every day: |cffffd100github.com/bdot89/WhoDidIt/releases/latest|r", ago(synced)))
+end)

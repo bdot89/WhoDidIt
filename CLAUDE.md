@@ -125,8 +125,9 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   (tools/Publish-RaidTimes.ps1: C/K/C2/K2/L lines, R5 only when every member is in ok, no PC/PK; refuses [[ ]] in a line, since
   it's a Lua 5.0 long string). B:SeedSnapshot puts it into the saved feed when it's newer, so the
   feed only sends what's newer; FULL_AGE is 21 days so a few-weeks-old snapshot asks for an update.
-- The maintainer's sync helper commits and pushes RaidTimes.lua by itself once a week
-  (Publish-RaidTimes.ps1 -Auto; it skips when main has unpushed commits). Pull --rebase before
+- The maintainer's sync helper commits and pushes RaidTimes.lua by itself once a day (Publish-RaidTimes.ps1 -Auto;
+  it skips when main has unpushed commits), and Publish-Release -Auto then puts out a "times" release (tag
+  v<version>-times-<yyyymmdd>, marked latest) so the latest-release zip carries them. Pull --rebase before
   pushing; never stage RaidTimes.lua with other changes.
 
 ## Languages (Locale.lua, Locales\*.lua)
