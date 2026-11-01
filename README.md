@@ -677,6 +677,20 @@ The **Auto-loot** button in the title bar (next to Nampower) shows whether it's 
 
 It replaces the AutoMasterLooter addon (by balake).
 
+## Auto invite
+
+`/wdi inv` switches auto invite on or off (`/wdi inv on|off` works too).
+- **While it's on,** everyone who whispers you `+`, or types it in guild chat, gets a raid invite. Any number of plus
+  signs works (`+`, `+++`, `+ ++`). A line with anything else in it, like `+1 please`, doesn't count.
+- **The raid makes itself:** solo, the first player to accept makes a party, and WhoDidIt turns it into a raid
+  straight away. Anyone who asks while it's still a party is invited once the raid is there.
+- **Guild chat:** switching it on posts one line there: `[WhoDidIt] Raid invites are open: whisper me + for an
+  invite.` `/wdi inv post` posts it again.
+- **Asked once, off at every login:** the first time, WhoDidIt asks before it posts anything. It's never on after you
+  log in until you switch it on.
+- **Limits:** you have to be the group leader, or an assistant in a raid. It stops at 40, and the same player is
+  invited at most once a minute.
+
 ## RollForML (soft-res master looting with RollFor)
 
 The **RollForML** button (or `/wdi loot`) is for master looting. WhoDidIt has [RollFor](https://github.com/sica42/roll-for-vanilla)
@@ -953,6 +967,7 @@ Totals recorded with older points were scaled to these once, and so are older gu
 /wdi lang [code]           WhoDidIt's language: en de fr es it pt ru zh ko (the same as the flags; reloads the UI)
 /wdi 5man                  5-man dungeon rankings
 /wdi timer on|off|reset     the run timer on screen (first pull to the last boss)
+/wdi inv [on|off|post]      auto invite: + in a whisper or guild chat gets a raid invite
 /wdi online                how many WhoDidIt users are online on your realm (also small, next to the add-on lights)
 /wdi 5man name <name>      name the group you're in
 /wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)
