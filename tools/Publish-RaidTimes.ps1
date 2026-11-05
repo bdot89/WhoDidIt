@@ -101,6 +101,29 @@ Write-Host ("RaidTimes.lua: {0} clears, {1} kills, {2} / {3} since the scaling c
     [int]$counts["C"], [int]$counts["K"], [int]$counts["C2"], [int]$counts["K2"], [int]$counts["L"], [int]$counts["R5"], [int]$counts["W5"], $when, ((Get-Item $dst).Length / 1KB))
 if ($NoPush) { return }
 
+# OctoRank (the folder next to this one, if it's there) ships the same file. Its own process and a
+# time limit: whatever goes wrong there can't touch this publish, which is already done.
+function Refresh-OctoRank {
+    try {
+        $tool = Join-Path (Split-Path -Parent $repo) "OctoRank\tools\Refresh-RaidTimes.ps1"
+        if (-not (Test-Path -LiteralPath $tool)) { return }
+        $log = [IO.Path]::GetTempFileName()
+        $err = [IO.Path]::GetTempFileName()
+        $p = Start-Process powershell -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$tool`"", "-From", "`"$repo`"" `
+            -NoNewWindow -PassThru -RedirectStandardOutput $log -RedirectStandardError $err
+        if ($p.WaitForExit(90000)) {
+            Write-Host (([IO.File]::ReadAllText($log) + [IO.File]::ReadAllText($err)).Trim())
+        } else {
+            $p.Kill()
+            Write-Host "OctoRank: stopped after 90 seconds, its raid times weren't refreshed."
+        }
+        Remove-Item -LiteralPath $log, $err -Force -ErrorAction SilentlyContinue
+    } catch {
+        Write-Host "OctoRank's raid times weren't refreshed: $_"
+    }
+}
+$publishOk = $false
+
 Push-Location $repo
 $ErrorActionPreference = "Continue"   # git prints line-ending warnings on stderr
 try {
@@ -115,12 +138,14 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "git pull failed - fix that first (nothing was committed)" }
     git add RaidTimes.lua 2>$null
     git diff --cached --quiet -- RaidTimes.lua
-    if ($LASTEXITCODE -eq 0) { Write-Host "No change since the last publish."; return }
+    if ($LASTEXITCODE -eq 0) { Write-Host "No change since the last publish."; $publishOk = $true; return }
     git commit -q -m "Raid times snapshot ($when)" -- RaidTimes.lua 2>$null
     if ($LASTEXITCODE -ne 0) { throw "git commit failed" }
     git push -q origin main 2>$null
     if ($LASTEXITCODE -ne 0) { throw "git push failed - check you can push to the repository" }
     Write-Host "Published: a fresh install of WhoDidIt now starts with these raid times."
+    $publishOk = $true
 } finally {
     Pop-Location
+    if ($publishOk) { Refresh-OctoRank }   # ("No change" too: it may have been skipped last time)
 }

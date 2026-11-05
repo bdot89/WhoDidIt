@@ -139,7 +139,8 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
 - The maintainer's sync helper commits and pushes RaidTimes.lua by itself once a day (Publish-RaidTimes.ps1 -Auto;
   it skips when main has unpushed commits), and Publish-Release -Auto then puts out a "times" release (tag
   v<version>-times-<yyyymmdd>, marked latest) so the latest-release zip carries them. Pull --rebase before
-  pushing; never stage RaidTimes.lua with other changes.
+  pushing; never stage RaidTimes.lua with other changes. After a good publish it starts ..\OctoRank\tools\Refresh-RaidTimes.ps1
+  if that's there (own process, 90 s limit, its failure can't touch this publish).
 
 ## Languages (Locale.lua, Locales\*.lua)
 - English is written in the code and is what WhoDidIt saves and sends: fights, boards, the feed,
