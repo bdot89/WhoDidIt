@@ -102,6 +102,20 @@ Every window below is the built-in **Demo fight** (made-up raiders) or your own 
 
 ## Install
 
+### With the Octo launcher (updates itself)
+
+1. In the launcher, open **Addons** and click **Add custom git addon**.
+2. Paste **`https://github.com/bdot89/WhoDidIt`** and click **Install**. It makes the `WhoDidIt` folder itself (about
+   16 MB, a few seconds).
+3. Make sure **Nampower** and **SuperWoW** are installed (the launcher's mods), then start the game and type `/wdi`.
+
+**Updates:** the launcher shows **Update** for WhoDidIt whenever there's something new (**Check for updates**, then
+**Update** or **Update all**). That includes fresh raid times every day. Your settings, fights and Hall of Fame are in
+the `WTF` folder and are kept. Installed from the zip before? Add it in the launcher anyway: it replaces the folder,
+and from then on it updates itself. (Paste the page's address above, not the zip's download link.)
+
+### By hand
+
 1. Download **[WhoDidIt.zip](https://github.com/bdot89/WhoDidIt/releases/latest/download/WhoDidIt.zip)** (the latest
    release; every version is on the [releases page](https://github.com/bdot89/WhoDidIt/releases)).
 2. Unzip it into `World of Warcraft\Interface\AddOns\`. You get a folder called **`WhoDidIt`**: nothing to rename.
@@ -289,10 +303,10 @@ its loading screen, laid out like the raids.
   across the realm, and members share their groups' bests again when someone asks. A run is only taken from someone
   who was in that group. **Sharing: on / off** (or `/wdi 5man off`) stops it: then no run you're in is shared by
   anyone's WhoDidIt. See [Privacy and security](#privacy-and-security).
-- **In the download, only with everyone's names agreed:** the download is a public repository, so the weekly update
-  only carries a group's run when every member shares their runs with WhoDidIt (the maintainer's WhoDidIt saw each of
-  them share it themselves). A group with anyone else in it, such as a player without WhoDidIt, stays on the realm
-  channel. When a group finishes, every member with sharing on sends the run, not only the one who names it.
+- **In the download, from every realm:** the daily update carries every 5-man run the maintainer's WhoDidIt has heard,
+  on any realm, with the group's name and its members' names and classes, so the boards of every realm reach everyone
+  (pick the realm on the 5-man boards). The download is a public repository on GitHub, so those names are public and
+  stay in its history. A run someone in the group opted out of (`/wdi 5man off`) is never shared, so it's never in it.
 - **A wrong time? Withdraw it.** If the timer got a run wrong (1.26.0 could lose a run's start after a death and a
   run-back), anyone who was in the group can take it off the boards: click the run (on the board or in **Your runs**),
   click **withdraw this run** next to **Wrong time?** and say **Yes**. It goes off your boards and best times (**Your
@@ -347,6 +361,9 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
   every 1.6 seconds or so, about 15 minutes (if one went out just before you logged in, up to half an hour). It comes in quietly in the
   background while you play. After that the master sends an update at most once an hour, with only the times that are new or changed
   (usually a few lines), and one send serves everyone listening.
+- **You're told:** the first time a session hears the master, a chat line says it's online. When your times are behind,
+  that line also shows on screen ("Upsy (the raid times master) is online - your raid times are syncing"), followed by
+  how many came in once the sync is done. Once a session.
 - **While you wait:** the top of the Rankings tab says what's happening: "Receiving them from Upsilon" with a progress
   bar, the % and the minutes left; "Upsilon is online… your WhoDidIt is asking for them"; or "Waiting for Upsilon to
   come online" (nothing to do). Under it, **How the sharing works** explains what arrives and what doesn't. Chat says
@@ -358,7 +375,8 @@ over WhoDidIt's hidden channel. Everyone else needs **nothing but the addon**: n
 - **All realms:** the master sends every realm's times (C'Thun, N'Zoth and Y'Shaarj in one). A chat channel only
   reaches players on its own realm, so there's a master character on each realm.
 - **Only the maintainer can be the master.** The master characters are written into the addon (`B.MASTERS` in
-  `Board.lua`), and every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm
+  `Board.lua`): since 1.29.1 every character of the maintainer's on every realm, so whichever one is logged in feeds
+  that realm and faction. Every copy of WhoDidIt ignores feed messages from anyone else. Character names are unique per realm
   and the channel only reaches the sender's own realm, so nobody else can send as them while those characters exist.
   The **Master** button and `/wdi master on|off` only work on those characters; someone editing their own copy only
   fools themselves.
@@ -398,7 +416,7 @@ It writes them to `CustomData\WhoDidIt_Chronicle.txt`, and WhoDidIt reads that f
 
 ```
 tools\WhoDidIt-Sync.cmd                    sync now, then every 30 minutes (close the window to stop)
-tools\WhoDidIt-Sync.cmd -NoPublish         don't put the raid times into the download each week
+tools\WhoDidIt-Sync.cmd -NoPublish         don't put the raid times into the download each day
 tools\WhoDidIt-Sync.cmd -Once              sync once and exit
 tools\WhoDidIt-Sync.cmd -Days 30           only raids from the last 30 days (default 90)
 tools\WhoDidIt-Sync.cmd -Server "Kronos"   another Chronicle server
@@ -429,20 +447,23 @@ WhoDidIt: on a PC without the helper (any player's, since the helper isn't in th
 instead, so a task left over from an older version disappears by itself after an update, with no "Can not find
 script file" message. (`AutoSync.ps1 -Minimised`
 uses a Startup shortcut with a minimised window instead.) Only one copy of the helper ever runs, so the extra starts,
-or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm.
+or double-clicking `WhoDidIt-Sync.cmd` as well, do no harm. **Updates apply by themselves:** when one of the
+helper's scripts changes (a new commit, a pull), the running helper notices within a minute between syncs, starts the
+new copy and stops, so there's nothing to restart.
 
-**Maintainer:** once a week the helper puts its latest times into the download by itself (`RaidTimes.lua`, about
+**Maintainer:** once a day the helper puts its latest times into the download by itself (`RaidTimes.lua`, about
 400 KB; your own characters' personal bests are left out): it runs `tools\Publish-RaidTimes.ps1`, which checks them
-and commits and pushes just that file. It skips a week (and tries again a day later) if the repository isn't on `main`
-or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
+and commits and pushes just that file, and then `tools\Publish-Release.ps1` puts out a release with them (tag
+`v<version>-times-<date>`), so the download link always has the newest times. It skips (and tries again 3 hours
+later) if the repository isn't on `main` or has commits of yours not pushed yet, so it never pushes your own work. `-NoPublish` turns it off;
 `tools\Publish-RaidTimes.cmd` publishes now. The 5-man boards your WhoDidIt keeps (written to
-`CustomData\WhoDidIt_Runs.txt`) go in only for groups whose members your WhoDidIt all saw share the run themselves.
+`CustomData\WhoDidIt_Runs.txt`) go in with them, from every realm your characters have heard them on.
 Keep AutoSync on and switch **Master** on (bottom left of Rankings, only shown on the master
 characters). Logging into the master character on a realm feeds that realm.
 
 **Website:** after every sync the helper also writes every raid time and 5-man run to one JSON file,
-`CustomData\WhoDidIt_Website.json` (`tools\Website-Export.ps1`; your characters' personal bests stay out, and a 5-man
-member is only named if your WhoDidIt saw them share the run themselves, the others show by class), for a
+`CustomData\WhoDidIt_Website.json` (`tools\Website-Export.ps1`; your characters' personal bests stay out, the 5-man
+runs go in with their members' names), for a
 website such as www.errorguild.com. Uploading it is **off** until `tools\website.json` (a copy of
 `tools\website.example.json`) has the site's https upload address and key and `"enabled": true`; that file stays on
 your PC. The **Website** button (Rankings > 5-mans, only on the master characters) shows the last export and upload.
@@ -510,7 +531,9 @@ The **Chronicle Logs** button (or `/wdi logs`) drives it from the WhoDidIt windo
 - Chronicle's auto-logging settings (raids, dungeons, save after combat, one file per realm)
 - WhoDidIt extras: **start logging when a boss is pulled** and **save after every boss fight**
 - Live status: logging on/off, the log file, unsaved lines, and what was saved this session
-- Step-by-step upload instructions. The upload itself is done on the website.
+- Step-by-step upload instructions. The upload itself is done on the website: pick the server **OctoWoW** and the
+  Log Format **1.12a · ChronicleCompanion**. The site remembers the format in your browser, and a log uploaded as
+  "WoW Forever · Blizzard Combat Log" fails with *no realm info found in log (format v22-cleu)*.
 
 ## Auto Marker
 
@@ -674,6 +697,27 @@ The **Auto-loot** button in the title bar (next to Nampower) shows whether it's 
   `/wdi aml list`. `/automl` works too.
 
 It replaces the AutoMasterLooter addon (by balake).
+
+## Auto invite
+
+The **Invite** button in the window's header (left of the language flags) shows whether auto invite is on.
+**Click** it (or type `/wdi inv`) for the auto invite panel: a big on / off toggle, the guild line again, and **who
+gets invited**. **Right-click** turns it on or off; `/wdi inv on|off` works too.
+- **Guild ranks:** the panel lists your guild's own ranks. Pick one and that rank and every rank above it are invited.
+  Pick Raider, for example, and Raiders, Officers and the Guild Master get in, Members and below don't, nor does anyone
+  outside the guild. Someone the guild list doesn't know yet (they just joined) is checked again once WoW sends a fresh
+  list. **Anyone who asks** (the default) invites everyone, guild or not. With a rank picked, the guild line says so
+  ("Raid invites are open for Raider and above").
+- **While it's on,** everyone who whispers you `+`, or types it in guild chat, gets a raid invite. Any number of plus
+  signs works (`+`, `+++`, `+ ++`). A line with anything else in it, like `+1 please`, doesn't count.
+- **The raid makes itself:** solo, the first player to accept makes a party, and WhoDidIt turns it into a raid
+  straight away. Anyone who asks while it's still a party is invited once the raid is there.
+- **Guild chat:** switching it on posts one line there: `[WhoDidIt] Raid invites are open: whisper me + for an
+  invite.` `/wdi inv post` posts it again.
+- **Asked once, off at every login:** the first time, WhoDidIt asks before it posts anything. It's never on after you
+  log in until you switch it on.
+- **Limits:** you have to be the group leader, or an assistant in a raid. It stops at 40, and the same player is
+  invited at most once a minute.
 
 ## RollForML (soft-res master looting with RollFor)
 
@@ -951,6 +995,7 @@ Totals recorded with older points were scaled to these once, and so are older gu
 /wdi lang [code]           WhoDidIt's language: en de fr es it pt ru zh ko (the same as the flags; reloads the UI)
 /wdi 5man                  5-man dungeon rankings
 /wdi timer on|off|reset     the run timer on screen (first pull to the last boss)
+/wdi inv [on|off|post]      auto invite panel (no word) / on / off / the guild line again
 /wdi online                how many WhoDidIt users are online on your realm (also small, next to the add-on lights)
 /wdi 5man name <name>      name the group you're in
 /wdi 5man on|off           share your groups' 5-man runs (off: no run you're in is shared by anyone)
@@ -1057,9 +1102,9 @@ WhoDidIt is built so it can't get you into trouble in chat, and so nothing about
 | Guild members, on the hidden **guild** addon channel (Hall of Fame sharing on) | Each fight they recorded: who was in it and their classes, deaths, hero and blame points by kind, the MVP and most to blame, the two best plays and worst blunders. Only to the guild. |
 | One member of a 5-man group (5-man sharing on) | The group's finished run: group name, the members' names and classes, dungeon, time, date, deaths, faction and boss splits. If a member withdraws a run: the dungeon, its time and the members' names |
 
-Never sent: character names (except a 5-man group's members in its run, and to your guild the players in its Hall of Fame fights), gear, chat, where you are, or anything from your PC. The download (`RaidTimes.lua`) and the website export only name
-5-man members who share their runs with WhoDidIt themselves (seen by the maintainer's WhoDidIt, never taken from a
-message's say-so); the download only carries runs where that's every member. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
+Never sent: character names (except a 5-man group's members in its run, and to your guild the players in its Hall of Fame fights), gear, chat, where you are, or anything from your PC. The download (`RaidTimes.lua`, a public GitHub repository)
+and the website export carry the shared 5-man runs with their members' names and classes, also of members without
+WhoDidIt. Before a 5-man run is shared, every WhoDidIt user in the group is asked; if anyone has `/wdi 5man off`, nobody shares it. `/wdi share off` leaves
 the channel altogether; `/wdi feed off` just ignores the feed.
 
 **What's accepted**

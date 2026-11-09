@@ -1555,11 +1555,28 @@ local function opts() return WhoDidItDB and WhoDidItDB.opts or {} end
 -- A player can stop trusting one (/wdi master remove Name) - if one of these is
 -- ever deleted or renamed and someone else takes the name - and trust it again
 -- (/wdi master add Name), but can't add anyone else. Custom channels are split
--- by faction, so a master only feeds its own faction.
+-- by faction, so a master only feeds its own faction. Since 1.29.1 every character
+-- of the maintainer's accounts BLACKLEGEND1989 and BDOT898989 (and N'Zoth's Upsi),
+-- so whichever one is logged in feeds that realm. A deleted or renamed character
+-- must come off this list: someone else could take the name.
+-- (tools\WhoDidIt-Sync.ps1 and AutoSync.ps1 read this table: keep "Name = true".)
 B.MASTERS = {
-	["Y'Shaarj"] = { Upsilon = true },
-	["C'Thun"]   = { Upsy = true },
-	["N'Zoth"]   = { Upsi = true },
+	["Y'Shaarj"] = {
+		Able = true, Accidental = true, Agro = true, Clunge = true, Cornershop = true, Deified = true, Did = true,
+		Downsilon = true, Flexible = true, Girth = true, Ible = true, Invis = true, Ira = true, Ispeed = true,
+		Itscominhome = true, Iwin = true, Johnsnow = true, Jokes = true, Mclovin = true, Mybad = true, Nessingwary = true,
+		Purpose = true, Shiitake = true, Squirter = true, Stabyou = true, Themountain = true, Tush = true, Twogirls = true,
+		Upsi = true, Upsillon = true, Upsilon = true, Upsilonii = true, Upsirogue = true, Upsis = true, Upsy = true,
+		Wabbit = true, Youloose = true,
+	},
+	["C'Thun"] = {
+		Deified = true, Did = true, Flexible = true, Ira = true, Johnsnow = true, Mybad = true, Nessingwary = true,
+		Themountain = true, Upsy = true, Wabbit = true,
+	},
+	["N'Zoth"] = {
+		Accidental = true, Agro = true, Downsilon = true, Ispeed = true, Purpose = true, Shiitake = true, Stabyou = true,
+		Upsi = true, Upsillon = true, Upsilonii = true, Upsirogue = true, Upsis = true,
+	},
 }
 local function myMasters(realm)
 	local m = WhoDidItDB and WhoDidItDB.masters
@@ -1878,10 +1895,12 @@ local function applyStream(s, sender, partial)
 	end
 	f.server, f.from, f.dirty = s.server, sender, true
 	if partial then f.part = math.max(f.part or 0, s.synced) else f.synced = s.synced end
+	local n = 0
+	for _ in pairs(s.lines) do n = n + 1 end
 	if first then
-		local n = 0
-		for _ in pairs(s.lines) do n = n + 1 end
 		W.Print("Raid times are in: |cffffffff" .. n .. "|r guild records from " .. sender .. ". Open |cffffd100Rankings|r to see them; they stay up to date while " .. sender .. " is online.")
+	elseif not partial then
+		B.FeedDone(sender, n)
 	end
 	if B:LoadChronicle() then
 		B.rivalsDirty = true
@@ -1945,8 +1964,9 @@ function B:FeedReceive(msg, sender)
 		local mine = WhoDidItDB.feed and WhoDidItDB.feed.synced or 0
 		-- the helper's own file counts too: no need to ask if it's as fresh
 		local c = B.chron
-		if c and not B.chronFeed and (c.synced or 0) >= s.synced then return end
-		if s.synced > mine and not want then want = { at = GetTime() + 3 + math.random(12), since = mine } end
+		local behind = s.synced > mine and not (c and not B.chronFeed and (c.synced or 0) >= s.synced)
+		B.MasterHeard(sender, behind)
+		if behind and not want then want = { at = GetTime() + 3 + math.random(12), since = mine } end
 	elseif kind == "A" then
 		local since = tonumber(p[3]) or 0
 		if want and since <= want.since then want = nil end   -- their stream will cover us
@@ -2170,3 +2190,49 @@ if UIErrorsFrame and UIErrorsFrame.AddMessage then
 	end
 end
 W:On("CHAT_MSG_SYSTEM", function(text) throttled(text) end)
+
+------------------------------------------------------------------ old raid times
+-- The download carries fresh raid times every day (the maintainer's helper publishes a
+-- release with them). Five minutes after login (time for the master feed, if the master is
+-- online on this realm), raid times older than 3 days get one line in your own chat, at most
+-- once a day. Not on the master characters: they make the times.
+local staleAt
+W:On("PLAYER_ENTERING_WORLD", function() if not staleAt then staleAt = GetTime() + 300 end end)
+W:Every(30, function()
+	if not staleAt or staleAt < 0 or GetTime() < staleAt or not WhoDidItDB then return end
+	staleAt = -1
+	if B.CanMaster() then return end
+	local synced = (B.chron and B.chron.synced) or B.FeedSynced()
+	if not synced or synced <= 0 or time() - synced < 3 * 86400 then return end
+	local today = date("%Y-%m-%d")
+	if WhoDidItDB.opts.staleTold == today then return end
+	WhoDidItDB.opts.staleTold = today
+	W.Print(W.LF("Your raid times were last updated %s. The WhoDidIt download has new ones every day: |cffffd100github.com/bdot89/WhoDidIt/releases/latest|r", ago(synced)))
+end)
+
+------------------------------------------------------------------ "the master is online"
+-- The first time a session hears one of the maintainer's characters (B.MASTERS) feeding
+-- this realm: a line in chat, and on screen too when your raid times are behind and a sync
+-- starts. The first finished sync after that says how much came in. Once a session each.
+local heardMaster, toldDone = {}, nil   -- (only B.MASTERS names get here: a handful at most)
+local function onScreen(text)
+	if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(text, 1, 0.82, 0, 1, 6) end
+end
+function B.MasterHeard(name, behind)
+	if heardMaster[name] or not WhoDidItDB then return end
+	heardMaster[name] = true
+	if behind then
+		local text = W.LF("%s (the raid times master) is online - your raid times are syncing.", name)
+		onScreen(text)
+		W.Print(text)
+	else
+		W.Print(W.LF("%s (the raid times master) is online - your raid times are up to date.", name))
+	end
+end
+function B.FeedDone(name, n)
+	if toldDone then return end
+	toldDone = true
+	local text = W.LF("Raid times synced from %s: %d new or changed.", name, n)
+	onScreen(text)
+	W.Print(text)
+end

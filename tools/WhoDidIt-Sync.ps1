@@ -22,7 +22,7 @@
 
     Usage (or just double-click WhoDidIt-Sync.cmd):
       WhoDidIt-Sync.ps1                    sync now, then every 30 minutes
-      WhoDidIt-Sync.ps1 -NoPublish         don't publish the raid times to the download each week
+      WhoDidIt-Sync.ps1 -NoPublish         don't publish the raid times to the download each day
       (after every sync it also writes the website export: tools\Website-Export.ps1)
       WhoDidIt-Sync.ps1 -Once              sync once and exit
       WhoDidIt-Sync.ps1 -Server "OctoWoW"  another Chronicle server
@@ -50,7 +50,7 @@ param(
     [switch]$NoDopingUpdate,
     [switch]$NoPackUpdate,           # no longer used (the packs ship with WhoDidIt); kept so old shortcuts work
     [switch]$Force,                  # run even on a PC without a master character
-    [switch]$NoPublish,              # don't publish the raid times to the download each week
+    [switch]$NoPublish,              # don't publish the raid times to the download each day
     [int]$DetailsPerSync = 150
 )
 
@@ -584,24 +584,24 @@ if ($LoggerOnly -or $UpdatesOnly) {
     return
 }
 
-# Once a week, after a good sync, the raid times go into the download
+# Once a day, after a good sync, the raid times go into the download
 # (tools\Publish-RaidTimes.ps1 -Auto: it checks them, and skips if the
 # repository is on another branch or has commits of yours not pushed yet,
-# so it never pushes your work). A failed try is retried a day later.
-function Publish-Weekly {
+# so it never pushes your work). A failed try is retried 3 hours later.
+function Publish-Daily {
     if ($NoPublish) { return }
     $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
     if (-not (Test-Path -LiteralPath (Join-Path $repo ".git"))) { return }
     $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     $last = 0
     try { $last = [long](git -C $repo log -1 --format=%ct -- RaidTimes.lua 2>$null) } catch { }
-    if ($now - $last -lt 7 * 86400) { return }
+    if ($now - $last -lt 20 * 3600) { return }   # (20 h: the time of day doesn't drift later each day)
     $tryFile = Join-Path $DataDir "WhoDidIt_PublishTry.txt"
     $tried = 0
     if (Test-Path -LiteralPath $tryFile) { try { $tried = [long]([IO.File]::ReadAllText($tryFile).Trim()) } catch { } }
-    if ($now - $tried -lt 86400) { return }
+    if ($now - $tried -lt 3 * 3600) { return }
     [IO.File]::WriteAllText($tryFile, [string]$now)
-    Log "Weekly: putting the raid times into the download (Publish-RaidTimes)"
+    Log "Daily: putting the raid times into the download (Publish-RaidTimes)"
     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "Publish-RaidTimes.ps1") -Auto 2>&1 | Out-String
     foreach ($l in ($out.Trim() -split "`r?`n")) { if ($l) { Log ("  " + $l) } }
 }
@@ -622,6 +622,18 @@ function Release-New {
     foreach ($l in ($out.Trim() -split "`r?`n")) { if ($l) { Log ("  " + $l) } }
 }
 
+# An update to the helper's own scripts (a new commit, a pull) takes effect by itself: while
+# it waits between syncs it checks them once a minute, and when one changed it starts the
+# new copy through the same launcher AutoSync's task uses, and stops. (If that fails, the
+# task starts it within 15 minutes anyway.)
+function Get-ScriptStamp {
+    $m = (Get-ChildItem -LiteralPath $PSScriptRoot -Filter "*.ps1" -File -ErrorAction SilentlyContinue | Measure-Object LastWriteTimeUtc -Maximum).Maximum
+    if ($m) { return $m.Ticks } else { return 0 }
+}
+$script:Stamp = Get-ScriptStamp
+$script:StampAt = Get-Date
+$script:Restart = $false
+
 Log "WhoDidIt-Sync for $Server (WoW folder: $WowDir)"
 while ($true) {
     if (Test-Path -LiteralPath $RequestFile) { [IO.File]::Delete($RequestFile) }   # this sync answers any request
@@ -631,7 +643,7 @@ while ($true) {
     if ($failed) { $script:St.state = "error"; $script:St.what = $failed }
     else { $script:St.state = "waiting"; $script:St.what = "Up to date"; $script:St.done = 0; $script:St.total = 0 }
     Write-Status
-    if (-not $failed) { try { Publish-Weekly } catch { Log ("Weekly publish failed: " + $_.Exception.Message) } }
+    if (-not $failed) { try { Publish-Daily } catch { Log ("Daily publish failed: " + $_.Exception.Message) } }
     try { Release-New } catch { Log ("Release check failed: " + $_.Exception.Message) }
     # every raid time and 5-man run as one JSON file for the website (tools\Website-Export.ps1)
     if (-not $failed) {
@@ -647,8 +659,22 @@ while ($true) {
     while ((Get-Date) -lt $next) {
         if (Test-Path -LiteralPath $RequestFile) { Log "Sync requested from the game"; break }
         if (((Get-Date) - $script:LastBeat).TotalSeconds -ge 30) { Write-Status }
+        if (((Get-Date) - $script:StampAt).TotalSeconds -ge 60) {
+            $script:StampAt = Get-Date
+            if ((Get-ScriptStamp) -ne $script:Stamp) { $script:Restart = $true; break }
+        }
         Start-Sleep -Seconds 3
     }
+    if ($script:Restart) { Log "The helper's scripts were updated: starting the new copy"; break }
 }
 $script:St.state = "stopped"
 Write-Status
+if ($script:Restart) {
+    # let go of "only one helper", then the launcher starts the new one (hidden, as the task does)
+    try { if ($mine) { $script:Single.ReleaseMutex() } } catch { }
+    $vbs = Join-Path $PSScriptRoot "WhoDidIt-Sync-Hidden.vbs"
+    try {
+        if (Test-Path -LiteralPath $vbs) { Start-Process -FilePath (Join-Path $env:WINDIR "System32\wscript.exe") -ArgumentList "`"$vbs`"" -WorkingDirectory $PSScriptRoot }
+        else { Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Minimized -File `"$PSCommandPath`"" -WorkingDirectory $PSScriptRoot }
+    } catch { Log ("Couldn't start the new copy (the scheduled task will): " + $_.Exception.Message) }
+}

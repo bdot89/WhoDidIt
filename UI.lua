@@ -4381,9 +4381,8 @@ function UI:WebRows()
 	tinsert(rows, row("File", C_DIM .. "WoW\\CustomData\\WhoDidIt_Website.json|r"))
 	tinsert(rows, row("Your 5-man boards for it", "|cffffd100write now  >|r",
 		{ tipTitle = "5-man runs", tip = { "Your WhoDidIt writes its 5-man boards to CustomData\\WhoDidIt_Runs.txt",
-			"5 minutes after they change. Only members seen sharing a run themselves are",
-			"named: in the export the others show by class, and the weekly download update",
-			"only takes runs whose members all were. Click to write them now." },
+			"5 minutes after they change. The export and the daily download update take",
+			"every run, with the members' names. Click to write them now." },
 		  click = function() R:WriteFile(); W.Print("5-man boards written to CustomData\\WhoDidIt_Runs.txt - in the export after the next sync.") end }))
 	head(rows, "Upload to the website")
 	if not st or st.up == "off" then
@@ -4533,6 +4532,8 @@ function UI:LogRows()
 	head(rows, "Uploading to Chronicle")
 	tinsert(rows, row("1.  After the raid click |cffffd100Stop & save|r (or |cffffd100Save now|r)."))
 	tinsert(rows, row("2.  Open |cffffd100chronicleclassic.com|r and click |cffffd100Upload|r."))
+	-- (a Log Format left on "WoW Forever" fails with "no realm info found in log (format v22-cleu)")
+	tinsert(rows, row("     Server |cffffd100OctoWoW|r, Log Format |cffffd1001.12a · ChronicleCompanion|r, not WoW Forever (it then says |cffffffffUploading as 1.12a-cc-addon|r)."))
 	tinsert(rows, row(W.LF("3.  Choose |cffffffffWoW folder\\CustomData\\%s|r.", file)))
 	if L:SplitOn() then
 		tinsert(rows, row("4.  Every raid and 5-man run has its own numbered file (below), so nothing needs archiving."))
@@ -5315,6 +5316,8 @@ function UI:FeedPanel()
 	local realm = B.Realm()
 	local names = B.MasterList and B.MasterList() or {}
 	local who = (getn(names) > 0) and table.concat(names, " / ") or nil
+	-- (the maintainer has dozens of characters: a few names and how many more)
+	if getn(names) > 4 then who = names[1] .. " / " .. names[2] .. " / " .. names[3] .. " " .. W.LF("+%d more", getn(names) - 3) end
 	local fs = B.FeedStatus and B:FeedStatus()
 	local m = B.master and (GetTime() - B.master.at) < 150 and B.master or nil
 
