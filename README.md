@@ -1071,6 +1071,9 @@ Demo fights are labelled *(demo)*. Automatic post-fight messages for them stay i
 - Game feeling slow? `/wdi perf` starts measuring; play on (a raid boss is the real test), then `/wdi perf` again lists
   what WhoDidIt spent its time on: milliseconds of CPU and garbage per event handler and timer, with the file and line.
   Nothing is timed until you start it.
+- WhoDidIt only listens to combat where a fight can start: in dungeons and raids, and with a raid group in the open
+  world (world bosses). In cities, battlegrounds, arenas and while questing the game doesn't send it the combat events
+  at all.
 - **Crash-proof fights.** WoW only saves addon data when you log out or `/reload`, so a crash used to lose the whole
   session. WhoDidIt now also keeps a backup of your fights, Hall of Fame and kill times in `CustomData` (written out of
   combat after each fight). If WoW crashes, the next login puts them back and says so in chat.

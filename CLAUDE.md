@@ -25,6 +25,9 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   pfUI's /pfprof uses both on this client. /wdi perf (Core.lua) times every W:On / W:Every handler,
   named by the file:line that registered it, plus Analyzer:Build and UI:RefreshNow. Measure there
   (a raid boss) before optimising, and after.
+- Tracker.lua mutes its 23 combat events (W:Mute: unregistered, handlers kept) unless a fight is on,
+  you're in a dungeon / raid instance, or in a raid group (world bosses); battlegrounds and arenas
+  always mute. Those events must stay Tracker-only: another module that needs one would be muted too.
 - Windows Script Host reads a .vbs written as UTF-16 with a BOM, so paths with umlauts
   survive; written as ASCII they turn into "?" (tested with cscript).
 - Both Karazhan towers report GetRealZoneText() "Tower of Karazhan" (WhoDidIt's fights, RollFor,

@@ -205,7 +205,7 @@ function W.SpellName(id)
 	return n
 end
 
-local nameCache = {}
+local nameCache, nNames = {}, 0   -- (started over past 3000 names: every mob a session meets)
 function W.GuidName(guid)
 	if not guid then return "Unknown" end
 	local r = W.roster.byGuid[guid]
@@ -214,6 +214,8 @@ function W.GuidName(guid)
 	if n then return n end
 	n = UnitName(guid)
 	if n and n ~= "" and n ~= UNKNOWNOBJECT then
+		nNames = nNames + 1
+		if nNames > 3000 then nameCache, nNames = {}, 1 end
 		nameCache[guid] = n
 		return n
 	end
@@ -342,6 +344,13 @@ frame:SetScript("OnEvent", function()
 		if not ok then W:Oops(event, err) end
 	end
 end)
+
+-- an event a module only needs some of the time (Tracker.lua: the combat events outside raids
+-- and dungeons): the client stops sending it; its handlers are kept for when it's back on
+function W:Mute(ev, muted)
+	if not handlers[ev] then return end
+	if muted then pcall(frame.UnregisterEvent, frame, ev) else pcall(frame.RegisterEvent, frame, ev) end
+end
 
 local tickers = {}
 function W:Every(interval, fn)

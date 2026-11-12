@@ -200,6 +200,7 @@ function T:Start(guid, puller, how)
 	end
 	if W.Logs then W.Logs:OnFightStart() end
 	if W.UI then W.UI:OnFightStart() end
+	T:Listen()   -- (a fight started by /wdi start, out of a raid: the events come back for it)
 end
 
 function T:Finish(result)
@@ -847,10 +848,11 @@ end
 
 function T:CastEvent(caster, target, evt, spellId, dur)
 	if evt == "CAST" then
-		local sp = W.SpellName(spellId)
-		if W.Data.defensiveSpell[sp] then
-			local who, pet = W.Owner(caster)
-			if who and not pet then
+		-- (a raid member's own cast first: the spell's name is only looked up for those)
+		local who, pet = W.Owner(caster)
+		if who and not pet then
+			local sp = W.SpellName(spellId)
+			if W.Data.defensiveSpell[sp] then
 				T.cdLog[who] = T.cdLog[who] or {}
 				T.cdLog[who][sp] = GetTime()
 			end
@@ -1236,7 +1238,7 @@ W:Every(0.5, function()
 	if F then
 		T:CheckLiving()
 		T:CheckEnd()
-	elseif UnitAffectingCombat("player") and W.env.superwow then
+	elseif T.listening and UnitAffectingCombat("player") and W.env.superwow then
 		-- backup start trigger: your own target is a boss already in combat
 		local g = W.Guid("target")
 		if g and UnitAffectingCombat("target") and T.IsBoss(g) and not deadBoss(g) then T:Start(g, nil, "combat") end
@@ -1249,4 +1251,52 @@ end)
 
 W:Every(2, function()
 	if F then T:SampleMana() end
+	T:Listen()   -- (the zone can lag a loading screen: looked at again every 2s)
 end)
+
+------------------------------------------------------------------ when to listen
+
+-- Nampower's and SuperWoW's combat events come for everything near you: every hit, heal and
+-- cast in a city, a battleground or while questing. A fight only starts in a dungeon or raid
+-- instance, or on a world boss with a raid group, so anywhere else the client stops sending
+-- them (W:Mute). A fight in progress always keeps them.
+local COMBAT_EVENTS = {
+	"SPELL_DAMAGE_EVENT_SELF", "SPELL_DAMAGE_EVENT_OTHER", "AUTO_ATTACK_SELF", "AUTO_ATTACK_OTHER",
+	"SPELL_HEAL_BY_SELF", "SPELL_HEAL_BY_OTHER", "ENVIRONMENTAL_DMG_SELF", "ENVIRONMENTAL_DMG_OTHER",
+	"DEBUFF_ADDED_SELF", "DEBUFF_ADDED_OTHER", "DEBUFF_REMOVED_SELF", "DEBUFF_REMOVED_OTHER",
+	"BUFF_ADDED_SELF", "BUFF_ADDED_OTHER", "BUFF_REMOVED_OTHER", "SPELL_GO_SELF", "SPELL_GO_OTHER",
+	"SPELL_MISS_SELF", "SPELL_MISS_OTHER", "SPELL_DISPEL_BY_SELF", "SPELL_DISPEL_BY_OTHER",
+	"UNIT_DIED", "UNIT_CASTEVENT",
+}
+T.listening = true   -- (registered as the files load)
+
+-- a battleground or arena: Spy / KillShot check it this way on this client (arenas say "pvp")
+local function inBattleground()
+	if GetBattlefieldStatus then
+		for i = 1, (MAX_BATTLEFIELD_QUEUES or 3) do
+			local ok, st = pcall(GetBattlefieldStatus, i)
+			if ok and st == "active" then return true end
+		end
+	end
+	local _, typ = IsInInstance()
+	return typ == "pvp" or typ == "arena"
+end
+
+function T.WantEvents()
+	if F then return true end
+	if inBattleground() then return false end
+	if IsInInstance() then return true end
+	return GetNumRaidMembers() > 0   -- a world boss
+end
+
+function T:Listen()
+	local want = T.WantEvents() and true or false
+	if want == T.listening then return end
+	T.listening = want
+	for i = 1, getn(COMBAT_EVENTS) do W:Mute(COMBAT_EVENTS[i], not want) end
+end
+
+-- (after the handler above that carries a fight on across a /reload: it may bring F back)
+W:On("PLAYER_ENTERING_WORLD", function() T:Listen() end)
+W:On("ZONE_CHANGED_NEW_AREA", function() T:Listen() end)
+W:On("RAID_ROSTER_UPDATE", function() T:Listen() end)
