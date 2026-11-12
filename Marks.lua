@@ -555,17 +555,25 @@ function M:PickMark(current, fn, removeFn, who)
 		p.rem:SetHeight(20)
 		p.rem:SetPoint("TOPLEFT", p, "TOPLEFT", 8 + 9 * 26 + 2, -23)
 		p.rem:SetText("|cffff7777Take out|r")
-		if p.rem.SetTextFontObject then p.rem:SetTextFontObject(W.FontO("GameFontNormalSmall")) end
+		if W.UI and W.UI.BtnFont then W.UI.BtnFont(p.rem, 2)
+		elseif p.rem.SetTextFontObject then p.rem:SetTextFontObject(W.FontO("GameFontNormalSmall")) end
 		p.rem:SetScript("OnClick", function()
 			local f = M.picker.removeFn
 			M.picker:Hide()
 			if f then f() end
 		end)
 		-- X in the top-right corner closes it without changing anything
-		local x = CreateFrame("Button", nil, p, "UIPanelCloseButton")
-		x:SetWidth(24)
-		x:SetHeight(24)
-		x:SetPoint("TOPRIGHT", p, "TOPRIGHT", 2, 2)
+		local x
+		if W.UI and W.UI.CloseButton then
+			x = W.UI.CloseButton(p, -3, -3)
+			x:SetWidth(17)
+			x:SetHeight(17)
+		else
+			x = CreateFrame("Button", nil, p, "UIPanelCloseButton")
+			x:SetWidth(24)
+			x:SetHeight(24)
+			x:SetPoint("TOPRIGHT", p, "TOPRIGHT", 2, 2)
+		end
 		x:SetScript("OnClick", function() M.picker:Hide() end)
 		tinsert(UISpecialFrames, "WhoDidItMarkPicker")
 		M.picker = p

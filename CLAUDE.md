@@ -151,6 +151,16 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   pushing; never stage RaidTimes.lua with other changes. After a good publish it starts ..\OctoRank\tools\Refresh-RaidTimes.ps1
   if that's there (own process, 90 s limit, its failure can't touch this publish).
 
+## The look (UI.lua, since 1.30.0)
+- The maintainer's house style (DMorph, OctoBG): flat near-black panels, 1-pixel neutral lines,
+  near-white semibold labels, one accent: WhoDidIt's gold for hover and for what's picked; red
+  and gold only in the name and the 2-pixel line along the top. Colours come from UI.COL.
+- Buttons: UI.Skin (flat, gold hover wash, label fonts from UI.BtnFont, levels 1-3 = UI.FIT),
+  UI.SkinSelect (the picked one: gold line along the bottom, gold-tinted edge), UI.Bare (no fill
+  or edge: the main tabs in the title bar), UI.CloseButton (flat, in place of the red X).
+  Other files reach them through W.UI, with the old look as the fallback.
+- Bars are flat (UI.FLAT); keep the client's glossy status-bar art out.
+
 ## Languages (Locale.lua, Locales\*.lua)
 - English is written in the code and is what WhoDidIt saves and sends: fights, boards, the feed,
   addon messages. Text is translated only when it's shown, never before it's stored or sent.

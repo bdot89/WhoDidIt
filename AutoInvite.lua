@@ -202,8 +202,12 @@ local function button(parent, w, h)
 	if W.UI and W.UI.Skin then W.UI.Skin(b) end
 	b:SetWidth(w)
 	b:SetHeight(h)
-	if b.SetTextFontObject then b:SetTextFontObject(W.FontO("GameFontNormalSmall")) end
-	if b.SetHighlightFontObject then b:SetHighlightFontObject(W.FontO("GameFontHighlightSmall")) end
+	if W.UI and W.UI.BtnFont then
+		W.UI.BtnFont(b, 2)
+	else
+		if b.SetTextFontObject then b:SetTextFontObject(W.FontO("GameFontNormalSmall")) end
+		if b.SetHighlightFontObject then b:SetHighlightFontObject(W.FontO("GameFontHighlightSmall")) end
+	end
 	return b
 end
 
@@ -218,22 +222,32 @@ function A:BuildPanel()
 	p:RegisterForDrag("LeftButton")
 	p:SetScript("OnDragStart", function() this:StartMoving() end)
 	p:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
-	p:SetBackdrop({
-		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-		tile = true, tileSize = 16, edgeSize = 16,
-		insets = { left = 4, right = 4, top = 4, bottom = 4 },
-	})
-	p:SetBackdropColor(0.04, 0.04, 0.06, 0.97)
-	p:SetBackdropBorderColor(0.55, 0.55, 0.6, 1)
+	-- the window's flat look (UI.lua); the tooltip frame without it
+	local UI = W.UI
+	if UI and UI.Flat then
+		UI.Flat(p, UI.COL.frame, UI.COL.frameEdge)
+	else
+		p:SetBackdrop({
+			bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+			tile = true, tileSize = 16, edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		p:SetBackdropColor(0.04, 0.04, 0.06, 0.97)
+		p:SetBackdropBorderColor(0.55, 0.55, 0.6, 1)
+	end
 	p:Hide()
 	tinsert(UISpecialFrames, "WhoDidItAutoInvitePanel")
 
 	local title = p:CreateFontString(nil, "OVERLAY", W.FontT("GameFontNormal"))
 	title:SetPoint("TOPLEFT", p, "TOPLEFT", 12, -12)
 	title:SetText(W.L("Auto invite"))
-	local close = CreateFrame("Button", nil, p, "UIPanelCloseButton")
-	close:SetPoint("TOPRIGHT", p, "TOPRIGHT", -2, -2)
+	if UI and UI.CloseButton then
+		UI.CloseButton(p)
+	else
+		local close = CreateFrame("Button", nil, p, "UIPanelCloseButton")
+		close:SetPoint("TOPRIGHT", p, "TOPRIGHT", -2, -2)
+	end
 
 	p.onBtn = button(p, 236, 22)
 	p.onBtn:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
