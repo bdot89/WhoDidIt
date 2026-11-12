@@ -5561,14 +5561,12 @@ function UI:Toggle()
 	else
 		if W.Tracker.fight then UI.selIdx = 0 end
 		UI.liveRec = nil
-		f:Show()
-		UI:Refresh()
+		f:Show()   -- (OnShow refreshes it)
 	end
 end
 
 function UI:Open()
-	if not f:IsVisible() then f:Show() end
-	UI:Refresh()
+	if f:IsVisible() then UI:Refresh() else f:Show() end   -- (OnShow refreshes it)
 end
 
 function UI:ShowFight(idx)
@@ -5680,13 +5678,23 @@ function UI.FitAll()
 	end
 end
 
--- live view: rebuild the in-progress report every 1.5s while it's on screen
-W:Every(1.5, function()
+-- live view: rebuild the in-progress report while it's on screen. That's the most expensive
+-- thing WhoDidIt does mid-fight (the whole analysis, then every row), so the next rebuild
+-- waits 40 times as long as the last one took (at most 2.5% of the time) and never comes
+-- sooner than 1.5s after it
+UI.liveNext = 0
+W:Every(0.25, function()
 	if not f:IsVisible() then return end
+	local now = GetTime()
+	if now < UI.liveNext then return end
+	local clock = debugprofilestop
+	local t0 = clock and clock()
 	if UI.mode == "logs" or UI.mode == "marks" or UI.mode == "loot" then
 		UI:Refresh()   -- unsaved line count / mobs in range and current marks
 	elseif UI.mode == "fights" and W.Tracker.fight then
 		if UI.selIdx == 0 then UI.liveRec = W.Analyzer:Build(W.Tracker.fight, false) end
 		UI:Refresh()
 	end
+	local took = t0 and (clock() - t0) / 1000 or 0
+	UI.liveNext = now + math.max(1.5, took * 40)
 end)
