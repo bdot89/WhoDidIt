@@ -1039,6 +1039,7 @@ Totals recorded with older points were scaled to these once, and so are older gu
 /wdi classicapi            what the optional ClassicAPI adds, and how to get it
 /wdi handover <addon>      ask again about switching a separate addon off
 /wdi errors                errors WhoDidIt caught (for bug reports)
+/wdi perf                  measure what WhoDidIt costs (CPU and garbage per event and timer); again: the results; off: stop
 /wdi status | clear
 ```
 
@@ -1067,6 +1068,9 @@ Demo fights are labelled *(demo)*. Automatic post-fight messages for them stay i
 - Turtle's custom raids (Karazhan, Emerald Sanctum) are detected as world bosses, but their mechanics aren't in the database yet. Add avoidable spells with `/wdi avoid <spell>`, or edit [`Data.lua`](Data.lua). Pull requests with mechanics are welcome!
 - Weapon oils, stones and imbues on other players are read through SuperWoW; out of range they show as **?**, never as missing.
 - Something not working? `/wdi errors` lists any errors WhoDidIt caught, for a bug report.
+- Game feeling slow? `/wdi perf` starts measuring; play on (a raid boss is the real test), then `/wdi perf` again lists
+  what WhoDidIt spent its time on: milliseconds of CPU and garbage per event handler and timer, with the file and line.
+  Nothing is timed until you start it.
 - **Crash-proof fights.** WoW only saves addon data when you log out or `/reload`, so a crash used to lose the whole
   session. WhoDidIt now also keeps a backup of your fights, Hall of Fame and kill times in `CustomData` (written out of
   combat after each fight). If WoW crashes, the next login puts them back and says so in chat.

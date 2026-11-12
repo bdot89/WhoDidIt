@@ -21,6 +21,10 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   have a spam limit (WhoDidIt sends one line a second there).
 - Custom chat channels are split by faction: a master only feeds its own faction.
 - math.randomseed is called once at load (Core.lua).
+- debugprofilestop() (the CPU clock in ms, stock since 1.7) and gcinfo() (Lua memory in KB) exist:
+  pfUI's /pfprof uses both on this client. /wdi perf (Core.lua) times every W:On / W:Every handler,
+  named by the file:line that registered it, plus Analyzer:Build and UI:RefreshNow. Measure there
+  (a raid boss) before optimising, and after.
 - Windows Script Host reads a .vbs written as UTF-16 with a BOM, so paths with umlauts
   survive; written as ASCII they turn into "?" (tested with cscript).
 - Both Karazhan towers report GetRealZoneText() "Tower of Karazhan" (WhoDidIt's fights, RollFor,
@@ -40,7 +44,9 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
 - Re-read the diff as a reviewer and try to break it. Say what you checked and what you did not.
 - Edits must not halve backslashes: Lua paths are written "Interface\\Icons\\..." in the
   source. Shell heredocs and perl replacements have dropped them before; check after editing.
-- The working tree uses CRLF line endings; normalise before exact-text replacements.
+- Line endings: the working tree was CRLF until early November 2026 and is LF since (seen 12 Nov,
+  `git ls-files --eol`: i/lf w/lf). Check before exact-text replacements, keep what the file has,
+  and count CR bytes with PowerShell: Git Bash's grep / sed hide the CR.
 
 ## House rules
 - Anything that posts to a shared chat channel, changes loot or raid marks, disables
