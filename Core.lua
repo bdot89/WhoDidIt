@@ -205,7 +205,7 @@ function W.SpellName(id)
 	return n
 end
 
-local nameCache = {}
+local nameCache, nNames = {}, 0   -- (started over past 3000 names: every mob a session meets)
 function W.GuidName(guid)
 	if not guid then return "Unknown" end
 	local r = W.roster.byGuid[guid]
@@ -214,6 +214,8 @@ function W.GuidName(guid)
 	if n then return n end
 	n = UnitName(guid)
 	if n and n ~= "" and n ~= UNKNOWNOBJECT then
+		nNames = nNames + 1
+		if nNames > 3000 then nameCache, nNames = {}, 1 end
 		nameCache[guid] = n
 		return n
 	end
@@ -284,6 +286,21 @@ end
 local frame = CreateFrame("Frame", "WhoDidItEventFrame")
 W.frame = frame
 local handlers = {}
+W.handlerAt = {}   -- handler -> "Tracker.lua:1113", the line that registered it (/wdi perf)
+
+-- the WhoDidIt file and line that called W:On / W:Every (read while the files load: the 3rd
+-- WhoDidIt line of the stack, after this function and W:On / W:Every themselves)
+function W.CallerAt()
+	if type(debugstack) ~= "function" then return nil end
+	local ok, s = pcall(debugstack)
+	if not ok or type(s) ~= "string" then return nil end
+	local n = 0
+	for file, line in string.gfind(s, "AddOns\\WhoDidIt\\([^:\n]+):(%d+)") do
+		n = n + 1
+		if n == 3 then return file .. ":" .. line end
+	end
+	return nil
+end
 
 function W:On(ev, fn)
 	if not handlers[ev] then
@@ -291,6 +308,7 @@ function W:On(ev, fn)
 		pcall(frame.RegisterEvent, frame, ev)
 	end
 	tinsert(handlers[ev], fn)
+	W.handlerAt[fn] = W.handlerAt[fn] or W.CallerAt()
 end
 
 -- an error in one handler is reported once and the others still run
@@ -315,29 +333,140 @@ end
 frame:SetScript("OnEvent", function()
 	local list = handlers[event]
 	if not list then return end
+	local timed = W.perf
 	for i = 1, getn(list) do
-		local ok, err = pcall(list[i], arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+		local ok, err
+		if timed then
+			ok, err = W.PerfCall(W.PerfKey(event, list[i]), list[i], arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+		else
+			ok, err = pcall(list[i], arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+		end
 		if not ok then W:Oops(event, err) end
 	end
 end)
 
+-- an event a module only needs some of the time (Tracker.lua: the combat events outside raids
+-- and dungeons): the client stops sending it; its handlers are kept for when it's back on
+function W:Mute(ev, muted)
+	if not handlers[ev] then return end
+	if muted then pcall(frame.UnregisterEvent, frame, ev) else pcall(frame.RegisterEvent, frame, ev) end
+end
+
 local tickers = {}
 function W:Every(interval, fn)
-	tinsert(tickers, { i = interval, f = fn, a = 0 })
+	tinsert(tickers, { i = interval, f = fn, a = 0, key = "every " .. interval .. "s  " .. (W.CallerAt() or "?") })
 end
 
 frame:SetScript("OnUpdate", function()
 	local e = arg1
+	local timed = W.perf
 	for i = 1, getn(tickers) do
 		local t = tickers[i]
 		t.a = t.a + e
 		if t.a >= t.i then
 			t.a = 0
-			local ok, err = pcall(t.f)
+			local ok, err
+			if timed then ok, err = W.PerfCall(t.key, t.f) else ok, err = pcall(t.f) end
 			if not ok then W:Oops("timer", err) end
 		end
 	end
 end)
+
+------------------------------------------------------------------ /wdi perf
+
+-- What each event handler and timer costs, measured only while it's on (off, the event bus
+-- checks one flag). debugprofilestop() is the game's CPU clock in milliseconds (stock since
+-- 1.7; pfUI's /pfprof uses it on this client), gcinfo() the Lua memory in KB: what a call
+-- adds is the garbage it made, and garbage is what makes the game's clean-up hitch.
+W.perfRows = {}
+local perfKeys = {}   -- event -> handler -> its row's name (made once, not on every event)
+
+function W.PerfKey(ev, fn)
+	local k = perfKeys[ev]
+	if not k then k = {}; perfKeys[ev] = k end
+	local key = k[fn]
+	if not key then
+		key = ev .. "  " .. (W.handlerAt[fn] or "?")
+		k[fn] = key
+	end
+	return key
+end
+
+function W.PerfCall(key, fn, a1, a2, a3, a4, a5, a6, a7, a8, a9)
+	local clock = debugprofilestop
+	local kb, t0 = gcinfo(), clock()
+	local ok, err = pcall(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9)
+	local ms, made = clock() - t0, gcinfo() - kb
+	local r = W.perfRows[key]
+	if not r then r = { n = 0, ms = 0, max = 0, kb = 0 }; W.perfRows[key] = r end
+	r.n, r.ms = r.n + 1, r.ms + ms
+	if ms > r.max then r.max = ms end
+	if made > 0 then r.kb = r.kb + made end   -- (less: the clean-up ran during the call)
+	return ok, err
+end
+
+-- the two big jobs, timed on their own as well ("inside": already counted in their event or timer)
+local PERF_INSIDE = { { "Analyzer", "Build", "inside: the fight analysis (Analyzer:Build)" },
+	{ "UI", "RefreshNow", "inside: the window rebuilt (UI:RefreshNow)" } }
+local perfOrig = {}
+
+local function perfWrap(on)
+	for i = 1, getn(PERF_INSIDE) do
+		local p = PERF_INSIDE[i]
+		local mod = W[p[1]]
+		if mod and mod[p[2]] then
+			if on and not perfOrig[i] then
+				local orig, key = mod[p[2]], p[3]
+				perfOrig[i] = orig
+				mod[p[2]] = function(a1, a2, a3, a4)
+					local ok, r = W.PerfCall(key, orig, a1, a2, a3, a4)
+					if not ok then error(r, 0) end
+					return r
+				end
+			elseif not on and perfOrig[i] then
+				mod[p[2]] = perfOrig[i]
+				perfOrig[i] = nil
+			end
+		end
+	end
+end
+
+function W.PerfReport()
+	local secs = math.max(1, GetTime() - (W.perfStart or GetTime()))
+	local list, total = {}, 0
+	for key, r in pairs(W.perfRows) do
+		tinsert(list, { key, r })
+		if not string.find(key, "^inside") then total = total + r.ms end
+	end
+	table.sort(list, function(a, b) return a[2].ms > b[2].ms end)
+	W.Print(string.format("what WhoDidIt cost in the last %s: %.1f ms of CPU, %.2f ms a second (%.3f%% of the time)",
+		W.FmtTime(secs), total, total / secs, total / secs / 10))
+	DEFAULT_CHAT_FRAME:AddMessage("  |cff888888total ms   calls   avg ms   worst ms   garbage KB   what (file:line)|r")
+	for i = 1, math.min(14, getn(list)) do
+		local key, r = list[i][1], list[i][2]
+		DEFAULT_CHAT_FRAME:AddMessage(string.format("  |cffffd100%8.1f|r  %7d  %7.3f  %8.2f  %8d   %s", r.ms, r.n, r.ms / r.n, r.max, r.kb, key))
+	end
+	if getn(list) == 0 then DEFAULT_CHAT_FRAME:AddMessage("  |cff888888nothing ran yet|r") end
+	DEFAULT_CHAT_FRAME:AddMessage(string.format("  |cff888888Lua memory now, every add-on together: %.1f MB|r", gcinfo() / 1024))
+end
+
+-- /wdi perf: start measuring (again: the results so far)   /wdi perf off: results, then stop
+-- /wdi perf reset: start over
+function W.PerfCommand(rest)
+	if not (debugprofilestop and gcinfo) then W.Print("This client can't time add-ons (no debugprofilestop).") return end
+	if rest == "off" then
+		if W.perf then W.PerfReport() end
+		W.perf = nil
+		perfWrap(false)
+		W.Print("Stopped measuring.")
+	elseif rest == "reset" or not W.perf then
+		W.perfRows, W.perfStart, W.perf = {}, GetTime(), true
+		perfWrap(true)
+		W.Print("Measuring what WhoDidIt costs: play as normal (a raid boss is the real test), then |cffffd100/wdi perf|r for the results, |cffffd100/wdi perf off|r to stop.")
+	else
+		W.PerfReport()
+	end
+end
 
 ------------------------------------------------------------------ saved variables
 
@@ -760,6 +889,7 @@ local function help()
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi start|r / " .. c .. "/wdi stop|r - manually track your target / end tracking")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi idleblame on|off|r - give blame points for low activity / low DPS (off: shown, worth 0)")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi status|r, " .. c .. "/wdi clear|r, " .. c .. "/wdi errors|r - errors WhoDidIt caught (for bug reports)")
+	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi perf|r - measure what WhoDidIt costs (again: the results),  " .. c .. "/wdi perf off|r")
 	DEFAULT_CHAT_FRAME:AddMessage(c .. "/wdi classicapi|r - what the optional ClassicAPI add-on improves, and how to get it")
 end
 
@@ -972,6 +1102,8 @@ local function slash(msg)
 			.. " - applies to fights recorded from now on")
 	elseif cmd == "art" then
 		if W.UI and W.UI.ArtProbe then W.UI.ArtProbe() end
+	elseif cmd == "perf" then
+		W.PerfCommand(rest)
 	elseif cmd == "errors" then
 		local list = db.errors or {}
 		if getn(list) == 0 then W.Print("No errors recorded.") end

@@ -21,6 +21,13 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   have a spam limit (WhoDidIt sends one line a second there).
 - Custom chat channels are split by faction: a master only feeds its own faction.
 - math.randomseed is called once at load (Core.lua).
+- debugprofilestop() (the CPU clock in ms, stock since 1.7) and gcinfo() (Lua memory in KB) exist:
+  pfUI's /pfprof uses both on this client. /wdi perf (Core.lua) times every W:On / W:Every handler,
+  named by the file:line that registered it, plus Analyzer:Build and UI:RefreshNow. Measure there
+  (a raid boss) before optimising, and after.
+- Tracker.lua mutes its 23 combat events (W:Mute: unregistered, handlers kept) unless a fight is on,
+  you're in a dungeon / raid instance, or in a raid group (world bosses); battlegrounds and arenas
+  always mute. Those events must stay Tracker-only: another module that needs one would be muted too.
 - Windows Script Host reads a .vbs written as UTF-16 with a BOM, so paths with umlauts
   survive; written as ASCII they turn into "?" (tested with cscript).
 - Both Karazhan towers report GetRealZoneText() "Tower of Karazhan" (WhoDidIt's fights, RollFor,
@@ -40,7 +47,9 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
 - Re-read the diff as a reviewer and try to break it. Say what you checked and what you did not.
 - Edits must not halve backslashes: Lua paths are written "Interface\\Icons\\..." in the
   source. Shell heredocs and perl replacements have dropped them before; check after editing.
-- The working tree uses CRLF line endings; normalise before exact-text replacements.
+- Line endings: the working tree was CRLF until early November 2026 and is LF since (seen 12 Nov,
+  `git ls-files --eol`: i/lf w/lf). Check before exact-text replacements, keep what the file has,
+  and count CR bytes with PowerShell: Git Bash's grep / sed hide the CR.
 
 ## House rules
 - Anything that posts to a shared chat channel, changes loot or raid marks, disables
@@ -141,6 +150,16 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   v<version>-times-<yyyymmdd>, marked latest) so the latest-release zip carries them. Pull --rebase before
   pushing; never stage RaidTimes.lua with other changes. After a good publish it starts ..\OctoRank\tools\Refresh-RaidTimes.ps1
   if that's there (own process, 90 s limit, its failure can't touch this publish).
+
+## The look (UI.lua, since 1.30.0)
+- The maintainer's house style (DMorph, OctoBG): flat near-black panels, 1-pixel neutral lines,
+  near-white semibold labels, one accent: WhoDidIt's gold for hover and for what's picked; red
+  and gold only in the name and the 2-pixel line along the top. Colours come from UI.COL.
+- Buttons: UI.Skin (flat, gold hover wash, label fonts from UI.BtnFont, levels 1-3 = UI.FIT),
+  UI.SkinSelect (the picked one: gold line along the bottom, gold-tinted edge), UI.Bare (no fill
+  or edge: the main tabs in the title bar), UI.CloseButton (flat, in place of the red X).
+  Other files reach them through W.UI, with the old look as the fallback.
+- Bars are flat (UI.FLAT); keep the client's glossy status-bar art out.
 
 ## Languages (Locale.lua, Locales\*.lua)
 - English is written in the code and is what WhoDidIt saves and sends: fights, boards, the feed,

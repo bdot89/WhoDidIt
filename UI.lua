@@ -40,14 +40,18 @@ local KIND_COLOR = {
 
 ------------------------------------------------------------------ the look
 
--- Flat dark panels and buttons with crisp 1-pixel borders. WHITE8X8 is a plain
--- white square in the client (Interface\Buttons\WHITE8X8.blp, checked in its files).
+-- Flat dark panels and buttons with crisp 1-pixel borders, in the house style of the
+-- maintainer's other add-ons (DMorph, OctoBG): near-black panels, neutral grey lines,
+-- near-white labels, and one accent - WhoDidIt's gold - for what's hovered and picked.
+-- WHITE8X8 is a plain white square in the client (Interface\Buttons\WHITE8X8.blp).
 UI.FLAT = "Interface\\Buttons\\WHITE8X8"
 UI.COL = {
-	frame = { 0.035, 0.035, 0.045, 0.96 }, frameEdge = { 0.42, 0.34, 0.16, 1 },
-	panel = { 0.07, 0.07, 0.085, 0.88 },   panelEdge = { 0.2, 0.2, 0.24, 1 },
-	btn   = { 0.11, 0.11, 0.13, 0.96 },    btnEdge   = { 0.3, 0.3, 0.35, 1 },
-	sel   = { 0.85, 0.66, 0.15, 1 },       hover     = { 1, 0.82, 0, 0.13 },
+	frame = { 0.045, 0.045, 0.055, 0.97 }, frameEdge = { 0.21, 0.21, 0.25, 1 },
+	panel = { 0.075, 0.075, 0.09, 0.92 },  panelEdge = { 0.16, 0.16, 0.19, 1 },
+	btn   = { 0.12, 0.12, 0.145, 0.96 },   btnEdge   = { 0.23, 0.23, 0.27, 1 },
+	sel   = { 1, 0.78, 0.25, 1 },          selEdge   = { 0.55, 0.44, 0.18, 1 },
+	hover = { 1, 0.82, 0.3, 0.13 },        title     = { 0.075, 0.075, 0.09, 1 },
+	text  = { 0.88, 0.88, 0.91 },          dim       = { 0.5, 0.5, 0.55 },
 }
 -- WhoDidIt's font: Fira Sans Condensed (SIL Open Font Licence, Fonts\OFL.txt), regular for
 -- text, semibold for the gold titles and button labels, one size up from WoW's own
@@ -88,6 +92,45 @@ if CreateFont then
 		end
 	end
 end
+-- button labels: semibold, near white (white on hover and while picked), grey when off; in
+-- three sizes - normal, the panels' small buttons, and tiny for a translation that doesn't
+-- fit (UI.Fit). Without CreateFont the WoW fonts stay (gold labels, as before 1.30).
+UI.FIT = {
+	{ "GameFontNormal", "GameFontHighlight", "GameFontDisable" },
+	{ "GameFontNormalSmall", "GameFontHighlightSmall", "GameFontDisableSmall" },
+	{ "TinyGameFontNormalSmall", "TinyGameFontHighlightSmall", "TinyGameFontDisableSmall" },
+}
+if CreateFont then
+	for lv = 1, 3 do
+		local base = getglobal(UI.FONTS[UI.FIT[lv][1]] or UI.FIT[lv][1])
+		local _, size, flags
+		if base and base.GetFont then _, size, flags = base:GetFont() end
+		if size then
+			local names = {}
+			for k, col in ipairs({ UI.COL.text, { 1, 1, 1 }, UI.COL.dim }) do
+				local name = "WhoDidItBtn" .. lv .. "_" .. k
+				local fo = CreateFont(name)
+				fo:SetFont(UI.FONT_BOLD, size, flags or "")
+				fo:SetTextColor(col[1], col[2], col[3])
+				if fo.SetShadowColor then fo:SetShadowColor(0, 0, 0, 0.9) end
+				if fo.SetShadowOffset then fo:SetShadowOffset(1, -1) end
+				UI.FONTS[name] = name
+				names[k] = name
+			end
+			UI.FIT[lv] = names
+		end
+	end
+end
+-- a button's label font, at size level 1 / 2 / 3
+function UI.BtnFont(b, lv)
+	local set = UI.FIT[lv] or UI.FIT[1]
+	local n, h, d = getglobal(UI.FONTS[set[1]] or set[1]), getglobal(UI.FONTS[set[2]] or set[2]), getglobal(UI.FONTS[set[3]] or set[3])
+	if n and b.SetTextFontObject then b:SetTextFontObject(n) end
+	if h and b.SetHighlightFontObject then b:SetHighlightFontObject(h) end
+	if d and b.SetDisabledFontObject then b:SetDisabledFontObject(d) end
+	b.wdiLevel = lv
+	return b
+end
 -- Fira Sans (Locale.lua swaps UI.FONT for Chinese / Korean; the flags' names keep Fira)
 UI.FIRA = UI.FONT
 -- every button in the window (UI.Fit shrinks a translated label that's too wide)
@@ -110,12 +153,11 @@ function UI.Flat(fr, bg, edge)
 	fr:SetBackdropBorderColor(edge[1], edge[2], edge[3], edge[4])
 end
 
--- a WoW panel button made flat: its red art hidden, a dark fill, a thin border,
--- a soft gold glow on hover (and while it's the selected tab)
+-- a WoW panel button made flat: its red art hidden, a dark fill, a thin border, a soft
+-- gold wash on hover, and (UI.SkinSelect) a gold line along the bottom while it's picked
 function UI.Skin(b)
 	if not b or b.wdiSkin then return b end
 	b.wdiSkin = true
-	b.wdiLevel = 1
 	tinsert(UI.allBtns, b)
 	-- labels are given in English; the button shows them in the player's language
 	local setText = b.SetText
@@ -131,26 +173,64 @@ function UI.Skin(b)
 		pcall(b.SetPushedTexture, b, "")
 		pcall(b.SetDisabledTexture, b, "")
 	end
-	-- the hover glow: the client's own quest-log highlight (a soft gold band)
-	b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
-	local h = b.GetHighlightTexture and b:GetHighlightTexture()
-	if h then
-		h:ClearAllPoints()
-		h:SetPoint("TOPLEFT", b, "TOPLEFT", 1, -1)
-		h:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -1, 1)
-		h:SetAlpha(0.55)
+	if b.GetHighlightTexture then
+		-- the hover wash: a flat colour on the highlight texture (pfUI's buttons, this client)
+		b:SetHighlightTexture(UI.FLAT)
+		local h = b:GetHighlightTexture()
+		if h then
+			h:ClearAllPoints()
+			h:SetPoint("TOPLEFT", b, "TOPLEFT", 1, -1)
+			h:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -1, 1)
+			h:SetTexture(UI.COL.hover[1], UI.COL.hover[2], UI.COL.hover[3], UI.COL.hover[4])
+		end
 	end
+	-- picked: a 2-pixel gold line inside the bottom edge
+	b.wdiMark = b:CreateTexture(nil, "OVERLAY")
+	b.wdiMark:SetTexture(UI.COL.sel[1], UI.COL.sel[2], UI.COL.sel[3], 1)
+	b.wdiMark:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 1, 1)
+	b.wdiMark:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -1, 1)
+	b.wdiMark:SetHeight(2)
+	b.wdiMark:Hide()
 	UI.Flat(b, UI.COL.btn, UI.COL.btnEdge)
-	if b.SetTextFontObject then b:SetTextFontObject(UI.FO("GameFontNormal")) end
-	if b.SetHighlightFontObject then b:SetHighlightFontObject(UI.FO("GameFontHighlight")) end
-	if b.SetDisabledFontObject then b:SetDisabledFontObject(UI.FO("GameFontDisable")) end
+	UI.BtnFont(b, 1)
 	return b
 end
--- the selected tab: a gold border and the glow kept on
+-- the picked one of a row (a tab, a view): the gold line, a gold-tinted edge, the wash kept on
 function UI.SkinSelect(b, on)
-	local e = on and UI.COL.sel or UI.COL.btnEdge
-	if b.wdiSkin then b:SetBackdropBorderColor(e[1], e[2], e[3], e[4]) end
+	if b.wdiSkin then
+		if not b.wdiBare then
+			local e = on and UI.COL.selEdge or UI.COL.btnEdge
+			b:SetBackdropBorderColor(e[1], e[2], e[3], e[4])
+		end
+		if on then b.wdiMark:Show() else b.wdiMark:Hide() end
+	end
 	if on then b:LockHighlight() else b:UnlockHighlight() end
+end
+-- no fill and no edge, only the label (the main tabs in the title bar): the wash on hover
+-- and the gold line under the picked one
+function UI.Bare(b)
+	b:SetBackdropColor(0, 0, 0, 0)
+	b:SetBackdropBorderColor(0, 0, 0, 0)
+	b.wdiBare = true
+	return b
+end
+-- a flat close button for WhoDidIt's windows (in place of the client's red one); a red wash
+-- on hover, and it hides its window
+function UI.CloseButton(parent, x, y)
+	local c = CreateFrame("Button", nil, parent)
+	c:SetWidth(20)
+	c:SetHeight(20)
+	c:SetPoint("TOPRIGHT", parent, "TOPRIGHT", x or -6, y or -6)
+	UI.Flat(c, UI.COL.btn, UI.COL.btnEdge)
+	local hl = c:CreateTexture(nil, "HIGHLIGHT")
+	hl:SetPoint("TOPLEFT", c, "TOPLEFT", 1, -1)
+	hl:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -1, 1)
+	hl:SetTexture(0.85, 0.2, 0.2, 0.55)
+	c.x = c:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlight"))
+	c.x:SetPoint("CENTER", c, "CENTER", 0, 1)
+	c.x:SetText("\195\151")   -- (U+00D7, the multiplication sign: in Fira Sans and the Noto subsets)
+	c:SetScript("OnClick", function() this:GetParent():Hide() end)
+	return c
 end
 
 ------------------------------------------------------------------ list widget
@@ -187,7 +267,7 @@ local function CreateList(parent, nrows, rowh, width)
 		b.art:Hide()
 
 		b.bar = b:CreateTexture(nil, "BORDER")
-		b.bar:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+		b.bar:SetTexture(UI.FLAT)
 		b.bar:SetPoint("TOPLEFT", b, "TOPLEFT", 0, -1)
 		b.bar:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 0, 1)
 		b.bar:Hide()
@@ -224,11 +304,11 @@ local function CreateList(parent, nrows, rowh, width)
 	s:SetPoint("TOPRIGHT", L, "TOPRIGHT", 0, 0)
 	s:SetPoint("BOTTOMRIGHT", L, "BOTTOMRIGHT", 0, 0)
 	s:SetWidth(8)
-	UI.Flat(s, { 0, 0, 0, 0.35 }, { 0.18, 0.18, 0.22, 1 })
+	UI.Flat(s, { 0, 0, 0, 0.3 }, { 0.14, 0.14, 0.17, 1 })
 	s:SetThumbTexture(UI.FLAT)
 	local thumb = s:GetThumbTexture()
 	if thumb then
-		thumb:SetVertexColor(0.55, 0.5, 0.38, 0.9)
+		thumb:SetVertexColor(0.42, 0.42, 0.47, 0.95)
 		thumb:SetWidth(6)
 		thumb:SetHeight(24)
 	end
@@ -342,16 +422,17 @@ local function CreateList(parent, nrows, rowh, width)
 				end
 				for j = ng + 1, getn(b.g) do b.g[j]:Hide() end
 				if d.bar then
+					-- (flat now: the glossy status bar art showed about 3/4 of its colour)
 					b.bar:SetWidth(math.max(1, self.rowW * math.min(1, d.bar)))
-					b.bar:SetVertexColor(d.cr or 0.5, d.cg or 0.5, d.cb or 0.5, d.ba or 0.45)
+					b.bar:SetVertexColor(d.cr or 0.5, d.cg or 0.5, d.cb or 0.5, (d.ba or 0.45) * 0.75)
 					b.bar:Show()
 				else
 					b.bar:Hide()
 				end
 				if d.sel then
-					b.stripe:SetTexture(0.9, 0.7, 0.1, 0.22)
+					b.stripe:SetTexture(1, 0.78, 0.25, 0.16)
 				elseif d.head then
-					b.stripe:SetTexture(0.25, 0.25, 0.32, 0.55)
+					b.stripe:SetTexture(0.16, 0.16, 0.2, 0.9)
 				elseif math.mod(self.offset + i, 2) == 0 then
 					b.stripe:SetTexture(1, 1, 1, 0.035)
 				else
@@ -632,20 +713,27 @@ function UI.BuildScaleGrip()
 end
 UI.BuildScaleGrip()
 
+-- WhoDidIt's colours in a 2-pixel line along the very top (red into gold, like its name)
+UI.brandLine = f:CreateTexture(nil, "OVERLAY")
+UI.brandLine:SetTexture(UI.FLAT)
+UI.brandLine:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
+UI.brandLine:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+UI.brandLine:SetHeight(2)
+if UI.brandLine.SetGradientAlpha then
+	UI.brandLine:SetGradientAlpha("HORIZONTAL", 1, 0.33, 0.33, 0.95, 1, 0.82, 0, 0.95)
+else
+	UI.brandLine:SetVertexColor(1, 0.82, 0, 0.9)
+end
 local titleBar = f:CreateTexture(nil, "ARTWORK")
 titleBar:SetTexture(UI.FLAT)
-if titleBar.SetGradientAlpha then
-	titleBar:SetGradientAlpha("VERTICAL", 0.1, 0.08, 0.04, 0.9, 0.22, 0.17, 0.07, 0.9)
-else
-	titleBar:SetVertexColor(0.16, 0.13, 0.06, 0.9)
-end
+titleBar:SetVertexColor(UI.COL.title[1], UI.COL.title[2], UI.COL.title[3], UI.COL.title[4])
 titleBar:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)
 titleBar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -5, -5)
 titleBar:SetHeight(24)
--- a thin gold line under the title bar
+-- a thin line under the title bar
 local titleLine = f:CreateTexture(nil, "ARTWORK")
 titleLine:SetTexture(UI.FLAT)
-titleLine:SetVertexColor(UI.COL.frameEdge[1], UI.COL.frameEdge[2], UI.COL.frameEdge[3], 0.8)
+titleLine:SetVertexColor(UI.COL.frameEdge[1], UI.COL.frameEdge[2], UI.COL.frameEdge[3], 1)
 titleLine:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
 titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
 titleLine:SetHeight(1)
@@ -669,17 +757,14 @@ local envText = f:CreateFontString(nil, "OVERLAY", UI.F("GameFontDisableSmall"))
 envText:SetPoint("TOPLEFT", f, "TOPLEFT", PAD + 4, -38)
 envText:SetJustifyH("LEFT")
 
-local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -2, -2)
+local close = UI.CloseButton(f, -7, -7)
 
 -- auto master looting: on/off at a glance, click to pick who gets the loot
 local amlBtn = UI.Skin(CreateFrame("Button", nil, f, "UIPanelButtonTemplate"))
 amlBtn:SetWidth(118)
 amlBtn:SetHeight(18)
 -- (placed under Hall of Fame, the same width, once the tab buttons exist - see below)
-if amlBtn.SetTextFontObject then amlBtn:SetTextFontObject(UI.FO("GameFontNormalSmall")) end
-if amlBtn.SetHighlightFontObject then amlBtn:SetHighlightFontObject(UI.FO("GameFontHighlightSmall")) end
-amlBtn.wdiLevel = 2
+UI.BtnFont(amlBtn, 2)
 amlBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 amlBtn:SetScript("OnClick", function()
 	if not W.AutoML then W.Print(W.RESTART_MSG) return end
@@ -906,11 +991,7 @@ sep:SetPoint("BOTTOMRIGHT", left, "BOTTOMRIGHT", -8, 132)
 
 -- smaller text, so labels like "Auto shout-outs: smart" fit
 local function smallText(b)
-	if b.SetTextFontObject then b:SetTextFontObject(UI.FO("GameFontNormalSmall")) end
-	if b.SetHighlightFontObject then b:SetHighlightFontObject(UI.FO("GameFontHighlightSmall")) end
-	if b.SetDisabledFontObject then b:SetDisabledFontObject(UI.FO("GameFontDisableSmall")) end
-	b.wdiLevel = 2
-	return b
+	return UI.BtnFont(b, 2)
 end
 
 -- 2 x 4 button grid, row 1 at the bottom
@@ -1385,8 +1466,8 @@ UI.modeButtons = {}
 for i = 1, getn(MODES) do
 	local m = MODES[i]
 	-- sized to the label, one after another
-	local b = UI.Skin(CreateFrame("Button", "WhoDidItMode" .. i, f, "UIPanelButtonTemplate"))
-	b:SetHeight(18)
+	local b = UI.Bare(UI.Skin(CreateFrame("Button", "WhoDidItMode" .. i, f, "UIPanelButtonTemplate")))
+	b:SetHeight(20)
 	b:SetText(m.text)
 	local label = getglobal("WhoDidItMode" .. i .. "Text")
 	local tw = label and label:GetStringWidth() or 0
@@ -1744,7 +1825,7 @@ do
 	bg:SetAllPoints(syncBar)
 	bg:SetTexture(0, 0, 0, 0.5)
 	syncBar.fill = syncBar:CreateTexture(nil, "BORDER")
-	syncBar.fill:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+	syncBar.fill:SetTexture(UI.FLAT)
 	syncBar.fill:SetPoint("TOPLEFT", syncBar, "TOPLEFT", 1, -1)
 	syncBar.fill:SetPoint("BOTTOMLEFT", syncBar, "BOTTOMLEFT", 1, 1)
 	syncBar.top = syncBar:CreateFontString(nil, "OVERLAY", UI.F("GameFontHighlightSmall"))
@@ -5567,9 +5648,12 @@ function UI:RefreshNow()
 	local db = WhoDidItDB
 
 	local e = W.env
-	local function yn(v, n) return (v and "|cff33ff33" or "|cffff3333") .. n .. "|r" end
-	envText:SetText(yn(e.nampower, "Nampower") .. "  " .. yn(e.superwow, "SuperWoW") .. "  " .. yn(e.twthreat or db.opts.queryThreat, W.L("Threat"))
-		.. "  " .. (e.classicapi and "|cff33ff33ClassicAPI|r" or "|cff777777ClassicAPI?|r") .. UI.OnlineText())
+	-- the add-on lights: a coloured dot (green on, red off, grey optional and missing) and a quiet name
+	local function yn(v, n, optional)
+		return (v and "|cff44dd66" or (optional and "|cff666670" or "|cffee4444")) .. "\226\128\162|r |cff9a9aa4" .. n .. "|r"
+	end
+	envText:SetText(yn(e.nampower, "Nampower") .. "   " .. yn(e.superwow, "SuperWoW") .. "   " .. yn(e.twthreat or db.opts.queryThreat, W.L("Threat"))
+		.. "   " .. yn(e.classicapi, "ClassicAPI", true) .. UI.OnlineText())
 	UI:UpdateAML()
 	UI.SetHeaderArt(nil)   -- each tab sets its own
 
@@ -5674,14 +5758,12 @@ function UI:Toggle()
 	else
 		if W.Tracker.fight then UI.selIdx = 0 end
 		UI.liveRec = nil
-		f:Show()
-		UI:Refresh()
+		f:Show()   -- (OnShow refreshes it)
 	end
 end
 
 function UI:Open()
-	if not f:IsVisible() then f:Show() end
-	UI:Refresh()
+	if f:IsVisible() then UI:Refresh() else f:Show() end   -- (OnShow refreshes it)
 end
 
 function UI:ShowFight(idx)
@@ -5766,15 +5848,12 @@ end
 
 -- a translated label wider than its button: the next smaller font, then the
 -- smallest (English labels fit; this only runs for the other languages)
-UI.FIT = {
-	{ "GameFontNormal", "GameFontHighlight", "GameFontDisable" },
-	{ "GameFontNormalSmall", "GameFontHighlightSmall", "GameFontDisableSmall" },
-	{ "TinyGameFontNormalSmall", "TinyGameFontHighlightSmall", "TinyGameFontDisableSmall" },
-}
+-- (UI.FIT, the three label sizes, is with the fonts at the top)
 function UI.Fit(b)
 	if not (b.GetTextWidth and b.SetTextFontObject) then return end
 	local room = b:GetWidth() - 8
-	for lv = b.wdiLevel or 1, 3 do
+	local start = b.wdiLevel or 1
+	for lv = start, 3 do
 		local set = UI.FIT[lv]
 		local fo = UI.FONTS[set[1]] and getglobal(UI.FONTS[set[1]])
 		if fo then
@@ -5793,13 +5872,23 @@ function UI.FitAll()
 	end
 end
 
--- live view: rebuild the in-progress report every 1.5s while it's on screen
-W:Every(1.5, function()
+-- live view: rebuild the in-progress report while it's on screen. That's the most expensive
+-- thing WhoDidIt does mid-fight (the whole analysis, then every row), so the next rebuild
+-- waits 40 times as long as the last one took (at most 2.5% of the time) and never comes
+-- sooner than 1.5s after it
+UI.liveNext = 0
+W:Every(0.25, function()
 	if not f:IsVisible() then return end
+	local now = GetTime()
+	if now < UI.liveNext then return end
+	local clock = debugprofilestop
+	local t0 = clock and clock()
 	if UI.mode == "logs" or UI.mode == "marks" or UI.mode == "loot" then
 		UI:Refresh()   -- unsaved line count / mobs in range and current marks
 	elseif UI.mode == "fights" and W.Tracker.fight then
 		if UI.selIdx == 0 then UI.liveRec = W.Analyzer:Build(W.Tracker.fight, false) end
 		UI:Refresh()
 	end
+	local took = t0 and (clock() - t0) / 1000 or 0
+	UI.liveNext = now + math.max(1.5, took * 40)
 end)
