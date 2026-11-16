@@ -17,6 +17,7 @@
 /tools/Publish-Packs.ps1 export-ignore
 /tools/Publish-RaidTimes.cmd export-ignore
 /tools/Publish-RaidTimes.ps1 export-ignore
+/tools/Raid-Stats.ps1 export-ignore
 /tools/WhoDidIt-Sync.cmd export-ignore
 /tools/WhoDidIt-Sync.ps1 export-ignore
 /tools/Website-Export.ps1 export-ignore

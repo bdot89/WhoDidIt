@@ -225,6 +225,34 @@ function B.LogURL(slug)
 	return "https://legacy.chronicleclassic.com/instances/" .. slug
 end
 
+-- a raid's player details from the download (tools\Raid-Stats.ps1), or nil: only the top raids
+-- have them. Read when a raid is opened; nothing is kept.
+--   { players = { { n, c, d, h, x }, ... }, deaths = { { boss, n, at, by }, ... } }
+function B:RaidStats(slug)
+	local s = WDI_RAIDTIMES
+	if not slug or type(s) ~= "table" or type(s.text) ~= "string" then return nil end
+	local function line(kind)
+		local tag = "\n" .. kind .. "|" .. slug .. "|"
+		local _, e = string.find(s.text, tag, 1, true)
+		if not e then return nil end
+		local stop = string.find(s.text, "\n", e + 1, true)
+		return string.sub(s.text, e + 1, (stop or 0) - 1)
+	end
+	local p = line("P")
+	if not p then return nil end
+	local out = { players = {}, deaths = {} }
+	for n, c, d, h, x in string.gfind(p, "([^:;]+):(%a%a):(%-?%d+):(%-?%d+):(%d+)") do
+		tinsert(out.players, { n = n, c = c, d = tonumber(d), h = tonumber(h), x = tonumber(x) })
+	end
+	for part in string.gfind(line("X") or "", "[^;]+") do
+		local _, _, boss, list = string.find(part, "^(.-)>(.*)$")
+		for n, at, by in string.gfind(list or "", "([^=,]+)=(%d+)=([^,]*)") do
+			tinsert(out.deaths, { boss = boss, n = n, at = tonumber(at), by = by })
+		end
+	end
+	return out
+end
+
 -- where a time ranks on a realm's board (1 = fastest)
 function B:Place(realm, kind, key, secs)
 	local list = B:Board(realm, kind, key, "All")

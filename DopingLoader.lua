@@ -39,6 +39,17 @@ f:SetScript("OnEvent", function()
 		return
 	end
 	this:UnregisterAllEvents()
+	-- DopingControl 0.7.0 wraps the global SendAddonMessage (scan\pull.lua), so the game's error
+	-- for another addon's bad message ("Invalid escape code in chat message") named pull.lua:208.
+	-- Re-raise it one level up: the error names the addon that sent it.
+	if not WDI_DOPING_SKIP and DC_Pull and DC_Pull.hooked and SendAddonMessage and not WhoDidIt.samWrapped then
+		WhoDidIt.samWrapped = true
+		local dcSend = SendAddonMessage
+		SendAddonMessage = function(prefix, msg, chatType, target)
+			local ok, err = pcall(dcSend, prefix, msg, chatType, target)
+			if not ok then error((string.gsub(tostring(err), "^.-pull%.lua:%d+: ", "")) .. " (prefix " .. tostring(prefix) .. ")", 2) end
+		end
+	end
 	-- in a raid its "Send to raid chat" and its whispers are for the raid leader
 	-- and assistants (WhoDidIt.CanLead), like everything WhoDidIt posts
 	if not WDI_DOPING_SKIP and WhoDidIt.CanLead then
