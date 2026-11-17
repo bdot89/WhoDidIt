@@ -253,14 +253,40 @@ function B:RaidStats(slug)
 	return out
 end
 
--- where a time ranks on a realm's board (1 = fastest)
+-- where a time ranks on a realm's board (1 = fastest), and how many guilds are on it. Counted
+-- straight from the two record sets B:Board merges (yours, Chronicle's: a guild's faster one),
+-- without building and sorting a board: the fight list asks for every fight on each refresh.
 function B:Place(realm, kind, key, secs)
-	local list = B:Board(realm, kind, key, "All")
-	local place = 1
-	for i = 1, getn(list) do
-		if list[i][2].t < secs then place = place + 1 end
+	if realm == B.ALL then
+		local list = B:Board(realm, kind, key, "All")
+		local place = 1
+		for i = 1, getn(list) do
+			if list[i][2].t < secs then place = place + 1 end
+		end
+		return place, getn(list)
 	end
-	return place, getn(list)
+	local mine = WhoDidItDB.board and WhoDidItDB.board[realm]
+	mine = mine and mine[kind] and mine[kind][key]
+	local c = B.chron and B.chron.realms[realm]
+	c = c and c[kind] and c[kind][key]
+	local place, n = 1, 0
+	if mine then
+		for g, rec in pairs(mine) do
+			local o = c and c[g]
+			local t = (o and o.t < rec.t) and o.t or rec.t
+			n = n + 1
+			if t < secs then place = place + 1 end
+		end
+	end
+	if c then
+		for g, rec in pairs(c) do
+			if not (mine and mine[g]) then
+				n = n + 1
+				if rec.t < secs then place = place + 1 end
+			end
+		end
+	end
+	return place, n
 end
 
 -- Chronicle bosses seen for a zone (names as Chronicle writes them)
@@ -1663,9 +1689,11 @@ local function better(a, b)
 end
 -- am I the one who talks on this realm right now? (two master characters
 -- online at once: the freshest one)
+local leadMe = { master = true }   -- (filled in on every ask, once a second: not a new table each time)
 local function isLead()
 	if not B.IsMaster() then return false end
-	local me = { name = UnitName("player"), synced = B.chron and B.chron.synced or 0, master = B.IsMaster() }
+	local me = leadMe
+	me.name, me.synced = UnitName("player"), B.chron and B.chron.synced or 0
 	local now = GetTime()
 	for _, s in pairs(servers) do
 		if now - s.at < 75 and better(s, me) then return false end
