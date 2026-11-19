@@ -76,6 +76,56 @@ if (Test-Path -LiteralPath $runsFile) {
         $counts["W5"] = 1 + [int]$counts["W5"]
     }
 }
+# player details (P / X, tools\Raid-Stats.ps1) for the 20 fastest clears per realm and raid, all
+# times and since the scaling change. Each raid is fetched once and kept in
+# CustomData\WhoDidIt_RaidStats.txt; at most 60 new ones a run, and a failure only leaves them out.
+try {
+    . (Join-Path $PSScriptRoot "Raid-Stats.ps1")
+    $cacheFile = Join-Path $wow "CustomData\WhoDidIt_RaidStats.txt"
+    $cache = @{}
+    if (Test-Path -LiteralPath $cacheFile) {
+        foreach ($l in [IO.File]::ReadAllLines($cacheFile)) {
+            $p = $l -split '\|', 3
+            if ($p.Count -eq 3) { if (-not $cache[$p[1]]) { $cache[$p[1]] = @() }; $cache[$p[1]] += $l }
+        }
+    }
+    $boards = @{}
+    foreach ($l in $lines) {
+        $p = $l -split '\|'
+        if (($p[0] -eq "C" -or $p[0] -eq "C2") -and $p.Count -ge 9 -and $p[8]) {
+            $k = $p[0] + "|" + $p[1] + "|" + $p[2]
+            if (-not $boards[$k]) { $boards[$k] = @() }
+            $boards[$k] += ,@([double]$p[5], $p[8])
+        }
+    }
+    # and each boss board's 3 fastest kills: K|realm|raid|boss|guild|faction|secs|ended|players|slug
+    foreach ($l in $lines) {
+        $p = $l -split '|'
+        if ($p[0] -eq "K" -and $p.Count -ge 10 -and $p[9]) {
+            $k = "K|" + $p[1] + "|" + $p[3]
+            if (-not $boards[$k]) { $boards[$k] = @() }
+            $boards[$k] += ,@([double]$p[6], $p[9])
+        }
+    }
+    $want = @{}
+    foreach ($bk in $boards.Keys) { $b = $boards[$bk]; $take = if ($bk.StartsWith("K|")) { 3 } else { 20 }; foreach ($e in @($b | Sort-Object { $_[0] } | Select-Object -First $take)) { $want[$e[1]] = $true } }
+    $new = 0
+    foreach ($slug in $want.Keys) {
+        if (-not $cache[$slug] -and $new -lt 60) {
+            $new++
+            try {
+                $inst = Invoke-RestMethod -Uri "$script:RsApi/raidlogs/instances/$slug" -UserAgent $script:RsUA -TimeoutSec 60
+                $cache[$slug] = @(Get-RaidStats $slug $inst)
+                [IO.File]::AppendAllText($cacheFile, (($cache[$slug] -join "`n") + "`n"), (New-Object Text.UTF8Encoding($false)))
+            } catch { Write-Host "No player details for raid $slug`: $_" }
+            Start-Sleep -Seconds 1
+        }
+        foreach ($l in @($cache[$slug])) {
+            if ($l -and $l -notmatch '\[\[|\]\]|[\x00-\x1f]') { $keep.Add($l); $counts["P"] = 1 + [int]$counts["P"] }
+        }
+    }
+    Write-Host ("Player details: {0} raids wanted, {1} fetched now." -f $want.Count, $new)
+} catch { Write-Host "Player details left out: $_" }
 $times = [int]$counts["C"] + [int]$counts["K"]
 $now = 0
 if (Test-Path -LiteralPath $dst) {

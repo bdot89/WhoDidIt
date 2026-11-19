@@ -283,6 +283,11 @@ shows your guild's clear, its rank (gold / silver / bronze) and a green bar for 
 - **A /reload or a disconnect mid-fight** no longer splits the fight in two: WhoDidIt carries on with it when you're
   back in the same place within two minutes.
 
+### Player details in raids
+Opening one of a board's 20 fastest clears, or a boss's 3 fastest kills, shows who was in it, their damage and healing, and who died to what on each
+boss. It comes from logs already public on Chronicle, and the download carries those players' character names. Other raids
+link to Chronicle instead. Details arrive with WhoDidIt updates, not over the channel.
+
 ### 5-man rankings
 **Raids / 5-mans** at the top of the list on the Rankings tab (or `/wdi 5man`) switches to the 5-man boards: the 13
 level-60 dungeons (Blackrock Depths, Lower and Upper Blackrock Spire, Stratholme Live and Undead, Scholomance, Dire Maul

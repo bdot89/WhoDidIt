@@ -3987,6 +3987,58 @@ local function clock(secs)
 	return string.format("%d:%02d", floor(secs / 60), math.mod(secs, 60))
 end
 
+-- who was in a raid, and one of: damage, healing, deaths (the download has this for the top raids)
+function UI:RaidStatRows(rows, slug)
+	local st = W.Board:RaidStats(slug)
+	if not st then
+		if slug then tinsert(rows, row(C_DIM .. W.L("Player details are in the download for each board's top raids. The rest is on Chronicle.") .. "|r")) end
+		return
+	end
+	if UI.rk.statFor ~= slug then UI.rk.statFor, UI.rk.statBoss = slug, nil end   -- (a boss picked in another raid)
+	local view = UI.rk.stat or "d"
+	local LABEL = { d = "Damage", h = "Healing", x = "Deaths" }
+	local function pick()
+		if not UI.statMenu then UI.statMenu = CreateFrame("Frame", "WhoDidItStatMenu", UIParent, "UIDropDownMenuTemplate") end
+		UIDropDownMenu_Initialize(UI.statMenu, function()
+			for _, k in ipairs({ "d", "h", "x" }) do
+				local key = k
+				UIDropDownMenu_AddButton({ text = W.L(LABEL[k]), checked = (view == k), func = function() UI.rk.stat = key; UI:Refresh() end })
+			end
+		end, "MENU")
+		ToggleDropDownMenu(1, nil, UI.statMenu, "cursor")
+	end
+	tinsert(rows, row("|cffffd100" .. W.L("Players") .. "|r  " .. C_DIM .. "(" .. W.L("the whole raid, trash included; pets not counted") .. ")|r",
+		"|cffffd100" .. W.L(LABEL[view]) .. "  v|r", { head = true, click = pick, tipTitle = LABEL[view], tip = { "Click to choose what to show" } }))
+	local CL = W.Runs and W.Runs.CLASS_OF or {}
+	if view == "x" then
+		local class = {}
+		for i = 1, getn(st.players) do class[st.players[i].n] = CL[st.players[i].c] end
+		local DSPEC = { { 170, "LEFT" }, { 44, "RIGHT" }, { 130, "LEFT" }, { 200, "LEFT" } }
+		if getn(st.deaths) == 0 then tinsert(rows, row(C_DIM .. W.L("none yet") .. "|r")) return end
+		colHead(rows, DSPEC, { "Boss", "Time", "Player", "Killed by" })
+		for i = 1, getn(st.deaths) do
+			local d = st.deaths[i]
+			if not UI.rk.statBoss or d.boss == UI.rk.statBoss then
+			tinsert(rows, cells(DSPEC, { "|cffdddddd" .. d.boss .. "|r", C_DIM .. clock(d.at) .. "|r", W.CName(d.n, class[d.n]), "|cffff7777" .. d.by .. "|r" }))
+			end
+		end
+		return
+	end
+	local list = {}
+	for i = 1, getn(st.players) do tinsert(list, st.players[i]) end
+	table.sort(list, function(a, b) return a[view] > b[view] end)
+	local top = (list[1] and list[1][view] > 0) and list[1][view] or 1
+	local PSPEC = { { 20, "RIGHT" }, { 170, "LEFT" }, { 90, "RIGHT" }, { 60, "RIGHT" } }
+	colHead(rows, PSPEC, { "#", "Player", LABEL[view], "%" })
+	local total = 0
+	for i = 1, getn(list) do total = total + math.max(0, list[i][view]) end
+	for i = 1, getn(list) do
+		local p, v = list[i], list[i][view]
+		tinsert(rows, cells(PSPEC, { C_DIM .. i .. ".|r", W.CName(p.n, CL[p.c]), C_TIME .. FmtNum(v) .. "|r",
+			C_DIM .. ((total > 0) and floor(v / total * 100 + 0.5) or 0) .. "%|r" }, { bar = math.max(0, v) / top, ba = 0.2, cr = 0.2, cg = 0.6, cb = 1 }))
+	end
+end
+
 function UI:RankLogRows()
 	local B = W.Board
 	local L = UI.rk.log
@@ -4013,6 +4065,7 @@ function UI:RankLogRows()
 			  click = function() W:CopyLink(W.LF("Chronicle log for %s", L.guild), url) end }))
 	end
 
+	UI:RaidStatRows(rows, L.slug)
 	if not log then
 		head(rows, "Boss kills in this raid")
 		if L.slug then
@@ -4034,7 +4087,7 @@ function UI:RankLogRows()
 	for i = 1, getn(log.kills) do wipes = wipes + (log.kills[i].w or 0) end
 	local last = log.kills[getn(log.kills)]
 	head(rows, W.L("Boss kills in this raid") .. "  " .. C_DIM .. "(" .. W.LF("%s kills", getn(log.kills)) .. ((wipes > 0) and (", " .. W.LF("%s wipes", wipes)) or "")
-		.. ((last and last.a) and (", " .. W.LF("%s start to last kill", clock(last.a))) or "") .. W.L(" - click a boss for its leaderboard") .. ")|r")
+		.. ((last and last.a) and (", " .. W.LF("%s start to last kill", clock(last.a))) or "") .. W.L(" - click a boss for its deaths") .. ")|r")
 	colHead(rows, LOG_SPEC, { "#", "Boss", "Kill", "Into raid", "Wipes", mine and "vs our best" or "vs our guild", "Rank" })
 	for i = 1, getn(log.kills) do
 		local k = log.kills[i]
@@ -4059,8 +4112,13 @@ function UI:RankLogRows()
 			            .. ((k.w and k.w > 0) and (" " .. W.LF((k.w == 1) and "after %s wipe" or "after %s wipes", k.w)) or ""),
 			          ours and W.LF("Our guild's best: %s", B.Fmt(ours.t)) or "Our guild has no kill yet",
 			          W.LF("That time would be #%s of %s on %s", kp, kof, log.realm or L.realm),
-			          W.LF("|cff888888Click: %s's leaderboard|r", k.n) },
-			  click = function() UI.rk.log = nil; UI.rk.boss = boss; UI:Refresh() end }))
+			          "|cff888888Click: deaths on this boss.  Shift-click: its leaderboard|r" },
+			  click = function()
+				  -- stays in this raid: its deaths on that boss. Shift-click: the boss's leaderboard
+				  if IsShiftKeyDown() then UI.rk.log = nil; UI.rk.boss = boss
+				  else UI.rk.stat = "x"; UI.rk.statBoss = (UI.rk.statBoss ~= boss) and boss or nil end
+				  UI:Refresh()
+			  end }))
 	end
 	return rows
 end

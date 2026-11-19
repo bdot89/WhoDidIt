@@ -30,7 +30,9 @@ local function clock(secs)
 	return string.format("%d:%02d", floor(secs / 60), math.mod(secs, 60))
 end
 
--- what to show, or nil: { title, start, cs (final secs), n, of, kind, key }
+-- what to show, or nil: { title, start, cs (final secs), doneAt, n, of, kind, key }. One table,
+-- filled in again on every look (4 times a second: a new one each time was garbage)
+local show = {}
 local function current()
 	local zone = GetRealZoneText()
 	local B = W.Board
@@ -41,8 +43,9 @@ local function current()
 		if need and (r.real or r.zone) == zone then
 			local n = 0
 			for i = 1, getn(need) do if r.kills[need[i]] then n = n + 1 end end
-			return { title = W.Data.instanceTitle[r.zone] or r.zone, start = r.start, cs = r.cs, doneAt = r.doneAt,
-				n = n, of = getn(need), kind = "clears", key = r.zone }
+			show.title, show.start, show.cs, show.doneAt = W.Data.instanceTitle[r.zone] or r.zone, r.start, r.cs, r.doneAt
+			show.n, show.of, show.kind, show.key = n, getn(need), "clears", r.zone
+			return show
 		end
 		return nil
 	end
@@ -52,10 +55,11 @@ local function current()
 		local r = R:Current()
 		if r and r.zone == zone then
 			local n = 0
-			for _ in pairs(r.k or {}) do n = n + 1 end
+			if r.k then for _ in pairs(r.k) do n = n + 1 end end
 			local dg = r.key and W.Data.DUNGEON[r.key]
-			return { title = dg and dg.title or zone, start = r.at, cs = r.cs, doneAt = r.cs and (r.at + r.cs),
-				n = n, kind = "runs", key = r.key }
+			show.title, show.start, show.cs, show.doneAt = dg and dg.title or zone, r.at, r.cs, r.cs and (r.at + r.cs)
+			show.n, show.of, show.kind, show.key = n, nil, "runs", r.key
+			return show
 		end
 	end
 end
@@ -151,7 +155,11 @@ local function noteFor(s, secs)
 	return ""
 end
 
-local last = -1
+-- Drawn again only when something on it changed: the second ticking over, a boss down, the
+-- end. The line under the time reads the boards (B:Board builds and sorts one), so it's only
+-- worked out again when the run's state changed, or every 30s for times arriving meanwhile;
+-- a finished run used to work out where it ranks 4 times a second for 10 minutes.
+local last, lastKey, lastN, lastCs, noteAt = -1, nil, nil, nil, 0
 function RT.Update()
 	if not WhoDidItDB then return end
 	local s = on() and current()
@@ -163,13 +171,17 @@ function RT.Update()
 	end
 	if not f then build() end
 	local secs = s.cs or (now - (s.start or now))
-	if not f:IsShown() then f:Show(); last = -1 end
-	if secs == last and not s.cs then return end
+	if not f:IsShown() then f:Show(); last, lastKey = -1, nil end
+	local noteDue = s.key ~= lastKey or s.n ~= lastN or s.cs ~= lastCs or GetTime() - noteAt > 30
+	if secs == last and not noteDue then return end
 	last = secs
 	f.title:SetText("|cffffd100" .. s.title .. "|r")
 	f.count:SetText(s.of and (((s.n >= s.of) and "|cff33ff33" or "|cffffffff") .. s.n .. "/" .. s.of .. "|r") or ("|cffffffff" .. s.n .. "|r|cffaaaaaa bosses|r"))
 	f.time:SetText((s.cs and "|cff33ff33" or "|cffffffff") .. clock(secs) .. "|r" .. (s.cs and "  |cff33ff33done|r" or ""))
-	f.note:SetText(noteFor(s, secs))
+	if noteDue then
+		lastKey, lastN, lastCs, noteAt = s.key, s.n, s.cs, GetTime()
+		f.note:SetText(noteFor(s, secs))
+	end
 end
 W:Every(0.25, RT.Update)
 
