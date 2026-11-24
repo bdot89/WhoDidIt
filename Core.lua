@@ -352,24 +352,38 @@ function W:Mute(ev, muted)
 	if muted then pcall(frame.UnregisterEvent, frame, ev) else pcall(frame.RegisterEvent, frame, ev) end
 end
 
+-- Each timer runs its interval after its last run (or after W:Every). The frame only adds up the
+-- time and compares it with the next one due: the list is walked a few times a second, not on
+-- every frame (30 timers walked 60+ times a second cost more than the timers themselves).
 local tickers = {}
+local tickClock, nextDue = 0, 0   -- seconds of OnUpdate time so far; when the next timer is due
 function W:Every(interval, fn)
-	tinsert(tickers, { i = interval, f = fn, a = 0, key = "every " .. interval .. "s  " .. (W.CallerAt() or "?") })
+	local t = { i = interval, f = fn, due = tickClock + interval, key = "every " .. interval .. "s  " .. (W.CallerAt() or "?") }
+	tinsert(tickers, t)
+	if t.due < nextDue then nextDue = t.due end
 end
 
 frame:SetScript("OnUpdate", function()
-	local e = arg1
+	local now = tickClock + arg1
+	tickClock = now
+	if now < nextDue then return end
 	local timed = W.perf
 	for i = 1, getn(tickers) do
 		local t = tickers[i]
-		t.a = t.a + e
-		if t.a >= t.i then
-			t.a = 0
+		if now >= t.due then
+			t.due = now + t.i
 			local ok, err
 			if timed then ok, err = W.PerfCall(t.key, t.f) else ok, err = pcall(t.f) end
 			if not ok then W:Oops("timer", err) end
 		end
 	end
+	-- (a timer a timer added is in the list by now)
+	local soonest = now + 3600
+	for i = 1, getn(tickers) do
+		local d = tickers[i].due
+		if d < soonest then soonest = d end
+	end
+	nextDue = soonest
 end)
 
 ------------------------------------------------------------------ /wdi perf
