@@ -101,14 +101,29 @@ local function splitBar(line)
 	return out
 end
 
+-- The sync file is about 1 MB: read every minute, that was 1 MB of garbage a minute. The helper
+-- rewrites its status line (WhoDidIt_SyncStatus.txt, a few bytes) whenever it works and when it
+-- finishes, and never writes the file without it, so lazy (the minute timer) reads the big file
+-- only when that line changed (its heartbeat time aside). No status line: read it every time.
+local chronFile, chronFileKey   -- the file as last read, and the status line then
+local function readChronFile(lazy)
+	if not ReadCustomFile then return nil end
+	local ok, st = pcall(ReadCustomFile, "WhoDidIt_SyncStatus.txt")
+	local key = ok and type(st) == "string" and st ~= "" and string.gsub(st, "^WDISYNC|%d+|%d+|", "") or nil
+	if lazy and key and key == chronFileKey then return chronFile end
+	local s
+	local ok2, v = pcall(ReadCustomFile, CHRON_FILE)
+	if ok2 and type(v) == "string" and v ~= "" then s = v end
+	chronFile, chronFileKey = s, key
+	return s
+end
+
 -- (re)read the sync file; true if it changed
-function B:LoadChronicle()
+function B:LoadChronicle(lazy)
 	-- the sync helper's file on this PC, or the master's feed (whichever is newer)
 	local s, fromFile
-	if ReadCustomFile then
-		local ok, v = pcall(ReadCustomFile, CHRON_FILE)
-		if ok and type(v) == "string" and v ~= "" then s, fromFile = v, true end
-	end
+	local v = readChronFile(lazy)
+	if v then s, fromFile = v, true end
 	local f = WhoDidItDB and WhoDidItDB.feed
 	if f and B.FeedSynced() > 0 and not (WhoDidItDB.opts and WhoDidItDB.opts.noFeed) then
 		local _, _, a = string.find(s or "", "^WDICHRON|%d+|(%d+)")
@@ -361,7 +376,7 @@ end
 -- re-read the sync file every minute; refresh the window when it changed
 W:Every(60, function()
 	if not WhoDidItDB then return end
-	local changed = B:LoadChronicle()
+	local changed = B:LoadChronicle(true)
 	-- new times in: anyone who just beat us goes on the rival watch
 	if (changed or B.rivalsDirty) and B.CheckRivals then
 		B.rivalsDirty = nil
@@ -1729,6 +1744,7 @@ function B:SeedSnapshot()
 	local f = store()
 	f.logAt = f.logAt or {}
 	local n = 0
+	local keep = {}   -- boss lists this download has or a board line points at
 	for line in string.gfind(s.text, "[^\r\n]+") do
 		local p = splitBar(line)
 		local t, key = p[1], nil
@@ -1737,8 +1753,23 @@ function B:SeedSnapshot()
 		elseif t == "L" and p[2] then
 			f.logs[p[2]] = line
 			f.logAt[p[2]] = s.synced
+			keep[p[2]] = true
+			if f.asked then f.asked[p[2]] = nil end   -- the download has it now: not capped
 		end
 		if key then f.lines[key] = line; n = n + 1 end
+	end
+	-- The download's boss lists don't count towards the 200 cap (the minute clean-up below: it
+	-- used to delete them one a minute). An older download's list goes when this one doesn't have
+	-- it and no saved time points at it (a C / K line's last field is its raid's slug).
+	for _, line in pairs(f.lines) do
+		local _, _, slug = string.find(line, "|([^|]*)$")
+		if slug and slug ~= "" then keep[slug] = true end
+	end
+	for slug in pairs(f.logs) do
+		if not keep[slug] and not (f.asked and f.asked[slug]) then
+			f.logs[slug] = nil
+			f.logAt[slug] = nil
+		end
 	end
 	f.synced, f.part = s.synced, nil
 	f.server = s.server or f.server
@@ -2091,6 +2122,8 @@ function B:FeedReceive(msg, sender)
 		logParts[slug] = nil
 		if string.sub(line, 1, 2) == "L|" then
 			local f = store()
+			-- (one the download didn't have: these count towards the 200 cap)
+			if not f.logs[slug] then f.asked = f.asked or {}; f.asked[slug] = true end
 			f.logs[slug] = line
 			f.logAt = f.logAt or {}
 			f.logAt[slug] = time()
@@ -2163,16 +2196,26 @@ W:Every(60, function()
 		if now - t > 60 then askedLog[slug] = nil; logParts[slug] = nil end
 	end
 	local f = WhoDidItDB and WhoDidItDB.feed
-	if f and f.logs then
-		local n, oldest, oldT = 0, nil, nil
-		for slug in pairs(f.logs) do
-			n = n + 1
-			local t = f.logAt and f.logAt[slug] or 0
-			if not oldT or t < oldT then oldest, oldT = slug, t end
+	-- (only lists asked for over the channel count: the download's are bounded by
+	-- B:SeedSnapshot. Before, this deleted those 1,100+ one a minute, and each time the whole
+	-- feed was rebuilt and re-read - megabytes of garbage a minute, for hours.)
+	local asked = f and f.asked
+	if asked then
+		local n = 0
+		for slug in pairs(asked) do
+			if f.logs[slug] then n = n + 1 else asked[slug] = nil end
 		end
-		if n > 200 and oldest then
-			f.logs[oldest] = nil
-			if f.logAt then f.logAt[oldest] = nil end
+		if n > 200 then
+			while n > 200 do
+				local oldest, oldT
+				for slug in pairs(asked) do
+					local t = f.logAt and f.logAt[slug] or 0
+					if not oldT or t < oldT then oldest, oldT = slug, t end
+				end
+				f.logs[oldest], asked[oldest] = nil, nil
+				if f.logAt then f.logAt[oldest] = nil end
+				n = n - 1
+			end
 			f.dirty = true
 		end
 	end
@@ -2201,6 +2244,11 @@ W:Every(0.2, function()
 	if now < pauseUntil or now - lastChan < chanGap() then return end
 	local q = (getn(logq) > 0 and logq) or (getn(outq) > 0 and outq) or (getn(feedq) > 0 and feedq)
 	if not q then return end
+	-- this character is below the server's level to talk in chat channels: it only listens
+	if B.Mute() then
+		while getn(q) > 0 do tremove(q) end
+		return
+	end
 	local id = chanId()
 	if not id then
 		if now - lastJoin > 5 then lastJoin = now; B:Join() end
@@ -2238,14 +2286,55 @@ local function throttled(text)
 	end
 	return true
 end
+-- "You are unable to speak yet." (24 Nov 2026, a low-level character): the server lets nobody under its
+-- level talk in chat channels, so every message to the hidden channel was refused with that line in chat.
+-- After one of ours is refused this character only listens (runs and raid times still come in; a group
+-- member shares a run) and the line is hidden; it tries again when it levels up. Per character.
+local function charKey() return (UnitName("player") or "?") .. "-" .. (GetRealmName() or "?") end
+function B.Mute()
+	local o = WhoDidItDB and WhoDidItDB.opts
+	local lvl = o and type(o.muteAt) == "table" and o.muteAt[charKey()]
+	if not lvl then return false end
+	if (UnitLevel("player") or 0) > lvl then
+		o.muteAt[charKey()] = nil   -- levelled up since: try again
+		return false
+	end
+	return true
+end
+local toldMute, lastMute = false, -100
+local function noSpeak(text)
+	if not text or not string.find(text, "unable to speak", 1, true) then return false end
+	local now = GetTime()
+	if now - lastChan > 3 and now - lastMute > 3 then return false end   -- not after one of ours
+	lastMute = now
+	local o = WhoDidItDB and WhoDidItDB.opts
+	if o then
+		if type(o.muteAt) ~= "table" then o.muteAt = {} end
+		o.muteAt[charKey()] = UnitLevel("player") or 0
+	end
+	if not toldMute then
+		toldMute = true
+		W.Print("This character is below the server's level for chat channels, so WhoDidIt only listens on its hidden channel here: "
+			.. "runs and raid times still come in, and anyone in your group shares your runs. It sends again once you level up.")
+	end
+	return true
+end
 if UIErrorsFrame and UIErrorsFrame.AddMessage then
 	local orig = UIErrorsFrame.AddMessage
 	UIErrorsFrame.AddMessage = function(self, text, a1, a2, a3, a4, a5)
-		if throttled(text) then return end
+		if throttled(text) or noSpeak(text) then return end
 		return orig(self, text, a1, a2, a3, a4, a5)
 	end
 end
 W:On("CHAT_MSG_SYSTEM", function(text) throttled(text) end)
+-- the refusal line itself, out of the chat windows (only right after one of ours)
+if ChatFrame_OnEvent then
+	local origChat = ChatFrame_OnEvent
+	ChatFrame_OnEvent = function(ev)
+		if (ev or event) == "CHAT_MSG_SYSTEM" and noSpeak(arg1) then return end
+		return origChat(ev)
+	end
+end
 
 ------------------------------------------------------------------ old raid times
 -- The download carries fresh raid times every day (the maintainer's helper publishes a
