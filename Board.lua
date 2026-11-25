@@ -1473,6 +1473,13 @@ function B:Receive(msg, sender)
 		if sender ~= UnitName("player") and (not lastAnswer or GetTime() - lastAnswer > 600) and not respondAt then
 			respondAt = GetTime() + 10 + math.random(30)
 		end
+		-- (a master: the runs it relayed a while ago go out again for them)
+		if sender ~= UnitName("player") and W.Runs and W.Runs.RelayAsked then W.Runs:RelayAsked() end
+		return
+	end
+	-- (1.31.0) another realm's or faction's run / withdrawal, passed on by a master (Dungeons.lua checks B.Trusted)
+	if kind == "M" or kind == "X" then
+		if W.Runs and W.Runs.ReceiveRelay then W.Runs:ReceiveRelay(p, sender) end
 		return
 	end
 	-- a 5-man run: only taken from someone in that group (Dungeons.lua checks it)

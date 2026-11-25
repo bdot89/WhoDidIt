@@ -383,6 +383,51 @@ check(count(outs(shemp)) == n0 and printedHas(shemp, "Only a member of the group
 check(shemp.R:Merge(REALM, "lbrs", GK, badRec("Shemp")) == false and board(shemp, "lbrs", GK) == nil, "P7 R:Merge refuses a withdrawn run")
 check(string.len(sent("W")[1].msg) <= 255, "P7 the W record fits a chat line")
 
+----------------------------------------------------------------- R: the masters' relay (1.31.0)
+-- The master's save holds an N'Zoth run, a Horde run on this realm (its channel is Alliance) and an N'Zoth withdrawal:
+-- it passes those on; this channel's own runs (Alliance, Y'Shaarj) are not sent again; nobody else can relay.
+do
+	local mdb = master.env.WhoDidItDB
+	mdb.dungeons = mdb.dungeons or {}
+	mdb.dungeons["N'Zoth"] = { stratud = { ["Far,Away"] = { g = "Northern Lights", t = 2400, d = RUN_D, x = 0, f = "Horde", n = 2,
+		m = "Far:Wa,Away:Pr", s = "", nt = RUN_D, by = "Far" } } }
+	mdb.dungeons[REALM] = mdb.dungeons[REALM] or {}
+	mdb.dungeons[REALM].scholo = { ["Hordey,Orcy"] = { g = "Red Team", t = 2600, d = RUN_D, x = 1, f = "Horde", n = 2,
+		m = "Hordey:Wa,Orcy:Sh", s = "", nt = RUN_D, by = "Hordey" } }
+	mdb.dungeons[REALM].ubrs = { ["Allie,Ance"] = { g = "Blue Team", t = 3100, d = RUN_D, x = 0, f = "Alliance", n = 2,
+		m = "Allie:Wa,Ance:Pr", s = "", nt = RUN_D, by = "Allie" } }
+	mdb.runsWithdrawn = mdb.runsWithdrawn or {}
+	mdb.runsWithdrawn["N'Zoth"] = { ["dme~Gone,Wrong~1500"] = { k = "dme", gk = "Gone,Wrong", t = 1500, at = math.floor(clock), hit = true } }
+	local before, xBefore = table.getn(sent("M")), table.getn(sent("X"))
+	-- (Shemp listens: a player on the master's channel)
+	local bys = shemp
+	tick(31)
+	tick(30)   -- (the lines go out one every 1.6 s)
+	local nz = bys.env.WhoDidItDB.dungeons["N'Zoth"]
+	check(nz and nz.stratud and nz.stratud["Away,Far"] and nz.stratud["Away,Far"].relay and nz.stratud["Away,Far"].t == 2400,
+		"R1 another realm's run reaches a player through the master")
+	local here = bys.env.WhoDidItDB.dungeons[REALM]
+	check(here and here.scholo and here.scholo["Hordey,Orcy"] and here.scholo["Hordey,Orcy"].f == "Horde",
+		"R2 the other faction's run on this realm reaches the Alliance channel")
+	check(not (here and here.ubrs and here.ubrs["Allie,Ance"]), "R3 this channel's own runs are not sent again")
+	local w = bys.env.WhoDidItDB.runsWithdrawn and bys.env.WhoDidItDB.runsWithdrawn["N'Zoth"]
+	check(w and w["dme~Gone,Wrong~1500"], "R4 a withdrawal on another realm is passed on too")
+	check(table.getn(sent("X")) - xBefore == 1, "R4 only withdrawals that took a run off are passed on (the made-up flood is not)")
+	local n1 = table.getn(sent("M"))
+	tick(31)
+	check(n1 > before and table.getn(sent("M")) == n1, "R5 each run is relayed once (" .. (n1 - before) .. " sent)")
+	-- anyone who is not a master: ignored
+	inject("Shemp", "WDIB1~M~N'Zoth~ubrs~Fake Fast~200~" .. RUN_D .. "~0~Horde~Shemp:Pr,Ludenlord:Wa~~" .. RUN_D)
+	local nzu = bys.env.WhoDidItDB.dungeons["N'Zoth"] and bys.env.WhoDidItDB.dungeons["N'Zoth"].ubrs
+	check(not nzu, "R6 a relay from someone not on the master list is ignored")
+	-- someone logs in and asks: what was relayed half an hour ago goes out again
+	clock = clock + 1900
+	inject("Bystander", "WDIB1~Q")
+	tick(31)
+	check(table.getn(sent("M")) > n1, "R7 after someone asks, older relays go out again")
+	for _, m in ipairs(sent("M")) do check(string.len(m.msg) <= 255, "R8 an M record fits a chat line") end
+end
+
 ----------------------------------------------------------------- errors anywhere
 for name, pc in pairs(PCS) do
 	for _, e in ipairs(pc.errors) do print("  error on " .. name .. ": " .. e) end

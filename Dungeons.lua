@@ -993,6 +993,152 @@ function R:AnswerOut()
 	return sent
 end
 
+------------------------------------------------------------------ the masters' relay (1.31.0)
+-- (25 Nov 2026, the maintainer) The hidden channel is per realm and, where the realm splits the factions (Y'Shaarj),
+-- per faction: a run is only heard where it was run. The maintainer's master characters share one save per account
+-- and between them hear every board, so a master passes on what its own channel can't have heard - other realms'
+-- runs and the other faction's - and everyone takes them, from B.MASTERS only (B.Trusted):
+--   M~realm~key~group~secs~date~deaths~faction~members~splits~named   a run (a "D" with its realm first)
+--   X~realm~key~secs~members                                          a withdrawal
+-- Each master remembers what it sent on which channel (WhoDidItDB.relaySent); a few at a time, the fastest
+-- RELAY_TOP groups per dungeon and faction; someone asking (Q) makes the older ones due again. Older
+-- versions drop unknown kinds (B:Receive).
+local RELAY_TOP, RELAY_BATCH, RELAY_KEEP, RELAY_AGAIN = 10, 8, 4000, 1800
+local relayOther = -1000     -- GetTime() another master was last heard relaying here (then this one waits)
+local relayAgainAt = 0       -- time(): what was sent before this is due again (someone asked)
+
+local function relayStore()
+	local o = WhoDidItDB.relaySent
+	if type(o) ~= "table" or type(o.ids) ~= "table" then
+		o = { n = 0, ids = {} }
+		WhoDidItDB.relaySent = o
+	end
+	return o
+end
+local function relayMark(id)
+	local st = relayStore()
+	if not st.ids[id] then
+		st.n = (st.n or 0) + 1
+		if st.n > RELAY_KEEP then st.ids, st.n = {}, 1 end
+	end
+	st.ids[id] = time()
+end
+local function chanKey() return realm() .. "/" .. faction() end
+local function okRealm(s) return type(s) == "string" and s ~= "" and string.len(s) <= 32 and not string.find(s, "[|~%c]") end
+
+function R.RelayLine(rl, key, rec)
+	local parts = { PROTO, "M", rl, key, rec.g, tostring(rec.t), tostring(rec.d), tostring(rec.x or 0), rec.f or "?", rec.m or "", rec.s or "", tostring(rec.nt or rec.d) }
+	local s = table.concat(parts, SEP)
+	if string.len(s) > 250 then
+		parts[11] = ""   -- (the splits stay home, as in R.Line)
+		s = table.concat(parts, SEP)
+	end
+	return s
+end
+
+-- what this channel can't have heard and hasn't had from us: { { line, id } }, at most limit
+function R:RelayDue(limit)
+	local out = {}
+	if not WhoDidItDB or type(WhoDidItDB.dungeons) ~= "table" then return out end
+	local here, fac, ck = realm(), faction(), chanKey()
+	local ids = relayStore().ids
+	local function due(id) local at = ids[id] return not at or at < relayAgainAt end
+	for rl, keys in pairs(WhoDidItDB.dungeons) do
+		if okRealm(rl) then
+			for key in pairs(keys) do
+				if D().DUNGEON[key] then
+					for _, f in ipairs({ "Alliance", "Horde" }) do
+						if rl ~= here or f ~= fac then
+							local list = R:Board(rl, key, f)
+							for i = 1, math.min(RELAY_TOP, getn(list)) do
+								local gk, rec = list[i][1], list[i][2]
+								local id = ck .. SEP .. rl .. SEP .. key .. SEP .. gk .. SEP .. rec.t
+								if not rec.priv and R.OkName(rec.g) and due(id) then
+									tinsert(out, { R.RelayLine(rl, key, rec), id })
+									if getn(out) >= limit then return out end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	-- withdrawals: any realm's (the other faction's on this realm may never have been heard here), only ones that
+	-- took a real run off (hit) - a flood of made-up ones (each from a member of its own made-up group) stays home
+	for rl, t in pairs(WhoDidItDB.runsWithdrawn or {}) do
+		if okRealm(rl) and type(t) == "table" then
+			for _, w in pairs(t) do
+				if w.hit and not w.priv and w.k and w.gk and w.t and D().DUNGEON[w.k] then
+					local id = ck .. SEP .. "X" .. SEP .. rl .. SEP .. outId(w.k, w.gk, w.t)
+					if due(id) then
+						tinsert(out, { table.concat({ PROTO, "X", rl, w.k, tostring(w.t), w.gk }, SEP), id })
+						if getn(out) >= limit then return out end
+					end
+				end
+			end
+		end
+	end
+	return out
+end
+
+-- a master sends a few every half minute (its channel on, not muted, no other master relaying here just now)
+function R:RelayTick()
+	if not WhoDidItDB or not WhoDidItDB.opts.shareBoard or not W.Board or not W.Board.CanMaster or not W.Board.CanMaster() then return 0 end
+	if W.Board.Mute and W.Board.Mute() then return 0 end
+	if GetTime() - relayOther < 120 then return 0 end
+	local list = R:RelayDue(RELAY_BATCH)
+	for i = 1, getn(list) do
+		W.Board.QueueOut(list[i][1])
+		relayMark(list[i][2])
+	end
+	return getn(list)
+end
+W:Every(30, function() R:RelayTick() end)
+
+-- someone asked (Q): what was relayed more than RELAY_AGAIN ago is due again (they may have missed it)
+function R:RelayAsked()
+	local again = time() - RELAY_AGAIN
+	if again > relayAgainAt then relayAgainAt = again end
+end
+
+-- a relayed run or withdrawal from the channel (p = the message split on ~), only from a master
+function R:ReceiveRelay(p, sender)
+	if not sender or not WhoDidItDB or sender == me() then return end
+	if not (W.Board and W.Board.Trusted and W.Board.Trusted(sender)) then return end
+	relayOther = GetTime()
+	local kind, rl = p[2], p[3]
+	if not okRealm(rl) then return end
+	local ck = chanKey()
+	if kind == "X" then
+		local key, secs = p[4], tonumber(p[5])
+		local dg = key and D().DUNGEON[key]
+		if not dg or not secs or secs ~= floor(secs) or secs < D().RUN_MIN or secs > D().RUN_MAX then return end
+		local gk, n = okGroup(p[6])
+		if not gk or n > (dg.max or D().GROUP_MAX) then return end
+		relayMark(ck .. SEP .. "X" .. SEP .. rl .. SEP .. outId(key, gk, secs))
+		if R:Withdrawn(rl, key, gk, secs) then return end
+		keepOut(rl, key, gk, secs, sender, takeOff(rl, key, gk, secs), true)
+		if W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
+		return
+	end
+	local key, g, secs, d, x, fac, m, s, nt = p[4], p[5], tonumber(p[6]), tonumber(p[7]), tonumber(p[8]), p[9], p[10], p[11], tonumber(p[12])
+	local dg = key and D().DUNGEON[key]
+	if not dg or not R.OkName(g) or not secs or not d or not x then return end
+	if secs < D().RUN_MIN or secs > D().RUN_MAX or d > time() + 86400 or d < 1700000000 or x < 0 or x > 99 then return end
+	if fac ~= "Alliance" and fac ~= "Horde" then return end
+	local list, mt, gk = R.Members(m)
+	if not list or getn(list) > (dg.max or D().GROUP_MAX) then return end
+	relayMark(ck .. SEP .. rl .. SEP .. key .. SEP .. gk .. SEP .. secs)
+	if R:Withdrawn(rl, key, gk, secs) then return end
+	if not nt or nt > time() + 86400 or nt < d then nt = d end
+	local rec = { g = g, t = secs, d = d, x = x, f = fac, n = getn(list), m = mt, s = okSplits(s, dg, secs), nt = nt, by = sender, net = true, relay = true }
+	if R:Merge(rl, key, gk, rec) then
+		R.dirty = true
+		if W.UI and W.UI.mode == "rankings" then W.UI:Refresh() end
+	end
+end
+
 ------------------------------------------------------------------ the download's runs, the master's file
 -- RaidTimes.lua (the maintainer's publish) carries the realms' 5-man runs as
 --   R5|realm|key|group|secs|date|deaths|faction|members|splits|named

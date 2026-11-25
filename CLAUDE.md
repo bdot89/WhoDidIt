@@ -131,6 +131,12 @@ World of Warcraft client 1.12.1 (TurtleWoW / OctoWoW), Lua 5.0, with SuperWoW an
   (yours always, ones that took a run off before ones that never did); taking one makes nobody send, members re-send
   theirs in R:Answer. Masters write W5 lines; Publish-RaidTimes publishes them (all of them) and R:Seed applies
   them. Older clients ignore W (B:Receive drops unknown kinds) and keep sharing the run until they update.
+- The masters' relay (Dungeons.lua R:RelayTick, 1.31.0): the channel is per realm and, on Y'Shaarj, per faction, so a
+  master character (B.CanMaster, not muted) passes on the runs its channel can't have heard - other realms' and the other
+  faction's, the fastest 10 per dungeon and faction, 8 lines every 30 s - as "M" (a "D" with the realm first), and
+  withdrawals that took a run off (w.hit) as "X". Taken only from B.Trusted senders (R:ReceiveRelay). What went out on
+  which channel is in WhoDidItDB.relaySent (4000 kept); a Q makes relays older than 30 min due again; another master
+  heard relaying = this one waits 2 min. Y'Shaarj's Alliance master is Pfuiocto (25 Nov 2026). Tests: tests\withdraw.lua R1-R8.
 - Character names in the repository (RaidTimes.lua) or an export: on 1 Nov 2026 the maintainer dropped review 3's
   T1 option (b) (9 Oct) so times spread to every realm: Publish-RaidTimes publishes every R5 / W5 line with the
   members' names and Website-Export names everyone. The README says so (5-man rankings, Privacy). Runs a member opted
