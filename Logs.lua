@@ -78,8 +78,22 @@ function L:Use(on)
 	end
 end
 
+-- (25 Nov 2026, Javelin: "Auto-enable in Raids" ticked in Chronicle's own options was off again after a relog) a
+-- player who switches one of the automatic settings on in Chronicle's own window has said yes too: quiet() at
+-- the next login only runs for someone who never did
+local function watchSettings()
+	if not (L:Available() and L:Source() == "builtin") or ChronicleLog.wdiWatched then return end
+	ChronicleLog.wdiWatched = true
+	local set = ChronicleLog.SetSetting
+	ChronicleLog.SetSetting = function(self, key, value)
+		if AUTO[key] and value == true and WhoDidItDB and WhoDidItDB.opts then WhoDidItDB.opts.chronUse = true end
+		return set(self, key, value)
+	end
+end
+
 W:On("ADDON_LOADED", function(name)
 	if name ~= "WhoDidIt" then return end
+	watchSettings()
 	if WhoDidItDB.opts.chronUse ~= true then quiet() end
 end)
 
