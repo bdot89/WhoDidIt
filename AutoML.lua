@@ -127,7 +127,16 @@ local function onLoot()
 	local backup = d.backup and cand[d.backup] and d.backup
 	local free = (to == me) and freeBagSlots() or 99
 	local epics = {}
+	-- a corpse with an epic: hands off, so the master looter's window isn't redrawn or closed
+	-- under them while they hand it out (raids, 26 Nov 2026)
 	for slot = 1, GetNumLootItems() do
+		if LootSlotIsItem(slot) then
+			local _, name, _, quality = GetLootSlotInfo(slot)
+			if name and quality and quality >= 4 and not d.always[name] then tinsert(epics, name) end
+		end
+	end
+	local handsOff = getn(epics) > 0
+	for slot = 1, (handsOff and 0 or GetNumLootItems()) do
 		if LootSlotIsItem(slot) then
 			local _, name, _, quality = GetLootSlotInfo(slot)
 			if name and quality then
