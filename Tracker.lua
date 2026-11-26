@@ -196,7 +196,12 @@ function T:Start(guid, puller, how)
 		T:Line("pull", bname .. " engaged")
 	end
 	if F.encKnown or UnitClassification(guid) == "worldboss" then
-		W.Print("Tracking |cffffd100" .. F.enc .. "|r.")
+		-- once per boss: a wipe can start and drop the fight again and again (BWL, 26 Nov 2026)
+		T.told = T.told or {}
+		if not T.told[F.enc] or GetTime() - T.told[F.enc] > 300 then
+			T.told[F.enc] = GetTime()
+			W.Print("Tracking |cffffd100" .. F.enc .. "|r.")
+		end
 	end
 	if W.Logs then W.Logs:OnFightStart() end
 	if W.UI then W.UI:OnFightStart() end
