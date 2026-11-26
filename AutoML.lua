@@ -145,7 +145,10 @@ local function onLoot()
 			end
 		end
 	end
-	if getn(epics) > 0 then
+	-- once per corpse: the master looter reopens the same loot over and over while handing it out
+	local key = table.concat(epics, ",")
+	if getn(epics) > 0 and (key ~= warned.epicKey or GetTime() - (warned.epicAt or 0) > 300) then
+		warned.epicKey, warned.epicAt = key, GetTime()
 		W.Print("|cffa335eeEpic inside!|r " .. table.concat(epics, ", "))
 		PlaySound("AuctionWindowClose")
 	end
