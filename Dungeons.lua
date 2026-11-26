@@ -385,9 +385,27 @@ local function say(text) W.Print("|cff33ccff5-man:|r " .. text) end
 local armed   -- a loading screen since the last run started
 local here    -- the run we're in, known since the last loading screen
 
+-- (26 Nov 2026, Lobo: "i just reset the instance and it kept the timer going ... its taking the afk time i was between
+-- runs") an unfinished run notes when you left its dungeon; back after more than BREAK seconds away is a new run (the
+-- next pull starts it), and the game's "<dungeon> has been reset." ends it at once
+local BREAK = 15 * 60
 local function settle()
 	local r = cur()
 	local zone = dungeonZone()
+	if r and not r.fin and not zone then
+		r.outAt = r.outAt or time()
+		return
+	end
+	if r and zone and r.outAt then
+		local away = time() - r.outAt
+		r.outAt = nil
+		if not r.fin and away > BREAK then
+			setCur(nil)
+			armed, here = true, nil
+			say("you were away " .. R.Fmt(away) .. " - the run timer starts again at your next pull.")
+			return
+		end
+	end
 	if not r or not zone then return end
 	local p = r.prev
 	if p and not r.fin and zone == p.zone and zone ~= r.zone then
@@ -417,6 +435,20 @@ W:On("PLAYER_ENTERING_WORLD", function()
 	settle()
 end)
 W:On("ZONE_CHANGED_NEW_AREA", function() if WhoDidItDB then settle() end end)
+-- an instance reset: an unfinished run of it is over
+W:On("CHAT_MSG_SYSTEM", function(msg)
+	if not WhoDidItDB or not msg or not INSTANCE_RESET_SUCCESS then return end
+	-- "%s has been reset." -> "^(.+) has been reset%.$"
+	local pat = string.gsub(INSTANCE_RESET_SUCCESS, "([%.%(%)%-%+%*%?%[%]%^%$])", "%%%1")
+	pat = "^" .. string.gsub(pat, "%%s", "(.+)") .. "$"
+	local _, _, zone = string.find(msg, pat)
+	local r = cur()
+	if zone and r and not r.fin and (r.zone == zone or not r.zone) then
+		setCur(nil)
+		armed, here = true, nil
+		say(zone .. " was reset - the run timer starts again at your next pull in it.")
+	end
+end)
 W:Every(1, function() if WhoDidItDB then settle() end end)
 
 W:On("PLAYER_REGEN_DISABLED", function()
